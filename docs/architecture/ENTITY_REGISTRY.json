@@ -1,0 +1,28 @@
+{
+  "registry_version": "1.0.0",
+  "entities": [
+    {
+      "id": "mosharrof.core",
+      "name": "Mosharrof Core",
+      "role": "coordination",
+      "brain": "src/core/mosharrof_brain.py",
+      "permission_profile": "core",
+      "status": "active"
+    }
+  ],
+  "future_entity_contract": {
+    "required": [
+      "identity",
+      "brain",
+      "responsibility",
+      "memory",
+      "permissions",
+      "policy",
+      "tools",
+      "communication",
+      "state",
+      "audit",
+      "version"
+    ]
+  }
+}
