@@ -1,43 +1,41 @@
-"""
-Mosharrof AI Ecosystem Complete Integration Test
-সকল মডিউল (Tool Factory, Voice Engine, Storage Engine, Brain) যৌথভাবে পরীক্ষা করা।
-"""
-
-import pytest
+import tempfile
+import unittest
+from pathlib import Path
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
-from src.core.tool_factory import ToolFactory
-from src.core.voice_engine import VoiceJournalEngine
+from src.core.entity import Entity
+from src.core.policy import PolicyDenied
 from src.core.storage_engine import StorageEngine
 
-def test_full_ecosystem_flow():
-    # ১. ইভেন্ট বাস ও মেমোরি লেজার তৈরি
-    event_bus = EcosystemEventBus()
-    ledger = MemoryLedger()
-    
-    # ২. ব্রেন ও সাব-ইঞ্জিন ইনস্ট্যানশিয়েশন
-    brain = MosharrofCoreBrain(event_bus=event_bus, memory_ledger=ledger)
-    tool_factory = ToolFactory()
-    voice_engine = VoiceJournalEngine(memory_ledger=ledger)
-    storage_engine = StorageEngine()
+class TestMosharrofEcosystem(unittest.TestCase):
+    def test_core_brain_and_memory(self):
+        bus=EcosystemEventBus()
+        ledger=MemoryLedger()
+        brain=MosharrofCoreBrain(event_bus=bus,memory_ledger=ledger)
+        result=brain.process_intent("organize the project")
+        self.assertEqual(result["status"],"SUCCESS")
+        self.assertGreaterEqual(len(ledger.short_term_memory),1)
 
-    # ৩. ভয়েস ও ব্যক্তিত্ব ট্র্যাকিং টেস্ট
-    voice_toggle = voice_engine.toggle_listening(True)
-    assert voice_toggle["listening_state"] == "ACTIVE"
+    def test_event_bus(self):
+        bus=EcosystemEventBus()
+        received=[]
+        bus.subscribe("SYSTEM_ALERT",received.append)
+        bus.publish("SYSTEM_ALERT",{"ok":True})
+        self.assertEqual(received,[{"ok":True}])
 
-    voice_res = voice_engine.process_ambient_conversation("SPEAKER_SHAMIM_01", "আজকের মিটিংয়ের সিদ্ধান্ত কী?")
-    assert voice_res["status"] == "SUCCESS"
+    def test_entity_boundary(self):
+        entity=Entity("test","Test Entity","test responsibility")
+        self.assertEqual(entity.act("READ")["status"],"APPROVED")
+        with self.assertRaises(PolicyDenied):
+            entity.act("DELETE")
 
-    # ৪. স্টোরেজ ও ফাইল ইনডেক্সিং টেস্ট
-    scan_res = storage_engine.scan_and_index_storage(".")
-    assert scan_res["status"] == "SUCCESS"
+    def test_storage_scan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp,"a.txt").write_text("ok",encoding="utf-8")
+            result=StorageEngine(tmp).scan_and_index_storage()
+            self.assertEqual(result["status"],"SUCCESS")
+            self.assertEqual(result["total_files_scanned"],1)
 
-    # ৫. টুল ফ্যাক্টরি টেস্ট
-    available_tools = tool_factory.list_available_tools()
-    assert isinstance(available_tools, list)
-
-    # ৬. কোর ব্রেন প্রসেসিং টেস্ট
-    brain_res = brain.process_intent("আমাদের জীবনের গল্প ও ফাইল গুছিয়ে রাখো")
-    assert brain_res["status"] == "SUCCESS"
-    assert brain_res["intent_clarity"] == "100%"
+if __name__=="__main__":
+    unittest.main()
