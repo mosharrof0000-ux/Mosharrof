@@ -163,22 +163,19 @@ def test_additional_delete_variants_are_denied():
         assert result["status"] == "DENIED"
 
 
-def test_context_aware_voice_pipeline():
-    engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
-    assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
-    result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ।"
-
-
-def test_voice_audio_requires_authorization_and_provider():
-    engine = VoiceJournalEngine()
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
-    engine.toggle_listening(True, authorized=True)
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
-    provider = lambda _audio: "তুমি কি করতেছ"
-    engine = VoiceJournalEngine(transcription_provider=provider)
-    engine.toggle_listening(True, authorized=True)
-    result = engine.sanitize_phonetic_speech(b"audio")
+def test_voice_smart_processing():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("আপনি কেমন আছেন") == "আপনি কেমন আছেন।"
+    assert voice.apply_smart_punctuation("আপনি কোথায়") == "আপনি কোথায়?"
+    corrected = voice.correct_contextual_grammar("আমি যাবে")
+    assert corrected["text"] == "আমি যাব"
+    assert corrected["changed"] is True
+    result = voice.sanitize_phonetic_speech("আমি যাবে")
     assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ।"
+    assert result["text"] == "আমি যাব।"
+
+
+def test_voice_requires_transcriber_for_raw_audio():
+    voice = VoiceJournalEngine()
+    result = voice.sanitize_phonetic_speech(b"raw-audio")
+    assert result["status"] == "TRANSCRIBER_REQUIRED"
