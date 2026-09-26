@@ -89,7 +89,7 @@ class VoiceJournalEngine:
                     text = text[:offset].rstrip() + ", " + text[offset:].lstrip()
 
         if not re.search(r"[?!।]$", text):
-            if question_hint is True:
+            if question_hint is True or any(marker in text for marker in (" কীভাবে ", " কিভাবে ", " কেন ", " কি ", " কী ")):
                 text += "?"
             else:
                 text += "।"
