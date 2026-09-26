@@ -119,7 +119,8 @@ def test_temporary_permission_cannot_grant_delete():
         scope="core/config", task="configuration"
     )
     assert granted["status"] == "GRANTED"
-    assert manager.revoke("task-2")["status"] == "REVOKED"
+    assert manager.complete_task("task-2")["status"] == "REVOKED"
+    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
 
 
 def test_machine_readable_project_contract():
