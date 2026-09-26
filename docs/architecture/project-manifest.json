@@ -1,0 +1,15 @@
+{
+  "project_id": "mosharrof",
+  "project_name": "Mosharrof",
+  "owner": "Mosharrof Karim",
+  "architecture_version": "1.0.0",
+  "core": "mosharrof-core",
+  "principles": ["modular", "entity-based", "model-agnostic", "permission-bounded", "auditable", "non-destructive"],
+  "hard_rules": {"delete_allowed": false, "destructive_operations_allowed": false},
+  "entity_contract": "docs/architecture/entity-contract.json",
+  "entity_registry": "docs/architecture/entity-registry.json",
+  "policy": "src/policies/capability_policy.json",
+  "lifecycle": "docs/architecture/entity-lifecycle.json",
+  "web_root": "web/index.html",
+  "status": "foundation-v1"
+}
