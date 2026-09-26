@@ -212,3 +212,10 @@ def test_voice_authorization_blocks_raw_audio():
     result = engine.sanitize_phonetic_speech(b"raw-audio")
     assert result["status"] == "BLOCKED"
     assert result["reason"] == "RECORDING_NOT_AUTHORIZED"
+
+
+def test_tool_factory_blocks_dynamic_execution_and_dangerous_imports(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert factory.create_tool("bad_eval", "return eval('1+1')").startswith("DENIED:")
+    assert factory.create_tool("bad_open", "return open('x')").startswith("DENIED:")
+    assert factory.create_tool("bad_import", "import subprocess\nreturn 1").startswith("DENIED:")
