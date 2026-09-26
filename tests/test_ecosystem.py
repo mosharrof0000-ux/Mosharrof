@@ -182,3 +182,30 @@ def test_voice_audio_requires_authorization_and_provider():
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ।"
+
+
+def test_context_aware_voice_pipeline():
+    engine = VoiceJournalEngine()
+    assert engine.apply_smart_punctuation("আপনি কোথায়", question_hint=True) == "আপনি কোথায়?"
+    assert engine.apply_smart_punctuation("প্রথমে কাজ করুন তারপর দেখুন") == "প্রথমে কাজ করুন তারপর দেখুন।"
+    assert engine.correct_contextual_grammar("মশারফ কোরান গবেষণা") == "মোশাররফ কুরআন গবেষণা"
+
+    result = engine.process_transcript(
+        "মশারফ কোরান নিয়ে গবেষণা করুন",
+        question_hint=False,
+        context="কুরআন গবেষণা",
+    )
+    assert result["status"] == "SUCCESS"
+    assert result["text"] == "মোশাররফ কুরআন নিয়ে গবেষণা করুন।"
+    assert result["stages"] == [
+        "phonetic_sanitizer",
+        "contextual_correction",
+        "smart_punctuation",
+    ]
+
+
+def test_voice_phonetic_sanitizer_requires_speech_adapter_for_audio():
+    engine = VoiceJournalEngine()
+    result = engine.sanitize_phonetic_speech(object())
+    assert result["status"] == "DEFERRED"
+    assert result["reason"] == "SPEECH_RECOGNITION_ADAPTER_REQUIRED"
