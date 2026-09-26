@@ -1,11 +1,12 @@
 """Context-aware Mosharrof voice processing with explicit recording authorization.
 
-Speech-to-text remains an external boundary. This module normalizes the resulting
-transcript with conservative punctuation and context-aware corrections.
+Speech-to-text is an external provider boundary. This engine owns authorization,
+transcript cleanup, conservative punctuation, contextual correction and audit
+records; it does not pretend to decode raw audio by itself.
 """
 
 import re
-from typing import Any, Dict, Iterable, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, Optional, Sequence
 from src.core.memory_ledger import MemoryLedger
 
 
@@ -17,22 +18,20 @@ class VoiceJournalEngine:
         "প্রজেকট": "প্রজেক্ট",
         "খুজে": "খুঁজে",
         "খুজুন": "খুঁজুন",
+        "করতেছ": "করছ",
     }
-
-    QUESTION_WORDS = (
-        "কি", "কী", "কেন", "কখন", "কোথায়", "কোথায়", "কত",
-        "কার", "কাকে", "কীভাবে", "কিভাবে", "কোন", "কোনটি",
-    )
 
     def __init__(
         self,
         memory_ledger: Optional[MemoryLedger] = None,
         correction_map: Optional[Dict[str, str]] = None,
+        transcription_provider: Optional[Callable[[Any], str]] = None,
     ):
         self.ledger = memory_ledger or MemoryLedger()
         self.is_listening = False
         self.recording_authorized = False
         self.known_voices: Dict[str, str] = {}
+        self.transcription_provider = transcription_provider
         self.correction_map = dict(self.DEFAULT_CORRECTIONS)
         if correction_map:
             self.correction_map.update(correction_map)
@@ -70,11 +69,12 @@ class VoiceJournalEngine:
         raw_text: str,
         pause_boundaries: Optional[Sequence[int]] = None,
     ) -> str:
-        """Add conservative punctuation to an STT transcript.
+        """Apply conservative punctuation to transcript text.
 
-        Pause markers can be represented as [pause]. Provider timing offsets
-        are accepted for API compatibility; punctuation remains conservative
-        when only raw text is available.
+        A provider can supply [pause] markers or timing metadata. When no
+        acoustic information is available, the engine defaults to a sentence
+        stop rather than guessing a question from a word such as 'কি' appearing
+        inside the sentence.
         """
         text = self._clean_spacing(raw_text or "")
         if not text:
@@ -83,13 +83,7 @@ class VoiceJournalEngine:
         text = re.sub(r"\s*\[pause\]\s*", "। ", text, flags=re.IGNORECASE)
 
         if not re.search(r"[?!।]$", text):
-            words = text.split()
-            if words and any(
-                word.strip(".,!?।") in self.QUESTION_WORDS for word in words[-4:]
-            ):
-                text += "?"
-            else:
-                text += "।"
+            text += "।"
 
         text = re.sub(r"।{2,}", "।", text)
         text = re.sub(r"\?+", "?", text)
@@ -107,7 +101,8 @@ class VoiceJournalEngine:
     ) -> str:
         """Apply only explicit, conservative transcript corrections.
 
-        Unknown or ambiguous speech is preserved rather than guessed.
+        Unknown speech is preserved. A caller may supply context to extend the
+        correction pass with a task-specific correction map.
         """
         text = self._clean_spacing(raw_text or "")
         if not text:
@@ -116,29 +111,24 @@ class VoiceJournalEngine:
         context_text = " ".join(context or ())
         for source, target in self.correction_map.items():
             pattern = rf"(?<!\S){re.escape(source)}(?!\S)"
-            if context_text or source in {"গবেষনা", "প্রজেকট", "খুজে", "খুজুন"}:
+            if context_text or source in self.DEFAULT_CORRECTIONS:
                 text = re.sub(pattern, target, text)
         return text
 
-    def sanitize_phonetic_speech(
+    def process_voice_text(
         self,
-        audio_stream: Any,
+        transcript: str,
         *,
-        transcript: Optional[str] = None,
         context: Optional[Iterable[str]] = None,
     ) -> Dict[str, Any]:
-        """Normalize provider transcript without pretending to perform STT."""
-        raw_text = transcript if transcript is not None else (
-            audio_stream if isinstance(audio_stream, str) else ""
-        )
-        corrected = self.correct_contextual_grammar(raw_text, context=context)
-        punctuated = self.apply_smart_punctuation(corrected)
+        """Process already-transcribed speech."""
+        corrected = self.correct_contextual_grammar(transcript, context=context)
+        final_text = self.apply_smart_punctuation(corrected)
         return {
-            "status": "SUCCESS" if punctuated else "EMPTY",
-            "raw_text": raw_text,
+            "status": "SUCCESS" if final_text else "EMPTY",
+            "raw_text": transcript,
             "corrected_text": corrected,
-            "text": punctuated,
-            "stt_provider": "EXTERNAL_BOUNDARY",
+            "final_text": final_text,
         }
 
     def process_voice_transcript(
@@ -147,11 +137,53 @@ class VoiceJournalEngine:
         *,
         context: Optional[Iterable[str]] = None,
     ) -> Dict[str, Any]:
-        return self.sanitize_phonetic_speech(
-            transcript,
-            transcript=transcript,
-            context=context,
-        )
+        """Backward-compatible alias for text transcript processing."""
+        result = self.process_voice_text(transcript, context=context)
+        return {
+            **result,
+            "text": result["final_text"],
+            "stt_provider": "EXTERNAL_BOUNDARY",
+        }
+
+    def sanitize_phonetic_speech(
+        self,
+        audio_stream: Any,
+        *,
+        transcript: Optional[str] = None,
+        context: Optional[Iterable[str]] = None,
+    ) -> Dict[str, Any]:
+        """Authorize audio processing and normalize provider transcription."""
+        if not self.recording_authorized:
+            return {"status": "BLOCKED", "reason": "RECORDING_NOT_AUTHORIZED"}
+
+        raw_text = transcript
+        if raw_text is None:
+            if isinstance(audio_stream, str):
+                raw_text = audio_stream
+            elif self.transcription_provider is not None:
+                raw_text = self.transcription_provider(audio_stream)
+            else:
+                return {
+                    "status": "UNAVAILABLE",
+                    "reason": "TRANSCRIPTION_PROVIDER_NOT_CONFIGURED",
+                }
+
+        if not isinstance(raw_text, str) or not raw_text.strip():
+            return {"status": "EMPTY", "reason": "NO_TRANSCRIPT"}
+
+        processed = self.process_voice_text(raw_text, context=context)
+        return {
+            "status": processed["status"],
+            "raw_text": raw_text,
+            "corrected_text": processed["corrected_text"],
+            "sanitized_text": processed["final_text"],
+            "text": processed["final_text"],
+            "stt_provider": (
+                "INJECTED_PROVIDER" if self.transcription_provider is not None
+                and transcript is None and not isinstance(audio_stream, str)
+                else "TEXT_BOUNDARY"
+            ),
+        }
 
     def process_ambient_conversation(self, speaker_signature: str, transcript: str) -> Dict[str, Any]:
         if not self.recording_authorized:
@@ -159,13 +191,13 @@ class VoiceJournalEngine:
         if not transcript.strip():
             return {"status": "EMPTY", "message": "No transcript supplied."}
 
-        processed = self.process_voice_transcript(transcript)
+        processed = self.process_voice_text(transcript)
         speaker_info = self.identify_speaker(speaker_signature)
         self.ledger.record_event(
             "SOCIAL_INTERACTION_LOGGED",
             {
                 "speaker": speaker_info["speaker"],
-                "transcript": processed["text"],
+                "transcript": processed["final_text"],
                 "raw_transcript": transcript,
                 "is_known_person": speaker_info["is_known"],
                 "privacy_status": "LOCAL_ONLY",
@@ -176,5 +208,5 @@ class VoiceJournalEngine:
             "status": "SUCCESS",
             "detected_speaker": speaker_info["speaker"],
             "is_known": speaker_info["is_known"],
-            "transcript": processed["text"],
+            "transcript": processed["final_text"],
         }
