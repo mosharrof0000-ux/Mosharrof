@@ -1,11 +1,13 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
+  "project_id": "mosharrof.core",
   "entities": [
     {
       "id": "core",
       "name": "Mosharrof Core",
       "responsibility": "coordination and governance",
       "brain": "core-brain",
+      "entity_path": "entities/core/ENTITY.json",
       "permissions": ["read", "write", "execute"],
       "scope": "core",
       "delete_allowed": false
@@ -13,17 +15,29 @@
     {
       "id": "chat",
       "name": "Chat Box",
-      "responsibility": "conversation interface",
+      "responsibility": "conversation interface and request routing",
       "brain": "chat-brain",
+      "entity_path": "entities/chat/ENTITY.json",
       "permissions": ["read", "message"],
       "scope": "chat",
       "delete_allowed": false
     },
     {
+      "id": "sidebar",
+      "name": "Sidebar",
+      "responsibility": "navigation and entity discovery",
+      "brain": "sidebar-brain",
+      "entity_path": "entities/sidebar/ENTITY.json",
+      "permissions": ["read", "navigate"],
+      "scope": "sidebar",
+      "delete_allowed": false
+    },
+    {
       "id": "ui",
       "name": "UI System",
-      "responsibility": "presentation and adaptive layout",
+      "responsibility": "presentation, adaptive layout and accessibility",
       "brain": "ui-brain",
+      "entity_path": "entities/ui/ENTITY.json",
       "permissions": ["read", "render"],
       "scope": "ui",
       "delete_allowed": false
@@ -31,8 +45,9 @@
     {
       "id": "voice",
       "name": "Voice Engine",
-      "responsibility": "voice input and social-memory processing",
+      "responsibility": "voice input and explicitly authorized social-memory processing",
       "brain": "voice-brain",
+      "entity_path": "entities/voice/ENTITY.json",
       "permissions": ["read", "process"],
       "scope": "voice",
       "delete_allowed": false
@@ -42,6 +57,7 @@
       "name": "Storage Engine",
       "responsibility": "file indexing and explicitly authorized organization",
       "brain": "storage-brain",
+      "entity_path": "entities/storage/ENTITY.json",
       "permissions": ["read", "organize"],
       "scope": "storage",
       "delete_allowed": false
@@ -51,6 +67,7 @@
       "name": "Tool Factory",
       "responsibility": "safe tool creation, registration and execution",
       "brain": "tool-brain",
+      "entity_path": "entities/tool_factory/ENTITY.json",
       "permissions": ["read", "create_tool", "execute_tool"],
       "scope": "tools",
       "delete_allowed": false
@@ -60,6 +77,7 @@
       "name": "Al-Quran Research",
       "responsibility": "Quran language research and evidence-based research workflows",
       "brain": "external-project://al-quran-research",
+      "entity_path": "entities/quran_research/ENTITY.json",
       "permissions": ["read", "research"],
       "scope": "tools/quran_research",
       "delete_allowed": false
