@@ -1,0 +1,12 @@
+{
+  "profiles":{
+    "core":{"create":true,"read":true,"update":true,"execute":true,"delete":false,"destructive":false},
+    "chat":{"create":false,"read":true,"update":false,"execute":true,"delete":false,"destructive":false},
+    "ui":{"create":true,"read":true,"update":true,"execute":true,"delete":false,"destructive":false},
+    "research":{"create":true,"read":true,"update":true,"execute":true,"delete":false,"destructive":false},
+    "voice":{"create":false,"read":true,"update":false,"execute":true,"delete":false,"destructive":false},
+    "storage":{"create":true,"read":true,"update":true,"execute":true,"move":true,"delete":false,"destructive":false},
+    "tool_factory":{"create":true,"read":true,"update":true,"execute":true,"delete":false,"destructive":false}
+  },
+  "hard_rules":["DELETE is always denied","Destructive operations are always denied","Temporary elevation must be task-scoped, audited and revoked"]
+}
