@@ -14,15 +14,24 @@ DELETE and destructive operations are permanently blocked.
 
 ### First-read architecture files
 
-- `config/project_manifest.json`
-- `config/entity_registry.json`
-- `policies/CORE_POLICY.md`
-- `docs/ARCHITECTURE.md`
+1. `config/project_manifest.json`
+2. `config/entity_registry.json`
+3. `policies/CORE_POLICY.md`
+4. `docs/ARCHITECTURE.md`
+
+The root `PROJECT_MANIFEST.json` and `ENTITY_REGISTRY.json` are synchronized compatibility maps; the `config/` files are canonical.
+
+### Entity structure
+
+Every registered entity has an isolated `entities/<entity>/ENTITY.json` contract. Entity brain/model selection remains replaceable through the model-adapter boundary.
 
 ### First research tool
 
-Al-Quran Research remains an independent project until explicit integration.
+Al-Quran Research remains an independent project until explicit integration. Its Mosharrof entity is a scoped tool boundary only.
 
 ## Live site
 
-GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
+GitHub Pages is deployed from `web/` by `.github/workflows/deploy-pages.yml`.
+
+Expected live URL:
+`https://mosharrof0000-ux.github.io/Mosharrof/`
