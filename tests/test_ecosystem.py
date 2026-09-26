@@ -224,3 +224,12 @@ def test_context_aware_voice_processing():
     assert result["corrected_text"] == "কুরআন গবেষণা"
     assert result["text"].endswith("।")
     assert voice.apply_smart_punctuation("কীভাবে কাজ করবে", question_hint=True).endswith("?")
+
+
+def test_voice_engine_smart_processing():
+    engine = VoiceJournalEngine()
+    result = engine.process_transcript("মোশারফ প্রজেক্ট করতেছি")
+    assert result["status"] == "SUCCESS"
+    assert result["final_text"] == "মোশাররফ প্রজেক্ট করছি।"
+    question = engine.process_transcript("কুরআন নিয়ে গবেষণা কীভাবে করব")
+    assert question["final_text"].endswith("?")
