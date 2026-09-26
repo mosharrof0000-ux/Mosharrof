@@ -1,0 +1,1 @@
+{"brains":[{"id":"mosharrof.core.brain","entity_id":"mosharrof.core","interface":"BrainAdapter","model_provider":"runtime-configured","model_id":"runtime-configured","state":"ready"}],"adapter_contract":{"required_methods":["understand","plan","act","explain"],"identity_persistence":true,"model_migration":true}}
