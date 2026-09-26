@@ -1,0 +1,11 @@
+{
+  "policy_version": "1.0.0",
+  "capability_formula": "model x permission x policy x scope x identity",
+  "global_denials": ["DELETE","DESTRUCTIVE_OPERATION"],
+  "profiles": {
+    "core":{"allow":["READ","CREATE","UPDATE","EXECUTE","DEPLOY"],"deny":["DELETE","DESTRUCTIVE_OPERATION"],"audit":true},
+    "chat":{"allow":["READ","CHAT"],"deny":["DELETE","DESTRUCTIVE_OPERATION","DEPLOY"]},
+    "ui":{"allow":["READ","UI_UPDATE"],"deny":["DELETE","DESTRUCTIVE_OPERATION","DEPLOY"]},
+    "tool_project":{"allow":["READ","EXECUTE"],"deny":["DELETE","DESTRUCTIVE_OPERATION"],"audit":true}
+  }
+}
