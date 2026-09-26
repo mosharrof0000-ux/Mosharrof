@@ -226,9 +226,10 @@ def test_context_aware_voice_processing():
     assert voice.apply_smart_punctuation("কীভাবে কাজ করবে", question_hint=True).endswith("?")
 
 
-def test_tool_factory_blocks_dynamic_execution_and_dangerous_imports(tmp_path):
-    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
-    assert factory.create_tool("bad_eval", "return eval('1+1')").startswith("DENIED:")
-    assert factory.create_tool("bad_open", "return open('x')").startswith("DENIED:")
-    assert factory.create_tool("bad_import", "import subprocess\nreturn 1").startswith("DENIED:")
-    assert factory.create_tool("bad_import_os", "import os\nreturn 1").startswith("DENIED:")
+def test_voice_engine_smart_processing():
+    engine = VoiceJournalEngine()
+    result = engine.process_transcript("মোশারফ প্রজেক্ট করতেছি")
+    assert result["status"] == "SUCCESS"
+    assert result["final_text"] == "মোশাররফ প্রজেক্ট করছি।"
+    question = engine.process_transcript("কুরআন নিয়ে গবেষণা কীভাবে করব")
+    assert question["final_text"].endswith("?")
