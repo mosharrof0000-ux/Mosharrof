@@ -26,3 +26,11 @@ def test_full_ecosystem_flow(tmp_path):
     assert result["status"] == "SUCCESS"
     assert result["intent"] == "RESEARCH"
     assert result["intent_clarity"] == 1.0
+
+
+def test_delete_is_hard_blocked():
+    result = MosharrofCoreBrain().monitor_sub_agent(
+        "test_entity", {"status": "PROCESSING", "operation": "DELETE"}
+    )
+    assert result["decision"] == "REJECTED"
+    assert result["reason"] == "DELETE_AND_DESTRUCTIVE_OPERATIONS_BLOCKED"
