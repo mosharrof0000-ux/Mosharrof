@@ -1,0 +1,1 @@
+import { defineConfig } from '@playwright/test'; export default defineConfig({testDir:'./visual-tests',timeout:90000,use:{headless:true,ignoreHTTPSErrors:true}});
