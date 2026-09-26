@@ -1,1 +1,1 @@
-{"id":"sidebar","type":"ui_entity","brain":"sidebar","responsibility":"Own navigation and entity discovery.","scope":"sidebar/*","permission_profile":"ui","memory":"entities/sidebar/memory","tools":"entities/sidebar/tools","audit":"entities/sidebar/audit"}
+{"id":"sidebar","type":"ui_entity","owner":"Mosharrof Core","brain":"sidebar","responsibility":"Own navigation and entity discovery.","scope":"sidebar/*","permission_profile":"ui","memory":"entities/sidebar/memory","tools":"entities/sidebar/tools","audit":"entities/sidebar/audit","delete_allowed":false}
