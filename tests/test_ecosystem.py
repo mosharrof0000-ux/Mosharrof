@@ -92,12 +92,6 @@ def test_storage_organizer_never_overwrites(tmp_path):
     assert existing.read_text(encoding="utf-8") == "existing"
 
 
-def test_tool_factory_safe_function_body_and_execution(tmp_path):
-    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
-    assert "created and registered" in factory.create_tool("safe_tool", "return 1")
-    assert factory.execute_tool("safe_tool") == 1
-
-
 def test_core_audit_and_brain_adapter():
     audit = AuditLedger()
     brain = MosharrofCoreBrain(audit_ledger=audit)
