@@ -1,0 +1,31 @@
+name: Mosharrof Visual Inspector
+
+on:
+  schedule:
+    - cron: "30 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-inspection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install browser
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Capture current UI
+        run: node scripts/visual_inspector.mjs
+      - name: Verify screenshot artifact
+        run: test -s artifacts/mosharrof-live.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-inspection
+          path: artifacts/mosharrof-live.png
