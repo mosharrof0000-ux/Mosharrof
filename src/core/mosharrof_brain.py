@@ -21,12 +21,15 @@ class MosharrofCoreBrain:
         self.active_entities=["core","chat","sidebar","quran_research"]
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
-        permission = self.permission_guard.check(operation, scope=scope or entity_id)
+        permission = self.permission_guard.check(
+            operation, scope=scope or entity_id, entity_scope=entity_id
+        )
         if permission["status"] == "DENIED":
             self.memory_ledger.record_event("ACTION_DENIED", permission)
             return permission
-        result = {"status":"ALLOWED","entity":entity_id,"operation":operation.upper(),"scope":scope}
-        self.memory_ledger.record_event("ACTION_ALLOWED", result)
+        result={"status":"ALLOWED","entity":entity_id,
+                "operation":operation.upper(),"scope":scope}
+        self.memory_ledger.record_event("ACTION_ALLOWED",result)
         return result
 
     def broadcast_system_command(self,command_type:str,payload:Dict[str,Any]):
@@ -37,6 +40,7 @@ class MosharrofCoreBrain:
         permission=self.permission_guard.check(
             action_report.get("operation","PROCESS"),
             scope=action_report.get("scope",entity_name),
+            entity_scope=action_report.get("entity_scope",entity_name),
             destructive=bool(action_report.get("destructive",False)))
         if permission["status"]=="DENIED":
             result={"decision":"REJECTED","entity":entity_name,
