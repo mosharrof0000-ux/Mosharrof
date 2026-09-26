@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "mosharrof.core",
+  "project_name": "Mosharrof",
+  "owner_name": "Mosharrof Karim",
+  "purpose": "Model-agnostic intelligent entity ecosystem.",
+  "core_principle": "Actual capability is bounded by brain, permission, policy, scope, identity.",
+  "default_branch": "main",
+  "live_site": "https://mosharrof0000-ux.github.io/Mosharrof/",
+  "deletion_policy": "DENY_ALWAYS",
+  "architecture": {
+    "core": "src/core",
+    "entities": "entities",
+    "brains": "brains",
+    "policies": "policies",
+    "tools": "tools",
+    "memory": "memory",
+    "audit": "audit",
+    "documentation": "docs",
+    "tests": "tests",
+    "web": "web"
+  },
+  "lifecycle": ["identity","brain","responsibility","permission","policy","memory","tools","communication","audit","version","test","approval","activation"],
+  "model_strategy": "Use adapters so models can change without changing entity identity, memory, responsibility or policy."
+}
