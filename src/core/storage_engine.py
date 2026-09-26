@@ -6,12 +6,14 @@ Mosharrof AI: Autonomous Device Storage & Memory Optimizer Engine
 import os
 import shutil
 from typing import Dict, Any, List
+from src.core.permission_engine import PermissionEngine
 
 class StorageEngine:
     def __init__(self, root_dir: str = "."):
         self.root_dir = root_dir
         self.file_index: Dict[str, Dict[str, Any]] = {}
         self.junk_extensions = [".tmp", ".log", ".chk", ".bak"]
+        self.permission_engine = PermissionEngine()
 
     def scan_and_index_storage(self, target_path: str = None) -> Dict[str, Any]:
         """মেমোরির প্রতিটি ফাইলের অবস্থান ইনডেক্স করা এবং জাঙ্ক ফাইল আলাদা করা"""
@@ -64,8 +66,11 @@ class StorageEngine:
         return f"দুঃখিত, মেমোরিতে '{query}' নামের কোনো ফাইল খুঁজে পাওয়া যায়নি।"
 
     def auto_organize_folder(self, folder_path: str) -> Dict[str, Any]:
-        """এলোমেলো ফোল্ডার থেকে টাইপ অনুযায়ী ফাইল আলাদা করে সাজানো"""
-        if not os.path.exists(folder_path):
+        """এলোমেলো ফোল্ডার থেকে টাইপ অনুযায়ী ফাইল আলাদা করে সাজানো।"""
+        decision = self.permission_engine.authorize("MOVE_FILES", scope=folder_path)
+        if decision["status"] != "ALLOWED":
+            return decision
+        if not os.path.isdir(folder_path):
             return {"status": "ERROR", "message": "ফোল্ডারটি পাওয়া যায়নি।"}
 
         categories = {
@@ -85,12 +90,16 @@ class StorageEngine:
                     if ext in ext_list:
                         target_dir = os.path.join(folder_path, cat)
                         os.makedirs(target_dir, exist_ok=True)
-                        shutil.move(file_path, os.path.join(target_dir, file))
+                        destination = os.path.join(target_dir, file)
+                        if os.path.exists(destination):
+                            continue
+                        shutil.move(file_path, destination)
                         moved_count += 1
                         break
 
         return {
             "status": "SUCCESS",
             "moved_files": moved_count,
+            "operation": "MOVE_FILES",
             "message": f"{moved_count} টি ফাইল ক্যাটাগরি অনুযায়ী ফোল্ডারে গুছিয়ে সাজানো হয়েছে।"
         }
