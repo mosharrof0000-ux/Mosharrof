@@ -1,4 +1,5 @@
 """Integration and safety tests for the Mosharrof core foundation."""
+
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
@@ -66,14 +67,23 @@ def test_storage_organization_is_explicitly_authorized(tmp_path):
 
 def test_tool_factory_blocks_destructive_source(tmp_path):
     factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
-    result = factory.create_tool("bad_tool", "import os\nos.remove('x')")
-    assert result.startswith("DENIED:")
+    samples = [
+        "import os\nos.remove('x')",
+        "__import__('os').remove('x')",
+        "import subprocess\nsubprocess.run(['echo', 'x'])",
+        "open('x', 'w').write('bad')",
+        "exec('print(1)')",
+    ]
+    for source in samples:
+        result = factory.create_tool("bad_tool", source)
+        assert result.startswith("DENIED:")
 
 
 def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
+
 
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
@@ -120,12 +130,15 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
     import json
     from pathlib import Path
+
     root = Path(__file__).resolve().parents[1]
     manifest = json.loads((root / "config/project_manifest.json").read_text(encoding="utf-8"))
     registry = json.loads((root / "config/entity_registry.json").read_text(encoding="utf-8"))
@@ -161,3 +174,18 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_smart_voice_punctuation_and_context():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("কীভাবে কাজ করবে") == "কীভাবে কাজ করবে?"
+    assert voice.apply_smart_punctuation("মোশাররফ প্রজেক্ট") == "মোশাররফ প্রজেক্ট।"
+    result = voice.correct_contextual_grammar("মোশারফ প্রজেক্ট মোশারফ এর")
+    assert result["corrected"] == "মোশাররফ প্রজেক্ট মোশাররফের"
+    processed = voice.process_smart_transcript("মোশারফ প্রজেক্ট")
+    assert processed["text"] == "মোশাররফ প্রজেক্ট।"
+
+
+def test_raw_audio_requires_asr_adapter():
+    voice = VoiceJournalEngine()
+    assert voice.sanitize_phonetic_speech(b"raw audio")["status"] == "REQUIRES_ASR"
