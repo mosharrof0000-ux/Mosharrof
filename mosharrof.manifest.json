@@ -1,0 +1,6 @@
+{
+  "project": {"id": "mosharrof", "name": "Mosharrof", "owner": "Mosharrof Karim", "architecture": "modular-entity-brain", "version": "0.1.0"},
+  "capability_formula": "AI_Brain x Permission x Policy x Scope x Identity",
+  "hard_rules": {"delete_operations": "DENIED", "destructive_operations": "DENIED", "production_changes": "PR_REQUIRED", "model_runtime": "adapter_based"},
+  "registries": {"entities": "config/entities.json", "policies": "config/policy.json"}
+}
