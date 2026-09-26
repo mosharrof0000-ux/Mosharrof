@@ -26,6 +26,12 @@ jobs:
           BASE_URL: http://127.0.0.1:4173
           BASELINE_URL: http://127.0.0.1:4174
         run: npm run visual:test
+      - name: AI visual screenshot review
+        if: ${{ secrets.GEMINI_API_KEY != '' }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 scripts/visual_ai_review.py
+
       - name: Live URL browser verification
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
