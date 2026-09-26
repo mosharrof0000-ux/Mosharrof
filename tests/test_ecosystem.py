@@ -20,9 +20,11 @@ def test_full_ecosystem_flow(tmp_path):
     assert brain.system_status()["delete_operations"] == "BLOCKED"
     assert voice_engine.toggle_listening(True)["listening_state"] == "BLOCKED"
     assert voice_engine.toggle_listening(True, authorized=True)["listening_state"] == "ACTIVE"
-    assert voice_engine.process_ambient_conversation(
-        "SPEAKER_TEST_01", "Test conversation"
-    )["status"] == "SUCCESS"
+    conversation = voice_engine.process_ambient_conversation(
+        "SPEAKER_TEST_01", "গবেষণার জন্য কোরআন রিসার্চ খুঁজে দাও"
+    )
+    assert conversation["status"] == "SUCCESS"
+    assert conversation["transcript"].endswith("।")
 
     sample = tmp_path / "sample.txt"
     sample.write_text("test", encoding="utf-8")
@@ -75,6 +77,7 @@ def test_runtime_import_smoke():
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
 
+
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
     folder.mkdir()
@@ -120,7 +123,9 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
@@ -161,3 +166,17 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_context_aware_voice_processing():
+    voice = VoiceJournalEngine()
+    result = voice.process_voice_text("কোরআন রিসার্চ কোথায়")
+    assert result["status"] == "SUCCESS"
+    assert result["corrected_text"] == "কুরআন রিসার্চ কোথায়"
+    assert result["text"].endswith("?")
+
+
+def test_voice_audio_provider_boundary():
+    voice = VoiceJournalEngine()
+    assert voice.sanitize_phonetic_speech(b"audio")["status"] == "PROVIDER_REQUIRED"
+    assert voice.sanitize_phonetic_speech("কোরআন রিসার্চ")["text"].endswith("।")
