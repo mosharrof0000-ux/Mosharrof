@@ -2,43 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#070a10">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Mosharrof Karim — Intelligent Entity and AI Brain Architecture">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="stylesheet" href="./styles.css">
   <title>Mosharrof Karim</title>
+  <style>
+    :root{color-scheme:dark}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,sans-serif;background:#080808;color:#f5f5f5;min-height:100vh}
+    main{max-width:760px;margin:auto;padding:56px 20px}
+    .card{border:1px solid #2b2b2b;border-radius:22px;padding:28px;background:#101010}
+    h1{font-size:42px;margin:0 0 10px}
+    p{line-height:1.65;color:#cfcfcf}
+    .status{display:inline-flex;padding:8px 12px;border:1px solid #333;border-radius:999px;font-size:14px}
+    a{color:#fff}
+    pre{white-space:pre-wrap;background:#070707;padding:16px;border-radius:14px;overflow:auto}
+  </style>
 </head>
 <body>
-  <div class="shell">
-    <header class="top"><div class="brand">MOSHARROF CORE</div><div class="status">● Foundation online</div></header>
-    <main class="main">
-      <section class="hero">
-        <div class="status">ENTITY-FIRST · MODEL-AGNOSTIC</div>
-        <h1>Mosharrof</h1>
-        <p class="muted"><strong>Mosharrof Karim</strong> — Intelligent Entity and AI Brain Architecture.</p>
-        <p class="ok">Permanent safety boundary: DELETE and destructive operations are blocked.</p>
-        <div class="grid">
-          <div class="item"><strong>Core</strong><span class="muted">Coordination and governance</span></div>
-          <div class="item"><strong>Entities</strong><span class="muted">Independent identity and responsibility</span></div>
-          <div class="item"><strong>Brains</strong><span class="muted">Replaceable model-adapter boundary</span></div>
-          <div class="item"><strong>Memory</strong><span class="muted">State, history and learning records</span></div>
-          <div class="item"><strong>Policy</strong><span class="muted">Permission and scope enforcement</span></div>
-          <div class="item"><strong>Audit</strong><span class="muted">Traceable changes and activation</span></div>
-        </div>
-        <div id="console" class="console" aria-live="polite"></div>
-      </section>
-    </main>
-    <div class="inputbar">
-      <form id="chatForm">
-        <input id="chatInput" autocomplete="off" placeholder="Ask the Mosharrof foundation...">
-        <button type="submit">Send</button>
-      </form>
-    </div>
-  </div>
-  <script src="./app.js"></script>
-  <script>
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  </script>
+<main>
+  <section class="card">
+    <span class="status" id="status">Checking core…</span>
+    <h1>Mosharrof Karim</h1>
+    <p>Intelligent Entity and AI Brain Architecture</p>
+    <p>This page is the public entry point for the Mosharrof Core project.</p>
+    <pre id="core">Loading project contract…</pre>
+    <p><a href="https://github.com/mosharrof0000-ux/Mosharrof">Open GitHub Repository</a></p>
+  </section>
+</main>
+<script>
+fetch("../config/project_manifest.json")
+  .then(r=>r.ok?r.json():Promise.reject(r.status))
+  .then(m=>{
+    document.querySelector("#status").textContent="Core contract available";
+    document.querySelector("#core").textContent=JSON.stringify({
+      project_id:m.project_id,name:m.name,owner:m.owner,
+      model_strategy:m.model_strategy,first_tool_project:m.first_tool_project,
+      delete_allowed:m.immutable_safety_rules.delete
+    },null,2);
+  })
+  .catch(()=>document.querySelector("#status").textContent="Core page online");
+</script>
 </body>
 </html>
