@@ -15,6 +15,7 @@ class PermissionGuard:
     DEFAULT_PERMISSIONS = {
         "core": {"READ", "WRITE", "EXECUTE", "COORDINATE", "REGISTER", "AUDIT"},
         "chat": {"READ", "MESSAGE"},
+        "sidebar": {"READ", "RENDER"},
         "ui": {"READ", "RENDER"},
         "voice": {"READ", "PROCESS"},
         "storage": {"READ", "ORGANIZE"},
