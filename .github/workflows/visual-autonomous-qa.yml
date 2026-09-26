@@ -1,0 +1,34 @@
+name: Mosharrof Visual Autonomous QA
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "30 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm init -y && npm install playwright && npx playwright install --with-deps chromium
+      - if: github.event_name == 'pull_request'
+        run: nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
+      - if: github.event_name == 'pull_request'
+        run: node scripts/visual_capture.mjs http://127.0.0.1:4173/ artifacts/proposed.png
+      - run: node scripts/visual_capture.mjs https://mosharrof0000-ux.github.io/Mosharrof/ artifacts/live.png
+      - name: AI visual analysis
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 scripts/visual_ai_audit.py artifacts/*.png
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-audit
+          path: |
+            artifacts/
+            visual-audit-report.json
