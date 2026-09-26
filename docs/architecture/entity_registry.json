@@ -1,0 +1,15 @@
+{
+  "registry_version": "1.0",
+  "entities": [
+    {
+      "entity_id": "mosharrof.core",
+      "name": "Mosharrof Core",
+      "responsibility": "Coordinate entities, enforce policy, route work, and maintain system state.",
+      "brain": {"adapter": "model-agnostic", "status": "foundation"},
+      "permissions": ["coordinate", "register", "route", "audit"],
+      "forbidden": ["DELETE", "DESTRUCTIVE"],
+      "status": "active"
+    }
+  ],
+  "registration_rule": "Every new meaningful component must be registered before activation."
+}
