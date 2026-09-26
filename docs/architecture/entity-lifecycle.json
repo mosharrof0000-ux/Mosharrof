@@ -1,0 +1,5 @@
+{
+  "lifecycle": ["DESIGN", "REGISTER", "CONFIGURE", "TEST", "APPROVE", "ACTIVATE", "AUDIT", "UPGRADE"],
+  "temporary_permission_flow": ["GRANT_FOR_TASK", "AUDIT", "TASK_COMPLETE", "REVOKE"],
+  "hard_stop": ["DELETE", "DESTRUCTIVE_OPERATION"]
+}
