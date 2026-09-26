@@ -198,3 +198,9 @@ def test_voice_smart_punctuation_and_contextual_correction():
     processed = engine.sanitize_phonetic_speech(b"raw-audio")
     assert processed["status"] == "SUCCESS"
     assert processed["sanitized_text"].endswith("?")
+
+
+def test_tool_factory_blocks_unsafe_imports(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    result = factory.create_tool("import_tool", "import pathlib\nreturn pathlib.Path('.')")
+    assert result.startswith("DENIED:")
