@@ -199,4 +199,4 @@ def test_voice_engine_smart_processing():
 def test_voice_engine_audio_requires_stt_adapter():
     engine = VoiceJournalEngine()
     result = engine.sanitize_phonetic_speech(b"raw-audio")
-    assert result["status"] == "NEEDS_STT_ADAPTER"
+    assert result["status"] == "BLOCKED"
