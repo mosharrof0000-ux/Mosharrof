@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const base=process.argv[2] || "http://127.0.0.1:4173";
+const browser=await chromium.launch({headless:true});
+const desktop=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
+await desktop.goto(base,{waitUntil:"networkidle"});
+await desktop.screenshot({path:"artifacts/visual/desktop.png",fullPage:true});
+await desktop.waitForTimeout(2000);
+await desktop.screenshot({path:"artifacts/visual/desktop-after-2s.png",fullPage:true});
+const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true});
+await mobile.goto(base,{waitUntil:"networkidle"});
+await mobile.screenshot({path:"artifacts/visual/mobile.png",fullPage:true});
+await mobile.waitForTimeout(2000);
+await mobile.screenshot({path:"artifacts/visual/mobile-after-2s.png",fullPage:true});
+await browser.close();

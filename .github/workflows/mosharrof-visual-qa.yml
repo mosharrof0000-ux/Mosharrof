@@ -1,0 +1,37 @@
+name: Mosharrof Visual QA
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: URL to inspect
+        required: false
+        default: https://mosharrof0000-ux.github.io/Mosharrof/
+        type: string
+  schedule:
+    - cron: "30 */6 * * *"
+permissions:
+  contents: read
+jobs:
+  visual-inspection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with: {node-version: 22}
+      - run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Capture real rendered screenshots
+        env:
+          TARGET_URL: ${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
+        run: node scripts/visual_qa_capture.mjs
+      - name: AI visual inspection
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 scripts/visual_qa_analyze.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-qa-${{ github.run_id }}
+          path: visual-qa/
+          retention-days: 30
