@@ -30,6 +30,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run autonomous agent
+        id: agent
         env:
           GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN: \${{ github.token }}
@@ -47,14 +48,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          PR=$(gh pr list --base main --head "agent/auto-*" --state open --json number --jq '.[0].number')
-          test -n "$PR"
-          gh pr checks "$PR" --watch
+          gh pr checks "${{ steps.agent.outputs.pr_number }}" --watch
 
       - name: Enable verified auto-merge
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          PR=$(gh pr list --base main --head "agent/auto-*" --state open --json number --jq '.[0].number')
-          test -n "$PR"
-          gh pr merge "$PR" --auto --squash
+          gh pr merge "${{ steps.agent.outputs.pr_number }}" --auto --squash
