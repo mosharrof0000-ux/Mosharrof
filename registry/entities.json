@@ -1,0 +1,9 @@
+{
+  "schema_version":"1.0.0",
+  "entities":[
+    {"id":"mosharrof.core","type":"core","name":"Mosharrof Core","responsibility":"Coordinate entities and enforce system policy.","brain":"mosharrof.core.brain","permission_profile":"core.max-necessary-no-delete","scope":"ecosystem","status":"active"},
+    {"id":"mosharrof.chat","type":"ui_entity","name":"Chat Box","responsibility":"Receive user input and route work.","brain":"mosharrof.chat.brain","permission_profile":"chat.standard","scope":"chat","status":"foundation"},
+    {"id":"mosharrof.sidebar","type":"ui_entity","name":"Sidebar","responsibility":"Navigation and entity discovery.","brain":"mosharrof.sidebar.brain","permission_profile":"sidebar.navigation","scope":"navigation","status":"foundation"},
+    {"id":"mosharrof.al-quran-research","type":"tool_project","name":"Al-Quran Research","responsibility":"Independent Quran research tool under Mosharrof.","brain":"tool.al-quran-research.brain","permission_profile":"research.tool","scope":"tool","status":"planned"}
+  ]
+}
