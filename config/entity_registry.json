@@ -34,6 +34,17 @@
         "render"
       ],
       "delete_allowed": false
+    },
+    {
+      "id": "quran-research",
+      "name": "Al-Quran Research",
+      "responsibility": "Quran language research and evidence-based research workflows.",
+      "brain": "external-project://al-quran-research",
+      "permissions": [
+        "read",
+        "research"
+      ],
+      "delete_allowed": false
     }
   ]
 }
