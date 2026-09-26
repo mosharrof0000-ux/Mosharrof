@@ -3,6 +3,8 @@ from pathlib import Path
 
 from src.core.model_adapter import DeterministicAdapter, ModelAdapter
 from src.core.permission_guard import PermissionGuard
+from src.core.project_manifest import ProjectManifest
+from src.core.entity_registry import EntityRegistry
 
 
 def test_manifest_and_registry_are_machine_readable():
@@ -14,6 +16,15 @@ def test_manifest_and_registry_are_machine_readable():
     assert manifest["immutable_safety_rules"]["destructive_operations"] is False
     assert registry["entities"]
     assert all(entity["delete_allowed"] is False for entity in registry["entities"])
+
+
+def test_manifest_and_registry_loaders():
+    manifest = ProjectManifest()
+    registry = EntityRegistry()
+    assert manifest.project_id == "mosharrof.core"
+    assert manifest.project_name == "Mosharrof"
+    assert registry.get("core")["delete_allowed"] is False
+    assert registry.get("quran_research")["scope"] == "tools/quran_research"
 
 
 def test_model_adapter_contract():
