@@ -1,9 +1,5 @@
-"""Mosharrof Core runtime entry point.
+"""Mosharrof Core runtime entry point."""
 
-The Core coordinates registered entities and keeps capability behind the
-identity, permission, policy and scope boundaries. Legacy entity modules remain
-available but are not required to boot the Core.
-"""
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
 from src.core.mosharrof_brain import MosharrofCoreBrain
@@ -17,9 +13,7 @@ def boot_mosharrof():
     return brain
 
 
-# Backward-compatible public entry point used by existing smoke tests.
-def boot_mosharrof_ai():
-    return boot_mosharrof()
+boot_mosharrof_ai = boot_mosharrof
 
 
 def main():

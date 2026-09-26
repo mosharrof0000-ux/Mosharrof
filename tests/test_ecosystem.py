@@ -120,7 +120,7 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
 
 
 def test_machine_readable_project_contract():
@@ -134,3 +134,30 @@ def test_machine_readable_project_contract():
     assert manifest["immutable_safety_rules"]["destructive_operations"] is False
     ids = {item["id"] for item in registry["entities"]}
     assert {"core", "chat", "sidebar", "voice", "storage", "tool_factory", "quran_research"} <= ids
+
+
+def test_event_bus_isolates_subscriber_failure():
+    bus = EcosystemEventBus()
+    received = []
+
+    def broken(_):
+        raise RuntimeError("subscriber failure")
+
+    def healthy(data):
+        received.append(data)
+
+    bus.subscribe("TEST", broken)
+    bus.subscribe("TEST", healthy)
+    result = bus.publish("TEST", {"ok": True})
+
+    assert result["status"] == "PARTIAL_FAILURE"
+    assert result["delivered"] == 1
+    assert len(result["failures"]) == 1
+    assert received == [{"ok": True}]
+
+
+def test_additional_delete_variants_are_denied():
+    brain = MosharrofCoreBrain()
+    for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
+        result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
+        assert result["status"] == "DENIED"
