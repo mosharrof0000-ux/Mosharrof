@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import { PNG } from 'pngjs';
+import pixelmatch from 'pixelmatch';
+const args=process.argv.slice(2);
+const a=args[0],b=args[1],out=args[2];
+const A=PNG.sync.read(fs.readFileSync(a));
+const B=PNG.sync.read(fs.readFileSync(b));
+if(A.width!==B.width||A.height!==B.height) process.exit(1);
+const diff=new PNG({width:A.width,height:A.height});
+const n=pixelmatch(A.data,B.data,diff.data,A.width,A.height,{threshold:0.12});
+fs.writeFileSync(out,PNG.sync.write(diff));
+const ratio=n/(A.width*A.height);
+console.log(JSON.stringify({differentPixels:n,totalPixels:A.width*A.height,ratio}));
+if(ratio>0.18) process.exit(2);
