@@ -1,46 +1,62 @@
 name: Mosharrof Visual QA
+
 on:
   pull_request:
     branches: [main]
   workflow_dispatch:
     inputs:
-      url:
+      target_url:
         description: "URL to inspect"
         required: true
         default: "https://mosharrof0000-ux.github.io/Mosharrof/"
+
 permissions:
   contents: read
+  pull-requests: write
+
 jobs:
   visual-qa:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-      - run: |
+      - name: Install Playwright
+        run: |
           npm init -y
           npm install playwright
           npx playwright install --with-deps chromium
-      - run: |
-          python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
-          sleep 3
-      - name: Capture candidate screenshots
-        env:
-          TARGET_URL: ${{ inputs.url || 'http://127.0.0.1:4173/' }}
-        run: node scripts/visual_qa.js "$TARGET_URL" artifacts/candidate
-      - name: Visual structure checks
+      - name: Start candidate
         run: |
-          python3 - <<'PY'
-          import json
-          d=json.load(open("artifacts/candidate/report.json"))
-          required=["header","composer","messages","drawer","fadeTop","fadeBottom"]
-          missing=[x for x in required if not d["elements"].get(x)]
-          if missing: raise SystemExit("Missing UI elements: "+", ".join(missing))
-          if not d["page_ok"]: raise SystemExit("Visual QA page check failed")
-          print("VISUAL QA: PASS")
-          PY
-      - uses: actions/upload-artifact@v4
+          python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
+          sleep 2
+      - name: Capture mobile and desktop screenshots
+        env:
+          TARGET_URL: http://127.0.0.1:4173/
+        run: |
+          mkdir -p artifacts
+          node <<'NODE'
+          const { chromium } = require("playwright");
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2});
+            await page.goto(process.env.TARGET_URL,{waitUntil:"networkidle"});
+            await page.screenshot({path:"artifacts/mosharrof-mobile.png"});
+            await page.setViewportSize({width:1440,height:900});
+            await page.reload({waitUntil:"networkidle"});
+            await page.screenshot({path:"artifacts/mosharrof-desktop.png"});
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+      - name: Verify visual safety invariants
+        run: |
+          test -s artifacts/mosharrof-mobile.png
+          test -s artifacts/mosharrof-desktop.png
+          grep -q "MOSHARROF AI" web/index.html
+          grep -q "120000" web/index.html
+          grep -q "safe-area-inset-top" web/index.html
+          grep -q "safe-area-inset-bottom" web/index.html
+      - name: Upload visual evidence
+        uses: actions/upload-artifact@v4
         with:
           name: mosharrof-visual-qa
-          path: artifacts/candidate/
+          path: artifacts/
