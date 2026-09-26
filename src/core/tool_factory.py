@@ -1,4 +1,9 @@
-"""Dynamic tool registry with an enforced destructive-operation boundary."""
+"""Dynamic tool registry with an enforced destructive-operation boundary.
+
+Dynamic tools run inside the Mosharrof process, so source validation is deliberately
+conservative. The factory rejects destructive APIs, import-based escape routes and
+Python introspection paths that could bypass the permanent DELETE boundary.
+"""
 
 import ast
 import importlib.util
@@ -13,15 +18,20 @@ class ToolFactory:
     BLOCKED_NAMES = {
         "eval", "exec", "compile", "open", "__import__", "input",
         "globals", "locals", "vars", "breakpoint",
+        "getattr", "setattr", "delattr",
     }
     BLOCKED_MODULES = {
         "os", "sys", "subprocess", "shutil", "socket", "pathlib",
         "requests", "httpx", "urllib", "ctypes", "pickle",
+        "importlib", "runpy", "builtins", "tempfile", "multiprocessing",
     }
     BLOCKED_ATTRIBUTES = {
         "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
         "system", "popen", "run", "call", "check_call", "check_output",
         "chmod", "chown",
+    }
+    BLOCKED_IDENTIFIER_NAMES = {
+        "__builtins__", "__loader__", "__spec__", "__package__", "__cached__",
     }
 
     def __init__(self, tools_dir: str = "src/tools"):
@@ -38,10 +48,15 @@ class ToolFactory:
             tree = ast.parse(wrapped)
         except SyntaxError:
             return True
+
         for node in ast.walk(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 if any(alias.name.split(".")[0].lower() in cls.BLOCKED_MODULES for alias in node.names):
                     return True
+
+            if isinstance(node, ast.Name) and node.id in cls.BLOCKED_IDENTIFIER_NAMES:
+                return True
+
             if isinstance(node, ast.Call):
                 if isinstance(node.func, ast.Name) and node.func.id in cls.BLOCKED_NAMES:
                     return True
@@ -51,8 +66,10 @@ class ToolFactory:
                     "DELETE", "DESTROY", "ERASE", "PURGE", "DROP_DATABASE"
                 }:
                     return True
+
             if isinstance(node, ast.Attribute) and node.attr.startswith("__"):
                 return True
+
         return False
 
     def _load_existing_tools(self):
