@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "transport": "event_bus",
+  "message_requirements": [
+    "message_id",
+    "sender_entity",
+    "receiver_entity",
+    "intent",
+    "payload",
+    "timestamp",
+    "policy_context"
+  ],
+  "rule": "Entities communicate through explicit contracts and do not silently exceed responsibility."
+}
