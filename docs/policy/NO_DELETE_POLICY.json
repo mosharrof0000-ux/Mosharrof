@@ -1,0 +1,1 @@
+{"policy_id":"mosharrof.no-delete.v1","version":"1.0.0","global_denials":["DELETE","DESTRUCTIVE"],"rules":["least privilege","scope enforcement","audit required for mutations","temporary elevation must be task-scoped and audited"]}
