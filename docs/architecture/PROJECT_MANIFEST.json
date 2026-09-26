@@ -1,0 +1,29 @@
+{
+  "project_id": "mosharrof.core",
+  "name": "Mosharrof",
+  "owner_identity": "Mosharrof Karim",
+  "architecture_version": "1.0.0",
+  "role": "root_core",
+  "principles": [
+    "entity_isolation",
+    "model_agnostic_brains",
+    "permission_as_capability_boundary",
+    "auditability",
+    "no_delete",
+    "test_before_activation"
+  ],
+  "core": {
+    "brain": "src/core/mosharrof_brain.py",
+    "event_bus": "src/core/event_bus.py",
+    "memory": "src/core/memory_ledger.py",
+    "tool_factory": "src/core/tool_factory.py"
+  },
+  "registries": {
+    "entities": "docs/architecture/ENTITY_REGISTRY.json"
+  },
+  "policies": {
+    "core": "src/policies/core_policy.json"
+  },
+  "lifecycle": "docs/architecture/lifecycle.md",
+  "future_model_adapter": "src/adapters/model/"
+}
