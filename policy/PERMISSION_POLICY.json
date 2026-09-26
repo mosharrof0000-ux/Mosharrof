@@ -1,0 +1,10 @@
+{
+  "policy_id": "mosharrof.permission.v1",
+  "rules": [
+    {"id": "NO_DELETE", "effect": "DENY", "operation": "DELETE", "permanent": true},
+    {"id": "NO_DESTRUCTIVE_BYPASS", "effect": "DENY", "condition": "destructive == true"},
+    {"id": "ENTITY_SCOPE", "effect": "DENY", "condition": "requested_scope_outside_entity_scope"},
+    {"id": "AUDIT_REQUIRED", "effect": "REQUIRE", "condition": "write_or_permission_change"},
+    {"id": "TEMPORARY_PERMISSION", "effect": "ALLOW_WITH_AUDIT", "condition": "task_bound_and_expiring"}
+  ]
+}
