@@ -1,0 +1,82 @@
+name: Mosharrof Autonomous Work Cycle
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: mosharrof-autonomous
+  cancel-in-progress: true
+
+jobs:
+  autonomous:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.action == 'opened') || (github.event_name == 'issue_comment' && github.event.action == 'created' && contains(github.event.comment.body, '/mosharrof'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main snapshot
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Install runtime dependencies
+        run: |
+          python3 -m pip install -r requirements.txt
+          python3 -m pip install requests
+
+      - name: Baseline tests
+        run: python3 -m pytest -q
+
+      - name: Build task
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          python3 - <<'PY'
+          import os
+          event=os.environ.get("EVENT_NAME","schedule")
+          if event=="schedule":
+              task="Perform a conservative 6-hour health/audit cycle. Find only clear, testable defects or safe improvements. If nothing is justified, make no change."
+          elif event=="workflow_dispatch":
+              task="Perform a conservative health/audit cycle and make only clearly justified, testable improvements."
+          elif event=="issues":
+              task=os.environ.get("ISSUE_TITLE","")+"\n"+os.environ.get("ISSUE_BODY","")
+          else:
+              task=os.environ.get("COMMENT_BODY","")
+          open("/tmp/task.txt","w",encoding="utf-8").write(task[:12000])
+          PY
+
+      - name: Autonomous planner and patcher
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          test -n "$GEMINI_API_KEY"
+          python3 .github/scripts/mosharrof_agent.py /tmp/task.txt
+
+      - name: Full verification
+        run: python3 -m pytest -q
+
+      - name: Protected change-surface check
+        shell: bash
+        run: |
+          if git diff --name-only HEAD~1 2>/dev/null | grep -E '^\.github/workflows/(deploy-pages|verification-gate)\.yml$|^CODEOWNERS$' >/dev/null; then
+            echo "Protected deployment/security file was modified."
+            exit 1
+          fi
+          if git diff HEAD~1 -- . | grep -nE 'rm -rf|git push --force|git reset --hard|gh repo delete|delete-repository' >/dev/null; then
+            echo "Destructive operation detected."
+            exit 1
+          fi
