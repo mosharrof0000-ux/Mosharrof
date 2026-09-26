@@ -70,3 +70,51 @@ def test_tool_factory_blocks_destructive_source(tmp_path):
 def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof_ai)
+
+
+def test_event_bus_isolates_subscriber_failure():
+    bus = EcosystemEventBus()
+    received = []
+
+    def broken(_):
+        raise RuntimeError("subscriber failure")
+
+    def healthy(data):
+        received.append(data)
+
+    bus.subscribe("TEST", broken)
+    bus.subscribe("TEST", healthy)
+    result = bus.publish("TEST", {"ok": True})
+
+    assert result["status"] == "PARTIAL_FAILURE"
+    assert result["delivered"] == 1
+    assert len(result["failures"]) == 1
+    assert received == [{"ok": True}]
+
+
+def test_storage_organization_avoids_overwrite(tmp_path):
+    folder = tmp_path / "files"
+    folder.mkdir()
+    documents = folder / "Documents"
+    documents.mkdir()
+    (folder / "note.txt").write_text("new", encoding="utf-8")
+    (documents / "note.txt").write_text("existing", encoding="utf-8")
+
+    result = StorageEngine(root_dir=str(tmp_path)).auto_organize_folder(str(folder))
+
+    assert result["status"] == "SUCCESS"
+    assert (documents / "note.txt").read_text(encoding="utf-8") == "existing"
+    assert (documents / "note__1.txt").read_text(encoding="utf-8") == "new"
+
+
+def test_tool_factory_execution_has_permission_boundary(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    result = factory.permission_engine.authorize("EXECUTE_TOOL", scope="tool_factory")
+    assert result["status"] == "ALLOWED"
+
+
+def test_additional_delete_variants_are_denied():
+    brain = MosharrofCoreBrain()
+    for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
+        result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
+        assert result["status"] == "DENIED"
