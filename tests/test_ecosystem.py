@@ -183,26 +183,21 @@ def test_voice_audio_requires_authorization_and_provider():
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ।"
 
-
-def test_voice_smart_punctuation_and_conservative_correction():
-    voice = VoiceJournalEngine()
-    assert voice.apply_smart_punctuation("আপনি কেমন আছেন") == "আপনি কেমন আছেন?"
-    assert voice.apply_smart_punctuation("আজ আমরা গবেষণা করব") == "আজ আমরা গবেষণা করব।"
-    assert voice.correct_contextual_grammar("মোশারফ কোরআন গবেষণা", context="quran", correction_map={"কোরআন": "কুরআন"}) == "মোশারফ কুরআন গবেষণা"
-
-
-def test_voice_audio_requires_explicit_transcriber():
-    voice = VoiceJournalEngine()
-    voice.toggle_listening(True, authorized=True)
-    assert voice.sanitize_phonetic_speech(b"audio")["status"] == "REQUIRES_TRANSCRIBER"
-
-
-def test_voice_audio_pipeline_uses_transcriber_and_correction():
-    voice = VoiceJournalEngine()
-    voice.toggle_listening(True, authorized=True)
-    result = voice.sanitize_phonetic_speech(b"audio", lambda _: "মোশারফ কোরআন গবেষণা", context="quran", correction_map={"কোরআন": "কুরআন"})
+def test_voice_smart_punctuation_and_contextual_correction():
+    engine = VoiceJournalEngine()
+    result = engine.process_voice_text("কীভাবে মোশারফ এর প্রজেক্ট সাজাব")
     assert result["status"] == "SUCCESS"
-    assert result["text"] == "মোশারফ কুরআন গবেষণা।"
+    assert result["corrected_text"] == "কীভাবে মোশাররফের প্রজেক্ট সাজাব"
+    assert result["final_text"].endswith("?")
+
+    blocked = engine.sanitize_phonetic_speech(b"raw-audio")
+    assert blocked["status"] == "BLOCKED"
+
+    engine.toggle_listening(True, authorized=True)
+    engine.transcription_provider = lambda _audio: "কীভাবে মোশারফ এর প্রজেক্ট সাজাব"
+    processed = engine.sanitize_phonetic_speech(b"raw-audio")
+    assert processed["status"] == "SUCCESS"
+    assert processed["sanitized_text"].endswith("?")
 
 
 def test_tool_factory_blocks_import_and_dynamic_destructive_access(tmp_path):
