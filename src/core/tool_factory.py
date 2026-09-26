@@ -19,7 +19,16 @@ class ToolFactory:
     def _load_existing_tools(self):
         for filename in os.listdir(self.tools_dir):
             if filename.endswith(".py") and not filename.startswith("__"):
-                self._import_and_register(filename[:-3])
+                tool_name = filename[:-3]
+                path = os.path.join(self.tools_dir, filename)
+                try:
+                    with open(path, "r", encoding="utf-8") as handle:
+                        source = handle.read()
+                    if self._contains_blocked_operation(source):
+                        continue
+                except OSError:
+                    continue
+                self._import_and_register(tool_name)
 
     @staticmethod
     def _contains_blocked_operation(code_body: str) -> bool:
