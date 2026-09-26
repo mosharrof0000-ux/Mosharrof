@@ -1,0 +1,9 @@
+{
+  "id": "quran_research",
+  "name": "Al-Quran Research",
+  "responsibility": "Quran language research and evidence-based research workflows",
+  "brain": "external-project://al-quran-research",
+  "permission_profile": "research",
+  "delete_allowed": false,
+  "status": "planned"
+}
