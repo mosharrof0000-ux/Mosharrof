@@ -147,11 +147,11 @@ body:after{
       <button>📖 শব্দ গবেষণা</button><button>⌕ আয়াত বিশ্লেষণ</button><button>▣ Research ID</button><button>⋯ আরও</button>
     </div>
     <div class="composer">
-      <button class="icon" aria-label="যোগ">＋</button>
+      <button class="icon" id="shot" aria-label="স্ক্রিনশট বিশ্লেষণ">▧</button><input id="shotFile" type="file" accept="image/*" hidden><button class="icon" aria-label="যোগ">＋</button>
       <input id="input" placeholder="আপনার প্রশ্ন লিখুন..." autocomplete="off">
       <button class="send" id="send" aria-label="পাঠান">➤</button>
     </div>
-  </main>
+  <div id="shotPanel" style="display:none;position:absolute;left:12px;right:12px;bottom:140px;z-index:44;padding:14px;border:1px solid rgba(160,215,255,.22);border-radius:22px;background:rgba(7,22,43,.78);backdrop-filter:blur(20px)"><div style="font-size:13px;margin-bottom:8px">📷 স্ক্রিনশট বিশ্লেষণ</div><img id="shotPreview" alt="স্ক্রিনশট" style="display:none;max-height:180px;max-width:100%;border-radius:14px;margin-bottom:8px"><div id="shotResult" style="font-size:13px;line-height:1.6;color:#dcecff">ছবি নির্বাচন করুন।</div></div></main>
 
   <div class="scrim" id="scrim"></div>
   <aside class="drawer" id="drawer" aria-label="সাইডবার">
@@ -199,6 +199,9 @@ const drawer=document.getElementById('drawer'),scrim=document.getElementById('sc
 function toggleDrawer(){drawer.classList.toggle('open');scrim.classList.toggle('open')}
 document.getElementById('menu').onclick=toggleDrawer;scrim.onclick=toggleDrawer;
 const input=document.getElementById('input'),messages=document.getElementById('messages');
+const shot=document.getElementById('shot'),shotFile=document.getElementById('shotFile'),shotPanel=document.getElementById('shotPanel'),shotPreview=document.getElementById('shotPreview'),shotResult=document.getElementById('shotResult');
+shot.onclick=()=>shotFile.click();
+shotFile.onchange=async()=>{const file=shotFile.files?.[0];if(!file)return;shotPanel.style.display='block';shotResult.textContent='স্ক্রিনশট প্রস্তুত করা হচ্ছে...';const reader=new FileReader();reader.onload=async()=>{shotPreview.src=reader.result;shotPreview.style.display='block';const endpoint=localStorage.getItem('MOSHARROF_SCREENSHOT_API');if(!endpoint){shotResult.textContent='স্ক্রিনশট প্রস্তুত। বিশ্লেষণ API এখনো সংযুক্ত হয়নি।';return;}const base64=String(reader.result).split(',')[1];try{const r=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({image_base64:base64,mime_type:file.type})});const j=await r.json();shotResult.textContent=j.text||j.error||'বিশ্লেষণ পাওয়া যায়নি।';}catch(e){shotResult.textContent='বিশ্লেষণ সার্ভারে পৌঁছানো যায়নি।';}};reader.readAsDataURL(file);};
 function send(){
  const v=input.value.trim();if(!v)return;
  const a=document.createElement('article');a.className='message user';a.innerHTML='<div class="who">আপনি</div><p></p>';a.querySelector('p').textContent=v;messages.appendChild(a);input.value='';
