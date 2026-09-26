@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "project_id": "mosharrof.core",
   "name": "Mosharrof",
   "owner": "Mosharrof Karim",
@@ -7,6 +7,9 @@
   "first_read": [
     "config/project_manifest.json",
     "config/entity_registry.json",
+    "config/model_registry.json",
+    "config/policy.json",
+    "config/permission_profiles.json",
     "policies/CORE_POLICY.md",
     "docs/ARCHITECTURE.md"
   ],
@@ -21,14 +24,37 @@
     "audit",
     "versioning"
   ],
+  "entity_contract": [
+    "identity",
+    "brain",
+    "memory",
+    "responsibility",
+    "permission",
+    "policy",
+    "scope",
+    "tools",
+    "communication",
+    "audit",
+    "version"
+  ],
   "immutable_safety_rules": {
     "delete": false,
-    "destructive_operations": false
+    "destructive_operations": false,
+    "scope_escape": false,
+    "activate_without_tests": false
   },
   "model_strategy": "model-agnostic adapter layer",
   "entity_lifecycle": [
-    "create", "register", "assign_brain", "assign_responsibility",
-    "assign_permission", "attach_tools", "test", "audit", "activate"
+    "create",
+    "register",
+    "assign_brain",
+    "assign_responsibility",
+    "assign_permission_scope",
+    "attach_tools",
+    "test",
+    "audit",
+    "approve",
+    "activate"
   ],
   "first_tool_project": "Al-Quran Research"
 }
