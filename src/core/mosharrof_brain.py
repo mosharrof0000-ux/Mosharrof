@@ -24,6 +24,18 @@ class MosharrofCoreBrain:
         self.event_bus.publish(command_type,payload)
         self.memory_ledger.record_event(command_type,payload)
 
+    def authorize_action(self, entity_id:str, operation:str, scope:str,
+                         destructive:bool=False)->Dict[str,Any]:
+        if scope != entity_id and not (entity_id == "core" and scope == "system"):
+            return {"status":"DENIED","reason":"SCOPE_OUTSIDE_ENTITY_BOUNDARY",
+                    "entity":entity_id,"operation":operation,"scope":scope}
+        permission=self.permission_guard.check(
+            operation, scope=scope, destructive=destructive)
+        self.memory_ledger.record_event("AUTHORIZATION_CHECK", {
+            "entity":entity_id,"operation":operation,"scope":scope,
+            "status":permission["status"]})
+        return permission
+
     def monitor_sub_agent(self,entity_name:str,action_report:Dict[str,Any])->Dict[str,Any]:
         permission=self.permission_guard.check(
             action_report.get("operation","PROCESS"),
@@ -46,10 +58,15 @@ class MosharrofCoreBrain:
         if not text:
             return {"status":"EMPTY","intent":"UNKNOWN","intent_clarity":0.0}
         lowered=text.lower()
-        intent="GENERAL"
-        if any(k in lowered for k in ("file","ফাইল","folder","ফোল্ডার")): intent="STORAGE"
-        elif any(k in lowered for k in ("tool","টুল")): intent="TOOL"
-        elif any(k in lowered for k in ("quran","কুরআন","কোরআন")): intent="RESEARCH"
+        # Specific research intent must be classified before generic file/storage terms.
+        if any(k in lowered for k in ("quran","কুরআন","কোরআন")):
+            intent="RESEARCH"
+        elif any(k in lowered for k in ("file","ফাইল","folder","ফোল্ডার")):
+            intent="STORAGE"
+        elif any(k in lowered for k in ("tool","টুল")):
+            intent="TOOL"
+        else:
+            intent="GENERAL"
         result={"status":"SUCCESS","intent":intent,"intent_clarity":1.0,"text":text}
         self.memory_ledger.record_event("INTENT_PROCESSED",result)
         return result
