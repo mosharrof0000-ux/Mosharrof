@@ -1,50 +1,62 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "entities": [
     {
       "id": "core",
+      "type": "core",
+      "owner": "Mosharrof Karim",
       "name": "Mosharrof Core",
-      "responsibility": "coordination and governance",
-      "brain": "core-brain",
-      "permissions": [
-        "read",
-        "write",
-        "execute"
-      ],
+      "brain": "core",
+      "responsibility": "Coordinate the ecosystem and enforce global policy.",
+      "scope": "mosharrof/*",
+      "permission_profile": "core",
+      "memory": "entities/core/memory",
+      "tools": "entities/core/tools",
+      "audit": "entities/core/audit",
       "delete_allowed": false
     },
     {
       "id": "chat",
+      "type": "ui_entity",
+      "owner": "Mosharrof Core",
       "name": "Chat Box",
-      "responsibility": "conversation interface",
-      "brain": "chat-brain",
-      "permissions": [
-        "read",
-        "message"
-      ],
+      "brain": "chat",
+      "responsibility": "Own user conversation and request routing.",
+      "scope": "chat/*",
+      "permission_profile": "chat",
+      "memory": "entities/chat/memory",
+      "tools": "entities/chat/tools",
+      "audit": "entities/chat/audit",
       "delete_allowed": false
     },
     {
-      "id": "ui",
-      "name": "UI System",
-      "responsibility": "presentation and adaptive layout",
-      "brain": "ui-brain",
-      "permissions": [
-        "read",
-        "render"
-      ],
+      "id": "sidebar",
+      "type": "ui_entity",
+      "owner": "Mosharrof Core",
+      "name": "Sidebar",
+      "brain": "sidebar",
+      "responsibility": "Own navigation and entity discovery.",
+      "scope": "sidebar/*",
+      "permission_profile": "ui",
+      "memory": "entities/sidebar/memory",
+      "tools": "entities/sidebar/tools",
+      "audit": "entities/sidebar/audit",
       "delete_allowed": false
     },
     {
       "id": "quran_research",
+      "type": "tool_project",
+      "owner": "Mosharrof Core",
       "name": "Al-Quran Research",
-      "responsibility": "Quran language research and evidence-based research workflows.",
       "brain": "external-project://al-quran-research",
-      "permissions": [
-        "read",
-        "research"
-      ],
-      "delete_allowed": false
+      "responsibility": "Quran language research and evidence-based research workflows.",
+      "scope": "quran_research/*",
+      "permission_profile": "research",
+      "memory": "entities/quran_research/memory",
+      "tools": "entities/quran_research/tools",
+      "audit": "entities/quran_research/audit",
+      "delete_allowed": false,
+      "integration_mode": "isolated-until-explicit-approval"
     }
   ]
 }
