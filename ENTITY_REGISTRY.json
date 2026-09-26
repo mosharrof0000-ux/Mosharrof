@@ -1,11 +1,17 @@
 {
-  "schema_version":"1.0.0",
-  "project_id":"mosharrof",
-  "entities":[
-    {"id":"core","role":"coordination and governance","brain":"src/core/mosharrof_brain.py","scope":"system coordination"},
-    {"id":"chat","role":"user conversation","brain":"entity.chat","scope":"conversation only"},
-    {"id":"sidebar","role":"navigation and entity discovery","brain":"entity.sidebar","scope":"navigation only"},
-    {"id":"quran-research","role":"research tool","brain":"tool.quran-research","scope":"Quran research only"}
+  "schema_version": "1.1.0",
+  "project_id": "mosharrof.core",
+  "canonical_registry": "config/entity_registry.json",
+  "entities": [
+    {"id":"core","registry_path":"entities/core/ENTITY.json"},
+    {"id":"chat","registry_path":"entities/chat/ENTITY.json"},
+    {"id":"sidebar","registry_path":"entities/sidebar/ENTITY.json"},
+    {"id":"ui","registry_path":"entities/ui/ENTITY.json"},
+    {"id":"voice","registry_path":"entities/voice/ENTITY.json"},
+    {"id":"storage","registry_path":"entities/storage/ENTITY.json"},
+    {"id":"tool_factory","registry_path":"entities/tool_factory/ENTITY.json"},
+    {"id":"quran_research","registry_path":"entities/quran_research/ENTITY.json"}
   ],
-  "entity_contract":["identity","brain","responsibility","memory","permissions","policy","tools","communication","state","audit","version"]
+  "entity_contract":["identity","brain","responsibility","memory","permissions","policy","tools","communication","state","audit","version"],
+  "safety":{"delete_allowed":false,"destructive_operations_allowed":false}
 }
