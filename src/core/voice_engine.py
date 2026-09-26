@@ -1,21 +1,25 @@
 """Context-aware voice processing with explicit recording authorization.
 
-The engine intentionally separates speech-to-text from text intelligence:
-- the browser/device ASR produces transcript text;
-- this engine normalizes punctuation and conservative contextual corrections;
-- raw audio bytes are not silently interpreted without an ASR adapter.
+Speech-to-text is provider-specific. The engine owns the text intelligence
+boundary: conservative contextual correction, smart punctuation, and audit.
 """
-from typing import Any, Dict, Mapping, Optional, Union
+
+from typing import Any, Callable, Dict, Mapping, Optional, Union
 import re
 from src.core.memory_ledger import MemoryLedger
 
 
 class VoiceJournalEngine:
-    def __init__(self, memory_ledger: Optional[MemoryLedger] = None):
+    def __init__(
+        self,
+        memory_ledger: Optional[MemoryLedger] = None,
+        transcription_provider: Optional[Callable[[Any], str]] = None,
+    ):
         self.ledger = memory_ledger or MemoryLedger()
         self.is_listening = False
         self.recording_authorized = False
         self.known_voices: Dict[str, str] = {}
+        self.transcription_provider = transcription_provider
 
     def toggle_listening(self, state: bool, authorized: bool = False) -> Dict[str, Any]:
         if state and not authorized:
@@ -53,42 +57,42 @@ class VoiceJournalEngine:
             return text + "?"
         return text + "।"
 
-    def apply_smart_punctuation(self, raw_text: str) -> str:
-        """Add conservative punctuation without inventing sentence content.
-
-        Newline/long-pause separators are treated as sentence boundaries.
-        Existing punctuation is preserved.
-        """
+    @classmethod
+    def apply_smart_punctuation(cls, raw_text: str) -> str:
+        """Add conservative punctuation without inventing sentence content."""
         text = (raw_text or "").strip()
         if not text:
             return ""
+        text = re.sub(r"\s+([,।!?])", r"\1", text)
+        text = re.sub(r",+", ",", text)
+        text = re.sub(r"!+", "!", text)
+        text = re.sub(r"\?+", "?", text)
+        text = re.sub(r"।+", "।", text)
         chunks = re.split(r"(?:\n+|\s{3,})", text)
-        punctuated = [self._punctuate_sentence(chunk) for chunk in chunks]
-        return " ".join(item for item in punctuated if item)
+        return " ".join(cls._punctuate_sentence(chunk) for chunk in chunks if chunk.strip())
 
-    def correct_contextual_grammar(
-        self,
+    @staticmethod
+    def _contextual_correction_result(
         raw_text: str,
         correction_map: Optional[Mapping[str, str]] = None,
     ) -> Dict[str, Any]:
-        """Apply only explicit/safe corrections and report every change.
-
-        A future language-model adapter can supply correction_map; the engine
-        never hides a model-generated correction from the audit result.
-        """
         text = re.sub(r"\s+", " ", (raw_text or "").strip())
         if not text:
             return {"text": "", "corrections": []}
 
         corrections = []
-        mapping = dict(correction_map or {})
-        # Conservative speech-to-text cleanup that does not change meaning.
-        mapping.update({
+        mapping = {
             "কেমনন": "কেমন",
             "আছন": "আছেন",
-            "করতেছ": "করছেন",
+            "করতেছ": "করছ",
             "করতেছে": "করছে",
-        })
+            "করতেছেন": "করছেন",
+            "যাইতেছি": "যাচ্ছি",
+            "আসতেছি": "আসছি",
+            "করবেনা": "করবে না",
+        }
+        if correction_map:
+            mapping.update(dict(correction_map))
 
         corrected = text
         for wrong, right in sorted(mapping.items(), key=lambda item: len(item[0]), reverse=True):
@@ -97,44 +101,64 @@ class VoiceJournalEngine:
                 corrections.append({"from": wrong, "to": right})
                 corrected = updated
 
-        # Collapse accidental repeated adjacent words.
         repeated = re.compile(r"(?P<word>\S+)(?:\s+\1){1,}", re.IGNORECASE)
         deduped = repeated.sub(r"\g<word>", corrected)
         if deduped != corrected:
             corrections.append({"type": "repeated_word", "from": corrected, "to": deduped})
             corrected = deduped
-
         return {"text": corrected, "corrections": corrections}
+
+    def correct_contextual_grammar(self, raw_text: str, context: str = "") -> str:
+        """Backward-compatible text correction returning only corrected text."""
+        return self._contextual_correction_result(raw_text)["text"]
 
     def sanitize_phonetic_speech(
         self,
         audio_stream: Union[str, bytes, bytearray, Mapping[str, Any]],
     ) -> Dict[str, Any]:
-        """Normalize an ASR transcript; require an ASR adapter for raw audio."""
+        """Process transcript text or authorized raw audio through an ASR provider."""
         if isinstance(audio_stream, Mapping):
             transcript = str(audio_stream.get("transcript", "") or "")
         elif isinstance(audio_stream, str):
             transcript = audio_stream
         else:
-            return {
-                "status": "ASR_ADAPTER_REQUIRED",
-                "message": "Raw audio requires a speech-to-text adapter before text sanitization.",
-            }
+            if not self.recording_authorized:
+                return {"status": "BLOCKED", "reason": "RECORDING_NOT_AUTHORIZED"}
+            if self.transcription_provider is None:
+                return {
+                    "status": "UNAVAILABLE",
+                    "reason": "NO_TRANSCRIPTION_PROVIDER_ATTACHED",
+                }
+            transcript = self.transcription_provider(audio_stream)
 
         if not transcript.strip():
             return {"status": "EMPTY", "text": "", "corrections": []}
 
-        corrected = self.correct_contextual_grammar(transcript)
+        corrected = self._contextual_correction_result(transcript)
         final_text = self.apply_smart_punctuation(corrected["text"])
         return {
             "status": "SUCCESS",
             "text": final_text,
             "corrections": corrected["corrections"],
+            "raw_transcript": transcript,
+            "sanitized_text": final_text,
             "pipeline": ["ASR_TRANSCRIPT", "CONTEXTUAL_CORRECTION", "SMART_PUNCTUATION"],
         }
 
+    def process_voice_text(self, raw_text: str, context: str = "") -> Dict[str, Any]:
+        """Backward-compatible transcript pipeline."""
+        corrected = self._contextual_correction_result(raw_text)
+        punctuated = self.apply_smart_punctuation(corrected["text"])
+        return {
+            "status": "SUCCESS" if punctuated else "EMPTY",
+            "raw_text": raw_text,
+            "corrected_text": corrected["text"],
+            "final_text": punctuated,
+            "corrections": corrected["corrections"],
+        }
+
     def process_voice_transcript(self, transcript: str) -> Dict[str, Any]:
-        """Public text pipeline used by UI/ASR adapters."""
+        """Public text pipeline used by browser/device ASR adapters."""
         return self.sanitize_phonetic_speech(transcript)
 
     def process_ambient_conversation(self, speaker_signature: str, transcript: str) -> Dict[str, Any]:
@@ -156,5 +180,6 @@ class VoiceJournalEngine:
             "detected_speaker": speaker_info["speaker"],
             "is_known": speaker_info["is_known"],
             "text": processed.get("text", transcript),
+            "normalized_transcript": processed.get("text", transcript),
             "corrections": processed.get("corrections", []),
         }
