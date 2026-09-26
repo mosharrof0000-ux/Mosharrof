@@ -182,3 +182,9 @@ def test_voice_audio_requires_authorization_and_provider():
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ।"
+
+
+def test_tool_factory_blocks_import_escape(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    result = factory.create_tool("import_tool", "import pathlib\nreturn pathlib.Path('.')")
+    assert result.startswith("DENIED:")
