@@ -24,6 +24,7 @@ class VoiceJournalEngine:
         "মোশরফ": "মোশাররফ",
         "কোরান": "কুরআন",
         "কুরান": "কুরআন",
+        "মোশারফ এর": "মোশাররফের",
     }
 
     def __init__(
@@ -82,7 +83,7 @@ class VoiceJournalEngine:
                     text = text[:offset].rstrip() + ", " + text[offset:].lstrip()
 
         if not re.search(r"[?!।]$", text):
-            if question_hint is True:
+            if question_hint is True or self._looks_like_question(text):
                 text += "?"
             else:
                 text += "।"
@@ -94,6 +95,14 @@ class VoiceJournalEngine:
             r"\1, ", text,
         )
         return text
+
+    @classmethod
+    def _looks_like_question(cls, text: str) -> bool:
+        words = text.split()
+        return bool(words and any(
+            word.strip(".,!?।") in cls.QUESTION_WORDS
+            for word in words[-4:]
+        ))
 
     def correct_contextual_grammar(
         self,
