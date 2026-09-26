@@ -1,0 +1,38 @@
+name: Mosharrof Visual Inspector
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  visual-inspection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - run: |
+          python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &
+          sleep 2
+      - name: Capture screenshots
+        env:
+          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
+        run: python3 scripts/visual_inspector.py capture --candidate http://127.0.0.1:4173/ --live "$LIVE_URL" --out artifacts
+      - name: AI visual comparison
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 scripts/visual_inspector.py inspect --candidate artifacts/candidate-mobile.png --live artifacts/live-mobile.png --report artifacts/visual-report.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-inspection-${{ github.run_id }}
+          path: artifacts/
+          retention-days: 30
+      - name: Visual promotion gate
+        run: python3 scripts/visual_inspector.py gate --report artifacts/visual-report.json
