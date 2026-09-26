@@ -2,9 +2,17 @@
 name: Mosharrof Visual QA
 
 on:
+  schedule:
+    - cron: "0 */6 * * *"
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Optional URL to inspect"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -24,5 +32,5 @@ jobs:
       - name: Run mobile visual comparison
         env:
           GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
-          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
+          LIVE_URL: ${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
         run: python3 scripts/mosharrof_visual_qa.py
