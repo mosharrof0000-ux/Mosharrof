@@ -1,0 +1,10 @@
+{
+  "id": "voice",
+  "type": "service_entity",
+  "owner": "Mosharrof Karim",
+  "brain": "voice",
+  "responsibility": "Voice input and social-memory processing.",
+  "scope": "voice/*",
+  "permission_profile": "voice",
+  "delete_allowed": false
+}
