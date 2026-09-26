@@ -43,6 +43,8 @@ class VoiceJournalEngine:
         """
         আশপাশের মানুষদের কথামালা বিশ্লেষণ ও সামাজিক সম্পর্কের তথ্য সেভ করা
         """
+        if not self.is_listening:
+            return {"status": "DENIED", "reason": "VOICE_CAPTURE_INACTIVE"}
         if not transcript.strip():
             return {"status": "EMPTY", "message": "কোনো বাক্য ধরা পড়েনি।"}
 
