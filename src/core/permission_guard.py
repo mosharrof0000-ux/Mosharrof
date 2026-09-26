@@ -7,7 +7,9 @@ are permanently denied.
 
 class PermissionGuard:
     BLOCKED_OPERATIONS = {
-        "DELETE", "DESTRUCTIVE", "DESTROY", "PURGE", "DROP", "ERASE", "REMOVE"
+        "DELETE", "DELETE_FILE", "DELETE_DIRECTORY", "DESTRUCTIVE",
+        "DESTROY", "DESTROY_PROJECT", "PURGE", "DROP", "DROP_DATABASE",
+        "ERASE", "REMOVE"
     }
 
     DEFAULT_PERMISSIONS = {
