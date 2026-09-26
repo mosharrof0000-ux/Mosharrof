@@ -6,6 +6,10 @@
   "responsibility": "Quran language research and evidence-based research workflows.",
   "scope": "quran_research/*",
   "permission_profile": "research",
+  "permissions": ["read", "research"],
+  "memory": "entities/quran_research/memory",
+  "tools": "entities/quran_research/tools",
+  "audit": "entities/quran_research/audit",
   "integration_mode": "external-until-explicit-connection",
   "delete_allowed": false
 }
