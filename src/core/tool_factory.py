@@ -2,6 +2,7 @@
 import ast
 import importlib.util
 import os
+import textwrap
 from typing import Any, Callable, Dict
 from src.core.permission_engine import PermissionEngine
 
@@ -32,7 +33,8 @@ class ToolFactory:
         blocked={"remove","unlink","rmtree","rmdir","rename","replace",
                  "system","popen","run","call","check_call","check_output"}
         try:
-            tree=ast.parse(code_body)
+            wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
+            tree = ast.parse(wrapped)
         except SyntaxError:
             return True
         for node in ast.walk(tree):
