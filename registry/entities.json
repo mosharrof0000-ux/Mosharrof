@@ -1,0 +1,4 @@
+{
+  "version":"1.0.0",
+  "entities":[{"id":"mosharrof.core","name":"Mosharrof Core","type":"core","responsibility":"coordination, governance, routing and system understanding","brain":"src/core/mosharrof_brain.py","permission_profile":"core.safe","status":"active"}]
+}
