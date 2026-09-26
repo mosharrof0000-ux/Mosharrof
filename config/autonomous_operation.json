@@ -1,0 +1,25 @@
+{
+  "name": "mosharrof-autonomous-operation",
+  "version": "1.0",
+  "mode": "verified-autonomous",
+  "rules": {
+    "main_direct_write": false,
+    "delete": false,
+    "destructive_operations": false,
+    "promotion_requires_verification": true,
+    "live_health_check_required": true
+  },
+  "flow": [
+    "instruction_or_schedule",
+    "isolated_task_branch",
+    "agent_execution",
+    "tests_and_policy_verification",
+    "controlled_promotion",
+    "live_health_check",
+    "audit_record"
+  ],
+  "scheduled_checks": {
+    "enabled": true,
+    "interval_hours": 6
+  }
+}
