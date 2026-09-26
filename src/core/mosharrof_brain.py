@@ -18,7 +18,7 @@ class MosharrofCoreBrain:
         self.event_bus=event_bus or EcosystemEventBus()
         self.memory_ledger=memory_ledger or MemoryLedger()
         self.permission_guard=permission_guard or PermissionGuard()
-        self.active_entities=["core","chat","sidebar","quran_research"]
+        self.active_entities=["core","chat","ui","voice","storage","tool_factory"]
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
         permission = self.permission_guard.check(
