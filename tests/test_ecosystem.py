@@ -194,3 +194,9 @@ def test_context_aware_smart_voice_processing():
     assert processed["text"].endswith("।")
     assert processed["audio_decoding"] == "EXTERNAL_STT_ADAPTER_REQUIRED"
     assert voice.sanitize_phonetic_speech(b"raw audio")["status"] == "UNSUPPORTED_AUDIO"
+
+    
+def test_tool_factory_blocks_destructive_aliases(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert factory.create_tool("alias_remove", "from os import remove as erase\nerase('x')").startswith("DENIED:")
+    assert factory.create_tool("shell_alias", "import subprocess as sp\nsp.run(['echo', 'x'])").startswith("DENIED:")
