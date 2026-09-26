@@ -22,6 +22,11 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install -r requirements.txt
       - run: python -m pytest -q
+      - name: Verify Pages artifact
+        shell: bash
+        run: |
+          test -f web/index.html
+          grep -q 'MOSHARROF AI' web/index.html
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
@@ -38,3 +43,17 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Live deployment health check
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os, urllib.request
+          url=os.environ["PAGE_URL"]
+          with urllib.request.urlopen(url, timeout=30) as r:
+              body=r.read(200000).decode("utf-8","ignore")
+              assert r.status == 200
+              assert "MOSHARROF AI" in body
+          print("LIVE HEALTH CHECK: PASS")
+          PY
