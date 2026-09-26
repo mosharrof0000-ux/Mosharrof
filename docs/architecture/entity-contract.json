@@ -1,0 +1,12 @@
+{
+  "identity": ["entity_id", "name", "version"],
+  "brain": ["brain_id", "model_adapter"],
+  "responsibility": ["scope", "allowed_actions"],
+  "memory": ["working", "long_term", "audit"],
+  "permissions": ["capabilities", "temporary_grants"],
+  "policy": ["hard_rules", "local_rules"],
+  "tools": ["registered_tools"],
+  "communication": ["channels"],
+  "state": ["lifecycle_state", "health"],
+  "upgrade": ["compatible_models", "migration_strategy"]
+}
