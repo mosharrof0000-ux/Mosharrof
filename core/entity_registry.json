@@ -1,0 +1,5 @@
+{
+  "registry_version":"1.0.0",
+  "entities": {},
+  "activation_requirements":["identity","brain","memory","responsibility","permission","policy","tools","communication","audit"]
+}
