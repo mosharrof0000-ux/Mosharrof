@@ -5,8 +5,9 @@ from src.core.memory_ledger import MemoryLedger
 
 
 class VoiceJournalEngine:
-    def __init__(self, memory_ledger: Optional[MemoryLedger] = None):
+    def __init__(self, memory_ledger: Optional[MemoryLedger] = None, correction_provider=None):
         self.ledger = memory_ledger or MemoryLedger()
+        self.correction_provider = correction_provider
         self.is_listening = False
         self.recording_authorized = False
         self.known_voices: Dict[str, str] = {}
