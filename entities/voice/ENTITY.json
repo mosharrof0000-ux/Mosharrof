@@ -1,0 +1,14 @@
+{
+  "id":"voice",
+  "type":"service_entity",
+  "owner":"Mosharrof Karim",
+  "brain":"voice-brain",
+  "responsibility":"Voice input and explicitly authorized social-memory processing.",
+  "scope":"voice/*",
+  "permission_profile":"voice",
+  "memory":"entities/voice/memory",
+  "tools":"entities/voice/tools",
+  "audit":"entities/voice/audit",
+  "version":"1.0.0",
+  "delete_allowed":false
+}
