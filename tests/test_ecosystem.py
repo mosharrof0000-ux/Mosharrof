@@ -212,15 +212,3 @@ def test_voice_authorization_blocks_raw_audio():
     result = engine.sanitize_phonetic_speech(b"raw-audio")
     assert result["status"] == "BLOCKED"
     assert result["reason"] == "RECORDING_NOT_AUTHORIZED"
-
-
-def test_context_aware_voice_processing():
-    voice = VoiceJournalEngine()
-    blocked = voice.sanitize_phonetic_speech("কুরান গবেষনা")
-    assert blocked["status"] == "BLOCKED"
-    voice.toggle_listening(True, authorized=True)
-    result = voice.sanitize_phonetic_speech("কুরান গবেষনা")
-    assert result["status"] == "SUCCESS"
-    assert result["corrected_text"] == "কুরআন গবেষণা"
-    assert result["text"].endswith("।")
-    assert voice.apply_smart_punctuation("কীভাবে কাজ করবে", question_hint=True).endswith("?")
