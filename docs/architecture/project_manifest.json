@@ -1,0 +1,41 @@
+{
+  "project_id": "mosharrof-core",
+  "name": "Mosharrof",
+  "owner_display_name": "Mosharrof Karim",
+  "version": "foundation-v1.1",
+  "purpose": "Modular AI ecosystem with independent intelligent entities.",
+  "architecture": {
+    "core": "src/core",
+    "entities": "src/entities",
+    "policies": "src/policies",
+    "tools": "src/tools",
+    "tests": "tests",
+    "web": "web",
+    "documentation": "docs"
+  },
+  "entity_contract": [
+    "identity",
+    "brain",
+    "memory",
+    "responsibility",
+    "permission",
+    "policy",
+    "tools",
+    "communication",
+    "state",
+    "audit",
+    "version"
+  ],
+  "capability_formula": "model x permission x policy x scope",
+  "hard_rules": {
+    "delete_allowed": false,
+    "destructive_operations_allowed": false,
+    "test_before_activation": true,
+    "existing_al_quran_research_is_external_until_connected": true
+  },
+  "model_policy": {
+    "model_provider_is_replaceable": true,
+    "identity_persists_across_model_changes": true,
+    "memory_persists_across_model_changes": true
+  }
+}
