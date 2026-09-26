@@ -1,0 +1,14 @@
+{
+  "id": "ui",
+  "type": "ui_entity",
+  "owner": "Mosharrof Karim",
+  "brain": "ui-brain",
+  "responsibility": "Own presentation, adaptive layout and accessibility.",
+  "scope": "ui/*",
+  "permission_profile": "ui",
+  "memory": "entities/ui/memory",
+  "tools": "entities/ui/tools",
+  "audit": "entities/ui/audit",
+  "version": "1.0.0",
+  "delete_allowed": false
+}
