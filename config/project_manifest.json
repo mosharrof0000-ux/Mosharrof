@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "mosharrof.core",
+  "name": "Mosharrof",
+  "owner": "Mosharrof Karim",
+  "role": "Central intelligent entity and AI brain architecture",
+  "architecture": [
+    "entity_registry",
+    "brain_adapter",
+    "memory",
+    "permission_policy",
+    "tools",
+    "communication",
+    "audit"
+  ],
+  "immutable_safety_rules": {
+    "delete": false,
+    "destructive_operations": false
+  },
+  "model_strategy": "model-agnostic adapter layer",
+  "first_tool_project": "Al-Quran Research"
+}
