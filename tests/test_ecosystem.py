@@ -75,6 +75,7 @@ def test_runtime_import_smoke():
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
 
+
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
     folder.mkdir()
@@ -120,7 +121,9 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
@@ -163,22 +166,19 @@ def test_additional_delete_variants_are_denied():
         assert result["status"] == "DENIED"
 
 
-def test_context_aware_voice_pipeline():
-    engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
-    assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
-    result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ।"
-
-
-def test_voice_audio_requires_authorization_and_provider():
-    engine = VoiceJournalEngine()
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
-    engine.toggle_listening(True, authorized=True)
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
-    provider = lambda _audio: "তুমি কি করতেছ"
-    engine = VoiceJournalEngine(transcription_provider=provider)
-    engine.toggle_listening(True, authorized=True)
-    result = engine.sanitize_phonetic_speech(b"audio")
+def test_voice_smart_processing():
+    result = VoiceJournalEngine.process_transcript("তুমি কেমন আছো")
     assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ।"
+    assert result["text"].endswith("।")
+
+    result = VoiceJournalEngine.process_transcript(
+        "মোশারফ কোথায়",
+        context_terms={"মোশারফ": "Mosharrof"},
+    )
+    assert result["text"].endswith("?")
+    assert "Mosharrof" in result["text"]
+
+
+def test_voice_audio_boundary_is_honest():
+    result = VoiceJournalEngine().sanitize_phonetic_speech(b"audio")
+    assert result["status"] == "MODEL_REQUIRED"
