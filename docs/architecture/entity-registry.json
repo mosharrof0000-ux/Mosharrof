@@ -1,0 +1,14 @@
+{
+  "registry_version": "1.0.0",
+  "entities": [
+    {
+      "entity_id": "mosharrof-core",
+      "name": "Mosharrof Core",
+      "type": "core",
+      "responsibility": "Coordinate entities, policy, memory, communication, and lifecycle.",
+      "brain": {"adapter": "model-agnostic", "model": "runtime-selected"},
+      "permissions": {"delete": false, "destructive": false},
+      "state": "ACTIVE"
+    }
+  ]
+}
