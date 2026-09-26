@@ -3,8 +3,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: "30 */6 * * *"
 permissions:
   contents: read
   pull-requests: read
@@ -16,39 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-      - name: Install image comparison dependency
-        run: python3 -m pip install pillow
-      - name: Install image comparison dependency
-        run: python3 -m pip install pillow
-      - name: Install browser
-        run: npx --yes playwright@1.55.0 install --with-deps chromium
-      - name: Start proposed site
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12"}
+      - name: Install browser QA dependencies
         run: |
-          python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
-          sleep 2
-      - name: Capture rendered screenshots
+          python -m pip install -r requirements.txt
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Start local preview
         run: |
-          mkdir -p qa/current
-          npx --yes playwright@1.55.0 screenshot --device="Desktop Chrome" --wait-for-timeout=2500 http://127.0.0.1:4173/ qa/current/desktop.png
-          npx --yes playwright@1.55.0 screenshot --device="iPhone 13" --wait-for-timeout=2500 http://127.0.0.1:4173/ qa/current/mobile.png
-      - name: Verify required UI survived
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          s=Path("web/index.html").read_text(encoding="utf-8")
-          required=["MOSHARROF AI",'class="header"','class="messages"','class="composer"','class="drawer"',"setInterval","120000","messages:before","messages:after"]
-          missing=[x for x in required if x not in s]
-          if missing: raise SystemExit("VISUAL CONTRACT FAILED: "+", ".join(missing))
-          print("VISUAL CONTRACT: PASS")
-          PY
-      - name: Compare with approved baseline
-        run: python3 scripts/visual_compare.py
+          nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-preview.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/ && break; sleep 1; done
+      - name: Render, screenshot and inspect
+        run: python3 scripts/visual_qa.py
       - name: Upload visual evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-visual-qa-\${{ github.run_id }}
-          path: qa/current/
+          name: mosharrof-visual-qa
+          path: artifacts/visual-qa/**
