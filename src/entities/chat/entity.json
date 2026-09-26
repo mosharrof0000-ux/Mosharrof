@@ -1,0 +1,9 @@
+{
+  "id": "chat",
+  "name": "Chat Box",
+  "responsibility": "conversation interface",
+  "brain": "chat-brain-adapter",
+  "permission_profile": "chat",
+  "delete_allowed": false,
+  "status": "planned"
+}
