@@ -25,6 +25,10 @@ for p in Path(".").rglob("*"):
             files.append(str(p))
 project_map="\n".join(files)
 
+slug=re.sub(r"[^a-z0-9-]+","-",request.lower())[:48].strip("-") or "task"
+branch="agent/auto-"+slug+"-"+os.environ["GITHUB_RUN_ID"]
+subprocess.run(["git","checkout","-b",branch],check=True)
+
 prompt="""You are Mosharrof Autonomous Engineer.
 Task:
 %s
@@ -80,20 +84,11 @@ subprocess.run(["git","config","user.email","41898282+github-actions[bot]@users.
 subprocess.run(["git","add","--"]+changed,check=True)
 subprocess.run(["git","commit","-m","Auto autonomous task"],check=True)
 
-slug=re.sub(r"[^a-z0-9-]+","-",request.lower())[:48].strip("-") or "task"
-branch="agent/auto-"+slug+"-"+os.environ["GITHUB_RUN_ID"]
-subprocess.run(["git","checkout","-b",branch],check=True)
-subprocess.run(["git","push","--set-upstream","origin",branch],check=True)
+\nsubprocess.run(["git","push","--set-upstream","origin",branch],check=True)
 
 body="Mosharrof Autonomous Engine task:\n\n"+request+"\n\nIsolated branch: "+branch+"\n\nThis PR must pass all required checks before promotion."
 subprocess.run(["gh","pr","create","--base","main","--head",branch,
                 "--title","Auto autonomous task","--body",body],check=True)
 pr=subprocess.run(["gh","pr","view",branch,"--json","number","--jq",".number"],capture_output=True,text=True,check=True)
-pr_number=pr.stdout.strip()
-# Wait for all required checks. Any failure stops promotion.
-checks=subprocess.run(["gh","pr","checks",pr_number,"--watch"],check=False)
-if checks.returncode != 0:
-    raise SystemExit("Verification failed; promotion stopped and PR left open.")
-# Promote only after every required check has passed.
-subprocess.run(["gh","pr","merge",pr_number,"--squash","--delete-branch"],check=True)
-print("All required checks passed; verified PR promoted to main.")
+print("PR created:",pr.stdout.strip())
+print("Waiting for visual QA and repository verification before promotion.")
