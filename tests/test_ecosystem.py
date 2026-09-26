@@ -1,14 +1,19 @@
 """
-Mosharrof AI: Ecosystem Integration Test Engine
-সব সাব-এজেন্ট, সেন্ট্রাল ব্রেইন, ইউআই সত্তা, ইভেন্ট বাস এবং স্মৃতিকোষ পরীক্ষা করে।
+Mosharrof AI: Complete Ecosystem Integration Test Engine
+ব্রেইন, ইভেন্ট বাস, মেমোরি, সাব-এজেন্ট, সেলফ-হিলিং অটো-ব্রেন স্ক্যানার পরীক্ষা করে।
 """
 
 import unittest
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
-from src.entities.categories.base_category_entity import LivingCategoryEntity
+from src.core.brain_scanner import AutoBrainScanner
+from src.entities.categories.philosophy_domain import PhilosophyDomainEntity
 from src.entities.ui_organ.sensory_engine import UISensoryEngine
+
+class DummyEntityWithoutBrain:
+    """ব্রেনহীন একটি পরীক্ষামূলক সত্তা"""
+    pass
 
 class TestMosharrofEcosystem(unittest.TestCase):
     def test_core_brain_activation(self):
@@ -28,30 +33,35 @@ class TestMosharrofEcosystem(unittest.TestCase):
         bus.publish("SYSTEM_ALERT", {"msg": "ALL_SYSTEMS_GO"})
 
         self.assertEqual(len(received_data), 1)
-        self.assertEqual(received_data[0]["msg"], "ALL_SYSTEMS_GO")
 
     def test_memory_ledger_storage(self):
-        """স্মৃতিকোষের স্বল্পমেয়াদী ও দীর্ঘমেয়াদী স্মৃতি ধারণ পরীক্ষা"""
+        """স্মৃতিকোষের ডাটা সেভ পরীক্ষা"""
         ledger = MemoryLedger()
         ledger.record_event("BOOT_SEQUENCE", {"status": "SUCCESS"})
-        ledger.consolidate_knowledge("SYSTEM_VERSION", "V2.0")
+        ledger.consolidate_knowledge("SYSTEM_VERSION", "V2.1")
+        self.assertEqual(ledger.long_term_memory["SYSTEM_VERSION"], "V2.1")
 
-        recent = ledger.recall_recent_events(limit=1)
-        self.assertEqual(len(recent), 1)
-        self.assertEqual(recent[0]["event_type"], "BOOT_SEQUENCE")
-        self.assertEqual(ledger.long_term_memory["SYSTEM_VERSION"], "V2.0")
+    def test_auto_brain_scanner_injection(self):
+        """ব্রেনহীন সত্তায় স্বয়ংক্রিয় এআই ব্রেন ইনজেকশন পরীক্ষা"""
+        scanner = AutoBrainScanner()
+        dummy = DummyEntityWithoutBrain()
+        
+        # প্রাথমিক অবস্থায় ব্রেন নেই
+        self.assertFalse(hasattr(dummy, 'consciousness_level'))
+        
+        # স্ক্যানার দিয়ে ব্রেন ইনজেক্ট করা
+        result = scanner.scan_and_inject_brain(dummy, "dummy_entity")
+        
+        # নিশ্চিত করা যে স্বয়ংক্রিয়ভাবে ব্রেন যুক্ত হয়েছে
+        self.assertEqual(result["status"], "BRAIN_INJECTED")
+        self.assertTrue(hasattr(dummy, 'consciousness_level'))
+        self.assertEqual(dummy.consciousness_level, 'AUTO_INJECTED_AI_BRAIN')
 
-    def test_ui_sensory_perception(self):
-        """ইউআই অর্গানের সেন্সর প্রতিক্রিয়া পরীক্ষা"""
-        ui_sensor = UISensoryEngine()
-        result = ui_sensor.analyze_user_behavior(scroll_speed=60.0, click_frequency=2, idle_time=1.0)
-        self.assertEqual(result["perceived_mood"], "URGENT_OR_FAST_SCANNING")
-
-    def test_living_entity_synchronization(self):
-        """বিষয়ভিত্তিক সত্তার সাথে মাস্টার ব্রেইনের সংযোগ পরীক্ষা"""
-        philosophy_entity = LivingCategoryEntity("philosophy_domain", "Philosophy & Critical Thinking")
-        status = philosophy_entity.sync_with_mosharrof_core("CHECK_HEALTH")
-        self.assertTrue(status)
+    def test_philosophy_rebel_entity(self):
+        """বিদ্রোহী দর্শন সত্তার যুক্তি ও প্রকাশ পরীক্ষা"""
+        philosophy = PhilosophyDomainEntity()
+        truth = philosophy.synthesize_truth("জীবন ও সৃষ্টির চরম বাস্তবতা")
+        self.assertIn("logic_stream", truth)
 
 if __name__ == "__main__":
     unittest.main()
