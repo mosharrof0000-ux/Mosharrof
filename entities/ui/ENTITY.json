@@ -1,0 +1,10 @@
+{
+  "id": "ui",
+  "type": "ui_entity",
+  "owner": "Mosharrof Karim",
+  "brain": "ui",
+  "responsibility": "Presentation, adaptive layout and accessibility behavior.",
+  "scope": "ui/*",
+  "permission_profile": "ui",
+  "delete_allowed": false
+}
