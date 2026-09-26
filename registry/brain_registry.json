@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "brains": [
+    {
+      "brain_id": "brain.core.default",
+      "entity_id": "mosharrof.core",
+      "adapter": "local-rule-brain",
+      "model": "runtime-configured",
+      "version": "1.0",
+      "status": "active"
+    }
+  ],
+  "adapter_contract": {
+    "required_methods": ["understand", "plan", "respond"],
+    "identity_persistence": "entity identity, memory and policy remain independent of model choice"
+  }
+}
