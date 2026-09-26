@@ -1,13 +1,1 @@
-{
-  "id": "tool_factory",
-  "type": "engine_entity",
-  "owner": "Mosharrof Core",
-  "brain": "tool_factory",
-  "responsibility": "Safe tool creation, registration and execution.",
-  "scope": "tools/*",
-  "permission_profile": "tool_factory",
-  "memory": "entities/tool_factory/memory",
-  "tools": "entities/tool_factory/tools",
-  "audit": "entities/tool_factory/audit",
-  "delete_allowed": false
-}
+{"id":"tool_factory","type":"engine_entity","owner":"Mosharrof Core","brain":"tool_factory","responsibility":"Safe tool creation, registration and execution.","scope":"tool_factory/*","permission_profile":"tool_factory","memory":"entities/tool_factory/memory","tools":"entities/tool_factory/tools","audit":"entities/tool_factory/audit","delete_allowed":false}

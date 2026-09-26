@@ -18,17 +18,14 @@ class MosharrofCoreBrain:
         self.event_bus=event_bus or EcosystemEventBus()
         self.memory_ledger=memory_ledger or MemoryLedger()
         self.permission_guard=permission_guard or PermissionGuard()
-        self.active_entities=["core","chat","ui","voice","storage","tool_factory"]
+        self.active_entities=["core","chat","sidebar","ui","voice","storage","tool_factory","quran_research"]
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
-        permission = self.permission_guard.check(
-            operation, scope=scope or entity_id, entity_scope=entity_id
-        )
-        if permission["status"] == "DENIED":
-            self.memory_ledger.record_event("ACTION_DENIED", permission)
+        permission=self.permission_guard.check(operation, scope=scope or entity_id, entity_scope=entity_id)
+        if permission["status"]=="DENIED":
+            self.memory_ledger.record_event("ACTION_DENIED",permission)
             return permission
-        result={"status":"ALLOWED","entity":entity_id,
-                "operation":operation.upper(),"scope":scope}
+        result={"status":"ALLOWED","entity":entity_id,"operation":operation.upper(),"scope":scope or entity_id}
         self.memory_ledger.record_event("ACTION_ALLOWED",result)
         return result
 
@@ -37,20 +34,13 @@ class MosharrofCoreBrain:
         self.memory_ledger.record_event(command_type,payload)
 
     def monitor_sub_agent(self,entity_name:str,action_report:Dict[str,Any])->Dict[str,Any]:
-        permission=self.permission_guard.check(
-            action_report.get("operation","PROCESS"),
-            scope=action_report.get("scope",entity_name),
-            entity_scope=action_report.get("entity_scope",entity_name),
-            destructive=bool(action_report.get("destructive",False)))
+        permission=self.permission_guard.check(action_report.get("operation","PROCESS"),scope=action_report.get("scope",entity_name),entity_scope=action_report.get("entity_scope",entity_name),destructive=bool(action_report.get("destructive",False)))
         if permission["status"]=="DENIED":
-            result={"decision":"REJECTED","entity":entity_name,
-                    "integrity_check":"FAILED","reason":permission["reason"]}
+            result={"decision":"REJECTED","entity":entity_name,"integrity_check":"FAILED","reason":permission["reason"]}
         elif action_report.get("status")=="PROCESSING":
-            result={"decision":"APPROVED","entity":entity_name,
-                    "integrity_check":"PASSED","reason":"Within declared scope"}
+            result={"decision":"APPROVED","entity":entity_name,"integrity_check":"PASSED","reason":"Within declared scope"}
         else:
-            result={"decision":"REJECTED","entity":entity_name,
-                    "integrity_check":"FAILED","reason":"Policy or state check failed"}
+            result={"decision":"REJECTED","entity":entity_name,"integrity_check":"FAILED","reason":"Policy or state check failed"}
         self.memory_ledger.record_event("ENTITY_ACTION_REVIEWED",result)
         return result
 
@@ -59,7 +49,6 @@ class MosharrofCoreBrain:
         if not text:
             return {"status":"EMPTY","intent":"UNKNOWN","intent_clarity":0.0}
         lowered=text.lower()
-        # Specific research terms take precedence over generic file/storage terms.
         if any(k in lowered for k in ("quran","কুরআন","কোরআন")): intent="RESEARCH"
         elif any(k in lowered for k in ("file","ফাইল","folder","ফোল্ডার")): intent="STORAGE"
         elif any(k in lowered for k in ("tool","টুল")): intent="TOOL"
@@ -69,5 +58,4 @@ class MosharrofCoreBrain:
         return result
 
     def system_status(self)->Dict[str,Any]:
-        return {"system":self.system_name,"state":self.consciousness_state,
-                "entities":list(self.active_entities),"delete_operations":"BLOCKED"}
+        return {"system":self.system_name,"state":self.consciousness_state,"entities":list(self.active_entities),"delete_operations":"BLOCKED"}
