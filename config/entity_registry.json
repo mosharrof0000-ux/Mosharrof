@@ -1,11 +1,10 @@
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.1.0",
   "entities": [
     {
       "id": "core",
-      "type": "core",
-      "owner": "Mosharrof Karim",
       "name": "Mosharrof Core",
+      "type": "core",
       "responsibility": "Coordinate the ecosystem and enforce global policy.",
       "brain": "core",
       "scope": "mosharrof/*",
@@ -13,13 +12,13 @@
       "memory": "entities/core/memory",
       "tools": "entities/core/tools",
       "audit": "entities/core/audit",
+      "permissions": ["read", "write", "execute"],
       "delete_allowed": false
     },
     {
       "id": "chat",
-      "type": "ui_entity",
-      "owner": "Mosharrof Core",
       "name": "Chat Box",
+      "type": "ui_entity",
       "responsibility": "Own user conversation and request routing.",
       "brain": "chat",
       "scope": "chat/*",
@@ -27,13 +26,13 @@
       "memory": "entities/chat/memory",
       "tools": "entities/chat/tools",
       "audit": "entities/chat/audit",
+      "permissions": ["read", "message"],
       "delete_allowed": false
     },
     {
       "id": "sidebar",
-      "type": "ui_entity",
-      "owner": "Mosharrof Core",
       "name": "Sidebar",
+      "type": "ui_entity",
       "responsibility": "Own navigation and entity discovery.",
       "brain": "sidebar",
       "scope": "sidebar/*",
@@ -41,64 +40,22 @@
       "memory": "entities/sidebar/memory",
       "tools": "entities/sidebar/tools",
       "audit": "entities/sidebar/audit",
-      "delete_allowed": false
-    },
-    {
-      "id": "voice",
-      "type": "engine_entity",
-      "owner": "Mosharrof Core",
-      "name": "Voice Engine",
-      "responsibility": "Voice input and social-memory processing.",
-      "brain": "voice",
-      "scope": "voice/*",
-      "permission_profile": "voice",
-      "memory": "entities/voice/memory",
-      "tools": "entities/voice/tools",
-      "audit": "entities/voice/audit",
-      "delete_allowed": false
-    },
-    {
-      "id": "storage",
-      "type": "engine_entity",
-      "owner": "Mosharrof Core",
-      "name": "Storage Engine",
-      "responsibility": "File indexing and explicitly authorized organization.",
-      "brain": "storage",
-      "scope": "storage/*",
-      "permission_profile": "storage",
-      "memory": "entities/storage/memory",
-      "tools": "entities/storage/tools",
-      "audit": "entities/storage/audit",
-      "delete_allowed": false
-    },
-    {
-      "id": "tool_factory",
-      "type": "engine_entity",
-      "owner": "Mosharrof Core",
-      "name": "Tool Factory",
-      "responsibility": "Safe tool creation, registration and execution.",
-      "brain": "tool_factory",
-      "scope": "tools/*",
-      "permission_profile": "tool_factory",
-      "memory": "entities/tool_factory/memory",
-      "tools": "entities/tool_factory/tools",
-      "audit": "entities/tool_factory/audit",
+      "permissions": ["read", "render"],
       "delete_allowed": false
     },
     {
       "id": "quran_research",
-      "type": "tool_project",
-      "owner": "Mosharrof Core",
       "name": "Al-Quran Research",
+      "type": "external_project",
       "responsibility": "Quran language research and evidence-based research workflows.",
       "brain": "external-project://al-quran-research",
-      "scope": "quran_research/*",
+      "scope": "tools/quran_research/*",
       "permission_profile": "research",
-      "memory": "entities/quran_research/memory",
-      "tools": "entities/quran_research/tools",
-      "audit": "entities/quran_research/audit",
-      "delete_allowed": false,
-      "integration_mode": "external-until-explicit-connection"
+      "memory": "external-project",
+      "tools": "external-project",
+      "audit": "integration-audit",
+      "permissions": ["read", "research"],
+      "delete_allowed": false
     }
   ]
 }
