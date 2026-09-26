@@ -53,7 +53,7 @@ class VoiceJournalEngine:
             "speaker": speaker_id,
             "transcript": transcript,
             "is_known_person": speaker_info["is_known"],
-            "privacy_status": "ENCRYPTED_LOCAL"
+            "privacy_status": "LOCAL_ONLY"
         }
 
         # সোশ্যাল স্মৃতিকোষে কথোপকথন রেকর্ড করা

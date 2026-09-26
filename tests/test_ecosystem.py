@@ -70,3 +70,18 @@ def test_tool_factory_blocks_destructive_source(tmp_path):
 def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof_ai)
+
+def test_storage_organizer_never_overwrites(tmp_path):
+    folder = tmp_path / "files"
+    folder.mkdir()
+    source = folder / "note.txt"
+    source.write_text("new", encoding="utf-8")
+    documents = folder / "Documents"
+    documents.mkdir()
+    existing = documents / "note.txt"
+    existing.write_text("existing", encoding="utf-8")
+
+    result = StorageEngine().auto_organize_folder(str(folder))
+    assert result["moved_files"] == 0
+    assert source.exists()
+    assert existing.read_text(encoding="utf-8") == "existing"
