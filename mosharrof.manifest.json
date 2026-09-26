@@ -1,0 +1,17 @@
+{
+  "project": {"id":"mosharrof","name":"Mosharrof","owner":"Mosharrof Karim","version":"0.1.0"},
+  "architecture": {
+    "pattern":"entity_brain_core",
+    "capability_formula":"AI_BRAIN * PERMISSION * POLICY * SCOPE",
+    "model_agnostic":true,
+    "delete_allowed":false
+  },
+  "core": {"id":"mosharrof.core","entrypoint":"src/main.py"},
+  "registries": {
+    "entities":"config/entities.json",
+    "permissions":"config/permissions.json",
+    "policy":"config/policy.json"
+  },
+  "lifecycle":["create","review","approve","store","backup","document","activate"],
+  "rules":["No DELETE operations","Every entity has an explicit responsibility","Every tool is permission-bounded","All important state changes are auditable"]
+}
