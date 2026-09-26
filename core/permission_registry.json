@@ -1,0 +1,10 @@
+{
+  "registry_version":"1.0.0",
+  "profiles":{
+    "core":{"read":true,"write":true,"create":true,"execute":true,"delete":false,"destructive":false,"scope":"project"},
+    "chat":{"read":true,"write":true,"create":false,"execute":true,"delete":false,"destructive":false,"scope":"chat"},
+    "sidebar":{"read":true,"write":false,"create":false,"execute":false,"delete":false,"destructive":false,"scope":"ui"},
+    "quran-research":{"read":true,"write":true,"create":true,"execute":true,"delete":false,"destructive":false,"scope":"tools/quran-research"}
+  },
+  "invariants":["DELETE is permanently denied.","Destructive operations are permanently denied.","Child entities cannot exceed their assigned scope or permission profile."]
+}
