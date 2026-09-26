@@ -1,0 +1,1 @@
+{"entity_id":"core","brain":"core","model_strategy":"model-agnostic","adapter":"src/core/model_adapter.py"}

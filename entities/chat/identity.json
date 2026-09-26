@@ -1,0 +1,1 @@
+{"id":"chat","type":"ui_entity","responsibility":"Own user conversation and request routing.","scope":"chat/*","delete_allowed":false}
