@@ -1,0 +1,5 @@
+{
+  "registry_version":"1.0.0",
+  "adapters":{"core":"model_agnostic","chat":"model_agnostic","sidebar":"model_agnostic","tool.quran-research":"model_agnostic"},
+  "rule":"A model adapter can be replaced without changing Entity identity, responsibility, policy or durable state."
+}
