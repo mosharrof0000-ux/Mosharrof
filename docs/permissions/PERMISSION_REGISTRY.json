@@ -1,0 +1,1 @@
+{"schema_version":"1.0.0","capability_formula":"brain x permission x policy x scope x identity","profiles":{"core":["READ","WRITE","CREATE","EXECUTE","DEPLOY","MANAGE"],"chat":["READ","CHAT"],"sidebar":["READ","NAVIGATE"],"quran-research":["READ","RESEARCH","WRITE_RESEARCH"]},"global_denials":["DELETE","DESTRUCTIVE"]}
