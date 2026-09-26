@@ -1,1 +1,27 @@
-{"project":{"id":"mosharrof","name":"Mosharrof","owner":"Mosharrof Karim","version":"0.1.0","status":"core-repair-v1"},"architecture":{"pattern":"modular-entity-brain","capability_formula":"brain x permission x policy x scope x identity","model_policy":"model-agnostic","communication":"event-stream","delete_policy":"permanently-blocked"},"entities":[{"id":"core","role":"coordination and governance","brain":"core"},{"id":"chat","role":"user conversation","brain":"chat"},{"id":"sidebar","role":"navigation and entity discovery","brain":"sidebar"},{"id":"quran-research","role":"research tool","brain":"tool.quran-research"}]}
+{
+  "project":{"id":"mosharrof","name":"Mosharrof","owner":"Mosharrof Karim","version":"1.0.0","status":"foundation"},
+  "architecture":{
+    "pattern":"modular-entity-brain",
+    "capability_formula":"AI_BRAIN * PERMISSION * POLICY * SCOPE * IDENTITY",
+    "model_policy":"model-agnostic",
+    "communication":"event-stream",
+    "entity_first":true
+  },
+  "security":{
+    "delete_operations":"PERMANENTLY_BLOCKED",
+    "destructive_operations":"PERMANENTLY_BLOCKED"
+  },
+  "registries":{
+    "entities":"core/entity_registry.json",
+    "brains":"core/brain_registry.json",
+    "permissions":"core/permission_registry.json"
+  },
+  "entities":[
+    {"id":"core","role":"coordination and governance","brain":"core","scope":"project"},
+    {"id":"chat","role":"user conversation","brain":"chat","scope":"chat"},
+    {"id":"sidebar","role":"navigation and entity discovery","brain":"sidebar","scope":"ui"},
+    {"id":"quran-research","role":"research tool","brain":"tool.quran-research","scope":"tools/quran-research"}
+  ],
+  "lifecycle":["create","register","assign-brain","assign-responsibility","assign-permission","attach-tools","test","audit","activate","version"],
+  "first_external_tool":"quran-research"
+}
