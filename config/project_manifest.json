@@ -1,9 +1,16 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "project_id": "mosharrof.core",
   "name": "Mosharrof",
   "owner": "Mosharrof Karim",
   "role": "Central intelligent entity and AI brain architecture",
+  "first_read": [
+    "config/project_manifest.json",
+    "config/entity_registry.json",
+    "config/model_registry.json",
+    "config/policy.json",
+    "docs/ARCHITECTURE.md"
+  ],
   "architecture": [
     "entity_registry",
     "brain_adapter",
@@ -13,9 +20,36 @@
     "communication",
     "audit"
   ],
+  "entity_contract": [
+    "identity",
+    "brain",
+    "memory",
+    "responsibility",
+    "permission",
+    "policy",
+    "scope",
+    "tools",
+    "communication",
+    "audit",
+    "version"
+  ],
+  "lifecycle": [
+    "create",
+    "register",
+    "assign_brain",
+    "assign_responsibility",
+    "assign_permission_scope",
+    "attach_tools",
+    "test",
+    "audit",
+    "approve",
+    "activate"
+  ],
   "immutable_safety_rules": {
     "delete": false,
-    "destructive_operations": false
+    "destructive_operations": false,
+    "scope_escape": false,
+    "activate_without_tests": false
   },
   "model_strategy": "model-agnostic adapter layer",
   "first_tool_project": "Al-Quran Research"
