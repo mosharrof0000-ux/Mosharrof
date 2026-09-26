@@ -90,5 +90,9 @@ body="Mosharrof Autonomous Engine task:\n\n"+request+"\n\nIsolated branch: "+bra
 subprocess.run(["gh","pr","create","--base","main","--head",branch,
                 "--title","Auto autonomous task","--body",body],check=True)
 pr=subprocess.run(["gh","pr","view",branch,"--json","number","--jq",".number"],capture_output=True,text=True,check=True)
-print("PR created:",pr.stdout.strip())
+pr_number=pr.stdout.strip()
+print("PR created:",pr_number)
+out=os.environ.get("GITHUB_OUTPUT")
+if out:
+    with open(out,"a",encoding="utf-8") as fh: fh.write("pr_number="+pr_number+"\n")
 print("Waiting for visual QA and repository verification before promotion.")
