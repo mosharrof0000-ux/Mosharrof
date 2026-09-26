@@ -1,20 +1,29 @@
 """Integration tests for the Mosharrof core foundation."""
+import json
+from pathlib import Path
+
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
 from src.core.tool_factory import ToolFactory
 from src.core.voice_engine import VoiceJournalEngine
 from src.core.storage_engine import StorageEngine
+from src.core.audit_ledger import AuditLedger
+from src.core.temporary_permission import TemporaryPermissionManager
+
+ROOT = Path(__file__).resolve().parents[1]
 
 def test_full_ecosystem_flow(tmp_path):
     event_bus = EcosystemEventBus()
     ledger = MemoryLedger()
-    brain = MosharrofCoreBrain(event_bus=event_bus, memory_ledger=ledger)
+    audit = AuditLedger()
+    brain = MosharrofCoreBrain(event_bus=event_bus, memory_ledger=ledger, audit_ledger=audit)
     tool_factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
     voice_engine = VoiceJournalEngine(memory_ledger=ledger)
     storage_engine = StorageEngine(root_dir=str(tmp_path))
 
     assert brain.system_status()["delete_operations"] == "BLOCKED"
+    assert brain.system_status()["brain_adapter"] == "deterministic-baseline"
     assert voice_engine.toggle_listening(True)["listening_state"] == "ACTIVE"
     assert voice_engine.process_ambient_conversation("SPEAKER_TEST_01", "Test conversation")["status"] == "SUCCESS"
 
@@ -29,18 +38,42 @@ def test_full_ecosystem_flow(tmp_path):
     assert intent["status"] == "SUCCESS"
     assert intent["intent"] == "RESEARCH"
     assert intent["intent_clarity"] == 1.0
+    assert audit.records()
 
 def test_capability_boundary():
     brain = MosharrofCoreBrain()
     assert brain.authorize_action(entity_id="core", operation="READ", scope="core")["status"] == "ALLOWED"
     assert brain.authorize_action(entity_id="core", operation="DELETE", scope="core")["status"] == "DENIED"
     assert brain.authorize_action(entity_id="core", operation="DESTRUCTIVE", scope="core")["status"] == "DENIED"
-    assert brain.authorize_action(entity_id="chat", operation="WRITE", scope="core")["status"] == "DENIED"
-
+    assert brain.authorize_action(entity_id="chat", operation="WRITE", scope="core")["status"] == "DENIED"]
 
 def test_delete_is_permanently_blocked():
     result = MosharrofCoreBrain().monitor_sub_agent(
-        "chat", {"status":"PROCESSING","operation":"DELETE","scope":"chat"}
+        "chat", {"status": "PROCESSING", "operation": "DELETE", "scope": "chat"}
     )
     assert result["decision"] == "REJECTED"
     assert result["integrity_check"] == "FAILED"
+
+def test_temporary_permission_cannot_grant_delete():
+    manager = TemporaryPermissionManager()
+    assert manager.grant(
+        "task-1", entity_id="core", operation="DELETE", scope="core", task="cleanup"
+    )["status"] == "DENIED"
+    granted = manager.grant(
+        "task-2", entity_id="core", operation="WRITE", scope="core/config", task="configuration"
+    )
+    assert granted["status"] == "GRANTED"
+    assert manager.revoke("task-2")["status"] == "REVOKED"
+
+def test_manifest_and_entity_registry_are_parseable_and_complete():
+    manifest = json.loads((ROOT / "config/project_manifest.json").read_text(encoding="utf-8"))
+    registry = json.loads((ROOT / "config/entity_registry.json").read_text(encoding="utf-8"))
+    assert manifest["project_id"] == "mosharrof.core"
+    assert manifest["owner"] == "Mosharrof Karim"
+    assert manifest["immutable_safety_rules"]["delete"] is False
+    ids = {item["id"] for item in registry["entities"]}
+    assert {"core", "chat", "sidebar", "quran_research"} <= ids
+    for item in registry["entities"]:
+        assert item["delete_allowed"] is False
+        assert item["scope"]
+        assert item["brain"]
