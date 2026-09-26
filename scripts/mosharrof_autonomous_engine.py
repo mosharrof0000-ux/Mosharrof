@@ -88,4 +88,4 @@ subprocess.run(["git","push","--set-upstream","origin",branch],check=True)
 body="Mosharrof Autonomous Engine task:\n\n"+request+"\n\nIsolated branch: "+branch+"\n\nThis PR must pass all required checks before promotion."
 subprocess.run(["gh","pr","create","--base","main","--head",branch,
                 "--title","Auto autonomous task","--body",body],check=True)
-print("Autonomous task completed through isolated PR creation.")
+\n# Ask GitHub to merge automatically only after required branch-protection checks pass.\n# If auto-merge is disabled at repository level, this fails safely and leaves the PR open.\nsubprocess.run(["gh","pr","merge","--auto","--squash","--delete-branch",branch],check=False)\nprint("Autonomous task completed through isolated PR creation; auto-merge requested.")
