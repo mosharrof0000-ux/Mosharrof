@@ -22,6 +22,8 @@ class VoiceJournalEngine:
         "করতেছেন": "করছেন",
         "মশারফ": "মোশাররফ",
         "মোশরফ": "মোশাররফ",
+        "মোশারফ এর": "মোশাররফের",
+        "মোশরফ এর": "মোশাররফের",
         "কোরান": "কুরআন",
         "কুরান": "কুরআন",
     }
@@ -82,7 +84,10 @@ class VoiceJournalEngine:
                     text = text[:offset].rstrip() + ", " + text[offset:].lstrip()
 
         if not re.search(r"[?!।]$", text):
-            if question_hint is True:
+            words = [w.strip(".,!?।") for w in text.split()]
+            first_word = words[0] if words else ""
+            last_word = words[-1] if words else ""
+            if question_hint is True or first_word in self.QUESTION_WORDS or last_word in {"কি", "কী"}:
                 text += "?"
             else:
                 text += "।"
