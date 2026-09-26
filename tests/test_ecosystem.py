@@ -44,3 +44,10 @@ def test_delete_is_permanently_blocked():
     )
     assert result["decision"] == "REJECTED"
     assert result["integrity_check"] == "FAILED"
+
+
+def test_monitor_sub_agent_cannot_bypass_capability_boundary():
+    brain = MosharrofCoreBrain()
+    denied = brain.monitor_sub_agent("core", {"status":"PROCESSING","operation":"DELETE","scope":"core","entity_scope":"core"})
+    assert denied["decision"] == "REJECTED"
+    assert denied["authorization"]["status"] == "DENIED"
