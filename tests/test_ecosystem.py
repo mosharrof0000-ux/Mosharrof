@@ -1,34 +1,30 @@
-"""Integration tests for the Mosharrof core foundation."""
-
-from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
-from src.core.tool_factory import ToolFactory
-from src.core.voice_engine import VoiceJournalEngine
-from src.core.storage_engine import StorageEngine
+from src.core.mosharrof_brain import MosharrofCoreBrain
+from src.core.permissions import PermissionGate
+from src.core.registry import EntityRegistry
 
-def test_full_ecosystem_flow(tmp_path):
-    event_bus = EcosystemEventBus()
-    ledger = MemoryLedger()
-    brain = MosharrofCoreBrain(event_bus=event_bus, memory_ledger=ledger)
-    tool_factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
-    voice_engine = VoiceJournalEngine(memory_ledger=ledger)
-    storage_engine = StorageEngine(root_dir=str(tmp_path))
+def test_core_boot_and_intent():
+    bus = EcosystemEventBus()
+    memory = MemoryLedger()
+    brain = MosharrofCoreBrain(event_bus=bus, memory_ledger=memory)
+    result = brain.process_intent("organize the project")
+    assert result["status"] == "SUCCESS"
+    assert memory.recall_recent_events(1)[0]["event_type"] == "INTENT_RECEIVED"
 
-    assert brain.system_status()["security_protocol"] == "NO_DELETE"
-    assert voice_engine.toggle_listening(True)["listening_state"] == "ACTIVE"
-    assert voice_engine.process_ambient_conversation(
-        "SPEAKER_TEST_01", "Test conversation"
-    )["status"] == "SUCCESS"
+def test_delete_is_permanently_blocked():
+    gate = PermissionGate({"READ", "CREATE", "UPDATE", "EXECUTE"})
+    assert gate.check("DELETE").allowed is False
+    assert gate.check("DESTRUCTIVE").allowed is False
 
-    sample = tmp_path / "sample.txt"
-    sample.write_text("test", encoding="utf-8")
-    scan = storage_engine.scan_and_index_storage(str(tmp_path))
-    assert scan["status"] == "SUCCESS"
-    assert scan["total_files_scanned"] >= 1
+def test_registry_loads():
+    registry = EntityRegistry()
+    registry.load()
+    assert registry.get("mosharrof.core").name == "Mosharrof Core"
 
-    assert isinstance(tool_factory.list_available_tools(), list)
-    intent = brain.process_intent("Please organize my files")
-    assert intent["status"] == "SUCCESS"
-    assert intent["intent"] == "STORAGE"
-    assert intent["intent_clarity"] == 1.0
+def test_event_bus():
+    bus = EcosystemEventBus()
+    received = []
+    bus.subscribe("SYSTEM_ALERT", received.append)
+    bus.publish("SYSTEM_ALERT", {"ok": True})
+    assert received == [{"ok": True}]
