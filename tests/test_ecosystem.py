@@ -165,20 +165,29 @@ def test_additional_delete_variants_are_denied():
 
 def test_context_aware_voice_pipeline():
     engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
-    assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
-    result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ।"
-
-
-def test_voice_audio_requires_authorization_and_provider():
-    engine = VoiceJournalEngine()
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
-    engine.toggle_listening(True, authorized=True)
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
-    provider = lambda _audio: "তুমি কি করতেছ"
-    engine = VoiceJournalEngine(transcription_provider=provider)
-    engine.toggle_listening(True, authorized=True)
-    result = engine.sanitize_phonetic_speech(b"audio")
+    assert engine.sanitize_phonetic_speech("মশাররফ কোরান গবেষনা") == "মোশাররফ কুরআন গবেষনা"
+    assert engine.correct_contextual_grammar("মোশাররফ কুরআন গবেষনা") == "মোশাররফ কুরআন গবেষণা"
+    assert engine.apply_smart_punctuation("কীভাবে মোশাররফ কাজ করবে") == "কীভাবে মোশাররফ কাজ করবে?"
+    result = engine.process_voice_text("মশাররফ কোরান গবেষনা")
     assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ।"
+    assert result["text"] == "মোশাররফ কুরআন গবেষণা।"
+    assert result["pipeline"] == [
+        "phonetic_sanitizer",
+        "contextual_correction",
+        "smart_punctuation",
+    ]
+
+
+def test_voice_engine_does_not_fake_audio_transcription():
+    engine = VoiceJournalEngine()
+    assert engine.sanitize_phonetic_speech(b"opaque-audio") == ""
+
+
+def test_ambient_conversation_uses_processed_transcript():
+    engine = VoiceJournalEngine()
+    engine.toggle_listening(True, authorized=True)
+    result = engine.process_ambient_conversation(
+        "SPEAKER_TEST_01", "কীভাবে মশাররফ কোরান গবেষনা"
+    )
+    assert result["status"] == "SUCCESS"
+    assert result["transcript"] == "কীভাবে মোশাররফ কুরআন গবেষণা?"
