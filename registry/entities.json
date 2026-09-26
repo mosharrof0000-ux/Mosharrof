@@ -1,0 +1,25 @@
+{
+  "registry_version": "1.0.0",
+  "entities": [
+    {
+      "id": "mosharrof.core",
+      "name": "Mosharrof Core",
+      "type": "core",
+      "responsibility": "Coordinate entities, policies, communication, memory, tools, and lifecycle.",
+      "brain": {"adapter": "model-agnostic", "state": "defined"},
+      "permission_profile": "core.max-necessary-no-delete",
+      "scope": "ecosystem",
+      "status": "active"
+    },
+    {
+      "id": "mosharrof.chat",
+      "name": "Chat Box",
+      "type": "ui_entity",
+      "responsibility": "Receive user input, maintain conversation context, and route requests to the responsible entity.",
+      "brain": {"adapter": "model-agnostic", "state": "defined"},
+      "permission_profile": "chat.standard",
+      "scope": "chat",
+      "status": "planned"
+    }
+  ]
+}
