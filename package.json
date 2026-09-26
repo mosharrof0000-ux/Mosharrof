@@ -1,1 +1,1 @@
-{"name":"mosharrof-visual-qa","private":true,"scripts":{"visual:test":"playwright test"},"devDependencies":{"@playwright/test":"^1.55.0"}}
+{"name":"mosharrof-visual-qa","private":true,"scripts":{"visual:test":"playwright test"},"devDependencies":{"@playwright/test":"^1.55.0","pixelmatch":"^6.0.0","pngjs":"^7.0.0"}}
