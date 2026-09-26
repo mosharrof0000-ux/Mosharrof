@@ -25,6 +25,16 @@ Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful compo
 6. `policies/CORE_POLICY.md`
 7. `docs/ARCHITECTURE.md`
 
+### Voice Engine
+
+`VoiceJournalEngine` provides a provider-agnostic voice-processing boundary:
+
+- Smart punctuation from transcript/context and optional acoustic pause hints.
+- Conservative contextual correction using explicit corrections or approved context terms.
+- Phonetic speech normalization without inventing a transcript from raw audio.
+- Raw audio requires an external speech-to-text provider through the brain/model adapter layer.
+- Recording remains blocked unless explicit authorization is supplied.
+
 ### Entity structure
 
 Every meaningful component is represented under `entities/<entity-id>/` where appropriate. The registry is the authoritative machine-readable map for identity, responsibility, brain, scope and permission boundaries.
@@ -39,4 +49,4 @@ Al-Quran Research remains an independent project until explicit integration.
 
 ## Live site
 
-GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
+GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`. The deployment is test-gated: the Pages job runs only after the repository test suite passes.
