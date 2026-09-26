@@ -1,0 +1,28 @@
+
+name: Mosharrof Visual QA
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install test dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run project tests
+        run: python -m pytest -q
+      - name: Run mobile visual comparison
+        env:
+          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
+        run: python3 scripts/mosharrof_visual_qa.py
