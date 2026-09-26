@@ -155,5 +155,4 @@ class VoiceJournalEngine:
             "detected_speaker": speaker_info["speaker"],
             "is_known": speaker_info["is_known"],
             "transcript": processed["text"],
-        }
-}
+        }\n
