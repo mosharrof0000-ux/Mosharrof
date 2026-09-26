@@ -65,3 +65,30 @@ class VoiceJournalEngine:
             "is_known": speaker_info["is_known"],
             "insight": f"{speaker_id}-এর বক্তব্য সামাজিক মেমোরিতে সংরক্ষণ করা হয়েছে।"
         }
+
+
+    def apply_smart_punctuation(self, raw_text: str) -> str:
+        """Apply conservative punctuation without changing the user's words."""
+        text = " ".join((raw_text or "").split())
+        if not text:
+            return ""
+        if text.endswith(("।", ".", "!", "?", "؟")):
+            return text
+        question_markers = ("কি", "কী", "কেন", "কখন", "কোথায়", "কোথায়", "কিভাবে", "কীভাবে", "হবে কি")
+        if any(marker in text for marker in question_markers):
+            return text + "?"
+        return text + "।"
+
+    def correct_contextual_grammar(self, raw_text: str, context: str = "") -> str:
+        """Conservative context pass; semantic correction is model-adapter work."""
+        del context
+        return " ".join((raw_text or "").split())
+
+    def sanitize_phonetic_speech(self, audio_stream: Any) -> Dict[str, Any]:
+        """Hand audio to a future speech-to-text model adapter."""
+        return {
+            "status": "ADAPTER_REQUIRED",
+            "engine": "voice",
+            "audio_received": audio_stream is not None,
+            "next_stage": "speech_to_text_model_adapter",
+        }
