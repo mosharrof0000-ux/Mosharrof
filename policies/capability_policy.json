@@ -1,0 +1,7 @@
+{
+  "policy_version": "1.0.0",
+  "permanent_denials": ["DELETE", "DESTRUCTIVE"],
+  "default_rule": "deny_unless_scoped",
+  "temporary_permissions": {"allowed": true, "requirements": ["task_scope", "audit_record", "expiry_or_revoke"]},
+  "entity_rule": "Each entity receives only the permissions required for its responsibility."
+}
