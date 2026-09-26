@@ -1,43 +1,64 @@
 """
-Mosharrof AI: Master Core Brain (কেন্দ্রীয় শাসনতন্ত্র ও প্রধান চেতনা)
-স্নায়ুতন্ত্র (EventBus)-এর মাধ্যমে সমগ্র ইকোসিস্টেম পরিচালনা ও স্বায়ত্তশাসন বজায় রাখে।
+Mosharrof Core Brain
+Model-agnostic orchestration core for the Mosharrof entity ecosystem.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 from src.core.event_bus import EcosystemEventBus
+from src.core.memory_ledger import MemoryLedger
+
 
 class MosharrofCoreBrain:
-    def __init__(self, event_bus: EcosystemEventBus = None):
+    """Coordinate entities while keeping capability behind explicit policy layers."""
+
+    def __init__(
+        self,
+        event_bus: Optional[EcosystemEventBus] = None,
+        memory_ledger: Optional[MemoryLedger] = None,
+    ):
         self.system_name = "Mosharrof AI Core"
-        self.consciousness_state = "SUPREME_GOVERNANCE"
-        self.security_protocol = "IRON_CLAD_LOCK"
+        self.consciousness_state = "ACTIVE"
+        self.security_protocol = "NO_DELETE"
         self.event_bus = event_bus or EcosystemEventBus()
-        self.active_entities = [
-            "philosophy_domain",
-            "ui_organ"
-        ]
+        self.memory_ledger = memory_ledger or MemoryLedger()
+        self.active_entities = []
+
+    def register_entity(self, entity_id: str) -> Dict[str, Any]:
+        if entity_id not in self.active_entities:
+            self.active_entities.append(entity_id)
+        return {"status": "REGISTERED", "entity_id": entity_id}
 
     def broadcast_system_command(self, command_type: str, payload: Dict[str, Any]):
-        """স্নায়ুতন্ত্রের মাধ্যমে সমগ্র ইকোসিস্টেমে স্বায়ত্তশাসিত নির্দেশিকা প্রচার করা"""
-        print(f"[{self.system_name}] Broadcasting command: {command_type}")
         self.event_bus.publish(command_type, payload)
 
     def monitor_sub_agent(self, entity_name: str, action_report: Dict[str, Any]) -> Dict[str, Any]:
-        """সাব-এজেন্টগুলোর কর্মকাণ্ড পর্যবেক্ষণ ও গাইডলাইন অনুমোদন করা"""
-        print(f"[{self.system_name}] Evaluating action from sub-agent: {entity_name}")
-        
         if action_report.get("status") == "PROCESSING":
             return {
                 "decision": "APPROVED",
-                "master_command": f"Proceed with adaptive behavior for {entity_name}.",
-                "integrity_check": "PASSED"
+                "master_command": f"Proceed within policy for {entity_name}.",
+                "integrity_check": "PASSED",
             }
-        
         return {
             "decision": "REJECTED",
-            "master_command": "Security policy violation detected.",
-            "integrity_check": "FAILED"
+            "master_command": "Policy validation failed.",
+            "integrity_check": "FAILED",
+        }
+
+    def process_intent(self, intent: str) -> Dict[str, Any]:
+        """Record and classify an intent without granting execution authority."""
+        clean = (intent or "").strip()
+        if not clean:
+            return {"status": "EMPTY", "intent_clarity": "0%", "intent": ""}
+        self.memory_ledger.record_event("INTENT_RECEIVED", {"intent": clean})
+        return {
+            "status": "SUCCESS",
+            "intent": clean,
+            "intent_clarity": "100%",
+            "execution": "REQUIRES_POLICY_AND_PERMISSION",
         }
 
     def system_status(self) -> str:
-        return f"{self.system_name} is fully active with {len(self.active_entities)} living entities online and EventBus integrated."
+        return (
+            f"{self.system_name} is active with "
+            f"{len(self.active_entities)} registered entities."
+        )
