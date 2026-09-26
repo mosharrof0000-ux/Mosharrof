@@ -1,5 +1,4 @@
 """Project manifest loader used for fast system understanding by new agents."""
-
 import json
 from pathlib import Path
 from typing import Any, Dict
@@ -12,16 +11,19 @@ class ProjectManifest:
 
     @property
     def project_id(self) -> str:
-        return self.data["project"]["id"]
+        return self.data["project_id"]
 
     @property
     def project_name(self) -> str:
-        return self.data["project"]["name"]
+        return self.data["name"]
 
     def summary(self) -> Dict[str, Any]:
         return {
-            "project": self.data["project"],
-            "core": self.data["core"],
+            "project_id": self.data["project_id"],
+            "name": self.data["name"],
+            "owner": self.data["owner"],
+            "role": self.data["role"],
             "architecture": self.data["architecture"],
-            "registries": self.data["registries"],
+            "first_read": self.data["first_read"],
+            "entity_lifecycle": self.data["entity_lifecycle"],
         }
