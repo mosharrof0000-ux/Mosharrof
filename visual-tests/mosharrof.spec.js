@@ -1,2 +1,20 @@
 import { test, expect } from "@playwright/test";
-test("Mosharrof visual guard", async ({page})=>{await page.goto("/",{waitUntil:"networkidle"});await expect(page).toHaveTitle(/MOSHARROF AI/i);await expect(page.locator(".header")).toBeVisible();await expect(page.locator("#messages")).toBeVisible();await expect(page.locator(".composer")).toBeVisible();const o=await page.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth}));expect(o.s).toBeLessThanOrEqual(o.w+2);const z=await page.evaluate(()=>({h:Number(getComputedStyle(document.querySelector(".header")).zIndex),c:Number(getComputedStyle(document.querySelector(".composer")).zIndex)}));expect(z.c).toBeGreaterThan(z.h);await expect(page).toHaveScreenshot("mosharrof-home.png",{fullPage:true,animations:"disabled",caret:"hide",maxDiffPixelRatio:0.035});});
+import pixelmatch from "pixelmatch";
+import { PNG } from "pngjs";
+
+const candidate=process.env.BASE_URL||"http://127.0.0.1:4173";
+const baseline=process.env.BASELINE_URL||"http://127.0.0.1:4174";
+
+test("Mosharrof rendered design regression",async({browser})=>{
+ const c=await browser.newPage(); const b=await browser.newPage();
+ await c.goto(candidate,{waitUntil:"networkidle"}); await b.goto(baseline,{waitUntil:"networkidle"});
+ await expect(c).toHaveTitle(/MOSHARROF AI/i); await expect(c.locator(".header")).toBeVisible(); await expect(c.locator("#messages")).toBeVisible(); await expect(c.locator(".composer")).toBeVisible();
+ const overflow=await c.evaluate(()=>({w:document.documentElement.clientWidth,s:document.documentElement.scrollWidth})); expect(overflow.s).toBeLessThanOrEqual(overflow.w+2);
+ const [cb,bb]=await Promise.all([c.screenshot({fullPage:true,animations:"disabled"}),b.screenshot({fullPage:true,animations:"disabled"})]);
+ const ca=PNG.sync.read(cb), ba=PNG.sync.read(bb); expect(ca.width).toBe(ba.width); expect(ca.height).toBe(ba.height);
+ const diff=new PNG({width:ca.width,height:ca.height}); const pixels=pixelmatch(ba.data,ca.data,diff.data,ca.width,ca.height,{threshold:0.12,includeAA:false}); const ratio=pixels/(ca.width*ca.height);
+ await require("fs").promises.mkdir("test-results",{recursive:true});
+ await require("fs").promises.writeFile("test-results/candidate.png",PNG.sync.write(ca)); await require("fs").promises.writeFile("test-results/baseline.png",PNG.sync.write(ba)); await require("fs").promises.writeFile("test-results/diff.png",PNG.sync.write(diff));
+ expect(ratio).toBeLessThanOrEqual(0.035);
+ await c.close(); await b.close();
+});
