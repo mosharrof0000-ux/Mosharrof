@@ -1,0 +1,65 @@
+name: Mosharrof Visual Design Guardian
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "URL to inspect"
+        required: false
+        default: "https://mosharrof0000-ux.github.io/Mosharrof/"
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: visual-qa-\${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposed version
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install browser
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Capture proposed design
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/web.log 2>&1 &
+          echo $! >/tmp/web.pid
+          sleep 2
+          node scripts/visual_capture.mjs http://127.0.0.1:4173/ artifacts/proposed.png
+          kill $(cat /tmp/web.pid) || true
+      - name: Capture current live URL
+        env:
+          TARGET_URL: \${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
+        run: node scripts/visual_capture.mjs "$TARGET_URL" artifacts/live.png
+      - name: Build main baseline
+        run: |
+          git worktree add /tmp/mosharrof-main origin/main
+          python3 -m http.server 4174 --directory /tmp/mosharrof-main/web >/tmp/main.log 2>&1 &
+          echo $! >/tmp/main.pid
+          sleep 2
+          node scripts/visual_capture.mjs http://127.0.0.1:4174/ artifacts/main.png
+          kill $(cat /tmp/main.pid) || true
+      - name: Pixel regression check
+        run: |
+          python3 scripts/visual_diff.py artifacts/main.png artifacts/proposed.png
+          python3 scripts/visual_diff.py artifacts/main.png artifacts/live.png
+      - name: AI visual review
+        env:
+          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+        run: python3 scripts/visual_ai_review.py artifacts/main.png artifacts/proposed.png artifacts/live.png
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-qa-\${{ github.run_id }}
+          path: artifacts/
