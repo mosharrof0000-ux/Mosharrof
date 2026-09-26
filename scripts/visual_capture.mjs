@@ -1,10 +1,10 @@
 import { chromium } from "playwright";
-import fs from "node:fs";
-const url=process.argv[2], output=process.argv[3];
-if (!url || !output) throw new Error("Usage: visual_capture.mjs URL OUTPUT");
-fs.mkdirSync("artifacts",{recursive:true});
+const [url,output]=process.argv.slice(2);
+if(!url||!output) throw new Error("URL/output required");
 const browser=await chromium.launch({headless:true});
-const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true});
-await page.goto(url,{waitUntil:"networkidle",timeout:60000});
+const page=await browser.newPage({viewport:{width:412,height:915},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+const response=await page.goto(url,{waitUntil:"networkidle",timeout:60000});
+if(!response||!response.ok()) throw new Error("Page failed: "+url);
+await page.waitForTimeout(2500);
 await page.screenshot({path:output,fullPage:false});
 await browser.close();
