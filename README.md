@@ -29,21 +29,13 @@ Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful compo
 
 Every meaningful component is represented under `entities/<entity-id>/` where appropriate. The registry is the authoritative machine-readable map for identity, responsibility, brain, scope and permission boundaries.
 
+### Context-aware smart voice
+
+`src/core/voice_engine.py` provides authorization-aware voice journaling, smart punctuation, conservative high-confidence contextual correction, and a provider-neutral speech-to-text boundary.
+
 ### Model independence
 
 `src/core/brain_adapter.py` separates entity identity from the underlying model/provider. A model can be replaced without changing the entity's identity, responsibility, memory, permission, scope or audit history.
-
-### Context-aware voice engine
-
-The Voice Journal Engine provides an explicit authorization boundary plus a provider-neutral voice-processing pipeline:
-
-- Smart punctuation for transcript text.
-- High-confidence contextual Bengali normalization.
-- Provider-backed phonetic/audio sanitization without pretending that raw audio can be decoded locally.
-- Transcript normalization before social-memory logging.
-- Recording remains blocked unless explicit authorization is supplied.
-
-The implementation lives in `src/core/voice_engine.py` and is covered by ecosystem tests.
 
 ### First research tool
 
@@ -51,4 +43,6 @@ Al-Quran Research remains an independent project until explicit integration.
 
 ## Live site
 
-GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
+GitHub Pages deployment is test-gated by `.github/workflows/test-and-pages.yml` and publishes the `site/` directory.
+
+Live site: https://mosharrof0000-ux.github.io/Mosharrof/
