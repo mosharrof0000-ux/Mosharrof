@@ -1,0 +1,14 @@
+{
+  "id":"tool_factory",
+  "type":"service_entity",
+  "owner":"Mosharrof Karim",
+  "brain":"tool-brain",
+  "responsibility":"Safe tool creation, registration and execution within policy.",
+  "scope":"tools/*",
+  "permission_profile":"tool_factory",
+  "memory":"entities/tool_factory/memory",
+  "tools":"entities/tool_factory/tools",
+  "audit":"entities/tool_factory/audit",
+  "version":"1.0.0",
+  "delete_allowed":false
+}
