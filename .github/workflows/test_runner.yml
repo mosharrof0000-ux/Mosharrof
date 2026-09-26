@@ -20,5 +20,6 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          python -m unittest discover -s tests
+          PYTHONPATH=. python -m unittest discover -s tests
+          
           
