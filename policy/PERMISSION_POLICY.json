@@ -1,0 +1,11 @@
+{
+  "policy_id": "mosharrof.permission.v1",
+  "capability_formula": "AI_BRAIN x PERMISSION x POLICY x SCOPE x IDENTITY",
+  "permanent_denials": ["DELETE", "DESTRUCTIVE"],
+  "rules": [
+    "Every entity operates only within its declared scope.",
+    "Every write or permission change must be auditable.",
+    "Temporary permissions must be task-bound, time-limited, audited and revoked after completion.",
+    "A model provider may change without changing entity identity, memory or policy."
+  ]
+}
