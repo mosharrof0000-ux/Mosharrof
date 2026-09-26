@@ -87,3 +87,9 @@ def test_storage_organizer_never_overwrites(tmp_path):
     assert result["moved_files"] == 0
     assert source.exists()
     assert existing.read_text(encoding="utf-8") == "existing"
+
+
+def test_tool_factory_safe_function_body_and_execution(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert "created and registered" in factory.create_tool("safe_tool", "return 1")
+    assert factory.execute_tool("safe_tool") == 1
