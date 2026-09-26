@@ -11,7 +11,10 @@
 </head>
 <body>
   <div class="shell">
-    <header class="top"><div class="brand">MOSHARROF CORE</div><div class="status">● Foundation online</div></header>
+    <header class="top">
+      <div class="brand">MOSHARROF CORE</div>
+      <div class="status">● Foundation online</div>
+    </header>
     <main class="main">
       <section class="hero">
         <div class="status">ENTITY-FIRST · MODEL-AGNOSTIC</div>
@@ -26,19 +29,21 @@
           <div class="item"><strong>Policy</strong><span class="muted">Permission and scope enforcement</span></div>
           <div class="item"><strong>Audit</strong><span class="muted">Traceable changes and activation</span></div>
         </div>
+        <div class="voice-card">
+          <div class="voice-title"><strong>Voice Engine</strong><span id="voiceStatus">Voice ready</span></div>
+          <p class="muted">Context-aware transcription with conservative smart punctuation and visible corrections.</p>
+        </div>
         <div id="console" class="console" aria-live="polite"></div>
       </section>
     </main>
     <div class="inputbar">
       <form id="chatForm">
         <input id="chatInput" autocomplete="off" placeholder="Ask the Mosharrof foundation...">
+        <button id="voiceButton" type="button" aria-label="Start voice input">🎙️</button>
         <button type="submit">Send</button>
       </form>
     </div>
   </div>
   <script src="./app.js"></script>
-  <script>
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  </script>
 </body>
 </html>
