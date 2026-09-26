@@ -1,2 +1,7 @@
-# Mosharrof Visual QA
-Browser-based visual verification opens the preview/live URL with Chromium, captures mobile and desktop screenshots, checks required UI layers and browser errors, and stores evidence as workflow artifacts. This gate has no permission to modify main directly.
+# Mosharrof Visual QA Engine
+
+The autonomous visual layer renders the proposed build in Chromium before promotion.
+
+**Code → isolated/preview build → real browser → screenshots → UI/overflow checks → optional baseline comparison → verification gate → promotion**
+
+It verifies the rendered result rather than trusting source code alone. Screenshots are retained as CI artifacts. A large baseline difference blocks promotion.
