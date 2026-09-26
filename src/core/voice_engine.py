@@ -57,9 +57,15 @@ class VoiceJournalEngine:
         text = re.sub(r"\?+", "?", text)
         text = re.sub(r"।+", "।", text)
 
-        # Respect an already supplied terminal mark.
+        # Infer a question mark only for high-confidence interrogative openings.
+        question_starts = (
+            "কি ", "কী ", "কেন ", "কোথায় ", "কোথায় ", "কখন ", "কে ",
+            "কাকে ", "কার ", "কোন ", "কত ", "কতটা ", "কীভাবে ", "কিভাবে ",
+            "where ", "why ", "when ", "who ", "what ", "how "
+        )
+        lowered = text.lower()
         if text[-1] not in ".!?।":
-            text += "।"
+            text += "?" if lowered.startswith(question_starts) else "।"
         return text
 
     @staticmethod
