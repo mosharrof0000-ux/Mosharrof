@@ -20,9 +20,11 @@ def test_full_ecosystem_flow(tmp_path):
     assert brain.system_status()["delete_operations"] == "BLOCKED"
     assert voice_engine.toggle_listening(True)["listening_state"] == "BLOCKED"
     assert voice_engine.toggle_listening(True, authorized=True)["listening_state"] == "ACTIVE"
-    assert voice_engine.process_ambient_conversation(
-        "SPEAKER_TEST_01", "Test conversation"
-    )["status"] == "SUCCESS"
+    conversation = voice_engine.process_ambient_conversation(
+        "SPEAKER_TEST_01", "কোরআন নিয়ে কথা বলি"
+    )
+    assert conversation["status"] == "SUCCESS"
+    assert conversation["transcript"] == "কুরআন নিয়ে কথা বলি।"
 
     sample = tmp_path / "sample.txt"
     sample.write_text("test", encoding="utf-8")
@@ -35,6 +37,14 @@ def test_full_ecosystem_flow(tmp_path):
     assert intent["status"] == "SUCCESS"
     assert intent["intent"] == "RESEARCH"
     assert intent["intent_clarity"] == 1.0
+
+
+def test_voice_smart_processing():
+    engine = VoiceJournalEngine()
+    assert engine.apply_smart_punctuation("আমি কি ঠিক বলেছি") == "আমি কি ঠিক বলেছি।"
+    assert engine.correct_contextual_grammar("কুরান নিয়ে গবেষণা") == "কুরআন নিয়ে গবেষণা"
+    assert engine.sanitize_phonetic_speech("মোশারফ কোরআন গবেষণা") == "মোশাররফ কুরআন গবেষণা।"
+    assert engine.sanitize_phonetic_speech(None) == ""
 
 
 def test_capability_boundary():
@@ -74,6 +84,7 @@ def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
+
 
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
@@ -120,7 +131,9 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
