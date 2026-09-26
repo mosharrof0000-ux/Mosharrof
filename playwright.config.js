@@ -1,2 +1,2 @@
-import { defineConfig, devices } from "@playwright/test";
-export default defineConfig({testDir:"./visual-tests",timeout:60000,expect:{timeout:10000},use:{trace:"retain-on-failure",screenshot:"only-on-failure"},projects:[{name:"mobile",use:{...devices["Pixel 5"]}},{name:"desktop",use:{...devices["Desktop Chrome"]}}]});
+const { defineConfig, devices } = require("@playwright/test");
+module.exports=defineConfig({testDir:"./visual-tests",timeout:60000,expect:{timeout:10000},use:{trace:"retain-on-failure",screenshot:"only-on-failure"},projects:[{name:"mobile",use:{...devices["Pixel 5"]}},{name:"desktop",use:{...devices["Desktop Chrome"]}}]});
