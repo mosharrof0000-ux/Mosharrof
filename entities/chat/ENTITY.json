@@ -1,0 +1,1 @@
+{"id":"chat","type":"ui_entity","brain":"chat","responsibility":"Own user conversation and request routing.","scope":"chat/*","permission_profile":"chat","memory":"entities/chat/memory","tools":"entities/chat/tools","audit":"entities/chat/audit"}
