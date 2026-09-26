@@ -1,8 +1,6 @@
-name: Mosharrof Autonomous Engineer
+name: Mosharrof Autonomous Engineer (manual legacy)
 
 on:
-  schedule:
-    - cron: "17 */6 * * *"
   workflow_dispatch:
 
 permissions:
