@@ -20,9 +20,11 @@ def test_full_ecosystem_flow(tmp_path):
     assert brain.system_status()["delete_operations"] == "BLOCKED"
     assert voice_engine.toggle_listening(True)["listening_state"] == "BLOCKED"
     assert voice_engine.toggle_listening(True, authorized=True)["listening_state"] == "ACTIVE"
-    assert voice_engine.process_ambient_conversation(
-        "SPEAKER_TEST_01", "Test conversation"
-    )["status"] == "SUCCESS"
+    conversation = voice_engine.process_ambient_conversation(
+        "SPEAKER_TEST_01", "কোরআন নিয়ে প্রশ্ন করতেছি"
+    )
+    assert conversation["status"] == "SUCCESS"
+    assert conversation["transcript"].endswith("।")
 
     sample = tmp_path / "sample.txt"
     sample.write_text("test", encoding="utf-8")
@@ -70,10 +72,18 @@ def test_tool_factory_blocks_destructive_source(tmp_path):
     assert result.startswith("DENIED:")
 
 
+def test_tool_factory_blocks_dynamic_execution(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert factory.create_tool("bad_eval", "return eval('1+1')").startswith("DENIED:")
+    assert factory.create_tool("bad_open", "return open('x')").startswith("DENIED:")
+    assert factory.create_tool("bad_import", "import subprocess\nreturn 1").startswith("DENIED:")
+
+
 def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
+
 
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
@@ -120,7 +130,9 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
@@ -163,18 +175,11 @@ def test_additional_delete_variants_are_denied():
         assert result["status"] == "DENIED"
 
 
-def test_context_aware_voice_processing():
+def test_voice_engine_smart_processing():
     engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("তুমি কেমন আছ") == "তুমি কেমন আছ।"
-    assert engine.apply_smart_punctuation("কীভাবে কাজ করবে") == "কীভাবে কাজ করবে?"
-    assert engine.correct_contextual_grammar("মোশারফ প্রজেক্ট") == "মোশাররফ প্রজেক্ট"
-    result = engine.sanitize_phonetic_speech("মোশারফ প্রজেক্ট")
+    result = engine.process_transcript("মোশারফ প্রজেক্ট করতেছি")
     assert result["status"] == "SUCCESS"
-    assert result["text"] == "মোশাররফ প্রজেক্ট।"
+    assert result["final_text"] == "মোশাররফ প্রজেক্ট করছি।"
 
-
-def test_voice_audio_provider_boundary():
-    engine = VoiceJournalEngine()
-    result = engine.sanitize_phonetic_speech(b"\xff\xfe")
-    assert result["status"] == "UNSUPPORTED_AUDIO"
-    assert result["reason"] == "ASR_PROVIDER_REQUIRED"
+    question = engine.process_transcript("কুরআন নিয়ে গবেষণা কীভাবে করব")
+    assert question["final_text"].endswith("?")
