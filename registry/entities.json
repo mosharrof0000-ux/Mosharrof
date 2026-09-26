@@ -1,0 +1,9 @@
+{
+  "registry_version": "1.0.0",
+  "entities": [
+    {"id":"core","type":"core","name":"Mosharrof Core","responsibility":"Coordination, governance, policy, permission, memory, communication and lifecycle.","brain":"core","scope":"ecosystem","permission_profile":"core.safe-admin"},
+    {"id":"chat","type":"ui_entity","name":"Chat Box","responsibility":"Conversation input, context and routing.","brain":"chat","scope":"chat","permission_profile":"entity.default"},
+    {"id":"sidebar","type":"ui_entity","name":"Sidebar","responsibility":"Navigation and entity discovery.","brain":"sidebar","scope":"navigation","permission_profile":"entity.default"},
+    {"id":"quran-research","type":"research_tool","name":"Al-Quran Research","responsibility":"Independent Quran research tool connected under Mosharrof.","brain":"tool.quran-research","scope":"research","permission_profile":"entity.default"}
+  ]
+}
