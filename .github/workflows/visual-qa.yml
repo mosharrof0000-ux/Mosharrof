@@ -5,46 +5,42 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  pull-requests: read
 concurrency:
-  group: visual-qa-\${{ github.event.pull_request.number || github.ref }}
+  group: visual-qa-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
   visual-qa:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout candidate
-        uses: actions/checkout@v6
-        with:
-          path: candidate
-      - name: Checkout current main for visual baseline
-        uses: actions/checkout@v6
-        with:
-          ref: main
-          path: baseline
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Install browser QA dependencies
-        run: |
+        with: {python-version: "3.12"}
+      - run: |
           python -m pip install playwright pillow
           python -m playwright install --with-deps chromium
-      - name: Start rendered baseline and candidate
+      - name: Start candidate
+        run: python3 -m http.server 4173 --directory web >/tmp/candidate.log 2>&1 &
+      - name: Candidate screenshots
+        run: python3 scripts/visual_qa.py capture --url http://127.0.0.1:4173
+      - name: Main baseline
         run: |
-          nohup python3 -m http.server 4173 --directory baseline/web >/tmp/base.log 2>&1 &
-          nohup python3 -m http.server 4174 --directory candidate/web >/tmp/candidate.log 2>&1 &
-          for port in 4173 4174; do
-            for i in {1..30}; do curl -fsS http://127.0.0.1:$port/ >/dev/null && break; sleep 1; done
-          done
-      - name: Render, screenshot and compare
-        working-directory: candidate
+          git fetch origin main --depth=1
+          git worktree add --detach /tmp/mosharrof-main origin/main
+          python3 -m http.server 4174 --directory /tmp/mosharrof-main/web >/tmp/baseline.log 2>&1 &
+          sleep 2
+      - name: Baseline screenshots
+        run: python3 scripts/visual_qa.py baseline --url http://127.0.0.1:4174
+      - name: Pixel comparison
+        run: python3 scripts/visual_qa.py compare
+      - name: Gemini visual review
+        if: ${{ secrets.GEMINI_API_KEY != '' }}
         env:
-          MOSHARROF_BASE_URL: http://127.0.0.1:4173/
-          MOSHARROF_QA_URL: http://127.0.0.1:4174/
-        run: python3 scripts/visual_qa.py
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 scripts/visual_qa.py ai-review
       - name: Upload visual evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mosharrof-visual-qa
-          path: candidate/artifacts/visual-qa/**
+          path: visual-qa/
+          if-no-files-found: ignore
