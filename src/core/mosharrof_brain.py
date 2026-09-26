@@ -5,6 +5,8 @@ Central orchestration layer. Model execution is adapter-ready.
 from typing import Any, Dict, Optional
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
+from src.core.permission_engine import PermissionEngine
+from src.core.policy_engine import PolicyEngine
 
 class MosharrofCoreBrain:
     def __init__(self, event_bus: Optional[EcosystemEventBus] = None,
@@ -14,6 +16,8 @@ class MosharrofCoreBrain:
         self.security_protocol = "NO_DELETE"
         self.event_bus = event_bus or EcosystemEventBus()
         self.memory_ledger = memory_ledger or MemoryLedger()
+        self.permission_engine = PermissionEngine()
+        self.policy_engine = PolicyEngine()
         self.active_entities = []
 
     def broadcast_system_command(self, command_type: str, payload: Dict[str, Any]):
@@ -22,14 +26,32 @@ class MosharrofCoreBrain:
             {"command_type": command_type, "payload": payload})
 
     def monitor_sub_agent(self, entity_name: str, action_report: Dict[str, Any]) -> Dict[str, Any]:
-        decision = "APPROVED" if action_report.get("status") == "PROCESSING" else "REJECTED"
-        result = {"decision": decision, "entity": entity_name,
-                  "integrity_check": "PASSED" if decision == "APPROVED" else "FAILED"}
+        operation = str(action_report.get("operation", "")).upper()
+        scope = str(action_report.get("scope", ""))
+        entity_scope = str(action_report.get("entity_scope", ""))
+        policy = self.policy_engine.check(
+            operation=operation, scope=scope, entity_scope=entity_scope
+        )
+        permission = self.permission_engine.authorize(
+            operation, scope=scope, policy_ok=policy["allowed"]
+        )
+        allowed = (
+            action_report.get("status") == "PROCESSING"
+            and policy["allowed"]
+            and permission["status"] == "ALLOWED"
+        )
+        result = {
+            "decision": "APPROVED" if allowed else "REJECTED",
+            "entity": entity_name,
+            "integrity_check": "PASSED" if allowed else "FAILED",
+            "policy": policy,
+            "permission": permission,
+        }
         self.memory_ledger.record_event("ENTITY_DECISION", result)
         return result
 
     def process_intent(self, text: str) -> Dict[str, Any]:
-        cleaned = text.strip()
+        cleaned = (text or "").strip()
         if not cleaned:
             return {"status": "EMPTY", "intent": "UNKNOWN", "intent_clarity": 0.0}
         lowered = cleaned.lower()
