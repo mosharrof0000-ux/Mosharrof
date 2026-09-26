@@ -84,11 +84,7 @@ class StorageEngine:
                     target_dir = os.path.join(folder_path, cat)
                     target_path = os.path.join(target_dir, file)
                     if os.path.exists(target_path):
-                        stem, suffix = os.path.splitext(file)
-                        counter = 1
-                        while os.path.exists(target_path):
-                            target_path = os.path.join(target_dir, f"{stem}__{counter}{suffix}")
-                            counter += 1
+                        continue
                     os.makedirs(target_dir, exist_ok=True)
                     shutil.move(file_path, target_path)
                     moved_count += 1
