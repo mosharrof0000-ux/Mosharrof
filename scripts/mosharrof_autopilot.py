@@ -7,8 +7,8 @@ never edits .github/workflows, and never targets main.
 """
 import json, os, sys, urllib.request
 
-task=sys.environ.get("MOSHARROF_TASK","").strip()
-snapshot=sys.environ.get("MOSHARROF_SNAPSHOT","")
+task=os.environ.get("MOSHARROF_TASK","").strip()
+snapshot=os.environ.get("MOSHARROF_SNAPSHOT","")
 api=os.environ.get("GEMINI_API_KEY","").strip()
 model=os.environ.get("GEMINI_MODEL","gemini-3.6-flash").strip()
 if not task or not api:
