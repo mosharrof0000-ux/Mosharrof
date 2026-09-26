@@ -1,0 +1,63 @@
+name: Mosharrof Visual QA
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposed version
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Capture proposed mobile screenshot
+        shell: bash
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
+          echo $! >/tmp/server.pid
+          sleep 2
+          python3 scripts/capture_visual.py http://127.0.0.1:4173 /tmp/proposed.png
+          kill $(cat /tmp/server.pid)
+
+      - name: Capture main mobile screenshot
+        shell: bash
+        run: |
+          git worktree add /tmp/mosharrof-main origin/main
+          python3 -m http.server 4174 --directory /tmp/mosharrof-main/web >/tmp/mosharrof-main-server.log 2>&1 &
+          echo $! >/tmp/main-server.pid
+          sleep 2
+          python3 scripts/capture_visual.py http://127.0.0.1:4174 /tmp/main.png
+          kill $(cat /tmp/main-server.pid)
+
+      - name: AI visual inspection
+        env:
+          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+        run: python3 scripts/visual_qa_gemini.py /tmp/main.png /tmp/proposed.png
+
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-qa
+          path: |
+            /tmp/main.png
+            /tmp/proposed.png
