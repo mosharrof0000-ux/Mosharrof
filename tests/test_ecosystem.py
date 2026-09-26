@@ -181,3 +181,9 @@ def test_voice_engine_phonetic_sanitizer_normalizes_transcript():
     result = voice.sanitize_phonetic_speech("মশাররফ এর কথা শুনুন")
     assert result["status"] == "SUCCESS"
     assert result["text"] == "মোশাররফ এর কথা শুনুন।"
+
+
+def test_tool_factory_blocks_move_operation(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    result = factory.create_tool("move_tool", "import shutil\nshutil.move('a', 'b')")
+    assert result.startswith("DENIED:")
