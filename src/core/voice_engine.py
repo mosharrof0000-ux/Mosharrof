@@ -7,14 +7,22 @@ conservative context correction. Raw audio is never silently guessed or rewritte
 
 import re
 from difflib import get_close_matches
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from src.core.memory_ledger import MemoryLedger
 
 
 class VoiceJournalEngine:
-    def __init__(self, memory_ledger: Optional[MemoryLedger] = None):
+    DEFAULT_CONTEXT_CORRECTIONS = {
+        "করতেছ": "করছ",
+        "করতেছেন": "করছেন",
+        "করতেছো": "করছ",
+        "করতেছিস": "করছিস",
+    }
+
+    def __init__(self, memory_ledger: Optional[MemoryLedger] = None, transcription_provider: Optional[Callable[[Any], str]] = None):
         self.ledger = memory_ledger or MemoryLedger()
+        self.transcription_provider = transcription_provider
         self.is_listening = False
         self.recording_authorized = False
         self.known_voices: Dict[str, str] = {}
@@ -94,7 +102,9 @@ class VoiceJournalEngine:
         if not text:
             return ""
 
-        for wrong, right in (corrections or {}).items():
+        merged = dict(VoiceJournalEngine.DEFAULT_CONTEXT_CORRECTIONS)
+        merged.update(corrections or {})
+        for wrong, right in merged.items():
             if wrong and right:
                 text = re.sub(rf"(?<!\S){re.escape(wrong)}(?!\S)", right, text)
 
@@ -116,25 +126,21 @@ class VoiceJournalEngine:
         return text
 
     def sanitize_phonetic_speech(self, audio_stream: Any) -> Dict[str, Any]:
-        """Normalize STT text or explicitly request an external STT adapter.
-
-        Actual audio-to-text conversion belongs to a model/provider adapter. Raw
-        bytes are therefore not guessed or transformed into invented words.
-        """
-        if isinstance(audio_stream, str):
-            normalized = self.apply_smart_punctuation(audio_stream)
-            return {
-                "status": "SUCCESS",
-                "input_type": "TRANSCRIPT",
-                "text": normalized,
-            }
-        if isinstance(audio_stream, (bytes, bytearray)):
-            return {
-                "status": "NEEDS_STT_ADAPTER",
-                "input_type": "AUDIO",
-                "reason": "A_SPEECH_TO_TEXT_PROVIDER_MUST_SUPPLY_TRANSCRIPT",
-            }
-        return {"status": "INVALID_INPUT", "reason": "UNSUPPORTED_AUDIO_STREAM_TYPE"}
+        """Convert authorized audio through an attached STT provider, then normalize it."""
+        if not self.recording_authorized:
+            return {"status": "BLOCKED", "reason": "RECORDING_NOT_AUTHORIZED"}
+        if not isinstance(audio_stream, (bytes, bytearray)):
+            return {"status": "INVALID_INPUT", "reason": "AUDIO_BYTES_REQUIRED"}
+        if self.transcription_provider is None:
+            return {"status": "UNAVAILABLE", "input_type": "AUDIO", "reason": "SPEECH_TO_TEXT_PROVIDER_NOT_ATTACHED"}
+        try:
+            transcript = self.transcription_provider(audio_stream)
+        except Exception as exc:
+            return {"status": "ERROR", "reason": "STT_PROVIDER_FAILED", "detail": str(exc)}
+        if not isinstance(transcript, str) or not transcript.strip():
+            return {"status": "EMPTY", "reason": "STT_PROVIDER_RETURNED_NO_TRANSCRIPT"}
+        processed = self.process_voice_text(transcript)
+        return {"status": "SUCCESS", "input_type": "AUDIO", "raw_transcript": transcript, "sanitized_text": processed["processed_text"]}
 
     def process_voice_text(
         self,
@@ -152,6 +158,7 @@ class VoiceJournalEngine:
             "status": "SUCCESS" if punctuated else "EMPTY",
             "raw_text": raw_text,
             "processed_text": punctuated,
+            "final_text": punctuated,
             "correction_applied": corrected != (raw_text or "").strip(),
         }
 
