@@ -58,7 +58,7 @@ class VoiceJournalEngine:
             "কি ", "কী ", "কেন ", "কখন ", "কোথায় ", "কোথায় ",
             "কীভাবে ", "কিভাবে ", "কে ", "কোন ", "কত ",
         )
-        if text.startswith(question_markers):
+        if text.startswith(question_markers) or any(marker in text for marker in (" কীভাবে "," কিভাবে "," কেন "," কি "," কী ")):
             return text + "?"
         return text + "।"
 
