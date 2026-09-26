@@ -48,13 +48,13 @@ class VoiceJournalEngine:
     @staticmethod
     def apply_smart_punctuation(raw_text: str) -> str:
         """Apply conservative punctuation without changing lexical content."""
-        text = re.sub(r"\\s+", " ", (raw_text or "").strip())
+        text = re.sub(r"\s+", " ", (raw_text or "").strip())
         if not text:
             return ""
-        text = re.sub(r"\\s+([,।!?])", r"\\1", text)
+        text = re.sub(r"\s+([,।!?])", r"\1", text)
         text = re.sub(r",+", ",", text)
         text = re.sub(r"!+", "!", text)
-        text = re.sub(r"\\?+", "?", text)
+        text = re.sub(r"\?+", "?", text)
         text = re.sub(r"।+", "।", text)
 
         # Respect an already supplied terminal mark.
@@ -69,7 +69,7 @@ class VoiceJournalEngine:
         This deliberately avoids inventing corrections. A future language-model
         provider can be attached at this boundary for richer contextual repair.
         """
-        text = re.sub(r"\\s+", " ", (raw_text or "").strip())
+        text = re.sub(r"\s+", " ", (raw_text or "").strip())
         if not text:
             return ""
 
