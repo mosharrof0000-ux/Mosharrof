@@ -1,7 +1,7 @@
-# Chat Box Entity
+# Chat Entity
 
-Owns user conversation and request routing.
+Responsibility: user conversation and request routing.
 
-- Identity: `chat`
-- Scope: `chat/*`
-- Delete: permanently blocked
+Boundary: `chat/*`.
+
+The Chat entity does not inherit Core permissions.
