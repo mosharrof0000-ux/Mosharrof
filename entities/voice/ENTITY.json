@@ -1,0 +1,13 @@
+{
+  "id": "voice",
+  "type": "engine_entity",
+  "owner": "Mosharrof Core",
+  "brain": "voice",
+  "responsibility": "Voice input and social-memory processing.",
+  "scope": "voice/*",
+  "permission_profile": "voice",
+  "memory": "entities/voice/memory",
+  "tools": "entities/voice/tools",
+  "audit": "entities/voice/audit",
+  "delete_allowed": false
+}
