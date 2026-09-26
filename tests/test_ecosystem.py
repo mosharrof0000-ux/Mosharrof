@@ -1,43 +1,65 @@
-"""
-Mosharrof AI Ecosystem Complete Integration Test
-সকল মডিউল (Tool Factory, Voice Engine, Storage Engine, Brain) যৌথভাবে পরীক্ষা করা।
-"""
+"""Verification of the Mosharrof Core foundation."""
 
-import pytest
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
 from src.core.tool_factory import ToolFactory
 from src.core.voice_engine import VoiceJournalEngine
 from src.core.storage_engine import StorageEngine
+from src.core.permission_guard import PermissionGuard
+from src.core.entity_registry import EntityDefinition, EntityRegistry
 
-def test_full_ecosystem_flow():
-    # ১. ইভেন্ট বাস ও মেমোরি লেজার তৈরি
+
+def test_core_brain_and_memory_integration():
     event_bus = EcosystemEventBus()
     ledger = MemoryLedger()
-    
-    # ২. ব্রেন ও সাব-ইঞ্জিন ইনস্ট্যানশিয়েশন
     brain = MosharrofCoreBrain(event_bus=event_bus, memory_ledger=ledger)
-    tool_factory = ToolFactory()
-    voice_engine = VoiceJournalEngine(memory_ledger=ledger)
-    storage_engine = StorageEngine()
 
-    # ৩. ভয়েস ও ব্যক্তিত্ব ট্র্যাকিং টেস্ট
-    voice_toggle = voice_engine.toggle_listening(True)
-    assert voice_toggle["listening_state"] == "ACTIVE"
+    result = brain.process_intent("organize project files")
+    assert result["status"] == "SUCCESS"
+    assert result["intent_clarity"] == "100%"
+    assert ledger.recall_recent_events(1)[0]["event_type"] == "INTENT_PROCESSED"
 
-    voice_res = voice_engine.process_ambient_conversation("SPEAKER_SHAMIM_01", "আজকের মিটিংয়ের সিদ্ধান্ত কী?")
-    assert voice_res["status"] == "SUCCESS"
 
-    # ৪. স্টোরেজ ও ফাইল ইনডেক্সিং টেস্ট
-    scan_res = storage_engine.scan_and_index_storage(".")
-    assert scan_res["status"] == "SUCCESS"
+def test_event_bus():
+    bus = EcosystemEventBus()
+    received = []
+    bus.subscribe("SYSTEM_ALERT", received.append)
+    bus.publish("SYSTEM_ALERT", {"ok": True})
+    assert received == [{"ok": True}]
 
-    # ৫. টুল ফ্যাক্টরি টেস্ট
-    available_tools = tool_factory.list_available_tools()
-    assert isinstance(available_tools, list)
 
-    # ৬. কোর ব্রেন প্রসেসিং টেস্ট
-    brain_res = brain.process_intent("আমাদের জীবনের গল্প ও ফাইল গুছিয়ে রাখো")
-    assert brain_res["status"] == "SUCCESS"
-    assert brain_res["intent_clarity"] == "100%"
+def test_permission_guard_blocks_delete_and_destructive():
+    guard = PermissionGuard()
+    assert guard.check("DELETE")["status"] == "DENIED"
+    assert guard.check("WRITE", destructive=True)["status"] == "DENIED"
+    assert guard.check("READ")["status"] == "ALLOWED"
+
+
+def test_entity_registry():
+    registry = EntityRegistry()
+    result = registry.register(EntityDefinition(
+        entity_id="test.chat",
+        name="Test Chat",
+        entity_type="ui_entity",
+        responsibility="Conversation",
+        scope="chat",
+        permission_profile="chat.standard"
+    ))
+    assert result["status"] == "REGISTERED"
+    assert registry.get("test.chat").name == "Test Chat"
+
+
+def test_voice_storage_and_tool_components():
+    ledger = MemoryLedger()
+    voice = VoiceJournalEngine(memory_ledger=ledger)
+    assert voice.toggle_listening(True)["listening_state"] == "ACTIVE"
+    assert voice.process_ambient_conversation(
+        "SPEAKER_TEST", "test message"
+    )["status"] == "SUCCESS"
+
+    storage = StorageEngine()
+    assert storage.scan_and_index_storage(".")["status"] == "SUCCESS"
+
+    tools = ToolFactory()
+    assert isinstance(tools.list_available_tools(), list)
