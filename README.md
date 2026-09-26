@@ -51,4 +51,8 @@ Al-Quran Research remains an independent project until explicit integration.
 
 ## Live site
 
-GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
+The GitHub Pages deployment workflow is `.github/workflows/deploy-pages.yml`.
+
+**Live URL:** https://mosharrof0000-ux.github.io/Mosharrof/
+
+Deployment is test-gated: the Pages deployment runs only after the Python test suite succeeds on `main`.
