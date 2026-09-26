@@ -1,4 +1,4 @@
-"""Dynamic tool registry with an enforced destructive-operation boundary."""
+"""Dynamic tool registry with an enforced safety boundary."""
 
 import ast
 import importlib.util
@@ -17,6 +17,39 @@ class ToolFactory:
         os.makedirs(self.tools_dir, exist_ok=True)
         self._load_existing_tools()
 
+    @staticmethod
+    def _contains_blocked_operation(code_body: str) -> bool:
+        """Reject destructive, shell, import, dynamic-code, and file mutation APIs."""
+        blocked_names = {
+            "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
+            "system", "popen", "run", "call", "check_call", "check_output",
+            "eval", "exec", "compile", "__import__", "open",
+            "input", "chmod", "chown", "symlink", "link",
+        }
+        blocked_modules = {"os", "shutil", "subprocess", "pathlib", "socket", "ctypes"}
+        try:
+            wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
+            tree = ast.parse(wrapped)
+        except SyntaxError:
+            return True
+
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                return True
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Attribute):
+                    if node.func.attr in blocked_names:
+                        return True
+                    if isinstance(node.func.value, ast.Name) and node.func.value.id in blocked_modules:
+                        return True
+                if isinstance(node.func, ast.Name) and node.func.id in blocked_names:
+                    return True
+                if isinstance(node.func, ast.Name) and node.func.id.upper() in {"DELETE", "DESTROY", "ERASE"}:
+                    return True
+            if isinstance(node, ast.Attribute) and node.attr in blocked_names:
+                return True
+        return False
+
     def _load_existing_tools(self):
         for filename in os.listdir(self.tools_dir):
             if filename.endswith(".py") and not filename.startswith("__"):
@@ -30,26 +63,6 @@ class ToolFactory:
                 except OSError:
                     continue
                 self._import_and_register(tool_name)
-
-    @staticmethod
-    def _contains_blocked_operation(code_body: str) -> bool:
-        """Reject common destructive or shell-spawning operations before registration."""
-        blocked = {
-            "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
-            "system", "popen", "run", "call", "check_call", "check_output",
-        }
-        try:
-            wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
-            tree = ast.parse(wrapped)
-        except SyntaxError:
-            return True
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute) and node.func.attr in blocked:
-                    return True
-                if isinstance(node.func, ast.Name) and node.func.id.upper() in {"DELETE", "DESTROY", "ERASE"}:
-                    return True
-        return False
 
     def _import_and_register(self, tool_name: str) -> bool:
         file_path = os.path.join(self.tools_dir, f"{tool_name}.py")
