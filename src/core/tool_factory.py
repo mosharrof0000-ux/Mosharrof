@@ -35,7 +35,7 @@ class ToolFactory:
     def _contains_blocked_operation(code_body: str) -> bool:
         """Reject common destructive or shell-spawning operations before registration."""
         blocked = {
-            "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
+            "remove", "unlink", "rmtree", "rmdir", "rename", "replace", "move",
             "system", "popen", "run", "call", "check_call", "check_output",
         }
         try:
