@@ -182,3 +182,21 @@ def test_voice_audio_requires_authorization_and_provider():
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ।"
+
+
+def test_context_aware_smart_voice_processing():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("তুমি কি আসবে") == "তুমি কি আসবে?"
+    corrected = voice.correct_contextual_grammar("মোশারফ প্রজেক্ট")
+    assert corrected["text"] == "মোশাররফ প্রজেক্ট"
+    processed = voice.sanitize_phonetic_speech("মোশারফ প্রজেক্ট তুমি কি আসবে")
+    assert processed["status"] == "SUCCESS"
+    assert processed["text"].endswith("।")
+    assert processed["audio_decoding"] == "EXTERNAL_STT_ADAPTER_REQUIRED"
+    assert voice.sanitize_phonetic_speech(b"raw audio")["status"] == "UNSUPPORTED_AUDIO"
+
+
+def test_tool_factory_blocks_destructive_aliases(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert factory.create_tool("alias_remove", "from os import remove as erase\nerase('x')").startswith("DENIED:")
+    assert factory.create_tool("shell_alias", "import subprocess as sp\nsp.run(['echo', 'x'])").startswith("DENIED:")
