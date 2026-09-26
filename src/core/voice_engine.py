@@ -1,28 +1,28 @@
-"""Mosharrof context-aware voice journal engine.
+"""Mosharrof Context-Aware Smart Voice Engine.
 
-The engine keeps recording authorization explicit and provides a model-agnostic
-text normalization boundary for smart punctuation, contextual correction and
-phonetic sanitization. Actual audio-to-text transcription is delegated to an
-attached provider; this module never pretends to decode raw audio by itself.
+The engine keeps recording authorization explicit, then normalizes speech text with
+local deterministic rules. If a model provider is attached, contextual correction
+can be delegated through the model-agnostic BrainAdapter. Raw audio decoding/STT
+remains outside this dependency-free core boundary.
 """
 
-from typing import Any, Callable, Dict, Optional
 import re
-
+from typing import Any, Dict, Optional
 from src.core.memory_ledger import MemoryLedger
+from src.core.brain_adapter import BrainAdapter
 
 
 class VoiceJournalEngine:
     def __init__(
         self,
         memory_ledger: Optional[MemoryLedger] = None,
-        transcription_provider: Optional[Callable[[Any], str]] = None,
+        brain_adapter: Optional[BrainAdapter] = None,
     ):
         self.ledger = memory_ledger or MemoryLedger()
+        self.brain_adapter = brain_adapter or BrainAdapter(entity_id="voice")
         self.is_listening = False
         self.recording_authorized = False
         self.known_voices: Dict[str, str] = {}
-        self.transcription_provider = transcription_provider
 
     def toggle_listening(self, state: bool, authorized: bool = False) -> Dict[str, Any]:
         if state and not authorized:
@@ -47,73 +47,92 @@ class VoiceJournalEngine:
 
     @staticmethod
     def apply_smart_punctuation(raw_text: str) -> str:
-        """Apply conservative punctuation without changing lexical content."""
+        """Add conservative sentence punctuation without changing the wording."""
         text = re.sub(r"\s+", " ", (raw_text or "").strip())
         if not text:
             return ""
-        text = re.sub(r"\s+([,।!?])", r"\1", text)
-        text = re.sub(r",+", ",", text)
-        text = re.sub(r"!+", "!", text)
-        text = re.sub(r"\?+", "?", text)
-        text = re.sub(r"।+", "।", text)
-
-        # Respect an already supplied terminal mark.
-        if text[-1] not in ".!?।":
-            text += "।"
+        text = re.sub(r"\s+([,।?!])", r"\1", text)
+        text = re.sub(r"([,।?!])(?=[^\s])", r"\1 ", text)
+        # Spoken question markers commonly appear as a question word at the start.
+        if text and not re.search(r"[।?!]$", text):
+            if re.match(r"^(কি|কী|কেন|কখন|কোথায়|কোথায়|কীভাবে|কিভাবে|কত|কে|what|why|when|where|how|who|is|are|can|do|does)\b", text, re.I):
+                text += "?"
+            else:
+                text += "।"
         return text
 
     @staticmethod
-    def correct_contextual_grammar(raw_text: str, context: str = "") -> str:
-        """Perform only high-confidence, context-safe normalization.
-
-        This deliberately avoids inventing corrections. A future language-model
-        provider can be attached at this boundary for richer contextual repair.
-        """
-        text = re.sub(r"\s+", " ", (raw_text or "").strip())
-        if not text:
-            return ""
-
-        replacements = {
-            "কি করতেছ": "কি করছ",
-            "করতেছেন": "করছেন",
-            "যাইতেছি": "যাচ্ছি",
-            "আসতেছি": "আসছি",
-            "করবেনা": "করবে না",
+    def _deterministic_context_corrections(text: str, context: Optional[str] = None) -> str:
+        """Small safe correction layer; never claims to replace a full language model."""
+        corrections = {
+            "মোশারফ প্রজেক্ট": "মোশাররফ প্রজেক্ট",
+            "মোশারফ প্রজেক্টের": "মোশাররফ প্রজেক্টের",
+            "মশাররফ": "মোশাররফ",
         }
-        for source, target in replacements.items():
-            text = text.replace(source, target)
-        return text
+        corrected = text
+        for wrong, right in corrections.items():
+            corrected = corrected.replace(wrong, right)
+        # Preserve a supplied context only as a hint; do not invent content.
+        if context:
+            corrected = corrected.strip()
+        return corrected
 
-    def sanitize_phonetic_speech(self, audio_stream: Any) -> Dict[str, Any]:
-        """Transcribe authorized audio through the configured provider.
+    def correct_contextual_grammar(
+        self, raw_text: str, context: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Correct obvious local errors or delegate contextual correction to a brain provider."""
+        text = (raw_text or "").strip()
+        if not text:
+            return {"status": "EMPTY", "text": "", "method": "NONE"}
 
-        Raw audio decoding/STT is provider-specific and therefore not faked here.
-        """
-        if not self.recording_authorized:
-            return {"status": "BLOCKED", "reason": "RECORDING_NOT_AUTHORIZED"}
-        if self.transcription_provider is None:
-            return {
-                "status": "UNAVAILABLE",
-                "reason": "NO_TRANSCRIPTION_PROVIDER_ATTACHED",
-            }
-        transcript = self.transcription_provider(audio_stream)
-        normalized = self.correct_contextual_grammar(transcript)
-        normalized = self.apply_smart_punctuation(normalized)
+        if self.brain_adapter.provider is not None:
+            prompt = (
+                "Correct only clear transcription/grammar errors in this Bengali speech. "
+                "Preserve meaning, names, numbers and intent. Return only corrected text.\n"
+                f"Context: {context or 'none'}\nText: {text}"
+            )
+            try:
+                model_text = self.brain_adapter.generate(prompt)
+                if model_text and model_text.strip():
+                    corrected = model_text.strip()
+                    return {
+                        "status": "SUCCESS",
+                        "text": corrected,
+                        "method": "MODEL_CONTEXT",
+                    }
+            except Exception:
+                pass
+
+        corrected = self._deterministic_context_corrections(text, context)
         return {
             "status": "SUCCESS",
-            "raw_transcript": transcript,
-            "sanitized_text": normalized,
+            "text": corrected,
+            "method": "LOCAL_SAFE_RULES",
         }
 
-    def process_voice_text(self, raw_text: str, context: str = "") -> Dict[str, Any]:
-        """Normalize a transcript through the context-aware text pipeline."""
-        corrected = self.correct_contextual_grammar(raw_text, context)
-        punctuated = self.apply_smart_punctuation(corrected)
+    def sanitize_phonetic_speech(self, audio_stream: Any, context: Optional[str] = None) -> Dict[str, Any]:
+        """Normalize a transcript-like stream; raw audio decoding belongs to an STT adapter."""
+        if isinstance(audio_stream, bytes):
+            return {
+                "status": "UNSUPPORTED_AUDIO",
+                "reason": "ATTACH_SPEECH_TO_TEXT_ADAPTER",
+                "text": "",
+            }
+
+        if isinstance(audio_stream, str):
+            raw_text = audio_stream
+        elif hasattr(audio_stream, "transcript"):
+            raw_text = str(getattr(audio_stream, "transcript") or "")
+        else:
+            raw_text = str(audio_stream or "")
+
+        correction = self.correct_contextual_grammar(raw_text, context=context)
+        punctuated = self.apply_smart_punctuation(correction["text"])
         return {
-            "status": "SUCCESS" if punctuated else "EMPTY",
-            "raw_text": raw_text,
-            "corrected_text": corrected,
-            "final_text": punctuated,
+            "status": correction["status"],
+            "text": punctuated,
+            "method": correction["method"],
+            "audio_decoding": "EXTERNAL_STT_ADAPTER_REQUIRED",
         }
 
     def process_ambient_conversation(self, speaker_signature: str, transcript: str) -> Dict[str, Any]:
@@ -122,16 +141,20 @@ class VoiceJournalEngine:
         if not transcript.strip():
             return {"status": "EMPTY", "message": "No transcript supplied."}
         speaker_info = self.identify_speaker(speaker_signature)
-        normalized = self.process_voice_text(transcript)["final_text"]
-        self.ledger.record_event("SOCIAL_INTERACTION_LOGGED", {
-            "speaker": speaker_info["speaker"],
-            "transcript": normalized,
-            "is_known_person": speaker_info["is_known"],
-            "privacy_status": "LOCAL_ONLY",
-        })
+        smart = self.sanitize_phonetic_speech(transcript)
+        self.ledger.record_event(
+            "SOCIAL_INTERACTION_LOGGED",
+            {
+                "speaker": speaker_info["speaker"],
+                "transcript": smart["text"],
+                "is_known_person": speaker_info["is_known"],
+                "privacy_status": "LOCAL_ONLY",
+            },
+        )
         return {
             "status": "SUCCESS",
             "detected_speaker": speaker_info["speaker"],
             "is_known": speaker_info["is_known"],
-            "normalized_transcript": normalized,
+            "transcript": smart["text"],
+            "voice_processing": smart["method"],
         }
