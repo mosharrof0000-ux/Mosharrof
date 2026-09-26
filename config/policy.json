@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {"id": "NO_DELETE", "operation": "DELETE", "decision": "DENY", "permanent": true},
+    {"id": "NO_DESTRUCTIVE", "operation": "DESTRUCTIVE", "decision": "DENY", "permanent": true},
+    {"id": "PR_FOR_PRODUCTION", "operation": "PRODUCTION_CHANGE", "decision": "REQUIRE_PULL_REQUEST", "permanent": true}
+  ]
+}
