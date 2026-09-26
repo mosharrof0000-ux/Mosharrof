@@ -38,7 +38,7 @@ class MosharrofCoreBrain:
         )
         if permission["status"] == "DENIED":
             self.memory_ledger.record_event("ACTION_DENIED", permission)
-            self.audit_ledger.record(entity_id, "ACTION_DENIED", "DENIED", **permission)
+            self.audit_ledger.record(entity_id, "ACTION_DENIED", "DENIED", operation=permission["operation"], scope=permission["scope"], reason=permission["reason"])
             return permission
         result = {
             "status": "ALLOWED",
@@ -47,7 +47,7 @@ class MosharrofCoreBrain:
             "scope": scope or entity_id,
         }
         self.memory_ledger.record_event("ACTION_ALLOWED", result)
-        self.audit_ledger.record(entity_id, "ACTION_ALLOWED", "ALLOWED", **result)
+        self.audit_ledger.record(entity_id, "ACTION_ALLOWED", "ALLOWED", operation=result["operation"], scope=result["scope"])
         return result
 
     def broadcast_system_command(self, command_type: str, payload: Dict[str, Any]):
