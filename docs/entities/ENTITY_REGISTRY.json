@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0.0",
+  "entities": [
+    {
+      "id": "mosharrof.core",
+      "name": "Mosharrof Core",
+      "type": "core",
+      "responsibility": "Coordinate the ecosystem and enforce system-wide policy.",
+      "brain": "brain.core",
+      "permissions_profile": "core",
+      "status": "active"
+    },
+    {
+      "id": "mosharrof.chat",
+      "name": "Chat Box",
+      "type": "ui_entity",
+      "responsibility": "Receive user input, maintain conversation state, and route requests.",
+      "brain": "brain.chat",
+      "permissions_profile": "chat",
+      "status": "planned"
+    },
+    {
+      "id": "mosharrof.sidebar",
+      "name": "Sidebar",
+      "type": "ui_entity",
+      "responsibility": "Navigate tools, projects, history, and system areas.",
+      "brain": "brain.sidebar",
+      "permissions_profile": "ui_navigation",
+      "status": "planned"
+    },
+    {
+      "id": "mosharrof.al_quran_research",
+      "name": "Al-Quran Research",
+      "type": "research_tool",
+      "responsibility": "Provide the Qur'an research workspace as a separate tool/project.",
+      "brain": "brain.al_quran_research",
+      "permissions_profile": "research_tool",
+      "status": "planned"
+    }
+  ]
+}
