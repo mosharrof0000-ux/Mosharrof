@@ -1,11 +1,9 @@
-"""
-Mosharrof AI: Autonomous Device Storage & Memory Optimizer Engine
-মেমোরির অনাবশ্যক ডাটা শনাক্তকরণ, অটো-ফাইল সর্টিং এবং প্রাকৃতিক ভাষায় স্টোরেজ অনুসন্ধান ইঞ্জিন।
-"""
+"""Read/index storage and perform non-destructive organization."""
 
 import os
 import shutil
-from typing import Dict, Any, List
+from typing import Any, Dict
+
 
 class StorageEngine:
     def __init__(self, root_dir: str = "."):
@@ -14,7 +12,6 @@ class StorageEngine:
         self.junk_extensions = [".tmp", ".log", ".chk", ".bak"]
 
     def scan_and_index_storage(self, target_path: str = None) -> Dict[str, Any]:
-        """মেমোরির প্রতিটি ফাইলের অবস্থান ইনডেক্স করা এবং জাঙ্ক ফাইল আলাদা করা"""
         scan_dir = target_path or self.root_dir
         total_files = 0
         junk_found = []
@@ -25,21 +22,17 @@ class StorageEngine:
                 total_files += 1
                 file_path = os.path.join(root, file)
                 ext = os.path.splitext(file)[1].lower()
-
-                # ফাইলের তথ্য ইনডেক্স করা
                 try:
                     file_size = os.path.getsize(file_path)
                     self.file_index[file.lower()] = {
                         "path": file_path,
                         "size_bytes": file_size,
-                        "extension": ext
+                        "extension": ext,
                     }
-
-                    # অনাবশ্যক বা ক্যাশ ফাইল চিহ্নিত করা
                     if ext in self.junk_extensions or "cache" in file_path.lower():
                         junk_found.append(file_path)
                         total_junk_size += file_size
-                except Exception:
+                except OSError:
                     continue
 
         return {
@@ -47,50 +40,61 @@ class StorageEngine:
             "total_files_scanned": total_files,
             "junk_files_count": len(junk_found),
             "reclaimable_mb": round(total_junk_size / (1024 * 1024), 2),
-            "junk_list": junk_found[:10]  # নমুনা ১০টি জাঙ্ক ফাইল
+            "junk_list": junk_found[:10],
         }
 
     def search_file(self, query: str) -> str:
-        """ইউজার মুখে বা টেক্সটে ফাইলের কথা জিজ্ঞাসা করলে সাথে সাথে তার সঠিক অবস্থান বলা"""
         query_clean = query.lower().strip()
         matched = []
-
         for name, meta in self.file_index.items():
             if query_clean in name:
-                matched.append(f"📄 **{name}** -> লোকেশন: `{meta['path']}` ({round(meta['size_bytes']/1024, 1)} KB)")
-
+                matched.append(
+                    f"{name} -> {meta['path']} ({round(meta['size_bytes'] / 1024, 1)} KB)"
+                )
         if matched:
-            return "আপনার ফাইলটি পাওয়া গেছে:\n" + "\n".join(matched[:5])
-        return f"দুঃখিত, মেমোরিতে '{query}' নামের কোনো ফাইল খুঁজে পাওয়া যায়নি।"
+            return "Files found:
+" + "
+".join(matched[:5])
+        return f"No file matching '{query}' was found."
 
     def auto_organize_folder(self, folder_path: str) -> Dict[str, Any]:
-        """এলোমেলো ফোল্ডার থেকে টাইপ অনুযায়ী ফাইল আলাদা করে সাজানো"""
-        if not os.path.exists(folder_path):
-            return {"status": "ERROR", "message": "ফোল্ডারটি পাওয়া যায়নি।"}
+        """Move files into category folders; never delete or overwrite."""
+        if not os.path.isdir(folder_path):
+            return {"status": "ERROR", "message": "Folder not found."}
 
         categories = {
             "Documents": [".pdf", ".docx", ".txt", ".xlsx"],
             "Images": [".jpg", ".png", ".jpeg", ".gif"],
             "Audio": [".mp3", ".wav", ".m4a"],
             "Videos": [".mp4", ".mkv"],
-            "Archives": [".zip", ".rar", ".7z"]
+            "Archives": [".zip", ".rar", ".7z"],
         }
 
         moved_count = 0
+        conflicts = []
         for file in os.listdir(folder_path):
             file_path = os.path.join(folder_path, file)
-            if os.path.isfile(file_path):
-                ext = os.path.splitext(file)[1].lower()
-                for cat, ext_list in categories.items():
-                    if ext in ext_list:
-                        target_dir = os.path.join(folder_path, cat)
-                        os.makedirs(target_dir, exist_ok=True)
-                        shutil.move(file_path, os.path.join(target_dir, file))
-                        moved_count += 1
-                        break
+            if not os.path.isfile(file_path):
+                continue
+            ext = os.path.splitext(file)[1].lower()
+            category = next((cat for cat, exts in categories.items() if ext in exts), None)
+            if not category:
+                continue
+
+            target_dir = os.path.join(folder_path, category)
+            os.makedirs(target_dir, exist_ok=True)
+            destination = os.path.join(target_dir, file)
+
+            if os.path.exists(destination):
+                conflicts.append({"source": file_path, "destination": destination})
+                continue
+
+            shutil.move(file_path, destination)
+            moved_count += 1
 
         return {
             "status": "SUCCESS",
             "moved_files": moved_count,
-            "message": f"{moved_count} টি ফাইল ক্যাটাগরি অনুযায়ী ফোল্ডারে গুছিয়ে সাজানো হয়েছে।"
+            "conflicts": conflicts,
+            "delete_performed": False,
         }
