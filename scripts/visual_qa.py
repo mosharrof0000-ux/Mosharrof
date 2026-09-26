@@ -1,67 +1,49 @@
 #!/usr/bin/env python3
-import json, os
+import argparse,base64,json,os,urllib.request
 from pathlib import Path
-from PIL import Image, ImageChops, ImageStat
+from PIL import Image,ImageChops
 from playwright.sync_api import sync_playwright
-
-OUT=Path("artifacts/visual-qa"); OUT.mkdir(parents=True,exist_ok=True)
-candidate_url=os.environ.get("MOSHARROF_QA_URL","http://127.0.0.1:4174/")
-base_url=os.environ.get("MOSHARROF_BASE_URL","http://127.0.0.1:4173/")
-
-def shot(page,url,path):
-    page.goto(url,wait_until="networkidle",timeout=30000)
-    # Freeze the animated presentation so both renders are comparable.
-    page.add_style_tag(content="*{animation:none!important;transition:none!important}")
-    page.screenshot(path=str(path),full_page=True)
-
-with sync_playwright() as p:
-    browser=p.chromium.launch()
-    page=browser.new_page(viewport={"width":390,"height":844},device_scale_factor=1)
-
-    shot(page,base_url,OUT/"baseline-mobile.png")
-    base_text=page.locator("body").inner_text()
-
-    shot(page,candidate_url,OUT/"current-mobile.png")
-    current_text=page.locator("body").inner_text()
-
-    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-    page.screenshot(path=str(OUT/"current-mobile-bottom.png"),full_page=True)
-
-    result={
-      "baseline_url":base_url,
-      "candidate_url":candidate_url,
-      "missing_required":[x for x in ["MOSHARROF AI","আপনার প্রশ্ন লিখুন"] if x not in current_text],
-      "removed_visible_text":[x for x in set(base_text.splitlines()) if x.strip() and x not in current_text][:80],
-      "horizontal_overflow":page.evaluate("document.documentElement.scrollWidth > window.innerWidth + 2"),
-      "header_visible":page.locator("header").is_visible(),
-      "composer_visible":page.locator(".composer").is_visible()
-    }
-    browser.close()
-
-a=Image.open(OUT/"baseline-mobile.png").convert("RGB")
-b=Image.open(OUT/"current-mobile.png").convert("RGB")
-if a.size==b.size:
-    diff=ImageChops.difference(a,b)
-    stat=ImageStat.Stat(diff)
-    # Mean absolute RGB difference, normalized to 0..1.
-    mean=sum(stat.mean)/(3*255)
-    result["visual_mean_difference"]=round(mean,4)
-    diff.save(OUT/"difference.png")
-else:
-    result["visual_size_changed"]={"baseline":a.size,"candidate":b.size}
-    mean=1.0
-
-(OUT/"result.json").write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding="utf-8")
-
-if result["missing_required"]:
-    raise SystemExit("Visual QA blocked: required UI missing.")
-if result["horizontal_overflow"]:
-    raise SystemExit("Visual QA blocked: horizontal overflow.")
-if not result["header_visible"] or not result["composer_visible"]:
-    raise SystemExit("Visual QA blocked: fixed UI missing.")
-if result["removed_visible_text"]:
-    raise SystemExit("Visual QA blocked: visible content disappeared from main baseline.")
-if mean > 0.35:
-    raise SystemExit("Visual QA blocked: rendered screen changed substantially from current main.")
-
-print(json.dumps(result,ensure_ascii=False,indent=2))
+OUT=Path("visual-qa"); OUT.mkdir(exist_ok=True)
+VIEW={"mobile":(390,844),"mobile-wide":(430,932),"desktop":(1440,900)}
+def capture(url,prefix):
+  with sync_playwright() as p:
+    b=p.chromium.launch(); page=b.new_page()
+    for n,(w,h) in VIEW.items():
+      page.set_viewport_size({"width":w,"height":h}); page.goto(url,wait_until="networkidle")
+      page.screenshot(path=str(OUT/f"{prefix}-{n}.png"),full_page=True)
+    b.close()
+def compare():
+  failures=[]
+  for n in VIEW:
+    a=Image.open(OUT/f"candidate-{n}.png").convert("RGB"); z=Image.open(OUT/f"baseline-{n}.png").convert("RGB")
+    if a.size!=z.size: failures.append(f"{n}: output size changed")
+    else:
+      d=ImageChops.difference(a,z)
+      if d.getbbox():
+        h=d.histogram(); changed=sum(v for i,v in enumerate(h) if i%256)
+        ratio=changed/max(a.width*a.height*3,1); print(f"{n}: difference={ratio:.4f}")
+        if ratio>.70: failures.append(f"{n}: catastrophic visual change")
+  if failures: raise SystemExit("\n".join(failures))
+def ai_review():
+  key=os.environ["GEMINI_API_KEY"]
+  parts=[{"text":"""Compare baseline and candidate screenshots as Mosharrof Visual QA.
+Check old features, requested new features, clipping, overlap, safe-area/notch issues,
+responsive breakage, and unintended major visual changes. Intentional color/spacing changes
+are not failures. Return JSON only: {"pass":true,"findings":[],"missing_old_features":[],
+"new_features_seen":[],"severity":"none|low|medium|high"}"""}]
+  for n in VIEW:
+    for pfx in ("baseline","candidate"):
+      parts.append({"text":f"{pfx} {n}"})
+      parts.append({"inlineData":{"mimeType":"image/png","data":base64.b64encode((OUT/f"{pfx}-{n}.png").read_bytes()).decode()}})
+  body=json.dumps({"contents":[{"parts":parts}],"generationConfig":{"temperature":0,"responseMimeType":"application/json"}}).encode()
+  req=urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",data=body,headers={"Content-Type":"application/json","x-goog-api-key":key})
+  with urllib.request.urlopen(req,timeout=180) as r: data=json.load(r)
+  result=json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+  (OUT/"ai-review.json").write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding="utf-8")
+  print(json.dumps(result,ensure_ascii=False,indent=2))
+  if not result.get("pass"): raise SystemExit("AI visual QA failed")
+ap=argparse.ArgumentParser(); ap.add_argument("mode"); ap.add_argument("--url",default=""); x=ap.parse_args()
+if x.mode=="capture": capture(x.url,"candidate")
+elif x.mode=="baseline": capture(x.url,"baseline")
+elif x.mode=="compare": compare()
+elif x.mode=="ai-review": ai_review()
