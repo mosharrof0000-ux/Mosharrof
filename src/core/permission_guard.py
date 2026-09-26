@@ -1,58 +1,48 @@
-"""Central capability guard for entity and operation boundaries.
+"""Central capability guard for Mosharrof entity boundaries.
 
-The guard is intentionally conservative: model intelligence never grants
-authority by itself. Identity, permission scope and policy remain the boundary.
-DELETE and destructive operations are permanently denied.
+Model intelligence never grants authority by itself. Identity, permission,
+policy and scope remain the capability boundary. DELETE/destructive operations
+are permanently denied.
 """
-
-from typing import Iterable
-
 
 class PermissionGuard:
     BLOCKED_OPERATIONS = {
         "DELETE", "DESTRUCTIVE", "DESTROY", "PURGE", "DROP", "ERASE", "REMOVE"
     }
 
-    def __init__(self, profile: str = "core", allowed: Iterable[str] = ()):
+    DEFAULT_PERMISSIONS = {
+        "core": {"READ", "WRITE", "EXECUTE", "COORDINATE", "REGISTER", "AUDIT"},
+        "chat": {"READ", "MESSAGE"},
+        "ui": {"READ", "RENDER"},
+        "voice": {"READ", "PROCESS"},
+        "storage": {"READ", "ORGANIZE"},
+        "tool_factory": {"READ", "CREATE_TOOL", "EXECUTE_TOOL"},
+        "quran_research": {"READ", "RESEARCH"},
+    }
+
+    def __init__(self, profile: str = "core", allowed=()):
         self.profile = profile
         self.allowed = {str(item).strip().upper() for item in allowed}
 
-    def check(
-        self,
-        operation: str,
-        *,
-        scope: str = "entity",
-        entity_scope: str = "",
-        destructive: bool = False,
-    ):
+    def check(self, operation: str, *, scope: str = "entity",
+              entity_scope: str = "", destructive: bool = False):
         op = (operation or "").strip().upper()
+        entity = (entity_scope or "").strip().lower()
 
         if destructive or op in self.BLOCKED_OPERATIONS:
-            return {
-                "status": "DENIED",
-                "operation": op,
-                "scope": scope,
-                "reason": "DELETE_AND_DESTRUCTIVE_OPERATIONS_BLOCKED",
-            }
+            return {"status": "DENIED", "operation": op, "scope": scope,
+                    "reason": "DELETE_AND_DESTRUCTIVE_OPERATIONS_BLOCKED"}
 
         if self.allowed and op not in self.allowed:
-            return {
-                "status": "DENIED",
-                "operation": op,
-                "scope": scope,
-                "reason": "OPERATION_NOT_IN_PERMISSION_SCOPE",
-            }
+            return {"status": "DENIED", "operation": op, "scope": scope,
+                    "reason": "OPERATION_NOT_IN_PERMISSION_SCOPE"}
 
-        if (
-            entity_scope
-            and scope
-            and not (scope == entity_scope or scope.startswith(entity_scope + "/"))
-        ):
-            return {
-                "status": "DENIED",
-                "operation": op,
-                "scope": scope,
-                "reason": "SCOPE_BOUNDARY",
-            }
+        if entity in self.DEFAULT_PERMISSIONS and op not in self.DEFAULT_PERMISSIONS[entity]:
+            return {"status": "DENIED", "operation": op, "scope": scope,
+                    "reason": "OPERATION_NOT_IN_ENTITY_PERMISSION"}
+
+        if entity and scope and not (scope == entity or scope.startswith(entity + "/")):
+            return {"status": "DENIED", "operation": op, "scope": scope,
+                    "reason": "SCOPE_BOUNDARY"}
 
         return {"status": "ALLOWED", "operation": op, "scope": scope}
