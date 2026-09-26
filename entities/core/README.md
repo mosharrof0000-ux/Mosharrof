@@ -1,7 +1,9 @@
-# Mosharrof Core Entity
+# Core Entity
 
-Owns ecosystem coordination and global governance.
+Owner: Mosharrof Karim.
 
-- Identity: `core`
-- Scope: `mosharrof/*`
-- Delete: permanently blocked
+Responsibility: ecosystem coordination and global policy enforcement.
+
+Boundary: `mosharrof/*`.
+
+Permanent rule: DELETE and destructive operations are blocked.
