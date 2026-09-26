@@ -1,0 +1,14 @@
+import argparse,base64,json,os,urllib.request
+from pathlib import Path
+p=argparse.ArgumentParser(); p.add_argument("--candidate",required=True); p.add_argument("--live",required=True); p.add_argument("--report",required=True); a=p.parse_args()
+key=os.environ.get("GEMINI_API_KEY")
+if not key: raise SystemExit("GEMINI_API_KEY is required")
+def enc(x): return base64.b64encode(Path(x).read_bytes()).decode()
+prompt='Compare candidate and live screenshots. Detect missing existing UI, broken layout/overflow, regressions, and new requested features. Return JSON: {"pass":true,"confidence":0,"regressions":[],"missing_features":[],"new_features":[],"notes":[]}. Be conservative.'
+payload=json.dumps({"contents":[{"parts":[{"text":prompt},{"inline_data":{"mime_type":"image/png","data":enc(a.candidate)}},{"inline_data":{"mime_type":"image/png","data":enc(a.live)}}]}],"generationConfig":{"temperature":0,"responseMimeType":"application/json"}}).encode()
+req=urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",data=payload,headers={"Content-Type":"application/json","x-goog-api-key":key})
+with urllib.request.urlopen(req,timeout=180) as r: result=json.load(r)
+report=json.loads(result["candidates"][0]["content"]["parts"][0]["text"])
+Path(a.report).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
+print(json.dumps(report,ensure_ascii=False,indent=2))
+if not report.get("pass") or int(report.get("confidence",0))<80: raise SystemExit("VISUAL QA FAILED")
