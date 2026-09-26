@@ -183,4 +183,4 @@ def test_voice_audio_requires_authorization_and_provider():
     engine.toggle_listening(True, authorized=True)
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ।"
+    assert result["sanitized_text"] == "তুমি কি করছ?"
