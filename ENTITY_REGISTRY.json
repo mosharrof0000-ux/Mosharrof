@@ -1,0 +1,11 @@
+{
+  "schema_version":"1.0.0",
+  "project_id":"mosharrof",
+  "entities":[
+    {"id":"core","role":"coordination and governance","brain":"src/core/mosharrof_brain.py","scope":"system coordination"},
+    {"id":"chat","role":"user conversation","brain":"entity.chat","scope":"conversation only"},
+    {"id":"sidebar","role":"navigation and entity discovery","brain":"entity.sidebar","scope":"navigation only"},
+    {"id":"quran-research","role":"research tool","brain":"tool.quran-research","scope":"Quran research only"}
+  ],
+  "entity_contract":["identity","brain","responsibility","memory","permissions","policy","tools","communication","state","audit","version"]
+}
