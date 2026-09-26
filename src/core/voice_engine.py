@@ -13,6 +13,8 @@ from src.core.memory_ledger import MemoryLedger
 class VoiceJournalEngine:
     """Voice journal boundary plus context-aware transcript intelligence."""
 
+    QUESTION_WORDS = ("কি", "কী", "কেন", "কখন", "কোথায়", "কোথায়", "কীভাবে", "কিভাবে", "কত", "কে", "কার", "কাকে")
+
     DEFAULT_CORRECTIONS = {
         "গবেষনা": "গবেষণা",
         "প্রজেকট": "প্রজেক্ট",
@@ -82,7 +84,9 @@ class VoiceJournalEngine:
                     text = text[:offset].rstrip() + ", " + text[offset:].lstrip()
 
         if not re.search(r"[?!।]$", text):
-            if question_hint is True:
+            words = text.split()
+            inferred_question = any(word.strip(",।?!") in self.QUESTION_WORDS for word in words[-4:])
+            if question_hint is True or (question_hint is None and inferred_question):
                 text += "?"
             else:
                 text += "।"
@@ -110,6 +114,7 @@ class VoiceJournalEngine:
             pattern = rf"(?<!\S){re.escape(source)}(?!\S)"
             if context_text or source in self.correction_map:
                 text = re.sub(pattern, target, text)
+        text = re.sub(r"\bমোশাররফ\s+এর\b", "মোশাররফের", text)
         return text
 
     def sanitize_phonetic_speech(
