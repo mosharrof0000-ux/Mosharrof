@@ -1,4 +1,4 @@
-"""Dynamic tool registry with an enforced destructive-operation boundary."""
+"""Dynamic tool registry with strict capability and code-safety boundaries."""
 
 import ast
 import importlib.util
