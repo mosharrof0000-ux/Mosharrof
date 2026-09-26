@@ -24,6 +24,8 @@ class VoiceJournalEngine:
         "মোশরফ": "মোশাররফ",
         "কোরান": "কুরআন",
         "কুরান": "কুরআন",
+        "মোশারফ এর": "মোশাররফের",
+        "মোশরফ এর": "মোশাররফের",
     }
 
     def __init__(
@@ -82,7 +84,7 @@ class VoiceJournalEngine:
                     text = text[:offset].rstrip() + ", " + text[offset:].lstrip()
 
         if not re.search(r"[?!।]$", text):
-            if question_hint is True:
+            if question_hint is True or self._looks_like_question(text):
                 text += "?"
             else:
                 text += "।"
@@ -94,6 +96,17 @@ class VoiceJournalEngine:
             r"\1, ", text,
         )
         return text
+
+    @staticmethod
+    def _looks_like_question(text: str) -> bool:
+        prefixes = (
+            "কি ", "কী ", "কেন ", "কখন ", "কোথায় ", "কোথায় ",
+            "কীভাবে ", "কিভাবে ", "what ", "why ", "when ", "where ",
+            "who ", "how ", "is ", "are ", "am ", "do ", "does ",
+            "did ", "can ", "could ", "would ", "will ", "shall "
+        )
+        lowered = text.casefold()
+        return any(lowered.startswith(prefix.casefold()) for prefix in prefixes)
 
     def correct_contextual_grammar(
         self,
