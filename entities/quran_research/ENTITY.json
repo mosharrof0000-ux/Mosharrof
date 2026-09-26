@@ -1,0 +1,14 @@
+{
+  "id": "quran_research",
+  "type": "tool_project",
+  "owner": "Mosharrof Core",
+  "brain": "external-project://al-quran-research",
+  "responsibility": "Quran language research and evidence-based research workflows.",
+  "scope": "quran_research/*",
+  "permission_profile": "research",
+  "memory": "entities/quran_research/memory",
+  "tools": "entities/quran_research/tools",
+  "audit": "entities/quran_research/audit",
+  "delete_allowed": false,
+  "integration_mode": "isolated-until-explicit-approval"
+}
