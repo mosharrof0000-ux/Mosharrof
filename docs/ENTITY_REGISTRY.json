@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "entities": [
+    {
+      "id": "mosharrof.core",
+      "type": "core",
+      "name": "Mosharrof Core",
+      "responsibility": "Coordinate entities, enforce policy, route work and maintain system integrity.",
+      "brain": "core.brain",
+      "permission_profile": "core.max-necessary.no-delete",
+      "status": "foundation"
+    }
+  ],
+  "future_entity_contract": {
+    "required": ["identity","brain","responsibility","permission","policy","memory","tools","communication","audit","version"],
+    "isolation": "Each entity owns its responsibility and cannot exceed its granted scope."
+  }
+}
