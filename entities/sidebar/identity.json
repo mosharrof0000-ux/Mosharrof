@@ -1,0 +1,1 @@
+{"id":"sidebar","type":"ui_entity","responsibility":"Own navigation and entity discovery.","scope":"sidebar/*","delete_allowed":false}
