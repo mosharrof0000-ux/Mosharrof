@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "global_policy": {
+    "delete_allowed": false,
+    "destructive_operations_allowed": false,
+    "scope_escape_allowed": false,
+    "automatic_activation_without_tests": false
+  },
+  "temporary_permissions": {
+    "allowed": true,
+    "requires_task_scope": true,
+    "requires_audit": true,
+    "must_expire_after_task": true,
+    "delete_exception": false
+  }
+}
