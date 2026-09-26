@@ -1,11 +1,1 @@
-{
-  "id": "quran_research",
-  "type": "research_project_entity",
-  "owner": "Mosharrof Karim",
-  "brain": "external-project://al-quran-research",
-  "responsibility": "Quran language research and evidence-based research workflows.",
-  "scope": "quran_research/*",
-  "permission_profile": "research",
-  "integration_mode": "external-until-explicit-connection",
-  "delete_allowed": false
-}
+{"id":"quran_research","type":"external_project","name":"Al-Quran Research","responsibility":"Quran language research and evidence-based research workflows.","brain":"external-project://al-quran-research","scope":"tools/quran_research/*","permission_profile":"research","delete_allowed":false}
