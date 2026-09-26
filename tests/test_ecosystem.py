@@ -171,7 +171,7 @@ def test_smart_voice_punctuation_and_contextual_correction():
     voice = VoiceJournalEngine()
     corrected = voice.correct_contextual_grammar("আপনি কি করতেছ")
     assert corrected == "আপনি কি করছ"
-    assert voice.apply_smart_punctuation(corrected).endswith("।")
+    assert voice.apply_smart_punctuation(corrected).endswith("?")
 
 
 def test_smart_voice_preserves_question_mark():
@@ -184,7 +184,7 @@ def test_voice_pipeline_returns_structured_result():
     result = voice.process_voice_text("আপনি কি করতেছেন")
     assert result["status"] == "SUCCESS"
     assert result["corrected_text"] == "আপনি কি করছেন"
-    assert result["final_text"].endswith("।")
+    assert result["final_text"].endswith("?")
 
 
 def test_audio_sanitizer_requires_provider_and_authorization():
