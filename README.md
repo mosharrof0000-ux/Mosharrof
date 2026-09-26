@@ -4,20 +4,34 @@ Mosharrof Karim — Intelligent Entity and AI Brain Architecture.
 
 ## Foundation
 
-Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful component can have its own identity, brain adapter, memory, responsibility, tools, permissions, policy, communication and audit boundary.
+Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful component has a machine-readable identity, brain assignment, responsibility, memory boundary, tools, permission profile, policy, scope and audit boundary.
 
 **Actual Capability = AI Brain × Permission × Policy × Scope × Identity**
 
-### Permanent safety rule
+### Permanent safety rules
 
-DELETE and destructive operations are permanently blocked.
+- DELETE is permanently blocked.
+- Destructive operations are permanently blocked.
+- Scope escape is blocked.
+- Activation without tests is blocked.
 
-### First-read architecture files
+### First-read architecture
 
-- `config/project_manifest.json`
-- `config/entity_registry.json`
-- `policies/CORE_POLICY.md`
-- `docs/ARCHITECTURE.md`
+1. `config/project_manifest.json`
+2. `config/entity_registry.json`
+3. `config/model_registry.json`
+4. `config/policy.json`
+5. `config/permission_profiles.json`
+6. `policies/CORE_POLICY.md`
+7. `docs/ARCHITECTURE.md`
+
+### Entity structure
+
+Every meaningful component is represented under `entities/<entity-id>/` where appropriate. The registry is the authoritative machine-readable map for identity, responsibility, brain, scope and permission boundaries.
+
+### Model independence
+
+`src/core/brain_adapter.py` separates entity identity from the underlying model/provider. A model can be replaced without changing the entity's identity, responsibility, memory, permission, scope or audit history.
 
 ### First research tool
 
