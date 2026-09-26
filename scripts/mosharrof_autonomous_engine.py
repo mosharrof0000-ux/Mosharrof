@@ -88,4 +88,12 @@ subprocess.run(["git","push","--set-upstream","origin",branch],check=True)
 body="Mosharrof Autonomous Engine task:\n\n"+request+"\n\nIsolated branch: "+branch+"\n\nThis PR must pass all required checks before promotion."
 subprocess.run(["gh","pr","create","--base","main","--head",branch,
                 "--title","Auto autonomous task","--body",body],check=True)
-\n# Ask GitHub to merge automatically only after required branch-protection checks pass.\n# If auto-merge is disabled at repository level, this fails safely and leaves the PR open.\nsubprocess.run(["gh","pr","merge","--auto","--squash","--delete-branch",branch],check=False)\nprint("Autonomous task completed through isolated PR creation; auto-merge requested.")
+pr=subprocess.run(["gh","pr","view",branch,"--json","number","--jq",".number"],capture_output=True,text=True,check=True)
+pr_number=pr.stdout.strip()
+# Wait for all required checks. Any failure stops promotion.
+checks=subprocess.run(["gh","pr","checks",pr_number,"--watch"],check=False)
+if checks.returncode != 0:
+    raise SystemExit("Verification failed; promotion stopped and PR left open.")
+# Promote only after every required check has passed.
+subprocess.run(["gh","pr","merge",pr_number,"--squash","--delete-branch"],check=True)
+print("All required checks passed; verified PR promoted to main.")
