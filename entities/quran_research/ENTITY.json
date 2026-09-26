@@ -1,0 +1,15 @@
+{
+  "id": "quran_research",
+  "type": "external_project_tool",
+  "owner": "Mosharrof Karim",
+  "brain": "external-project://al-quran-research",
+  "responsibility": "Own the Al-Quran Research tool boundary; research scope only.",
+  "scope": "tools/quran_research/*",
+  "permission_profile": "quran_research",
+  "memory": "entities/quran_research/memory",
+  "tools": "entities/quran_research/tools",
+  "audit": "entities/quran_research/audit",
+  "version": "1.0.0",
+  "delete_allowed": false,
+  "integration_mode": "isolated-until-explicit-integration"
+}
