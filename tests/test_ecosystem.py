@@ -75,6 +75,7 @@ def test_runtime_import_smoke():
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
 
+
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
     folder.mkdir()
@@ -161,3 +162,27 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_voice_smart_punctuation_and_context_correction():
+    voice = VoiceJournalEngine()
+    assert voice.toggle_listening(True, authorized=True)["listening_state"] == "ACTIVE"
+    voice.context_terms["মোশারফ"] = "মোশাররফ"
+    assert voice.correct_contextual_grammar("মোশারফ আসবে") == "মোশাররফ আসবে"
+    assert voice.apply_smart_punctuation("মোশাররফ আসবে") == "মোশাররফ আসবে।"
+    assert voice.apply_smart_punctuation("কি মোশাররফ আসবে") == "কি মোশাররফ আসবে?"
+
+
+def test_voice_sanitizer_preserves_original_and_blocks_without_authorization():
+    voice = VoiceJournalEngine()
+    blocked = voice.sanitize_phonetic_speech("audio", transcript="মোশারফ আসবে")
+    assert blocked["status"] == "BLOCKED"
+
+    voice.toggle_listening(True, authorized=True)
+    result = voice.sanitize_phonetic_speech(
+        "audio", transcript="মোশারফ আসবে", context="মোশারফ=মোশাররফ"
+    )
+    assert result["status"] == "SUCCESS"
+    assert result["original_transcript"] == "মোশারফ আসবে"
+    assert result["text"] == "মোশাররফ আসবে।"
+    assert result["corrections_applied"] is True
