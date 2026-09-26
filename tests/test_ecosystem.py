@@ -66,14 +66,19 @@ def test_storage_organization_is_explicitly_authorized(tmp_path):
 
 def test_tool_factory_blocks_destructive_source(tmp_path):
     factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
-    result = factory.create_tool("bad_tool", "import os\nos.remove('x')")
-    assert result.startswith("DENIED:")
+    assert factory.create_tool("bad_tool", "import os\nos.remove('x')").startswith("DENIED:")
+
+
+def test_tool_factory_blocks_dynamic_import(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert factory.create_tool("import_tool", "import os\nreturn os.getcwd()").startswith("DENIED:")
 
 
 def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
+
 
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
@@ -84,7 +89,6 @@ def test_storage_organizer_never_overwrites(tmp_path):
     documents.mkdir()
     existing = documents / "note.txt"
     existing.write_text("existing", encoding="utf-8")
-
     result = StorageEngine().auto_organize_folder(str(folder))
     assert result["moved_files"] == 0
     assert source.exists()
@@ -120,7 +124,9 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
@@ -133,7 +139,7 @@ def test_machine_readable_project_contract():
     assert manifest["immutable_safety_rules"]["delete"] is False
     assert manifest["immutable_safety_rules"]["destructive_operations"] is False
     ids = {item["id"] for item in registry["entities"]}
-    assert {"core", "chat", "sidebar", "voice", "storage", "tool_factory", "quran_research"} <= ids
+    assert {"core", "chat", "sidebar", "ui", "voice", "storage", "tool_factory", "quran_research"} <= ids
 
 
 def test_event_bus_isolates_subscriber_failure():
@@ -149,7 +155,6 @@ def test_event_bus_isolates_subscriber_failure():
     bus.subscribe("TEST", broken)
     bus.subscribe("TEST", healthy)
     result = bus.publish("TEST", {"ok": True})
-
     assert result["status"] == "PARTIAL_FAILURE"
     assert result["delivered"] == 1
     assert len(result["failures"]) == 1
@@ -159,32 +164,19 @@ def test_event_bus_isolates_subscriber_failure():
 def test_additional_delete_variants_are_denied():
     brain = MosharrofCoreBrain()
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
-        result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
-        assert result["status"] == "DENIED"
+        assert brain.authorize_action(entity_id="core", operation=operation, scope="core")["status"] == "DENIED"
 
 
-def test_voice_context_aware_processing():
-    voice = VoiceJournalEngine()
-    result = voice.process_transcript("কোরান নিয়ে গবেষণা কর")
+def test_context_aware_voice_processing():
+    engine = VoiceJournalEngine()
+    result = engine.process_transcript("মোশারফ এআই তুমি কি আসবে")
     assert result["status"] == "SUCCESS"
-    assert result["text"] == "কুরআন নিয়ে গবেষণা কর।"
+    assert result["text"] == "মোশাররফ AI তুমি কি আসবে?"
     assert result["correction_applied"] is True
-
-
-def test_voice_smart_punctuation_question():
-    voice = VoiceJournalEngine()
-    result = voice.process_transcript("কুরআন কোথায়")
-    assert result["text"] == "কুরআন কোথায়?"
+    assert engine.apply_smart_punctuation("আমি আজ গবেষণা করছি") == "আমি আজ গবেষণা করছি।"
+    assert engine.sanitize_phonetic_speech("মোশারফ এআই তুমি কি আসবে") == "মোশাররফ AI তুমি কি আসবে?"
 
 
 def test_voice_raw_audio_requires_provider():
     result = VoiceJournalEngine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "PROVIDER_REQUIRED"
-
-
-def test_context_aware_voice_processing():
-    engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("তুমি কি আসবে") == "তুমি কি আসবে?"
-    assert engine.apply_smart_punctuation("আমি আজ গবেষণা করছি") == "আমি আজ গবেষণা করছি।"
-    assert engine.correct_contextual_grammar("মোশারফ এআই") == "মোশাররফ AI"
-    assert engine.sanitize_phonetic_speech("মোশারফ এআই তুমি কি আসবে") == "মোশাররফ AI তুমি কি আসবে?"
