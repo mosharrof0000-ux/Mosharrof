@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "model_policy": "model-agnostic",
+  "adapters": {
+    "mosharrof.core.brain": {
+      "entity": "mosharrof.core",
+      "provider": "adapter-required",
+      "model": null,
+      "state": "foundation"
+    },
+    "mosharrof.chat.brain": {
+      "entity": "mosharrof.chat",
+      "provider": "adapter-required",
+      "model": null,
+      "state": "foundation"
+    }
+  }
+}
