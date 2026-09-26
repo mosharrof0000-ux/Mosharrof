@@ -6,5 +6,9 @@
   "responsibility": "Presentation, adaptive layout and accessibility behavior.",
   "scope": "ui/*",
   "permission_profile": "ui",
+  "permissions": ["read", "render"],
+  "memory": "entities/ui/memory",
+  "tools": "entities/ui/tools",
+  "audit": "entities/ui/audit",
   "delete_allowed": false
 }
