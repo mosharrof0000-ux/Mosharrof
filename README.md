@@ -23,6 +23,10 @@ DELETE and destructive operations are permanently blocked.
 
 Al-Quran Research remains an independent project until explicit integration.
 
+## Verification
+
+Pull requests and pushes to `main` run the test suite. GitHub Pages deployment occurs only after tests pass on `main`.
+
 ## Live site
 
 GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
