@@ -10,7 +10,17 @@ from typing import Iterable
 
 class PermissionGuard:
     BLOCKED_OPERATIONS = {
-        "DELETE", "DESTRUCTIVE", "DESTROY", "PURGE", "DROP", "ERASE", "REMOVE"
+        "DELETE",
+        "DELETE_FILE",
+        "DELETE_DIRECTORY",
+        "DESTRUCTIVE",
+        "DESTROY",
+        "DESTROY_PROJECT",
+        "PURGE",
+        "DROP",
+        "DROP_DATABASE",
+        "ERASE",
+        "REMOVE",
     }
 
     def __init__(self, profile: str = "core", allowed: Iterable[str] = ()):
