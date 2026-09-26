@@ -39,5 +39,38 @@ jobs:
           python3 -m pip install -r requirements.txt
           python3 -m pytest -q
 
+      - name: Install browser visual QA tools
+        run: |
+          npm init -y
+          npm install --save-dev playwright pixelmatch pngjs
+          npx playwright install --with-deps chromium
+
+      - name: Capture candidate and current live screenshots
+        env:
+          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
+        run: |
+          python3 -m http.server 4173 --directory web > /tmp/mosharrof-server.log 2>&1 &
+          sleep 2
+          node scripts/visual_qa.mjs "http://127.0.0.1:4173/" "$LIVE_URL"
+
+      - name: Require visual regression to be within safe threshold
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("visual-qa/report.json"))
+          print(json.dumps(r,indent=2,ensure_ascii=False))
+          assert r["candidate"]["status"] == 200
+          assert r["live"]["status"] == 200
+          assert r["candidate"]["errors"] == [], r["candidate"]["errors"]
+          assert r["diff"]["changed_ratio"] <= 0.35, "Large visual change requires review"
+          PY
+
+      - name: AI screenshot inspection
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          test -n "$GEMINI_API_KEY"
+          python3 scripts/visual_ai_review.py
+
       - name: Promotion decision
         run: echo "ALL VERIFICATION CHECKS PASSED — eligible for controlled promotion."
