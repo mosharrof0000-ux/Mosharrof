@@ -1,0 +1,14 @@
+{
+  "id": "storage",
+  "type": "service_entity",
+  "owner": "Mosharrof Karim",
+  "brain": "storage-brain",
+  "responsibility": "Own file indexing and explicitly authorized organization without deletion.",
+  "scope": "storage/*",
+  "permission_profile": "storage",
+  "memory": "entities/storage/memory",
+  "tools": "entities/storage/tools",
+  "audit": "entities/storage/audit",
+  "version": "1.0.0",
+  "delete_allowed": false
+}
