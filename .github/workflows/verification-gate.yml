@@ -1,0 +1,43 @@
+name: Mosharrof Verification Gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+
+concurrency:
+  group: verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify before promotion
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposed version
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Verify Pages entrypoint
+        shell: bash
+        run: |
+          test -f web/index.html
+          grep -q 'MOSHARROF AI' web/index.html
+          grep -q 'setInterval' web/index.html
+          grep -q '120000' web/index.html
+          grep -q 'messages:before' web/index.html
+          grep -q 'messages:after' web/index.html
+
+      - name: Run project tests
+        run: |
+          python3 -m pip install -r requirements.txt
+          python3 -m pytest -q
+
+      - name: Promotion decision
+        run: echo "ALL VERIFICATION CHECKS PASSED — eligible for controlled promotion."
