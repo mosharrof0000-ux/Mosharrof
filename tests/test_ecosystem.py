@@ -51,10 +51,18 @@ def test_voice_preserves_existing_punctuation():
     assert result["text"] == "আপনি আসবেন? আমি অপেক্ষা করছি।"
 
 
-def test_raw_audio_requires_asr_adapter():
+def test_voice_audio_requires_authorization_and_provider():
     engine = VoiceJournalEngine()
-    result = engine.sanitize_phonetic_speech(b"raw-audio")
-    assert result["status"] == "ASR_ADAPTER_REQUIRED"
+    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
+    engine.toggle_listening(True, authorized=True)
+    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
+
+    provider = lambda _audio: "তুমি কি করতেছ"
+    engine = VoiceJournalEngine(transcription_provider=provider)
+    engine.toggle_listening(True, authorized=True)
+    result = engine.sanitize_phonetic_speech(b"audio")
+    assert result["status"] == "SUCCESS"
+    assert result["sanitized_text"] == "তুমি কি করছ?"
 
 
 def test_capability_boundary():
@@ -182,3 +190,10 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_legacy_voice_text_contract_is_preserved():
+    engine = VoiceJournalEngine()
+    result = engine.process_voice_text("তুমি কি করতেছ")
+    assert result["final_text"] == "তুমি কি করছ?"
+    assert result["corrected_text"] == "তুমি কি করছ"
