@@ -1,0 +1,13 @@
+{
+  "policy_id": "mosharrof-hard-capability-policy-v1",
+  "delete": "DENY",
+  "destructive_operations": "DENY",
+  "default_child_entity_mode": "LEAST_REQUIRED",
+  "temporary_permission": {
+    "allowed": true,
+    "must_have_scope": true,
+    "must_have_expiry_or_completion": true,
+    "must_be_audited": true,
+    "must_be_revoked": true
+  }
+}
