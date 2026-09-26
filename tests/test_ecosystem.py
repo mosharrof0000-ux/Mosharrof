@@ -5,6 +5,8 @@ from src.core.memory_ledger import MemoryLedger
 from src.core.tool_factory import ToolFactory
 from src.core.voice_engine import VoiceJournalEngine
 from src.core.storage_engine import StorageEngine
+from src.core.audit_ledger import AuditLedger
+from src.core.temporary_permission import TemporaryPermissionManager
 
 
 def test_full_ecosystem_flow(tmp_path):
@@ -93,3 +95,41 @@ def test_tool_factory_safe_function_body_and_execution(tmp_path):
     factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
     assert "created and registered" in factory.create_tool("safe_tool", "return 1")
     assert factory.execute_tool("safe_tool") == 1
+
+
+def test_core_audit_and_brain_adapter():
+    audit = AuditLedger()
+    brain = MosharrofCoreBrain(audit_ledger=audit)
+    status = brain.system_status()
+    assert status["brain"]["entity_id"] == "core"
+    assert status["brain"]["model_independent_identity"] is True
+    brain.authorize_action(entity_id="core", operation="READ", scope="core")
+    assert audit.recent(1)[0]["action"] == "ACTION_ALLOWED"
+
+
+def test_temporary_permission_cannot_grant_delete():
+    manager = TemporaryPermissionManager()
+    denied = manager.grant(
+        "task-1", entity_id="core", operation="DELETE", scope="core", task="cleanup"
+    )
+    assert denied["status"] == "DENIED"
+
+    granted = manager.grant(
+        "task-2", entity_id="core", operation="WRITE",
+        scope="core/config", task="configuration"
+    )
+    assert granted["status"] == "GRANTED"
+    assert manager.revoke("task-2")["status"] == "REVOKED"
+
+
+def test_machine_readable_project_contract():
+    import json
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    manifest = json.loads((root / "config/project_manifest.json").read_text(encoding="utf-8"))
+    registry = json.loads((root / "config/entity_registry.json").read_text(encoding="utf-8"))
+    assert manifest["owner"] == "Mosharrof Karim"
+    assert manifest["immutable_safety_rules"]["delete"] is False
+    assert manifest["immutable_safety_rules"]["destructive_operations"] is False
+    ids = {item["id"] for item in registry["entities"]}
+    assert {"core", "chat", "sidebar", "voice", "storage", "tool_factory", "quran_research"} <= ids
