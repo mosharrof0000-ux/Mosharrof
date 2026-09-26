@@ -39,5 +39,46 @@ jobs:
           python3 -m pip install -r requirements.txt
           python3 -m pytest -q
 
+
+      - name: Start browser test server
+        run: |
+          nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
+          sleep 2
+          curl --fail --silent http://127.0.0.1:4173/ >/dev/null
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Capture mobile and desktop screenshots
+        run: |
+          mkdir -p artifacts/visual
+          node scripts/mosharrof_visual_qa.mjs http://127.0.0.1:4173
+
+      - name: Verify screenshots are valid and UI changes over time
+        run: |
+          python3 -m pip install pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageChops
+          names=["mobile.png","desktop.png","mobile-after-2s.png","desktop-after-2s.png"]
+          for n in names:
+              im=Image.open("artifacts/visual/"+n)
+              assert im.width >= 320 and im.height >= 500
+              assert im.getbbox()
+          for a,b in [("mobile.png","mobile-after-2s.png"),("desktop.png","desktop-after-2s.png")]:
+              ia=Image.open("artifacts/visual/"+a).convert("RGB")
+              ib=Image.open("artifacts/visual/"+b).convert("RGB")
+              assert ImageChops.difference(ia,ib).getbbox() is not None
+          PY
+
+      - name: Upload visual evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-evidence
+          path: artifacts/visual/
+          if-no-files-found: error
+
       - name: Promotion decision
         run: echo "ALL VERIFICATION CHECKS PASSED — eligible for controlled promotion."
