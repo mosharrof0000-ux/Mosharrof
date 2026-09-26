@@ -41,3 +41,13 @@ def test_full_ecosystem_flow(tmp_path):
     assert brain_res["status"] == "SUCCESS"
     assert brain_res["intent"] == "ORGANIZE_STORAGE"
     assert 0.0 < brain_res["intent_clarity"] <= 1.0
+
+
+def test_tool_factory_blocks_destructive_code(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    result = factory.create_tool(
+        "unsafe",
+        "import os\nos.remove('important.txt')\nreturn 'done'",
+    )
+    assert result == "DENIED: DELETE_AND_DESTRUCTIVE_OPERATIONS_BLOCKED"
+    assert "unsafe" not in factory.list_available_tools()
