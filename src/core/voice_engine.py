@@ -1,7 +1,7 @@
 """Context-aware Mosharrof voice processing with explicit recording authorization.
 
 Speech-to-text remains an external boundary. This module normalizes the resulting
-transcript with conservative punctuation and context-aware corrections.
+transcript with conservative punctuation and high-confidence corrections.
 """
 
 import re
@@ -17,6 +17,11 @@ class VoiceJournalEngine:
         "প্রজেকট": "প্রজেক্ট",
         "খুজে": "খুঁজে",
         "খুজুন": "খুঁজুন",
+        "কি করতেছ": "কি করছ",
+        "করতেছেন": "করছেন",
+        "যাইতেছি": "যাচ্ছি",
+        "আসতেছি": "আসছি",
+        "করবেনা": "করবে না",
     }
 
     QUESTION_WORDS = (
@@ -70,12 +75,7 @@ class VoiceJournalEngine:
         raw_text: str,
         pause_boundaries: Optional[Sequence[int]] = None,
     ) -> str:
-        """Add conservative punctuation to an STT transcript.
-
-        Pause markers can be represented as [pause]. Provider timing offsets
-        are accepted for API compatibility; punctuation remains conservative
-        when only raw text is available.
-        """
+        """Add conservative punctuation to an STT transcript."""
         text = self._clean_spacing(raw_text or "")
         if not text:
             return ""
@@ -105,7 +105,7 @@ class VoiceJournalEngine:
         raw_text: str,
         context: Optional[Iterable[str]] = None,
     ) -> str:
-        """Apply only explicit, conservative transcript corrections.
+        """Apply only explicit, high-confidence transcript corrections.
 
         Unknown or ambiguous speech is preserved rather than guessed.
         """
@@ -116,7 +116,7 @@ class VoiceJournalEngine:
         context_text = " ".join(context or ())
         for source, target in self.correction_map.items():
             pattern = rf"(?<!\S){re.escape(source)}(?!\S)"
-            if context_text or source in {"গবেষনা", "প্রজেকট", "খুজে", "খুজুন"}:
+            if context_text or source in self.correction_map:
                 text = re.sub(pattern, target, text)
         return text
 
@@ -127,7 +127,7 @@ class VoiceJournalEngine:
         transcript: Optional[str] = None,
         context: Optional[Iterable[str]] = None,
     ) -> Dict[str, Any]:
-        """Normalize provider transcript without pretending to perform STT."""
+        """Normalize a provider transcript; raw audio STT stays external."""
         raw_text = transcript if transcript is not None else (
             audio_stream if isinstance(audio_stream, str) else ""
         )
