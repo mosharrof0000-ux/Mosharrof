@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "project_id": "mosharrof.core",
   "name": "Mosharrof",
   "owner": "Mosharrof Karim",
@@ -11,12 +11,25 @@
     "permission_policy",
     "tools",
     "communication",
-    "audit"
+    "audit",
+    "versioning"
   ],
   "immutable_safety_rules": {
     "delete": false,
     "destructive_operations": false
   },
   "model_strategy": "model-agnostic adapter layer",
+  "entity_strategy": "one responsibility and one bounded intelligence boundary per entity",
+  "lifecycle": [
+    "create",
+    "register",
+    "assign_brain",
+    "assign_responsibility",
+    "assign_permission_and_scope",
+    "attach_tools",
+    "test",
+    "audit",
+    "activate"
+  ],
   "first_tool_project": "Al-Quran Research"
 }
