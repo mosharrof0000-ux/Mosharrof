@@ -47,7 +47,7 @@ class VoiceJournalEngine:
 
     @staticmethod
     def apply_smart_punctuation(raw_text: str) -> str:
-        """Apply conservative punctuation without changing lexical content."""
+        """Apply conservative punctuation while preserving lexical content."""
         text = re.sub(r"\s+", " ", (raw_text or "").strip())
         if not text:
             return ""
@@ -57,10 +57,22 @@ class VoiceJournalEngine:
         text = re.sub(r"\?+", "?", text)
         text = re.sub(r"।+", "।", text)
 
-        # Respect an already supplied terminal mark.
-        if text[-1] not in ".!?।":
-            text += "।"
-        return text
+        if text[-1] in ".!?।":
+            return text
+
+        # High-confidence interrogative cues. Do not infer a question from
+        # intonation that is unavailable in a plain transcript.
+        question_starts = (
+            "কি ", "কী ", "কেন ", "কখন ", "কোথায় ", "কোথায় ",
+            "কোথায়?", "কোথায়?", "কীভাবে ", "কিভাবে ",
+            "what ", "why ", "when ", "where ", "who ", "how ",
+            "is ", "are ", "am ", "do ", "does ", "did ", "can ",
+            "could ", "would ", "will ", "shall "
+        )
+        lowered = text.casefold()
+        if any(lowered.startswith(prefix.casefold()) for prefix in question_starts):
+            return text + "?"
+        return text + "।"
 
     @staticmethod
     def correct_contextual_grammar(raw_text: str, context: str = "") -> str:
