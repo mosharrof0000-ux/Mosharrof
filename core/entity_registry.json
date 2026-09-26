@@ -1,0 +1,10 @@
+{
+  "registry_version": "1.0.0",
+  "entities": [
+    {"id":"core","name":"Mosharrof Core","responsibility":"Coordinate entities, policies, communication and lifecycle.","brain":"core_coordinator","scope":"ecosystem"},
+    {"id":"chat_box","name":"Chat Box","responsibility":"User conversation and intent handoff.","brain":"chat_entity","scope":"conversation"},
+    {"id":"sidebar","name":"Sidebar","responsibility":"Navigation and entity discovery.","brain":"navigation_entity","scope":"navigation"},
+    {"id":"ui","name":"UI Entity","responsibility":"Adaptive presentation and accessibility.","brain":"ui_entity","scope":"presentation"},
+    {"id":"tools","name":"Tool System","responsibility":"Register and invoke approved tools within policy.","brain":"tool_entity","scope":"tools"}
+  ]
+}
