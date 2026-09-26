@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "entities": [
+    {
+      "id": "mosharrof.core",
+      "type": "core",
+      "name": "Mosharrof Core",
+      "responsibility": "Coordinate registered entities, enforce policy and route work.",
+      "brain": {"adapter": "model-adapter", "model": "runtime-selected"},
+      "permissions": ["coordinate", "read", "write-non-destructive"],
+      "scope": "project",
+      "status": "active"
+    },
+    {
+      "id": "mosharrof.tool_factory",
+      "type": "core-service",
+      "name": "Tool Factory",
+      "responsibility": "Create and register tools only through policy-checked workflows.",
+      "brain": {"adapter": "model-adapter", "model": "runtime-selected"},
+      "permissions": ["tool-create", "tool-register"],
+      "scope": "src/tools",
+      "status": "foundation"
+    }
+  ]
+}
