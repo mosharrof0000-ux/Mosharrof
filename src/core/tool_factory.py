@@ -1,5 +1,5 @@
 """
-Mosharrof Dynamic Tool Factory
+Mosharrof Dynamic Tool Factory.
 
 Creates and loads small Python tools while enforcing the permanent
 no-delete/destructive-operation policy at the tool boundary.
@@ -33,16 +33,24 @@ class ToolFactory:
         os.makedirs(self.tools_dir, exist_ok=True)
         self._load_existing_tools()
 
-    def _load_existing_tools(self):
-        for filename in os.listdir(self.tools_dir):
-            if filename.endswith(".py") and not filename.startswith("__"):
-                self._import_and_register(filename[:-3])
+    def _contains_blocked_operation(self, code_body: str) -> bool:
+        return any(
+            re.search(pattern, code_body, re.IGNORECASE | re.DOTALL)
+            for pattern in self._BLOCKED_PATTERNS
+        )
 
     def _import_and_register(self, tool_name: str) -> bool:
         file_path = os.path.join(self.tools_dir, f"{tool_name}.py")
         if not os.path.isfile(file_path):
             return False
+
         try:
+            with open(file_path, "r", encoding="utf-8") as handle:
+                source = handle.read()
+            if self._contains_blocked_operation(source):
+                print(f"Blocked unsafe tool '{tool_name}'.")
+                return False
+
             spec = importlib.util.spec_from_file_location(tool_name, file_path)
             if not spec or not spec.loader:
                 return False
@@ -54,10 +62,6 @@ class ToolFactory:
         except Exception as exc:
             print(f"Error loading tool '{tool_name}': {exc}")
         return False
-
-    def _contains_blocked_operation(self, code_body: str) -> bool:
-        return any(re.search(pattern, code_body, re.IGNORECASE | re.DOTALL)
-                   for pattern in self._BLOCKED_PATTERNS)
 
     def create_tool(self, tool_name: str, code_body: str) -> str:
         self.permission_guard.require("CREATE_TOOL")
