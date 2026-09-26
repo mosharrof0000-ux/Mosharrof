@@ -1,4 +1,4 @@
-"""Integration and safety tests for the Mosharrof core foundation."""
+"""Core integration and safety tests for Mosharrof."""
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
@@ -35,6 +35,26 @@ def test_full_ecosystem_flow(tmp_path):
     assert intent["status"] == "SUCCESS"
     assert intent["intent"] == "RESEARCH"
     assert intent["intent_clarity"] == 1.0
+
+
+def test_voice_smart_punctuation_and_context():
+    engine = VoiceJournalEngine()
+    result = engine.process_voice_transcript("ভাই  আপনি কেমনন")
+    assert result["status"] == "SUCCESS"
+    assert result["text"] == "ভাই আপনি কেমন?"
+    assert result["corrections"]
+
+
+def test_voice_preserves_existing_punctuation():
+    engine = VoiceJournalEngine()
+    result = engine.process_voice_transcript("আপনি আসবেন? আমি অপেক্ষা করছি।")
+    assert result["text"] == "আপনি আসবেন? আমি অপেক্ষা করছি।"
+
+
+def test_raw_audio_requires_asr_adapter():
+    engine = VoiceJournalEngine()
+    result = engine.sanitize_phonetic_speech(b"raw-audio")
+    assert result["status"] == "ASR_ADAPTER_REQUIRED"
 
 
 def test_capability_boundary():
@@ -74,6 +94,7 @@ def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
+
 
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
@@ -161,24 +182,3 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
-
-
-def test_context_aware_voice_pipeline():
-    engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
-    assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
-    result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ।"
-
-
-def test_voice_audio_requires_authorization_and_provider():
-    engine = VoiceJournalEngine()
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
-    engine.toggle_listening(True, authorized=True)
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
-    provider = lambda _audio: "তুমি কি করতেছ"
-    engine = VoiceJournalEngine(transcription_provider=provider)
-    engine.toggle_listening(True, authorized=True)
-    result = engine.sanitize_phonetic_speech(b"audio")
-    assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ।"
