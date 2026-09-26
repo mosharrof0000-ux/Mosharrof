@@ -182,3 +182,12 @@ def test_voice_audio_requires_authorization_and_provider():
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ।"
+
+
+def test_voice_engine_smart_processing():
+    engine = VoiceJournalEngine()
+    result = engine.process_transcript("মোশারফ প্রজেক্ট করতেছি")
+    assert result["status"] == "SUCCESS"
+    assert result["final_text"] == "মোশাররফ প্রজেক্ট করছি।"
+    question = engine.process_transcript("কুরআন নিয়ে গবেষণা কীভাবে করব")
+    assert question["final_text"].endswith("?")
