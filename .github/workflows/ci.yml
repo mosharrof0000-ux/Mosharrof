@@ -1,7 +1,13 @@
 name: Mosharrof CI
+
 on:
   push:
+    branches: ["main", "repair/**"]
   pull_request:
+
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
