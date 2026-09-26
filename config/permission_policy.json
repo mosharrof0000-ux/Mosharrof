@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "global_rules": {
+    "delete": "DENY",
+    "destructive_operations": "DENY",
+    "secret_exposure": "DENY",
+    "permission_escalation_without_audit": "DENY"
+  },
+  "profiles": {
+    "core": {
+      "allow": ["read", "create", "update", "execute", "coordinate"],
+      "temporary_permissions_require": ["task_scope", "audit_record", "automatic_expiry"]
+    },
+    "domain_read": {
+      "allow": ["read", "analyze", "communicate"]
+    },
+    "ui_read": {
+      "allow": ["read", "analyze", "propose_ui_change", "communicate"]
+    }
+  }
+}
