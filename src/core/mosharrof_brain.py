@@ -18,7 +18,7 @@ class MosharrofCoreBrain:
         self.event_bus=event_bus or EcosystemEventBus()
         self.memory_ledger=memory_ledger or MemoryLedger()
         self.permission_guard=permission_guard or PermissionGuard()
-        self.active_entities=["core","chat","sidebar","quran_research"]
+        self.active_entities=["core","chat","ui","voice","storage","tool_factory"]
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
         permission = self.permission_guard.check(
@@ -28,7 +28,7 @@ class MosharrofCoreBrain:
             self.memory_ledger.record_event("ACTION_DENIED", permission)
             return permission
         result={"status":"ALLOWED","entity":entity_id,
-                "operation":operation.upper(),"scope":scope}
+                "operation":operation.upper(),"scope":scope or entity_id}
         self.memory_ledger.record_event("ACTION_ALLOWED",result)
         return result
 
@@ -59,7 +59,6 @@ class MosharrofCoreBrain:
         if not text:
             return {"status":"EMPTY","intent":"UNKNOWN","intent_clarity":0.0}
         lowered=text.lower()
-        # Specific research terms take precedence over generic file/storage terms.
         if any(k in lowered for k in ("quran","কুরআন","কোরআন")): intent="RESEARCH"
         elif any(k in lowered for k in ("file","ফাইল","folder","ফোল্ডার")): intent="STORAGE"
         elif any(k in lowered for k in ("tool","টুল")): intent="TOOL"
