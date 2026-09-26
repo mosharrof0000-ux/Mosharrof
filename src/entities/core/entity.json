@@ -1,0 +1,9 @@
+{
+  "id": "core",
+  "name": "Mosharrof Core",
+  "responsibility": "coordination and governance",
+  "brain": "src/core/brain_adapter.py",
+  "permission_profile": "core",
+  "delete_allowed": false,
+  "status": "active"
+}
