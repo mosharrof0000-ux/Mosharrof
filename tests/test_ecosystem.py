@@ -224,3 +224,11 @@ def test_context_aware_voice_processing():
     assert result["corrected_text"] == "কুরআন গবেষণা"
     assert result["text"].endswith("।")
     assert voice.apply_smart_punctuation("কীভাবে কাজ করবে", question_hint=True).endswith("?")
+
+
+def test_tool_factory_blocks_dynamic_execution_and_dangerous_imports(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert factory.create_tool("bad_eval", "return eval('1+1')").startswith("DENIED:")
+    assert factory.create_tool("bad_open", "return open('x')").startswith("DENIED:")
+    assert factory.create_tool("bad_import", "import subprocess\nreturn 1").startswith("DENIED:")
+    assert factory.create_tool("bad_import_os", "import os\nreturn 1").startswith("DENIED:")
