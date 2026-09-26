@@ -28,6 +28,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+
       - name: Run autonomous agent
         env:
           GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
@@ -35,3 +36,9 @@ jobs:
           REQUEST: \${{ inputs.request }}
           REPOSITORY: \${{ github.repository }}
         run: python3 scripts/mosharrof_autonomous_engine.py
+
+      - name: Visual and functional audit
+        env:
+          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
+        run: python3 scripts/visual_audit.py
