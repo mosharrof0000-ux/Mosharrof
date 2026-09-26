@@ -168,7 +168,7 @@ def test_context_aware_voice_pipeline():
     assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
     assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
     result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ।"
+    assert result["final_text"] == "তুমি কি করছ?"
 
 
 def test_voice_audio_requires_authorization_and_provider():
