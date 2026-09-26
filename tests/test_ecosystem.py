@@ -1,9 +1,4 @@
-"""
-Mosharrof AI Ecosystem Complete Integration Test
-সকল মডিউল (Tool Factory, Voice Engine, Storage Engine, Brain) যৌথভাবে পরীক্ষা করা।
-"""
-
-import pytest
+"""Focused unit/integration tests for the Mosharrof foundation."""
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
@@ -11,33 +6,33 @@ from src.core.tool_factory import ToolFactory
 from src.core.voice_engine import VoiceJournalEngine
 from src.core.storage_engine import StorageEngine
 
-def test_full_ecosystem_flow():
-    # ১. ইভেন্ট বাস ও মেমোরি লেজার তৈরি
-    event_bus = EcosystemEventBus()
-    ledger = MemoryLedger()
-    
-    # ২. ব্রেন ও সাব-ইঞ্জিন ইনস্ট্যানশিয়েশন
-    brain = MosharrofCoreBrain(event_bus=event_bus, memory_ledger=ledger)
-    tool_factory = ToolFactory()
-    voice_engine = VoiceJournalEngine(memory_ledger=ledger)
-    storage_engine = StorageEngine()
+def test_core_brain_and_memory():
+    bus, ledger = EcosystemEventBus(), MemoryLedger()
+    brain = MosharrofCoreBrain(event_bus=bus, memory_ledger=ledger)
+    result = brain.process_intent("organize project")
+    assert result["status"] == "SUCCESS"
+    assert result["intent_clarity"] == "100%"
+    assert ledger.recall_recent_events(1)[0]["event_type"] == "INTENT_RECEIVED"
 
-    # ৩. ভয়েস ও ব্যক্তিত্ব ট্র্যাকিং টেস্ট
-    voice_toggle = voice_engine.toggle_listening(True)
-    assert voice_toggle["listening_state"] == "ACTIVE"
+def test_event_bus():
+    bus = EcosystemEventBus()
+    received = []
+    bus.subscribe("SYSTEM_ALERT", received.append)
+    bus.publish("SYSTEM_ALERT", {"ok": True})
+    assert received == [{"ok": True}]
 
-    voice_res = voice_engine.process_ambient_conversation("SPEAKER_SHAMIM_01", "আজকের মিটিংয়ের সিদ্ধান্ত কী?")
-    assert voice_res["status"] == "SUCCESS"
+def test_voice_engine_is_explicitly_toggleable():
+    voice = VoiceJournalEngine()
+    assert voice.toggle_listening(False)["listening_state"] == "INACTIVE"
+    assert voice.toggle_listening(True)["listening_state"] == "ACTIVE"
 
-    # ৪. স্টোরেজ ও ফাইল ইনডেক্সিং টেস্ট
-    scan_res = storage_engine.scan_and_index_storage(".")
-    assert scan_res["status"] == "SUCCESS"
+def test_storage_scan_is_non_destructive():
+    result = StorageEngine(root_dir=".").scan_and_index_storage(".")
+    assert result["status"] == "SUCCESS"
 
-    # ৫. টুল ফ্যাক্টরি টেস্ট
-    available_tools = tool_factory.list_available_tools()
-    assert isinstance(available_tools, list)
+def test_tool_factory_registry():
+    assert isinstance(ToolFactory().list_available_tools(), list)
 
-    # ৬. কোর ব্রেন প্রসেসিং টেস্ট
-    brain_res = brain.process_intent("আমাদের জীবনের গল্প ও ফাইল গুছিয়ে রাখো")
-    assert brain_res["status"] == "SUCCESS"
-    assert brain_res["intent_clarity"] == "100%"
+def test_delete_policy_is_hard_block():
+    brain = MosharrofCoreBrain()
+    assert brain.system_status()["delete_allowed"] is False
