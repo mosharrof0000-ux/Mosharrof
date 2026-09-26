@@ -1,8 +1,14 @@
 {
-  "project":{"id":"mosharrof","name":"Mosharrof","display_name":"Mosharrof Karim","version":"0.1.0","architecture":"entity-first","model_policy":"model-agnostic"},
-  "capability_formula":"AI_BRAIN x PERMISSION x POLICY x SCOPE x IDENTITY",
-  "permanent_safety":{"delete":"DENY","destructive_operations":"DENY"},
+  "schema_version":"1.2.0",
+  "project_id":"mosharrof.core",
+  "name":"Mosharrof",
+  "owner":"Mosharrof Karim",
+  "role":"Central intelligent entity and AI brain architecture",
   "first_read":["config/project_manifest.json","config/entity_registry.json","policies/CORE_POLICY.md","docs/ARCHITECTURE.md"],
-  "entry_points":{"web":"site/index.html","core":"src/core/mosharrof_brain.py"},
-  "integration_policy":{"al_quran_research":"independent_until_explicit_integration"}
+  "architecture":["identity","entity_registry","brain_adapter","memory","permission_policy","tools","communication","audit","versioning"],
+  "immutable_safety_rules":{"delete":false,"destructive_operations":false},
+  "capability_formula":"AI_BRAIN x PERMISSION x POLICY x SCOPE x IDENTITY",
+  "model_strategy":"model-agnostic adapter layer",
+  "entity_lifecycle":["create","register","assign_brain","assign_responsibility","assign_permission","attach_tools","test","audit","activate"],
+  "first_tool_project":"Al-Quran Research"
 }
