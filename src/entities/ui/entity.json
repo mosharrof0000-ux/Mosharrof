@@ -1,0 +1,9 @@
+{
+  "id": "ui",
+  "name": "UI System",
+  "responsibility": "presentation and adaptive layout",
+  "brain": "ui-brain-adapter",
+  "permission_profile": "ui",
+  "delete_allowed": false,
+  "status": "planned"
+}
