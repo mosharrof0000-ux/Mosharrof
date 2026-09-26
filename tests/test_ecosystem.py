@@ -35,7 +35,8 @@ def test_capability_boundary():
     assert brain.authorize_action(entity_id="core", operation="READ", scope="core")["status"] == "ALLOWED"
     assert brain.authorize_action(entity_id="core", operation="DELETE", scope="core")["status"] == "DENIED"
     assert brain.authorize_action(entity_id="core", operation="DESTRUCTIVE", scope="core")["status"] == "DENIED"
-    assert brain.authorize_action(entity_id="chat", operation="WRITE", scope="core")["status"] == "DENIED"
+    assert brain.authorize_action(entity_id="chat", operation="WRITE", scope="chat")["status"] == "DENIED"
+    assert brain.authorize_action(entity_id="chat", operation="MESSAGE", scope="chat")["status"] == "ALLOWED"
 
 
 def test_delete_is_permanently_blocked():
