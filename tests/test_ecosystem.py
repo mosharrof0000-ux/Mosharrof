@@ -70,6 +70,12 @@ def test_tool_factory_blocks_destructive_source(tmp_path):
     assert result.startswith("DENIED:")
 
 
+def test_tool_factory_blocks_dynamic_import(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    result = factory.create_tool("import_tool", "import os\nreturn os.getcwd()")
+    assert result.startswith("DENIED:")
+
+
 def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof)
