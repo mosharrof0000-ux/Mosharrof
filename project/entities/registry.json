@@ -1,0 +1,9 @@
+{
+  "registry_version": "1.0.0",
+  "entities": [
+    {"id":"mosharrof.core","type":"core","responsibility":"Coordinate the ecosystem and enforce global policy.","brain_adapter":"src/core/mosharrof_brain.py","permission_profile":"core"},
+    {"id":"mosharrof.chat","type":"ui_entity","responsibility":"Own chat interaction and route requests within scope.","brain_adapter":"future","permission_profile":"chat"},
+    {"id":"mosharrof.sidebar","type":"ui_entity","responsibility":"Own navigation and tool discovery.","brain_adapter":"future","permission_profile":"ui"},
+    {"id":"mosharrof.al-quran-research","type":"tool_project","responsibility":"Operate as the first research tool under Mosharrof.","brain_adapter":"external_project","permission_profile":"tool_project"}
+  ]
+}
