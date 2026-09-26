@@ -1,5 +1,13 @@
 {
-  "registry_version":"1.0",
-  "entities":[{"id":"mosharrof-core","name":"Mosharrof Core","type":"core","responsibility":"coordinate entities, policy, memory, communication and lifecycle","brain_interface":"src/core/mosharrof_brain.py","permission_profile":"core","status":"active"}],
-  "required_entity_contract":["identity","brain","memory","responsibility","permission","policy","tools","communication","audit","version"]
+  "schema_version":"1.2.0",
+  "required_entity_contract":["identity","brain","memory","responsibility","permission","policy","tools","communication","audit","version"],
+  "entities":[
+    {"id":"core","name":"Mosharrof Core","responsibility":"coordination and governance","brain":"core-brain","permissions":["read","write","execute"],"scope":"core","delete_allowed":false},
+    {"id":"chat","name":"Chat Box","responsibility":"conversation interface","brain":"chat-brain","permissions":["read","message"],"scope":"chat","delete_allowed":false},
+    {"id":"ui","name":"UI System","responsibility":"presentation and adaptive layout","brain":"ui-brain","permissions":["read","render"],"scope":"ui","delete_allowed":false},
+    {"id":"voice","name":"Voice Engine","responsibility":"voice input and social-memory processing","brain":"voice-brain","permissions":["read","process"],"scope":"voice","delete_allowed":false},
+    {"id":"storage","name":"Storage Engine","responsibility":"file indexing and explicitly authorized organization","brain":"storage-brain","permissions":["read","organize"],"scope":"storage","delete_allowed":false},
+    {"id":"tool_factory","name":"Tool Factory","responsibility":"safe tool creation, registration and execution","brain":"tool-brain","permissions":["read","create_tool","execute_tool"],"scope":"tools","delete_allowed":false},
+    {"id":"quran_research","name":"Al-Quran Research","responsibility":"Quran language research and evidence-based research workflows","brain":"external-project://al-quran-research","permissions":["read","research"],"scope":"tools/quran_research","delete_allowed":false}
+  ]
 }
