@@ -1,5 +1,10 @@
 {
-  "registry_version":"1.0.0",
-  "entities": {},
+  "registry_version":"1.1.0",
+  "entities":{
+    "core":{"role":"coordination and governance","brain":"core","scope":"core"},
+    "chat":{"role":"user conversation","brain":"chat","scope":"ui.chat"},
+    "sidebar":{"role":"navigation and entity discovery","brain":"sidebar","scope":"ui.sidebar"},
+    "quran-research":{"role":"research tool","brain":"tool.quran-research","scope":"tools.quran-research"}
+  },
   "activation_requirements":["identity","brain","memory","responsibility","permission","policy","tools","communication","audit"]
 }
