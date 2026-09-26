@@ -1,8 +1,5 @@
-# UI System Entity
+# ui Entity
 
-Owns presentation, adaptive layout and accessibility behavior.
+Isolated entity boundary for ui. Identity, brain, memory, tools, communication, permissions and audit remain governed by the central Mosharrof registries and policies.
 
-- Identity: `ui`
-- Scope: `ui/*`
-- Permission: `ui`
-- Delete: permanently blocked
+DELETE and destructive operations are permanently blocked.
