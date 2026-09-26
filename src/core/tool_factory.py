@@ -45,8 +45,7 @@ class ToolFactory:
     def _contains_blocked_operation(cls, code_body: str) -> bool:
         """Reject unsafe imports, file access and shell/code execution."""
         try:
-            wrapped = "def _probe():
-" + textwrap.indent(code_body, "    ")
+            wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
             tree = ast.parse(wrapped)
         except SyntaxError:
             return True
@@ -92,13 +91,9 @@ class ToolFactory:
 
         file_path = os.path.join(self.tools_dir, f"{clean_name}.py")
         full_code = (
-            f'"""Mosharrof dynamic tool: {clean_name}."""
-
-'
-            "def run(*args, **kwargs):
-"
-            f"    {code_body}
-"
+            f'"""Mosharrof dynamic tool: {clean_name}."""\n\n'
+            "def run(*args, **kwargs):\n"
+            f"    {code_body}\n"
         )
         with open(file_path, "w", encoding="utf-8") as handle:
             handle.write(full_code)
