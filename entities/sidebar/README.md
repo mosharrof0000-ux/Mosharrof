@@ -1,7 +1,7 @@
 # Sidebar Entity
 
-Owns navigation and entity discovery.
+Responsibility: navigation and entity discovery.
 
-- Identity: `sidebar`
-- Scope: `sidebar/*`
-- Delete: permanently blocked
+Boundary: `sidebar/*`.
+
+The Sidebar entity owns presentation/navigation behavior only.
