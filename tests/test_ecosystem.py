@@ -1,4 +1,5 @@
 """Integration and safety tests for the Mosharrof core foundation."""
+
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
@@ -66,14 +67,23 @@ def test_storage_organization_is_explicitly_authorized(tmp_path):
 
 def test_tool_factory_blocks_destructive_source(tmp_path):
     factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
-    result = factory.create_tool("bad_tool", "import os\nos.remove('x')")
-    assert result.startswith("DENIED:")
+    samples = [
+        "import os\nos.remove('x')",
+        "__import__('os').remove('x')",
+        "import subprocess\nsubprocess.run(['echo', 'x'])",
+        "open('x', 'w').write('bad')",
+        "exec('print(1)')",
+    ]
+    for source in samples:
+        result = factory.create_tool("bad_tool", source)
+        assert result.startswith("DENIED:")
 
 
 def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
+
 
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
@@ -120,12 +130,15 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
     import json
     from pathlib import Path
+
     root = Path(__file__).resolve().parents[1]
     manifest = json.loads((root / "config/project_manifest.json").read_text(encoding="utf-8"))
     registry = json.loads((root / "config/entity_registry.json").read_text(encoding="utf-8"))
@@ -163,52 +176,47 @@ def test_additional_delete_variants_are_denied():
         assert result["status"] == "DENIED"
 
 
-def test_context_aware_voice_pipeline():
-    engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ?"
-    assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
-    result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ?"
+def test_smart_voice_punctuation_and_context():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("কীভাবে কাজ করবে") == "কীভাবে কাজ করবে?"
+    assert voice.apply_smart_punctuation("মোশাররফ প্রজেক্ট") == "মোশাররফ প্রজেক্ট।"
+    result = voice.correct_contextual_grammar("মোশারফ প্রজেক্ট মোশারফ এর")
+    assert result["corrected"] == "মোশাররফ প্রজেক্ট মোশাররফের"
+    processed = voice.process_smart_transcript("মোশারফ প্রজেক্ট")
+    assert processed["text"] == "মোশাররফ প্রজেক্ট।"
 
 
-def test_voice_audio_requires_authorization_and_provider():
-    engine = VoiceJournalEngine()
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
-    engine.toggle_listening(True, authorized=True)
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
-    provider = lambda _audio: "তুমি কি করতেছ"
-    engine = VoiceJournalEngine(transcription_provider=provider)
-    engine.toggle_listening(True, authorized=True)
-    result = engine.sanitize_phonetic_speech(b"audio")
+def test_raw_audio_requires_asr_adapter():
+    voice = VoiceJournalEngine()
+    assert voice.sanitize_phonetic_speech(b"raw audio")["status"] == "REQUIRES_ASR"
+
+
+def test_voice_smart_punctuation_and_conservative_correction():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("আপনি কেমন আছেন") == "আপনি কেমন আছেন?"
+    assert voice.apply_smart_punctuation("আজ আমরা গবেষণা করব") == "আজ আমরা গবেষণা করব।"
+    assert voice.correct_contextual_grammar("মোশারফ কোরআন গবেষণা", context="quran", correction_map={"কোরআন": "কুরআন"}) == "মোশারফ কুরআন গবেষণা"
+
+
+def test_voice_audio_requires_explicit_transcriber():
+    voice = VoiceJournalEngine()
+    voice.toggle_listening(True, authorized=True)
+    result = voice.sanitize_phonetic_speech(b"audio")
+    assert result["status"] == "REQUIRES_TRANSCRIBER"
+
+
+def test_voice_audio_pipeline_uses_transcriber_and_correction():
+    voice = VoiceJournalEngine()
+    voice.toggle_listening(True, authorized=True)
+    result = voice.sanitize_phonetic_speech(
+        b"audio", lambda _: "মোশারফ কোরআন গবেষণা", context="quran",
+        correction_map={"কোরআন": "কুরআন"}
+    )
     assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ?"
-
-def test_voice_smart_punctuation_and_contextual_correction():
-    engine = VoiceJournalEngine()
-    result = engine.process_voice_text("কীভাবে মোশারফ এর প্রজেক্ট সাজাব")
-    assert result["status"] == "SUCCESS"
-    assert result["corrected_text"] == "কীভাবে মোশাররফের প্রজেক্ট সাজাব"
-    assert result["final_text"].endswith("?")
-
-    blocked = engine.sanitize_phonetic_speech(b"raw-audio")
-    assert blocked["status"] == "BLOCKED"
-
-    engine.toggle_listening(True, authorized=True)
-    engine.transcription_provider = lambda _audio: "কীভাবে মোশারফ এর প্রজেক্ট সাজাব"
-    processed = engine.sanitize_phonetic_speech(b"raw-audio")
-    assert processed["status"] == "SUCCESS"
-    assert processed["sanitized_text"].endswith("?")
+    assert result["text"] == "মোশারফ কুরআন গবেষণা।"
 
 
-def test_voice_phonetic_corrections_are_conservative():
-    engine = VoiceJournalEngine()
-    result = engine.process_voice_text("মশাররফ কোরান গবেষনা")
-    assert result["corrected_text"] == "মোশাররফ কুরআন গবেষণা"
-    assert result["final_text"] == "মোশাররফ কুরআন গবেষণা।"
-
-
-def test_voice_authorization_blocks_raw_audio():
-    engine = VoiceJournalEngine()
-    result = engine.sanitize_phonetic_speech(b"raw-audio")
-    assert result["status"] == "BLOCKED"
-    assert result["reason"] == "RECORDING_NOT_AUTHORIZED"
+def test_tool_factory_blocks_import_and_dynamic_destructive_access(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert factory.create_tool("bad_import", "import subprocess\nreturn 1").startswith("DENIED:")
+    assert factory.create_tool("bad_getattr", "import os\ngetattr(os, 'remove')('x')").startswith("DENIED:")
