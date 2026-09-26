@@ -60,9 +60,9 @@ class MosharrofCoreBrain:
             return {"status":"EMPTY","intent":"UNKNOWN","intent_clarity":0.0}
         lowered=text.lower()
         intent="GENERAL"
-        if any(k in lowered for k in ("file","ফাইল","folder","ফোল্ডার")): intent="STORAGE"
+        if any(k in lowered for k in ("quran","কুরআন","কোরআন")): intent="RESEARCH"
+        elif any(k in lowered for k in ("file","ফাইল","folder","ফোল্ডার")): intent="STORAGE"
         elif any(k in lowered for k in ("tool","টুল")): intent="TOOL"
-        elif any(k in lowered for k in ("quran","কুরআন","কোরআন")): intent="RESEARCH"
         result={"status":"SUCCESS","intent":intent,"intent_clarity":1.0,"text":text}
         self.memory_ledger.record_event("INTENT_PROCESSED",result)
         return result
