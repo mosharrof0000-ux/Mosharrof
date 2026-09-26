@@ -1,0 +1,9 @@
+{
+  "policy_id": "mosharrof.no_delete",
+  "version": "1.0",
+  "status": "permanent",
+  "rules": [
+    {"operation": "DELETE", "decision": "DENY"},
+    {"operation": "DESTRUCTIVE", "decision": "DENY"}
+  ]
+}
