@@ -4,7 +4,7 @@ Mosharrof Karim — Intelligent Entity and AI Brain Architecture.
 
 ## Foundation
 
-Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful component can have its own identity, brain adapter, memory, responsibility, tools, permissions, policy, communication and audit boundary.
+Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful component has an explicit identity, brain adapter, responsibility, memory, tools, permissions, policy, communication and audit boundary.
 
 **Actual Capability = AI Brain × Permission × Policy × Scope × Identity**
 
@@ -14,15 +14,24 @@ DELETE and destructive operations are permanently blocked.
 
 ### First-read architecture files
 
-- `config/project_manifest.json`
-- `config/entity_registry.json`
-- `policies/CORE_POLICY.md`
-- `docs/ARCHITECTURE.md`
+1. `config/project_manifest.json`
+2. `config/entity_registry.json`
+3. `policies/CORE_POLICY.md`
+4. `docs/ARCHITECTURE.md`
+
+The `config/` files are canonical. Root `PROJECT_MANIFEST.json` and `ENTITY_REGISTRY.json` are synchronized compatibility maps.
+
+### Entity structure
+
+Every registered entity has an isolated `entities/<entity>/ENTITY.json` contract. Brain/model selection remains replaceable through the model-adapter boundary.
 
 ### First research tool
 
-Al-Quran Research remains an independent project until explicit integration.
+Al-Quran Research remains an independent project until explicit integration; its Mosharrof entity is a scoped tool boundary only.
 
 ## Live site
 
-GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
+GitHub Pages deploys `web/` through `.github/workflows/deploy-pages.yml`.
+
+Expected live URL:
+`https://mosharrof0000-ux.github.io/Mosharrof/`
