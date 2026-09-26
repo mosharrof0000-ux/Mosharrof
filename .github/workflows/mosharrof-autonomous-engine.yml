@@ -1,0 +1,37 @@
+name: Mosharrof Autonomous Engine
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      request:
+        description: "Optional task for Mosharrof to implement"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: mosharrof-autonomous-engine
+  cancel-in-progress: false
+
+jobs:
+  autonomous-work:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Run autonomous agent
+        env:
+          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: \${{ github.token }}
+          REQUEST: \${{ inputs.request }}
+          REPOSITORY: \${{ github.repository }}
+        run: python3 scripts/mosharrof_autonomous_engine.py
