@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "profiles": {
+    "core": {
+      "allow": ["read", "write", "execute", "coordinate"],
+      "deny": ["delete", "destructive", "scope_escape"]
+    },
+    "chat": {
+      "allow": ["read", "message"],
+      "deny": ["write", "delete", "destructive", "scope_escape"]
+    },
+    "ui": {
+      "allow": ["read", "render"],
+      "deny": ["delete", "destructive", "scope_escape"]
+    },
+    "research": {
+      "allow": ["read", "research"],
+      "deny": ["delete", "destructive", "scope_escape"]
+    }
+  },
+  "global_rule": "A child entity can never exceed the global policy or its assigned profile."
+}
