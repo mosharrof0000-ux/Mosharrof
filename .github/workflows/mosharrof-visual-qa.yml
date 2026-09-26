@@ -1,0 +1,39 @@
+name: Mosharrof Visual QA
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+  schedule:
+    - cron: "30 */6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install browser test tools
+        run: |
+          npm init -y
+          npm install --no-save playwright pixelmatch pngjs
+          npx playwright install --with-deps chromium
+      - name: Start candidate site
+        run: python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
+      - name: Capture candidate and current Live screenshots
+        env:
+          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
+        run: node scripts/visual_qa.mjs
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-qa-${{ github.run_id }}
+          path: visual-qa/
+          if-no-files-found: ignore
