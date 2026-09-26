@@ -1,0 +1,9 @@
+{
+  "registry_version":"1.0.0",
+  "brains":{
+    "core":{"adapter":"model-adapter","model":"runtime-selected","memory":"core-memory"},
+    "chat":{"adapter":"model-adapter","model":"runtime-selected","memory":"chat-memory"},
+    "sidebar":{"adapter":"model-adapter","model":"runtime-selected","memory":"sidebar-memory"},
+    "tool.quran-research":{"adapter":"model-adapter","model":"runtime-selected","memory":"quran-research-memory"}
+  }
+}
