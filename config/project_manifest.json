@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "id": "mosharrof",
+    "name": "Mosharrof Karim",
+    "repository": "mosharrof0000-ux/Mosharrof",
+    "architecture": "entity-first",
+    "model_strategy": "model-agnostic"
+  },
+  "core": {
+    "entity_id": "mosharrof.core",
+    "role": "governance-and-coordination"
+  },
+  "capability_formula": "AI Brain × Permission × Policy × Scope × Identity",
+  "permanent_rules": {
+    "delete": "DENY",
+    "destructive_operations": "DENY",
+    "secret_exposure": "DENY"
+  },
+  "first_read": [
+    "config/project_manifest.json",
+    "config/entity_registry.json",
+    "policies/CORE_POLICY.md",
+    "docs/ARCHITECTURE.md"
+  ],
+  "version": "0.1.0"
+}
