@@ -189,3 +189,34 @@ def test_smart_voice_punctuation_and_context():
 def test_raw_audio_requires_asr_adapter():
     voice = VoiceJournalEngine()
     assert voice.sanitize_phonetic_speech(b"raw audio")["status"] == "REQUIRES_ASR"
+
+
+def test_voice_smart_punctuation_and_conservative_correction():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("আপনি কেমন আছেন") == "আপনি কেমন আছেন?"
+    assert voice.apply_smart_punctuation("আজ আমরা গবেষণা করব") == "আজ আমরা গবেষণা করব।"
+    assert voice.correct_contextual_grammar("মোশারফ কোরআন গবেষণা", context="quran", correction_map={"কোরআন": "কুরআন"}) == "মোশারফ কুরআন গবেষণা"
+
+
+def test_voice_audio_requires_explicit_transcriber():
+    voice = VoiceJournalEngine()
+    voice.toggle_listening(True, authorized=True)
+    result = voice.sanitize_phonetic_speech(b"audio")
+    assert result["status"] == "REQUIRES_TRANSCRIBER"
+
+
+def test_voice_audio_pipeline_uses_transcriber_and_correction():
+    voice = VoiceJournalEngine()
+    voice.toggle_listening(True, authorized=True)
+    result = voice.sanitize_phonetic_speech(
+        b"audio", lambda _: "মোশারফ কোরআন গবেষণা", context="quran",
+        correction_map={"কোরআন": "কুরআন"}
+    )
+    assert result["status"] == "SUCCESS"
+    assert result["text"] == "মোশারফ কুরআন গবেষণা।"
+
+
+def test_tool_factory_blocks_import_and_dynamic_destructive_access(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert factory.create_tool("bad_import", "import subprocess\nreturn 1").startswith("DENIED:")
+    assert factory.create_tool("bad_getattr", "import os\ngetattr(os, 'remove')('x')").startswith("DENIED:")
