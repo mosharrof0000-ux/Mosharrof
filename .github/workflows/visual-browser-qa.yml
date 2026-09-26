@@ -26,10 +26,39 @@ jobs:
           BASE_URL: http://127.0.0.1:4173
           BASELINE_URL: http://127.0.0.1:4174
         run: npm run visual:test
+      - name: Live URL browser verification
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
+        run: |
+          cat > /tmp/live-check.mjs <<'JS'
+          import { chromium } from "playwright";
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:390,height:844}});
+          const url=process.env.LIVE_URL;
+          let ok=false;
+          for(let i=0;i<18;i++){
+            try{
+              const r=await page.goto(url,{waitUntil:"networkidle",timeout:15000});
+              if(r && r.ok()){
+                await page.screenshot({path:"test-results/live-390x844.png",fullPage:false});
+                await page.locator(".header").waitFor({state:"visible",timeout:5000});
+                await page.locator(".messages").waitFor({state:"visible",timeout:5000});
+                await page.locator(".composer").waitFor({state:"visible",timeout:5000});
+                ok=true; break;
+              }
+            }catch(e){}
+            await new Promise(r=>setTimeout(r,10000));
+          }
+          await browser.close();
+          if(!ok) throw new Error("LIVE BROWSER QA FAILED");
+          console.log("LIVE URL BROWSER QA: PASS");
+          JS
+          node /tmp/live-check.mjs
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-visual-qa
+          name: mosharrof-visual-qa-${{ github.run_number }}
           path: test-results/
           if-no-files-found: ignore
           retention-days: 30
