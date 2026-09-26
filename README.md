@@ -1,34 +1,42 @@
 # Mosharrof
 
-**Mosharrof Karim — Intelligent Entity and AI Brain Architecture**
+Mosharrof Karim — Intelligent Entity and AI Brain Architecture.
 
-Mosharrof is being built as an entity-first, model-agnostic AI ecosystem.
+## Foundation
 
-## First read
-1. `config/project_manifest.json`
-2. `config/entity_registry.json`
-3. `policies/CORE_POLICY.md`
-4. `docs/ARCHITECTURE.md`
+Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful component has a machine-readable identity, brain assignment, responsibility, memory boundary, tools, permission profile, policy, scope and audit boundary.
 
-## Capability boundary
 **Actual Capability = AI Brain × Permission × Policy × Scope × Identity**
 
-DELETE and destructive operations are permanently denied.
+### Permanent safety rules
 
-## Repository structure
-- `config/` — machine-readable project and entity registry
-- `docs/` — architecture and design records
-- `policies/` — non-negotiable rules
-- `src/core/` — core runtime
-- `src/tools/` — tools
-- `tests/` — automated verification
-- `site/` — GitHub Pages interface
+- DELETE is permanently blocked.
+- Destructive operations are permanently blocked.
+- Scope escape is blocked.
+- Activation without tests is blocked.
 
-## First integration
-Al-Quran Research remains independent until explicit integration.
+### First-read architecture
 
-## Verification
-Run `pytest -q`.
+1. `config/project_manifest.json`
+2. `config/entity_registry.json`
+3. `config/model_registry.json`
+4. `config/policy.json`
+5. `config/permission_profiles.json`
+6. `policies/CORE_POLICY.md`
+7. `docs/ARCHITECTURE.md`
 
-## Web
-GitHub Pages is deployed from `site/` by `.github/workflows/deploy-pages.yml`.
+### Entity structure
+
+Every meaningful component is represented under `entities/<entity-id>/` where appropriate. The registry is the authoritative machine-readable map for identity, responsibility, brain, scope and permission boundaries.
+
+### Model independence
+
+`src/core/brain_adapter.py` separates entity identity from the underlying model/provider. A model can be replaced without changing the entity's identity, responsibility, memory, permission, scope or audit history.
+
+### First research tool
+
+Al-Quran Research remains an independent project until explicit integration.
+
+## Live site
+
+GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
