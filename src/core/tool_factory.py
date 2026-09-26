@@ -10,6 +10,16 @@ from src.core.permission_engine import PermissionEngine
 
 
 class ToolFactory:
+    BLOCKED_IMPORTS = {
+        "os", "subprocess", "shutil", "socket", "ctypes", "pathlib",
+        "urllib", "http", "ftplib", "pickle",
+    }
+    BLOCKED_CALLS = {
+        "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
+        "system", "popen", "run", "call", "check_call", "check_output",
+        "open", "eval", "exec", "compile", "__import__", "input", "breakpoint",
+    }
+
     def __init__(self, tools_dir: str = "src/tools"):
         self.tools_dir = tools_dir
         self.registry: Dict[str, Callable] = {}
@@ -31,23 +41,25 @@ class ToolFactory:
                     continue
                 self._import_and_register(tool_name)
 
-    @staticmethod
-    def _contains_blocked_operation(code_body: str) -> bool:
-        """Reject common destructive or shell-spawning operations before registration."""
-        blocked = {
-            "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
-            "system", "popen", "run", "call", "check_call", "check_output",
-        }
+    @classmethod
+    def _contains_blocked_operation(cls, code_body: str) -> bool:
+        """Reject unsafe imports, file access and shell/code execution."""
         try:
-            wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
+            wrapped = "def _probe():
+" + textwrap.indent(code_body, "    ")
             tree = ast.parse(wrapped)
         except SyntaxError:
             return True
+
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute) and node.func.attr in blocked:
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                names = [alias.name.split(".")[0].lower() for alias in node.names]
+                if any(name in cls.BLOCKED_IMPORTS for name in names):
                     return True
-                if isinstance(node.func, ast.Name) and node.func.id.upper() in {"DELETE", "DESTROY", "ERASE"}:
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Attribute) and node.func.attr.lower() in cls.BLOCKED_CALLS:
+                    return True
+                if isinstance(node.func, ast.Name) and node.func.id.lower() in cls.BLOCKED_CALLS:
                     return True
         return False
 
@@ -80,9 +92,13 @@ class ToolFactory:
 
         file_path = os.path.join(self.tools_dir, f"{clean_name}.py")
         full_code = (
-            f'"""Mosharrof dynamic tool: {clean_name}."""\n\n'
-            "def run(*args, **kwargs):\n"
-            f"    {code_body}\n"
+            f'"""Mosharrof dynamic tool: {clean_name}."""
+
+'
+            "def run(*args, **kwargs):
+"
+            f"    {code_body}
+"
         )
         with open(file_path, "w", encoding="utf-8") as handle:
             handle.write(full_code)
