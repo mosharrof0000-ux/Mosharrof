@@ -1,0 +1,32 @@
+{
+  "entities": [
+    {
+      "id": "mosharrof.core",
+      "type": "core",
+      "responsibility": "Coordinate entities, policy, memory, tools and communication.",
+      "brain_adapter": "src/core/mosharrof_brain.py",
+      "permissions_profile": "core"
+    },
+    {
+      "id": "mosharrof.voice",
+      "type": "entity",
+      "responsibility": "Process explicitly enabled voice input and social-memory records.",
+      "brain_adapter": "src/core/voice_engine.py",
+      "permissions_profile": "voice"
+    },
+    {
+      "id": "mosharrof.storage",
+      "type": "entity",
+      "responsibility": "Index and organize files within an explicitly assigned scope.",
+      "brain_adapter": "src/core/storage_engine.py",
+      "permissions_profile": "storage"
+    },
+    {
+      "id": "mosharrof.tool_factory",
+      "type": "entity",
+      "responsibility": "Create and register tools within policy boundaries.",
+      "brain_adapter": "src/core/tool_factory.py",
+      "permissions_profile": "tool_factory"
+    }
+  ]
+}
