@@ -163,22 +163,31 @@ def test_additional_delete_variants_are_denied():
         assert result["status"] == "DENIED"
 
 
+
 def test_context_aware_voice_pipeline():
     engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
+    assert engine.apply_smart_punctuation("তুমি কি") == "তুমি কি?"
     assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
-    result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ।"
-
-
-def test_voice_audio_requires_authorization_and_provider():
-    engine = VoiceJournalEngine()
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
-    engine.toggle_listening(True, authorized=True)
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
-    provider = lambda _audio: "তুমি কি করতেছ"
-    engine = VoiceJournalEngine(transcription_provider=provider)
-    engine.toggle_listening(True, authorized=True)
-    result = engine.sanitize_phonetic_speech(b"audio")
+    result = engine.process_voice_transcript("তুমি কি করতেছ")
     assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ।"
+    assert result["text"] == "তুমি কি করছ?"
+
+
+def test_voice_transcript_pipeline_preserves_unknown_speech():
+    engine = VoiceJournalEngine()
+    result = engine.process_voice_transcript("এই অজানা শব্দটি")
+    assert result["status"] == "SUCCESS"
+    assert result["text"] == "এই অজানা শব্দটি।"
+
+
+def test_voice_ambient_processing_requires_authorization():
+    engine = VoiceJournalEngine()
+    assert engine.process_ambient_conversation(
+        "SPEAKER_TEST_02", "তুমি কি করতেছ"
+    )["status"] == "BLOCKED"
+    engine.toggle_listening(True, authorized=True)
+    result = engine.process_ambient_conversation(
+        "SPEAKER_TEST_02", "তুমি কি করতেছ"
+    )
+    assert result["status"] == "SUCCESS"
+    assert result["transcript"] == "তুমি কি করছ?"
