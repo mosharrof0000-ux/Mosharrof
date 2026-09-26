@@ -1,57 +1,42 @@
 """
-Mosharrof AI: Main Runtime Orchestrator (V2.1 with MemoryLedger)
-সমগ্র স্বায়ত্তশাসিত এআই ইকোসিস্টেম, স্নায়ুতন্ত্র ও স্মৃতিকোষের পূর্ণাঙ্গ সমন্বয় ফাইল।
+Mosharrof AI: Main Runtime Orchestrator (V3.0 with Self-Healing Brain Scanner)
+সমগ্র স্বায়ত্তশাসিত এআই ইকোসিস্টেম, স্নায়ুতন্ত্র, স্মৃতিকোষ ও অটো-ব্রেন ইনজেক্টরের পূর্ণাঙ্গ সমন্বয় ফাইল।
 """
 
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
+from src.core.brain_scanner import AutoBrainScanner
 from src.core.entity_factory import EntityFactory
 from src.entities.ui_organ.sensory_engine import UISensoryEngine
-from src.entities.categories.base_category_entity import LivingCategoryEntity
+from src.entities.categories.philosophy_domain import PhilosophyDomainEntity
 
 def boot_mosharrof_ai():
     print("==========================================")
-    print("   BOOTING MOSHARROF AI ECOSYSTEM V2.1   ")
+    print("   BOOTING MOSHARROF AI ECOSYSTEM V3.0   ")
     print("==========================================")
     
-    # ১. স্নায়ুতন্ত্র, স্মৃতিকোষ ও সেন্ট্রাল ব্রেইন স্টার্ট
+    # ১. কেন্দ্র, স্নায়ুতন্ত্র, স্মৃতিকোষ ও ব্রেন স্ক্যানার চালু
     event_bus = EcosystemEventBus()
     memory_ledger = MemoryLedger()
+    brain_scanner = AutoBrainScanner(event_bus=event_bus)
     brain = MosharrofCoreBrain(event_bus=event_bus)
     
-    memory_ledger.record_event("BOOT_SEQUENCE", {"status": "SUCCESS", "version": "V2.1"})
+    memory_ledger.record_event("BOOT_SEQUENCE", {"status": "SUCCESS", "version": "V3.0"})
     print(f"[Core State]: {brain.system_status()}")
     
-    # ২. স্নায়ুতন্ত্রে লিসেনার ও স্মৃতি ট্র্যাকিং যুক্ত করা
-    def on_system_event(data):
-        print(f"[Signal Receiver]: Event perceived across ecosystem -> {data}")
-        memory_ledger.record_event("SYSTEM_EVENT", data)
-
-    event_bus.subscribe("USER_PERCEPTION", on_system_event)
-    event_bus.subscribe("ENTITY_SPAWNED", on_system_event)
+    # ২. বিদ্রোহী দর্শন সত্তা পরীক্ষা ও অটো-স্ক্যান
+    philosophy_entity = PhilosophyDomainEntity()
+    scan_report = brain_scanner.scan_and_inject_brain(philosophy_entity, "philosophy_domain")
+    print(f"[Brain Health Report]: {scan_report['action']}")
     
-    # ৩. ইউআই সেন্সরি প্রতিক্রিয়া ও ব্রেইন ব্রডকাস্ট
-    ui_sensor = UISensoryEngine()
-    sensory_feedback = ui_sensor.analyze_user_behavior(scroll_speed=85.0, click_frequency=4, idle_time=0.2)
-    brain.broadcast_system_command("USER_PERCEPTION", sensory_feedback)
-    
-    # ৪. এনটিটি ফ্যাক্টরি দিয়ে নতুন 'বিজ্ঞান ও প্রযুক্তি' সত্তা জন্ম দেওয়া
-    factory = EntityFactory()
-    new_entity = factory.spawn_entity("science_domain", "Science & Discovery", "Analytical, Empirical, Truth-Seeking")
-    brain.broadcast_system_command("ENTITY_SPAWNED", new_entity)
-    
-    # ৫. নতুন সত্তার সাথে সিঙ্ক ও স্মৃতিতে কনসোলিডেশন
-    sci_entity = LivingCategoryEntity("science_domain", "Science & Discovery")
-    sci_response = sci_entity.perceive_user_behavior("Analyzing quantum entanglement", {"depth": "HIGH"})
-    governance = brain.monitor_sub_agent("science_domain", sci_response)
-    
-    memory_ledger.consolidate_knowledge("ACTIVE_ENTITY_SCIENCE", sci_response)
-    print(f"[Governance Result]: {governance['decision']} -> {governance['master_command']}")
-    print(f"[Memory Status]: Recent events recorded = {len(memory_ledger.recall_recent_events())}")
+    # ৩. সত্যের অখণ্ড সংমিশ্রণ প্রকাশ
+    truth_synthesis = philosophy_entity.synthesize_truth("বিদ্রোহী চেতনা ও চরম বাস্তবতার ভবিষ্যৎ")
+    memory_ledger.consolidate_knowledge("PHILOSOPHY_TRUTH", truth_synthesis)
+    print(f"[Philosophy Output]: {truth_synthesis['synthesis']}")
     
     print("==========================================")
-    print("   MOSHARROF AI IS FULLY OPERATIONAL!    ")
+    print("   MOSHARROF AI IS SELF-HEALING & OPERATIONAL! ")
     print("==========================================")
 
 if __name__ == "__main__":
