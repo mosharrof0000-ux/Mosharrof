@@ -1,0 +1,9 @@
+{
+  "project": {"id":"mosharrof-core","name":"Mosharrof","owner":"Mosharrof Karim","version":"0.1.0"},
+  "architecture": {"style":"modular","coordination":"core-mediated","model_strategy":"model-agnostic","future_upgrade":"adapter-based"},
+  "capability_rule":"Actual Capability = Brain × Permission × Policy × Scope",
+  "hard_rules":{"delete":false,"destructive_operations":false,"direct_live_mutation":false},
+  "entity_contract":["identity","brain","memory","responsibility","permission","policy","tools","communication","audit","version"],
+  "source_of_truth":"config/project_manifest.json",
+  "registry":"config/entity_registry.json"
+}
