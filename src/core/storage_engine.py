@@ -85,7 +85,11 @@ class StorageEngine:
                     if ext in ext_list:
                         target_dir = os.path.join(folder_path, cat)
                         os.makedirs(target_dir, exist_ok=True)
-                        shutil.move(file_path, os.path.join(target_dir, file))
+                        destination = os.path.join(target_dir, file)
+                        # Never overwrite an existing file during organization.
+                        if os.path.exists(destination):
+                            continue
+                        shutil.move(file_path, destination)
                         moved_count += 1
                         break
 
