@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "project_id": "mosharrof.core",
+  "name": "Mosharrof",
+  "owner": "Mosharrof Karim",
+  "purpose": "A modular AI ecosystem where each meaningful component is an independent entity with a bounded brain, memory, tools, permissions, policy, communication and audit trail.",
+  "architecture": {
+    "capability_formula": "AI_BRAIN x PERMISSION x POLICY x SCOPE x IDENTITY",
+    "core_role": "coordinate, govern, register and communicate; do not collapse all entities into one brain",
+    "model_strategy": "model-agnostic adapters so models can be upgraded without replacing entity identity, memory or policy",
+    "organization": "one responsibility per entity; one canonical folder per domain; machine-readable registries are authoritative"
+  },
+  "non_negotiable_rules": [
+    "DELETE and destructive operations are permanently denied",
+    "child entities receive only permissions required for their responsibility",
+    "all capability-changing actions must pass policy checks",
+    "important state and decisions must be auditable",
+    "new entities must be registered before activation",
+    "existing tools and projects remain isolated until explicitly connected"
+  ],
+  "lifecycle": ["define", "register", "assign_brain", "assign_permissions", "test", "approve", "activate", "audit", "upgrade"],
+  "first_connected_project": null,
+  "status": "FOUNDATION"
+}
