@@ -1,0 +1,13 @@
+{
+  "id": "storage",
+  "type": "engine_entity",
+  "owner": "Mosharrof Core",
+  "brain": "storage",
+  "responsibility": "File indexing and explicitly authorized organization.",
+  "scope": "storage/*",
+  "permission_profile": "storage",
+  "memory": "entities/storage/memory",
+  "tools": "entities/storage/tools",
+  "audit": "entities/storage/audit",
+  "delete_allowed": false
+}
