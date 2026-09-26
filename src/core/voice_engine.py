@@ -110,6 +110,17 @@ class VoiceJournalEngine:
         )
         return text
 
+    @staticmethod
+    def _looks_like_question(text: str) -> bool:
+        prefixes = (
+            "কি ", "কী ", "কেন ", "কখন ", "কোথায় ", "কোথায় ",
+            "কীভাবে ", "কিভাবে ", "what ", "why ", "when ", "where ",
+            "who ", "how ", "is ", "are ", "am ", "do ", "does ",
+            "did ", "can ", "could ", "would ", "will ", "shall "
+        )
+        lowered = text.casefold()
+        return any(lowered.startswith(prefix.casefold()) for prefix in prefixes)
+
     def correct_contextual_grammar(
         self,
         raw_text: str,
