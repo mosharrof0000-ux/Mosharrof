@@ -17,9 +17,7 @@ def boot_mosharrof():
     return brain
 
 
-# Backward-compatible public entry point used by existing smoke tests.
-def boot_mosharrof_ai():
-    return boot_mosharrof()
+boot_mosharrof_ai = boot_mosharrof
 
 
 def main():
