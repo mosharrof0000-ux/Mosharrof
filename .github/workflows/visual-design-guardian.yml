@@ -18,13 +18,10 @@ jobs:
   visual-qa:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout proposed version
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v6
+        with: {fetch-depth: 0}
       - uses: actions/setup-node@v6
-        with:
-          node-version: 22
+        with: {node-version: 22}
       - name: Install browser
         run: |
           npm init -y
