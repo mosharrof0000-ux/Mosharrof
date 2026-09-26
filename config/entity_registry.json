@@ -1,22 +1,31 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "entities": [
     {
       "id": "core",
       "name": "Mosharrof Core",
       "responsibility": "coordination and governance",
       "brain": "core-brain",
+      "scope": "core/*",
       "permissions": ["read", "write", "execute"],
-      "scope": "core",
       "delete_allowed": false
     },
     {
       "id": "chat",
       "name": "Chat Box",
-      "responsibility": "conversation interface",
+      "responsibility": "conversation interface and request routing",
       "brain": "chat-brain",
+      "scope": "chat/*",
       "permissions": ["read", "message"],
-      "scope": "chat",
+      "delete_allowed": false
+    },
+    {
+      "id": "sidebar",
+      "name": "Sidebar",
+      "responsibility": "navigation and entity discovery",
+      "brain": "sidebar-brain",
+      "scope": "sidebar/*",
+      "permissions": ["read", "render"],
       "delete_allowed": false
     },
     {
@@ -24,8 +33,8 @@
       "name": "UI System",
       "responsibility": "presentation and adaptive layout",
       "brain": "ui-brain",
+      "scope": "ui/*",
       "permissions": ["read", "render"],
-      "scope": "ui",
       "delete_allowed": false
     },
     {
@@ -33,8 +42,8 @@
       "name": "Voice Engine",
       "responsibility": "voice input and social-memory processing",
       "brain": "voice-brain",
+      "scope": "voice/*",
       "permissions": ["read", "process"],
-      "scope": "voice",
       "delete_allowed": false
     },
     {
@@ -42,8 +51,8 @@
       "name": "Storage Engine",
       "responsibility": "file indexing and explicitly authorized organization",
       "brain": "storage-brain",
+      "scope": "storage/*",
       "permissions": ["read", "organize"],
-      "scope": "storage",
       "delete_allowed": false
     },
     {
@@ -51,8 +60,8 @@
       "name": "Tool Factory",
       "responsibility": "safe tool creation, registration and execution",
       "brain": "tool-brain",
+      "scope": "tool_factory/*",
       "permissions": ["read", "create_tool", "execute_tool"],
-      "scope": "tools",
       "delete_allowed": false
     },
     {
@@ -60,9 +69,10 @@
       "name": "Al-Quran Research",
       "responsibility": "Quran language research and evidence-based research workflows",
       "brain": "external-project://al-quran-research",
+      "scope": "quran_research/*",
       "permissions": ["read", "research"],
-      "scope": "tools/quran_research",
-      "delete_allowed": false
+      "delete_allowed": false,
+      "integration_state": "independent-until-explicit-integration"
     }
   ]
 }
