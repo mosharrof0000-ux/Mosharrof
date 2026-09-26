@@ -1,0 +1,10 @@
+{
+  "id": "tool_factory",
+  "type": "service_entity",
+  "owner": "Mosharrof Karim",
+  "brain": "tool_factory",
+  "responsibility": "Safe tool creation, registration and execution.",
+  "scope": "tool_factory/*",
+  "permission_profile": "tool_factory",
+  "delete_allowed": false
+}
