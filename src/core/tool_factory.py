@@ -3,6 +3,7 @@
 import ast
 import importlib.util
 import os
+import textwrap
 from typing import Any, Callable, Dict
 
 from src.core.permission_engine import PermissionEngine
@@ -38,7 +39,8 @@ class ToolFactory:
             "system", "popen", "run", "call", "check_call", "check_output",
         }
         try:
-            tree = ast.parse(code_body)
+            wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
+            tree = ast.parse(wrapped)
         except SyntaxError:
             return True
         for node in ast.walk(tree):
@@ -90,6 +92,11 @@ class ToolFactory:
         return f"Tool '{clean_name}' was written but could not be loaded."
 
     def execute_tool(self, tool_name: str, *args, **kwargs) -> Any:
+        decision = self.permission_engine.authorize(
+            "EXECUTE_TOOL", scope=f"tools/{tool_name}"
+        )
+        if decision["status"] != "ALLOWED":
+            return decision
         clean_name = tool_name.lower().strip().replace(" ", "_")
         if clean_name in self.registry:
             return self.registry[clean_name](*args, **kwargs)
