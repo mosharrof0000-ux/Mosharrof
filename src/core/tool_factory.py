@@ -1,15 +1,23 @@
-"""Dynamic tool registry with an enforced destructive-operation boundary."""
-
+"""Dynamic tool registry with an enforced non-destructive execution boundary."""
 import ast
 import importlib.util
 import os
 import textwrap
 from typing import Any, Callable, Dict
-
 from src.core.permission_engine import PermissionEngine
 
 
 class ToolFactory:
+    BLOCKED_CALLS = {
+        "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
+        "system", "popen", "run", "call", "check_call", "check_output",
+        "open", "eval", "exec", "compile", "__import__", "input",
+    }
+    BLOCKED_MODULES = {
+        "os", "shutil", "subprocess", "pathlib", "sys", "socket",
+        "requests", "httpx", "urllib", "ctypes",
+    }
+
     def __init__(self, tools_dir: str = "src/tools"):
         self.tools_dir = tools_dir
         self.registry: Dict[str, Callable] = {}
@@ -31,24 +39,32 @@ class ToolFactory:
                     continue
                 self._import_and_register(tool_name)
 
-    @staticmethod
-    def _contains_blocked_operation(code_body: str) -> bool:
-        """Reject common destructive or shell-spawning operations before registration."""
-        blocked = {
-            "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
-            "system", "popen", "run", "call", "check_call", "check_output",
-        }
+    @classmethod
+    def _contains_blocked_operation(cls, code_body: str) -> bool:
+        """Reject destructive, shell, import, and reflection escape paths."""
         try:
             wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
             tree = ast.parse(wrapped)
         except SyntaxError:
             return True
+
         for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                return True
             if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute) and node.func.attr in blocked:
+                if isinstance(node.func, ast.Attribute) and (
+                    node.func.attr in cls.BLOCKED_CALLS or node.func.attr.startswith("__")
+                ):
                     return True
-                if isinstance(node.func, ast.Name) and node.func.id.upper() in {"DELETE", "DESTROY", "ERASE"}:
+                if isinstance(node.func, ast.Name) and (
+                    node.func.id.upper() in {"DELETE", "DESTROY", "ERASE", "PURGE"}
+                    or node.func.id in cls.BLOCKED_CALLS
+                ):
                     return True
+            if isinstance(node, ast.Attribute) and node.attr.startswith("__"):
+                return True
+            if isinstance(node, ast.Name) and node.id in cls.BLOCKED_MODULES:
+                return True
         return False
 
     def _import_and_register(self, tool_name: str) -> bool:
@@ -72,7 +88,7 @@ class ToolFactory:
         if decision["status"] != "ALLOWED":
             return f"DENIED: {decision['reason']}"
         if self._contains_blocked_operation(code_body):
-            return "DENIED: DELETE_AND_DESTRUCTIVE_OPERATIONS_BLOCKED"
+            return "DENIED: IMPORT_DELETE_DESTRUCTIVE_OR_UNSAFE_OPERATION_BLOCKED"
 
         clean_name = tool_name.lower().strip().replace(" ", "_")
         if not clean_name or not clean_name.replace("_", "").isalnum():
