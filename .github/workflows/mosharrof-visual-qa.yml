@@ -1,72 +1,37 @@
 name: Mosharrof Visual QA
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+    inputs:
+      url:
+        description: URL to inspect
+        required: false
+        default: https://mosharrof0000-ux.github.io/Mosharrof/
+        type: string
+  schedule:
+    - cron: "30 */6 * * *"
 permissions:
   contents: read
-concurrency:
-  group: visual-qa-\${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 jobs:
-  visual-qa:
-    name: Screenshot and visual regression
+  visual-inspection:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout proposed version
-        uses: actions/checkout@v6
-        with:
-          ref: \${{ github.event.pull_request.head.sha || github.sha }}
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - name: Start local Pages server
-        run: |
-          nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
-          sleep 2
-          curl --fail --silent http://127.0.0.1:4173/ >/dev/null
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-      - name: Install Playwright
-        run: |
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with: {node-version: 22}
+      - run: |
           npm init -y
-          npm install --no-save playwright
+          npm install playwright
           npx playwright install --with-deps chromium
-      - name: Capture desktop and mobile screenshots
-        run: |
-          mkdir -p artifacts/visual
-          node scripts/mosharrof_visual_qa.mjs http://127.0.0.1:4173
-      - name: Structural visual checks
-        run: |
-          test -s artifacts/visual/mobile.png
-          test -s artifacts/visual/desktop.png
-          test -s artifacts/visual/mobile-after-2s.png
-          test -s artifacts/visual/desktop-after-2s.png
-          python3 -m pip install pillow
-          python3 - <<'PY'
-          from PIL import Image, ImageChops
-          from pathlib import Path
-          for p in Path("artifacts/visual").glob("*.png"):
-              im=Image.open(p)
-              assert im.width >= 320 and im.height >= 500
-              assert im.getbbox()
-          for a,b in [("mobile.png","mobile-after-2s.png"),("desktop.png","desktop-after-2s.png")]:
-              ia=Image.open("artifacts/visual/"+a).convert("RGB")
-              ib=Image.open("artifacts/visual/"+b).convert("RGB")
-              assert ImageChops.difference(ia,ib).getbbox() is not None
-          PY
-      - name: AI visual review when Gemini is configured
-        if: \${{ secrets.GEMINI_API_KEY != '' }}
+      - name: Capture real rendered screenshots
         env:
-          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
-        run: python3 scripts/mosharrof_visual_ai_review.py
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
+          TARGET_URL: ${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
+        run: node scripts/visual_qa_capture.mjs
+      - name: AI visual inspection
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 scripts/visual_qa_analyze.py
+      - uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-visual-qa
-          path: artifacts/visual/
-          if-no-files-found: error
+          name: mosharrof-visual-qa-${{ github.run_id }}
+          path: visual-qa/
+          retention-days: 30
