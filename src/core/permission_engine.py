@@ -1,9 +1,11 @@
-"""Capability boundary. DELETE and destructive operations are permanently denied."""
-class PermissionEngine:
-    BLOCKED={"DELETE","DESTRUCTIVE","DESTROY","PURGE","DROP","ERASE","REMOVE"}
+"""Backward-compatible permission engine backed by the single core guard."""
+from src.core.permission_guard import PermissionGuard
+
+
+class PermissionEngine(PermissionGuard):
+    """Compatibility facade; all capability decisions use PermissionGuard."""
+
     def authorize(self, operation, *, scope="", policy_ok=True):
-        op=(operation or "").upper()
-        blocked=op in self.BLOCKED or any(word in op for word in ("DELETE","DESTROY","ERASE","PURGE"))
-        if blocked or not policy_ok:
-            return {"status":"DENIED","operation":op,"reason":"DELETE_AND_DESTRUCTIVE_OPERATIONS_BLOCKED" if blocked else "POLICY_DENIED"}
-        return {"status":"ALLOWED","operation":op,"scope":scope}
+        if not policy_ok:
+            return {"status": "DENIED", "operation": (operation or "").upper(), "scope": scope, "reason": "POLICY_DENIED"}
+        return self.check(operation, scope=scope, entity_scope=scope)
