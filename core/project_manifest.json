@@ -1,0 +1,12 @@
+{
+  "project_id": "mosharrof",
+  "name": "Mosharrof",
+  "owner": "Mosharrof Karim",
+  "role": "root_core",
+  "architecture": "modular_entity_brain",
+  "capability_formula": "identity * permission * policy * scope",
+  "permanent_constraints": {"delete_operations": "DENY", "destructive_operations": "DENY"},
+  "model_strategy": "model_agnostic_adapter",
+  "source_of_truth": ["core/project_manifest.json", "core/entity_registry.json", "policies/capability_policy.json"],
+  "lifecycle": ["define", "implement", "test", "review", "approve", "document", "activate"]
+}
