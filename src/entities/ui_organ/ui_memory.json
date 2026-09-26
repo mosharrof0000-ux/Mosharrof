@@ -1,0 +1,14 @@
+{
+  "entity_name": "ui_organ",
+  "consciousness_level": "ACTIVE",
+  "sensory_inputs": {
+    "mouse_tracking": "ENABLED",
+    "scroll_speed_analysis": "ENABLED",
+    "hesitation_detection": "ENABLED"
+  },
+  "adaptive_theme": {
+    "current_mode": "NEUTRAL_BALANCED",
+    "dynamic_color_mutation": true
+  },
+  "user_behavior_logs": []
+}
