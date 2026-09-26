@@ -12,9 +12,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Install browser inspection tools
         run: |
-          npm init -y
-          npm install --save-dev playwright
-          npx playwright install --with-deps chromium
+          npm init -y && npm install --no-save playwright && npx playwright install --with-deps chromium
       - name: Start proposed site
         run: |
           python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
