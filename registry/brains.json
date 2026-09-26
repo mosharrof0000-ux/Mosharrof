@@ -1,0 +1,1 @@
+{"schema_version":"1.0","brains":[{"id":"core-brain","entity":"core","adapter":"model-adapter","model":"runtime-selected","memory":"core-memory","status":"ready"},{"id":"web-console-brain","entity":"web-console","adapter":"model-adapter","model":"runtime-selected","memory":"ui-memory","status":"ready"}]}
