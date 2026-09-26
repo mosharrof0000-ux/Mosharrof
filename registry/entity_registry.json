@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "entities": [
+    {
+      "entity_id": "mosharrof.core",
+      "name": "Mosharrof Core",
+      "type": "core",
+      "responsibility": "System coordination, governance, registry access and bounded orchestration.",
+      "brain_id": "brain.core.default",
+      "permission_profile": "core.minimum",
+      "status": "active"
+    }
+  ]
+}
