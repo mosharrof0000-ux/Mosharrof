@@ -21,14 +21,16 @@ class VoiceJournalEngine:
         "কোরান": "কুরআন",
         "কুরান": "কুরআন",
         "কুরআন গবেষনা": "কুরআন গবেষণা",
+        "মোশাররফ": "মোশাররফ",
+        "মোশাররফ এর": "মোশাররফের",
+        "মোশারফ": "মোশাররফ",
+        "মোশররফ": "মোশাররফ",
         "করতেছ": "করছ",
         "করতেছেন": "করছেন",
         "মশারফ": "মোশাররফ",
         "মোশরফ": "মোশাররফ",
-        "মোশররফ": "মোশাররফ",
-        "মোশারফ": "মোশাররফ",
-        "মোশারফ এর": "মোশাররফের",
-        "মোশাররফ এর": "মোশাররফের",
+        "কোরান": "কুরআন",
+        "কুরান": "কুরআন",
     }
 
     def __init__(
@@ -87,17 +89,7 @@ class VoiceJournalEngine:
                     text = text[:offset].rstrip() + ", " + text[offset:].lstrip()
 
         if not re.search(r"[?!।]$", text):
-            question_starts = ("কি ", "কী ", "কেন ", "কীভাবে ", "কিভাবে ", "কোথায় ", "কোথায় ", "কখন ", "কে ", "কোন ", "কত ")
-            words = [word.strip(".,!?।") for word in text.split()]
-            recent_question_words = set(words[-4:]).intersection(
-                {word.strip() for word in ("কি", "কী", "কেন", "কীভাবে", "কিভাবে", "কোথায়", "কোথায়", "কখন", "কে", "কোন", "কত")}
-            )
-            inferred_question = (
-                text.startswith(question_starts)
-                or text.endswith((" কি", " কী", " কেন", " কীভাবে", " কিভাবে"))
-                or bool(recent_question_words)
-            )
-            if question_hint is True or inferred_question:
+            if question_hint is True:
                 text += "?"
             else:
                 text += "।"
