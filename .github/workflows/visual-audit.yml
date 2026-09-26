@@ -29,6 +29,7 @@ jobs:
         run: python3 -m http.server 4173 --directory web > /tmp/mosharrof-server.log 2>&1 &
       - name: Audit candidate design
         env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AUDIT_URL: http://127.0.0.1:4173/
           AUDIT_OUT: artifacts/candidate
         run: npm run audit
