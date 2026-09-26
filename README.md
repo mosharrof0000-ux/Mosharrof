@@ -1,28 +1,27 @@
 # Mosharrof
 
-Mosharrof Karim — Intelligent Entity and AI Brain Architecture.
+**Mosharrof Karim — Intelligent Entity and AI Brain Architecture**
 
-## Foundation
+Mosharrof is a modular, model-agnostic AI ecosystem.
 
-Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful component can have its own identity, brain adapter, memory, responsibility, tools, permissions, policy, communication and audit boundary.
+## Core rules
 
-**Actual Capability = AI Brain × Permission × Policy × Scope × Identity**
+- Every meaningful component is an Entity with a defined responsibility.
+- Each Entity has explicit identity, brain/model boundary, memory, tools, permissions, policy, communication, audit and version.
+- Effective authority is bounded by: **AI Brain × Permission × Policy × Scope × Identity**.
+- **DELETE and destructive operations are permanently blocked.**
+- The Core coordinates Entities; it must not bypass their permissions.
+- A model adapter may change without replacing Entity identity, memory, responsibility or history.
+- Machine-readable manifests and registries provide one-glance project understanding.
 
-### Permanent safety rule
+## Project map
 
-DELETE and destructive operations are permanently blocked.
+- `project.manifest.json` — project contract
+- `registry/entities.json` — Entity registry
+- `registry/policies.json` — permission and policy registry
+- `src/core/` — Core runtime components
+- `tests/` — automated tests
 
-### First-read architecture files
+## Development rule
 
-- `config/project_manifest.json`
-- `config/entity_registry.json`
-- `policies/CORE_POLICY.md`
-- `docs/ARCHITECTURE.md`
-
-### First research tool
-
-Al-Quran Research remains an independent project until explicit integration.
-
-## Live site
-
-GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
+Build in an isolated branch, test, review, then promote to `main`. Do not use deletion as a cleanup mechanism.
