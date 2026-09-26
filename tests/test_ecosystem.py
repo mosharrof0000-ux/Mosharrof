@@ -165,10 +165,10 @@ def test_additional_delete_variants_are_denied():
 
 def test_context_aware_voice_pipeline():
     engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
+    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ?"
     assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
     result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ।"
+    assert result["final_text"] == "তুমি কি করছ?"
 
 
 def test_voice_audio_requires_authorization_and_provider():
@@ -181,7 +181,7 @@ def test_voice_audio_requires_authorization_and_provider():
     engine.toggle_listening(True, authorized=True)
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ।"
+    assert result["sanitized_text"] == "তুমি কি করছ?"
 
 def test_voice_smart_punctuation_and_contextual_correction():
     engine = VoiceJournalEngine()
@@ -198,3 +198,17 @@ def test_voice_smart_punctuation_and_contextual_correction():
     processed = engine.sanitize_phonetic_speech(b"raw-audio")
     assert processed["status"] == "SUCCESS"
     assert processed["sanitized_text"].endswith("?")
+
+
+def test_voice_phonetic_corrections_are_conservative():
+    engine = VoiceJournalEngine()
+    result = engine.process_voice_text("মশাররফ কোরান গবেষনা")
+    assert result["corrected_text"] == "মোশাররফ কুরআন গবেষণা"
+    assert result["final_text"] == "মোশাররফ কুরআন গবেষণা।"
+
+
+def test_voice_authorization_blocks_raw_audio():
+    engine = VoiceJournalEngine()
+    result = engine.sanitize_phonetic_speech(b"raw-audio")
+    assert result["status"] == "BLOCKED"
+    assert result["reason"] == "RECORDING_NOT_AUTHORIZED"
