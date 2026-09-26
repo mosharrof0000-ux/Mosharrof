@@ -1,3 +1,3 @@
-# Sidebar Audit
+# sidebar audit
 
-Reserved for sidebar entity audit records.
+Append-only lifecycle and capability decisions for this entity. DELETE and destructive operations are never granted.
