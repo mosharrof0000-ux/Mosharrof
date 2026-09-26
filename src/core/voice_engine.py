@@ -6,7 +6,7 @@ pretends to decode raw audio without an authorized transcription provider.
 """
 
 import re
-from typing import Any, Dict, Iterable, Optional, Sequence, Callable
+from typing import Any, Callable, Dict, Iterable, Optional, Sequence, Callable
 from src.core.memory_ledger import MemoryLedger
 
 
@@ -36,6 +36,7 @@ class VoiceJournalEngine:
         self.is_listening = False
         self.recording_authorized = False
         self.known_voices: Dict[str, str] = {}
+        self.transcription_provider = transcription_provider
         self.correction_map = dict(self.DEFAULT_CORRECTIONS)
         if correction_map:
             self.correction_map.update(correction_map)
@@ -156,6 +157,19 @@ class VoiceJournalEngine:
         final_text = self.apply_smart_punctuation(corrected)
         return {"status": "SUCCESS" if final_text else "EMPTY",
                 "corrected_text": corrected, "final_text": final_text}
+
+    def process_voice_text(
+        self, transcript: str, *, context: Optional[Iterable[str]] = None
+    ) -> Dict[str, Any]:
+        result = self.sanitize_phonetic_speech(
+            transcript, transcript=transcript, context=context
+        )
+        return {
+            "status": result["status"],
+            "raw_text": result["raw_text"],
+            "corrected_text": result["corrected_text"],
+            "final_text": result["sanitized_text"],
+        }
 
     def process_voice_transcript(self, transcript: str, *, context: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         return self.process_voice_text(transcript, context=context)
