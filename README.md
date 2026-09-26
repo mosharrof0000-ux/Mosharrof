@@ -29,6 +29,10 @@ Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful compo
 
 Every meaningful component is represented under `entities/<entity-id>/` where appropriate. The registry is the authoritative machine-readable map for identity, responsibility, brain, scope and permission boundaries.
 
+### Context-aware voice boundary
+
+`VoiceJournalEngine` provides conservative smart punctuation and contextual correction through the model adapter when available, with deterministic local fallback rules. Raw audio decoding is intentionally delegated to an external speech-to-text adapter rather than pretending the dependency-free core can decode arbitrary audio.
+
 ### Model independence
 
 `src/core/brain_adapter.py` separates entity identity from the underlying model/provider. A model can be replaced without changing the entity's identity, responsibility, memory, permission, scope or audit history.
