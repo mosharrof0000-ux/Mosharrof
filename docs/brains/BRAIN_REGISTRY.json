@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0.0",
+  "brains": [
+    {
+      "id": "brain.core",
+      "entity_id": "mosharrof.core",
+      "model_adapter": "adapter.default",
+      "memory": ["working", "long_term"],
+      "tools": ["tool.registry"],
+      "status": "active"
+    },
+    {
+      "id": "brain.chat",
+      "entity_id": "mosharrof.chat",
+      "model_adapter": "adapter.default",
+      "memory": ["conversation"],
+      "tools": [],
+      "status": "planned"
+    },
+    {
+      "id": "brain.sidebar",
+      "entity_id": "mosharrof.sidebar",
+      "model_adapter": "adapter.default",
+      "memory": ["navigation"],
+      "tools": [],
+      "status": "planned"
+    },
+    {
+      "id": "brain.al_quran_research",
+      "entity_id": "mosharrof.al_quran_research",
+      "model_adapter": "adapter.default",
+      "memory": ["research"],
+      "tools": [],
+      "status": "planned"
+    }
+  ]
+}
