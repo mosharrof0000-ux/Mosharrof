@@ -1,0 +1,58 @@
+name: Mosharrof Autonomous Scheduler
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: mosharrof-autonomous-scheduler
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Six-hour autonomous audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main read-only
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Run repository safety audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f web/index.html
+          test -f .github/workflows/deploy-pages.yml
+          test -f .github/workflows/verification-gate.yml
+          python3 -m pip install -r requirements.txt
+          python3 -m pytest -q
+          echo "AUTONOMOUS AUDIT: PASS"
+
+      - name: Record audit result
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const body = [
+              "## Mosharrof 6-hour autonomous audit",
+              "",
+              "Result: PASS",
+              "",
+              "The scheduled audit verified the Pages entrypoint, deployment workflow, verification gate, and project tests.",
+              "",
+              "This job does not write to main and does not deploy."
+            ].join("\n");
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "Autonomous audit PASS — " + new Date().toISOString(),
+              body,
+              labels: ["autonomous-audit"]
+            });
