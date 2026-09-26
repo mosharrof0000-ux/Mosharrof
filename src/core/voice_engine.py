@@ -1,28 +1,35 @@
-"""Mosharrof context-aware voice journal engine.
+"""Context-aware voice processing boundary for Mosharrof.
 
-The engine keeps recording authorization explicit and provides a model-agnostic
-text normalization boundary for smart punctuation, contextual correction and
-phonetic sanitization. Actual audio-to-text transcription is delegated to an
-attached provider; this module never pretends to decode raw audio by itself.
+This module keeps recording authorization separate from text normalization.
+Real audio-to-text/ASR providers can be attached later; no fake audio
+processing is claimed when an ASR provider is absent.
 """
 
-from typing import Any, Callable, Dict, Optional
 import re
-
+from typing import Any, Dict, Optional, Mapping
 from src.core.memory_ledger import MemoryLedger
 
 
 class VoiceJournalEngine:
+    """Authorized voice journal plus conservative transcript processing."""
+
+    QUESTION_STARTERS = (
+        "কি ", "কী ", "কেন ", "কখন ", "কোথায় ", "কোথায় ", "কিভাবে ",
+        "কীভাবে ", "কত ", "কে ", "কার ", "কোন ", "কোনটি ", "কতটা "
+    )
+
     def __init__(
         self,
         memory_ledger: Optional[MemoryLedger] = None,
-        transcription_provider: Optional[Callable[[Any], str]] = None,
+        corrections: Optional[Mapping[str, str]] = None,
+        asr_provider: Any = None,
     ):
         self.ledger = memory_ledger or MemoryLedger()
         self.is_listening = False
         self.recording_authorized = False
         self.known_voices: Dict[str, str] = {}
-        self.transcription_provider = transcription_provider
+        self.corrections = dict(corrections or {})
+        self.asr_provider = asr_provider
 
     def toggle_listening(self, state: bool, authorized: bool = False) -> Dict[str, Any]:
         if state and not authorized:
@@ -46,86 +53,89 @@ class VoiceJournalEngine:
         return {"is_known": False, "speaker": "UNKNOWN_VOICE"}
 
     @staticmethod
-    def apply_smart_punctuation(raw_text: str) -> str:
-        """Apply conservative punctuation without changing lexical content."""
-        text = re.sub(r"\s+", " ", (raw_text or "").strip())
-        if not text:
-            return ""
-        text = re.sub(r"\s+([,।!?])", r"\1", text)
-        text = re.sub(r",+", ",", text)
-        text = re.sub(r"!+", "!", text)
-        text = re.sub(r"\?+", "?", text)
-        text = re.sub(r"।+", "।", text)
+    def _normalize_spacing(text: str) -> str:
+        text = re.sub(r"\s+", " ", (text or "").strip())
+        text = re.sub(r"\s+([,!?।])", r"\1", text)
+        text = re.sub(r"([,!?।])(?=\S)", r"\1 ", text)
+        return text.strip()
 
-        # Respect an already supplied terminal mark.
-        if text[-1] not in ".!?।":
-            text += "।"
-        return text
+    def apply_smart_punctuation(self, raw_text: str) -> str:
+        """Add only high-confidence terminal punctuation.
 
-    @staticmethod
-    def correct_contextual_grammar(raw_text: str, context: str = "") -> str:
-        """Perform only high-confidence, context-safe normalization.
-
-        This deliberately avoids inventing corrections. A future language-model
-        provider can be attached at this boundary for richer contextual repair.
+        Pause/intonation metadata can be used by a future ASR adapter. Plain
+        transcript text alone cannot reliably recover every spoken pause.
         """
-        text = re.sub(r"\s+", " ", (raw_text or "").strip())
+        text = self._normalize_spacing(raw_text)
         if not text:
             return ""
+        if text[-1] in ".!?।":
+            return text
+        if text.startswith(self.QUESTION_STARTERS):
+            return text + "?"
+        return text + "।"
 
-        replacements = {
-            "কি করতেছ": "কি করছ",
-            "করতেছেন": "করছেন",
-            "যাইতেছি": "যাচ্ছি",
-            "আসতেছি": "আসছি",
-            "করবেনা": "করবে না",
-        }
-        for source, target in replacements.items():
-            text = text.replace(source, target)
-        return text
+    def correct_contextual_grammar(self, raw_text: str) -> str:
+        """Apply only explicit, caller-supplied corrections and safe cleanup."""
+        text = self._normalize_spacing(raw_text)
+        if not text:
+            return ""
+        for wrong, right in sorted(self.corrections.items(), key=lambda item: len(item[0]), reverse=True):
+            if wrong:
+                text = text.replace(wrong, right)
+        text = re.sub(r"\b(\w+)(\s+\1\b)+", r"\1", text, flags=re.IGNORECASE)
+        return self._normalize_spacing(text)
 
     def sanitize_phonetic_speech(self, audio_stream: Any) -> Dict[str, Any]:
-        """Transcribe authorized audio through the configured provider.
+        """Normalize a transcript or delegate bytes to an attached ASR provider.
 
-        Raw audio decoding/STT is provider-specific and therefore not faked here.
+        No provider means no invented transcription: callers receive an
+        explicit status instead of silently guessing what the audio said.
         """
-        if not self.recording_authorized:
-            return {"status": "BLOCKED", "reason": "RECORDING_NOT_AUTHORIZED"}
-        if self.transcription_provider is None:
+        if isinstance(audio_stream, str):
+            normalized = self.correct_contextual_grammar(audio_stream)
+            return {
+                "status": "SUCCESS",
+                "source": "TEXT_TRANSCRIPT",
+                "text": self.apply_smart_punctuation(normalized),
+            }
+        if self.asr_provider is None:
             return {
                 "status": "UNAVAILABLE",
-                "reason": "NO_TRANSCRIPTION_PROVIDER_ATTACHED",
+                "reason": "ASR_PROVIDER_NOT_ATTACHED",
             }
-        transcript = self.transcription_provider(audio_stream)
-        normalized = self.correct_contextual_grammar(transcript)
-        normalized = self.apply_smart_punctuation(normalized)
+        transcript = self.asr_provider.transcribe(audio_stream)
         return {
             "status": "SUCCESS",
-            "raw_transcript": transcript,
-            "sanitized_text": normalized,
+            "source": "ASR_PROVIDER",
+            "text": self.apply_smart_punctuation(
+                self.correct_contextual_grammar(transcript)
+            ),
         }
 
-    def process_voice_text(self, raw_text: str, context: str = "") -> Dict[str, Any]:
-        """Normalize a transcript through the context-aware text pipeline."""
-        corrected = self.correct_contextual_grammar(raw_text, context)
+    def process_transcript(self, raw_text: str) -> Dict[str, Any]:
+        """Run the complete conservative text-processing pipeline."""
+        corrected = self.correct_contextual_grammar(raw_text)
         punctuated = self.apply_smart_punctuation(corrected)
-        return {
+        result = {
             "status": "SUCCESS" if punctuated else "EMPTY",
             "raw_text": raw_text,
-            "corrected_text": corrected,
-            "final_text": punctuated,
+            "text": punctuated,
+            "smart_punctuation": bool(punctuated),
+            "contextual_correction": corrected != self._normalize_spacing(raw_text),
         }
+        self.ledger.record_event("VOICE_TRANSCRIPT_PROCESSED", result)
+        return result
 
     def process_ambient_conversation(self, speaker_signature: str, transcript: str) -> Dict[str, Any]:
         if not self.recording_authorized:
             return {"status": "BLOCKED", "reason": "RECORDING_NOT_AUTHORIZED"}
         if not transcript.strip():
             return {"status": "EMPTY", "message": "No transcript supplied."}
+        processed = self.process_transcript(transcript)
         speaker_info = self.identify_speaker(speaker_signature)
-        normalized = self.process_voice_text(transcript)["final_text"]
         self.ledger.record_event("SOCIAL_INTERACTION_LOGGED", {
             "speaker": speaker_info["speaker"],
-            "transcript": normalized,
+            "transcript": processed["text"],
             "is_known_person": speaker_info["is_known"],
             "privacy_status": "LOCAL_ONLY",
         })
@@ -133,5 +143,5 @@ class VoiceJournalEngine:
             "status": "SUCCESS",
             "detected_speaker": speaker_info["speaker"],
             "is_known": speaker_info["is_known"],
-            "normalized_transcript": normalized,
+            "transcript": processed["text"],
         }
