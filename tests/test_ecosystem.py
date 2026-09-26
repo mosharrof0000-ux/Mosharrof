@@ -182,3 +182,22 @@ def test_voice_audio_requires_authorization_and_provider():
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ।"
+
+
+def test_voice_context_aware_processing():
+    voice = VoiceJournalEngine()
+    result = voice.process_transcript("কোরান নিয়ে গবেষণা কর")
+    assert result["status"] == "SUCCESS"
+    assert result["text"] == "কুরআন নিয়ে গবেষণা কর।"
+    assert result["correction_applied"] is True
+
+
+def test_voice_smart_punctuation_question():
+    voice = VoiceJournalEngine()
+    result = voice.process_transcript("কুরআন কোথায়")
+    assert result["text"] == "কুরআন কোথায়?"
+
+
+def test_voice_raw_audio_requires_provider():
+    result = VoiceJournalEngine.sanitize_phonetic_speech(b"audio")
+    assert result["status"] == "PROVIDER_REQUIRED"
