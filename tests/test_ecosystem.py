@@ -27,7 +27,7 @@ def test_full_ecosystem_flow(tmp_path):
 
     intent = brain.process_intent("গবেষণার জন্য কুরআন ফাইল খুঁজে দাও")
     assert intent["status"] == "SUCCESS"
-    assert intent["intent"] == "STORAGE"
+    assert intent["intent"] == "RESEARCH"
     assert intent["intent_clarity"] == 1.0
 
 def test_capability_boundary():
