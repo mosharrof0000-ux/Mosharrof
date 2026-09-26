@@ -1,0 +1,8 @@
+{
+  "project":{"id":"mosharrof","name":"Mosharrof","owner":"Mosharrof Karim","architecture_version":"0.1.0","status":"development"},
+  "core":{"entry":"src/core/mosharrof_brain.py","role":"coordinate entities; never bypass entity permissions"},
+  "entity_contract":{"required":["identity","brain","memory","responsibility","permission","policy","tools","communication","audit","version"],"capability_formula":"AI Brain × Permission × Policy × Scope × Identity"},
+  "safety":{"delete_allowed":false,"destructive_operations_allowed":false},
+  "registries":{"entities":"registry/entities.json","policies":"registry/policies.json"},
+  "model_strategy":{"model_agnostic":true,"adapter_boundary":"brain interface -> model adapter"}
+}
