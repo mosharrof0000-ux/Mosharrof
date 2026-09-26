@@ -1,27 +1,32 @@
 """
-Mosharrof AI: Main Runtime Orchestrator (V2.0 with EventBus)
-সমগ্র স্বায়ত্তশাসিত এআই ইকোসিস্টেম ও স্নায়ুতন্ত্রের পূর্ণাঙ্গ সমন্বয় ফাইল।
+Mosharrof AI: Main Runtime Orchestrator (V2.1 with MemoryLedger)
+সমগ্র স্বায়ত্তশাসিত এআই ইকোসিস্টেম, স্নায়ুতন্ত্র ও স্মৃতিকোষের পূর্ণাঙ্গ সমন্বয় ফাইল।
 """
 
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
+from src.core.memory_ledger import MemoryLedger
 from src.core.entity_factory import EntityFactory
 from src.entities.ui_organ.sensory_engine import UISensoryEngine
 from src.entities.categories.base_category_entity import LivingCategoryEntity
 
 def boot_mosharrof_ai():
     print("==========================================")
-    print("   BOOTING MOSHARROF AI ECOSYSTEM V2.0   ")
+    print("   BOOTING MOSHARROF AI ECOSYSTEM V2.1   ")
     print("==========================================")
     
-    # ১. স্নায়ুতন্ত্র ও সেন্ট্রাল ব্রেইন স্টার্ট
+    # ১. স্নায়ুতন্ত্র, স্মৃতিকোষ ও সেন্ট্রাল ব্রেইন স্টার্ট
     event_bus = EcosystemEventBus()
+    memory_ledger = MemoryLedger()
     brain = MosharrofCoreBrain(event_bus=event_bus)
+    
+    memory_ledger.record_event("BOOT_SEQUENCE", {"status": "SUCCESS", "version": "V2.1"})
     print(f"[Core State]: {brain.system_status()}")
     
-    # ২. স্নায়ুতন্ত্রে লিসেনার যুক্ত করা
+    # ২. স্নায়ুতন্ত্রে লিসেনার ও স্মৃতি ট্র্যাকিং যুক্ত করা
     def on_system_event(data):
         print(f"[Signal Receiver]: Event perceived across ecosystem -> {data}")
+        memory_ledger.record_event("SYSTEM_EVENT", data)
 
     event_bus.subscribe("USER_PERCEPTION", on_system_event)
     event_bus.subscribe("ENTITY_SPAWNED", on_system_event)
@@ -36,11 +41,14 @@ def boot_mosharrof_ai():
     new_entity = factory.spawn_entity("science_domain", "Science & Discovery", "Analytical, Empirical, Truth-Seeking")
     brain.broadcast_system_command("ENTITY_SPAWNED", new_entity)
     
-    # ৫. নতুন সত্তার সাথে সেন্ট্রাল ব্রেইনের সিঙ্ক
+    # ৫. নতুন সত্তার সাথে সিঙ্ক ও স্মৃতিতে কনসোলিডেশন
     sci_entity = LivingCategoryEntity("science_domain", "Science & Discovery")
     sci_response = sci_entity.perceive_user_behavior("Analyzing quantum entanglement", {"depth": "HIGH"})
     governance = brain.monitor_sub_agent("science_domain", sci_response)
+    
+    memory_ledger.consolidate_knowledge("ACTIVE_ENTITY_SCIENCE", sci_response)
     print(f"[Governance Result]: {governance['decision']} -> {governance['master_command']}")
+    print(f"[Memory Status]: Recent events recorded = {len(memory_ledger.recall_recent_events())}")
     
     print("==========================================")
     print("   MOSHARROF AI IS FULLY OPERATIONAL!    ")
