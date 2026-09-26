@@ -29,6 +29,20 @@ class MosharrofCoreBrain:
         self.memory_ledger.record_event("ACTION_ALLOWED", result)
         return result
 
+    def authorize_action(self, *, entity_id: str, operation: str, scope: str = "", entity_scope: str = "") -> Dict[str, Any]:
+        effective_scope = scope or entity_scope or entity_id
+        result = self.permission_guard.check(operation, scope=effective_scope)
+        if result["status"] == "DENIED":
+            self.memory_ledger.record_event("ACTION_DENIED", {"entity": entity_id, **result})
+            return result
+        if entity_scope and scope and not scope.startswith(entity_scope):
+            denied = {"status":"DENIED","operation":operation.upper(),"scope":scope,"reason":"SCOPE_BOUNDARY"}
+            self.memory_ledger.record_event("ACTION_DENIED", {"entity": entity_id, **denied})
+            return denied
+        allowed = {"status":"ALLOWED","entity":entity_id,"operation":operation.upper(),"scope":effective_scope}
+        self.memory_ledger.record_event("ACTION_ALLOWED", allowed)
+        return allowed
+
     def broadcast_system_command(self,command_type:str,payload:Dict[str,Any]):
         self.event_bus.publish(command_type,payload)
         self.memory_ledger.record_event(command_type,payload)
