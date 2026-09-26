@@ -36,6 +36,7 @@ jobs:
       - name: Audit live URL
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AUDIT_URL: ${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
           AUDIT_OUT: artifacts/live
         run: npm run audit
