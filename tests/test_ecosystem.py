@@ -161,3 +161,33 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_context_aware_voice_pipeline():
+    engine = VoiceJournalEngine()
+    assert engine.sanitize_phonetic_speech("মশাররফ কোরান গবেষনা") == "মোশাররফ কুরআন গবেষনা"
+    assert engine.correct_contextual_grammar("মোশাররফ কুরআন গবেষনা") == "মোশাররফ কুরআন গবেষণা"
+    assert engine.apply_smart_punctuation("কীভাবে মোশাররফ কাজ করবে") == "কীভাবে মোশাররফ কাজ করবে?"
+    result = engine.process_voice_text("মশাররফ কোরান গবেষনা")
+    assert result["status"] == "SUCCESS"
+    assert result["text"] == "মোশাররফ কুরআন গবেষণা।"
+    assert result["pipeline"] == [
+        "phonetic_sanitizer",
+        "contextual_correction",
+        "smart_punctuation",
+    ]
+
+
+def test_voice_engine_does_not_fake_audio_transcription():
+    engine = VoiceJournalEngine()
+    assert engine.sanitize_phonetic_speech(b"opaque-audio") == ""
+
+
+def test_ambient_conversation_uses_processed_transcript():
+    engine = VoiceJournalEngine()
+    engine.toggle_listening(True, authorized=True)
+    result = engine.process_ambient_conversation(
+        "SPEAKER_TEST_01", "কীভাবে মশাররফ কোরান গবেষনা"
+    )
+    assert result["status"] == "SUCCESS"
+    assert result["transcript"] == "কীভাবে মোশাররফ কুরআন গবেষণা?"
