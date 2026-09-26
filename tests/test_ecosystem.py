@@ -87,3 +87,36 @@ def test_storage_organizer_never_overwrites(tmp_path):
     assert result["moved_files"] == 0
     assert source.exists()
     assert existing.read_text(encoding="utf-8") == "existing"
+
+
+def test_event_bus_isolates_subscriber_failure():
+    bus = EcosystemEventBus()
+    received = []
+
+    def broken(_):
+        raise RuntimeError("subscriber failure")
+
+    def healthy(data):
+        received.append(data)
+
+    bus.subscribe("TEST", broken)
+    bus.subscribe("TEST", healthy)
+    result = bus.publish("TEST", {"ok": True})
+
+    assert result["status"] == "PARTIAL_FAILURE"
+    assert result["delivered"] == 1
+    assert len(result["failures"]) == 1
+    assert received == [{"ok": True}]
+
+
+def test_tool_factory_execution_permission_is_explicit(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    result = factory.permission_engine.authorize("EXECUTE_TOOL", scope="tool_factory")
+    assert result["status"] == "ALLOWED"
+
+
+def test_additional_delete_variants_are_denied():
+    brain = MosharrofCoreBrain()
+    for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
+        result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
+        assert result["status"] == "DENIED"
