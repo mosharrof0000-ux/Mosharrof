@@ -1,0 +1,39 @@
+name: Mosharrof Visual QA
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "URL to inspect"
+        required: true
+        default: "http://127.0.0.1:4173"
+
+permissions:
+  contents: read
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Start candidate site
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
+          sleep 3
+      - name: Capture and visually inspect
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python3 scripts/visual_qa.py             --url "http://127.0.0.1:4173"             --output artifacts/candidate.png             --task "Review the Mosharrof mobile UI. Check that existing controls remain intact and that no design regression, clipping, overlap, or missing feature is visible."
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mosharrof-visual-qa
+          path: artifacts/
