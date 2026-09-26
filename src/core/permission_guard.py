@@ -1,6 +1,6 @@
 """Central capability guard for entity and operation boundaries."""
 class PermissionGuard:
-    BLOCKED_OPERATIONS = {"DELETE","DESTROY","PURGE","DROP","ERASE","REMOVE"}
+    BLOCKED_OPERATIONS = {"DELETE","DESTRUCTIVE","DESTROY","PURGE","DROP","ERASE","REMOVE"}
 
     def check(self, operation: str, *, scope: str = "entity",
               entity_scope: str = "", destructive: bool = False):
