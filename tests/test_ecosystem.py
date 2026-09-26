@@ -15,6 +15,9 @@ def test_full_ecosystem_flow(tmp_path):
     storage_engine = StorageEngine(root_dir=str(tmp_path))
 
     assert brain.system_status()["delete_operations"] == "BLOCKED"
+    assert brain.monitor_sub_agent("core", {"status":"PROCESSING","operation":"WRITE","scope":"core"})["decision"] == "APPROVED"
+    assert brain.monitor_sub_agent("core", {"status":"PROCESSING","operation":"DELETE","scope":"core"})["decision"] == "REJECTED"
+    assert brain.monitor_sub_agent("core", {"status":"PROCESSING","operation":"DESTRUCTIVE","scope":"core"})["decision"] == "REJECTED"
     assert voice_engine.toggle_listening(True)["listening_state"] == "ACTIVE"
     assert voice_engine.process_ambient_conversation("SPEAKER_TEST_01", "Test conversation")["status"] == "SUCCESS"
 
