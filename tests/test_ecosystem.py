@@ -32,3 +32,11 @@ def test_full_ecosystem_flow(tmp_path):
     assert intent["status"] == "SUCCESS"
     assert intent["intent"] == "STORAGE"
     assert intent["intent_clarity"] == 1.0
+
+
+def test_delete_is_permanently_blocked():
+    result = MosharrofCoreBrain().monitor_sub_agent(
+        "chat", {"status": "PROCESSING", "operation": "DELETE", "scope": "chat"}
+    )
+    assert result["decision"] == "REJECTED"
+    assert result["integrity_check"] == "FAILED"
