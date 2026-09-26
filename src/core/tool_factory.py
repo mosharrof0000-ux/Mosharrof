@@ -1,4 +1,4 @@
-"""Dynamic tool registry with an enforced destructive-operation boundary."""
+"""Dynamic tool registry with strict capability and code-safety boundaries."""
 
 import ast
 import importlib.util
@@ -10,6 +10,20 @@ from src.core.permission_engine import PermissionEngine
 
 
 class ToolFactory:
+    BLOCKED_CALLS = {
+        "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
+        "system", "popen", "run", "call", "check_call", "check_output",
+        "exec", "eval", "compile", "__import__",
+    }
+    BLOCKED_NAMES = {
+        "DELETE", "DESTROY", "ERASE", "PURGE", "DROP", "SUBPROCESS",
+        "SOCKET", "REQUESTS", "URLOPEN", "OPEN",
+    }
+    BLOCKED_IMPORTS = {
+        "subprocess", "socket", "requests", "urllib", "http", "ftplib",
+        "shutil", "pathlib",
+    }
+
     def __init__(self, tools_dir: str = "src/tools"):
         self.tools_dir = tools_dir
         self.registry: Dict[str, Callable] = {}
@@ -17,39 +31,44 @@ class ToolFactory:
         os.makedirs(self.tools_dir, exist_ok=True)
         self._load_existing_tools()
 
-    def _load_existing_tools(self):
-        for filename in os.listdir(self.tools_dir):
-            if filename.endswith(".py") and not filename.startswith("__"):
-                tool_name = filename[:-3]
-                path = os.path.join(self.tools_dir, filename)
-                try:
-                    with open(path, "r", encoding="utf-8") as handle:
-                        source = handle.read()
-                    if self._contains_blocked_operation(source):
-                        continue
-                except OSError:
-                    continue
-                self._import_and_register(tool_name)
-
-    @staticmethod
-    def _contains_blocked_operation(code_body: str) -> bool:
-        """Reject common destructive or shell-spawning operations before registration."""
-        blocked = {
-            "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
-            "system", "popen", "run", "call", "check_call", "check_output",
-        }
+    @classmethod
+    def _contains_blocked_operation(cls, code_body: str) -> bool:
         try:
             wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
             tree = ast.parse(wrapped)
         except SyntaxError:
             return True
+
         for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                root = (node.names[0].name if node.names else "").split(".")[0]
+                if root in cls.BLOCKED_IMPORTS:
+                    return True
+                # Dynamic tools are snippets, not arbitrary module loaders.
+                return True
             if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute) and node.func.attr in blocked:
+                if isinstance(node.func, ast.Attribute) and node.func.attr in cls.BLOCKED_CALLS:
                     return True
-                if isinstance(node.func, ast.Name) and node.func.id.upper() in {"DELETE", "DESTROY", "ERASE"}:
+                if isinstance(node.func, ast.Name) and node.func.id.upper() in cls.BLOCKED_NAMES:
                     return True
+            if isinstance(node, ast.Name) and node.id.upper() in cls.BLOCKED_NAMES:
+                return True
         return False
+
+    def _load_existing_tools(self):
+        for filename in os.listdir(self.tools_dir):
+            if not filename.endswith(".py") or filename.startswith("__"):
+                continue
+            tool_name = filename[:-3]
+            path = os.path.join(self.tools_dir, filename)
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    source = handle.read()
+                if self._contains_blocked_operation(source):
+                    continue
+            except OSError:
+                continue
+            self._import_and_register(tool_name)
 
     def _import_and_register(self, tool_name: str) -> bool:
         file_path = os.path.join(self.tools_dir, f"{tool_name}.py")
@@ -72,7 +91,7 @@ class ToolFactory:
         if decision["status"] != "ALLOWED":
             return f"DENIED: {decision['reason']}"
         if self._contains_blocked_operation(code_body):
-            return "DENIED: DELETE_AND_DESTRUCTIVE_OPERATIONS_BLOCKED"
+            return "DENIED: UNSAFE_OR_DESTRUCTIVE_TOOL_CODE"
 
         clean_name = tool_name.lower().strip().replace(" ", "_")
         if not clean_name or not clean_name.replace("_", "").isalnum():
@@ -92,9 +111,7 @@ class ToolFactory:
         return f"Tool '{clean_name}' was written but could not be loaded."
 
     def execute_tool(self, tool_name: str, *args, **kwargs) -> Any:
-        decision = self.permission_engine.authorize(
-            "EXECUTE_TOOL", scope=f"tools/{tool_name}"
-        )
+        decision = self.permission_engine.authorize("EXECUTE_TOOL", scope=f"tools/{tool_name}")
         if decision["status"] != "ALLOWED":
             return decision
         clean_name = tool_name.lower().strip().replace(" ", "_")
