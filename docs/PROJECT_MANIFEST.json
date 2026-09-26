@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "id": "mosharrof",
+    "name": "Mosharrof",
+    "owner": "Mosharrof Karim",
+    "purpose": "Modular intelligent entity and AI brain ecosystem",
+    "architecture": "entity-first, modular, model-agnostic"
+  },
+  "core_rules": {
+    "no_delete": true,
+    "least_privilege_for_entities": true,
+    "audit_required_for_mutations": true,
+    "model_independent_identity": true,
+    "separate_responsibility_per_entity": true
+  },
+  "boot_order": [
+    "identity",
+    "policy",
+    "permissions",
+    "entity_registry",
+    "brain_registry",
+    "memory",
+    "tools",
+    "communication",
+    "audit",
+    "ui"
+  ],
+  "entrypoints": {
+    "web": "index.html",
+    "core": "src/core/mosharrof_brain.py",
+    "entity_registry": "docs/entities/ENTITY_REGISTRY.json",
+    "policy": "docs/policy/NO_DELETE_POLICY.json"
+  }
+}
