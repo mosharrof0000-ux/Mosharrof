@@ -1,0 +1,19 @@
+{
+  "project_id": "mosharrof-core",
+  "name": "Mosharrof",
+  "owner": "Mosharrof Karim",
+  "version": "1.0.0-core-foundation",
+  "purpose": "Modular AI ecosystem with independent entities, brains, permissions, memory, tools, communication, and audit.",
+  "architecture": {
+    "capability_formula": "AI_BRAIN x PERMISSION x POLICY x SCOPE x IDENTITY",
+    "model_agnostic": true,
+    "delete_operations": "PERMANENTLY_BLOCKED"
+  },
+  "entrypoints": {
+    "web": "index.html",
+    "manifest": "PROJECT_MANIFEST.json",
+    "entity_registry": "registry/entities.json"
+  },
+  "lifecycle": ["CREATE", "REVIEW", "APPROVE", "STORE", "BACKUP", "DOCUMENT", "TEST", "ACTIVATE"],
+  "status": "FOUNDATION"
+}
