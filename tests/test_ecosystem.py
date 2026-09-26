@@ -70,3 +70,22 @@ def test_tool_factory_blocks_destructive_source(tmp_path):
 def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof_ai)
+
+
+def test_voice_capture_requires_explicit_activation():
+    voice = VoiceJournalEngine()
+    result = voice.process_ambient_conversation("SPEAKER_TEST_01", "Must not be recorded")
+    assert result["status"] == "DENIED"
+    assert result["reason"] == "VOICE_CAPTURE_INACTIVE"
+
+
+def test_tool_factory_allows_safe_function_body_and_checks_execution(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert "created and registered" in factory.create_tool("safe_tool", "return 1")
+    assert factory.execute_tool("safe_tool") == 1
+
+
+def test_tool_factory_blocks_destructive_function_body(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    result = factory.create_tool("bad_tool", "import os\nos.remove('x')")
+    assert result.startswith("DENIED:")
