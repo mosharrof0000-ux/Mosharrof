@@ -39,6 +39,22 @@ jobs:
 
       - name: Visual and functional audit
         env:
-          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
         run: python3 scripts/visual_audit.py
+
+      - name: Wait for required PR checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR=$(gh pr list --base main --head "agent/auto-*" --state open --json number --jq '.[0].number')
+          test -n "$PR"
+          gh pr checks "$PR" --watch
+
+      - name: Enable verified auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR=$(gh pr list --base main --head "agent/auto-*" --state open --json number --jq '.[0].number')
+          test -n "$PR"
+          gh pr merge "$PR" --auto --squash
