@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "profiles": {
+    "core": ["READ", "WRITE", "CREATE", "EXECUTE", "DEPLOY", "MANAGE"],
+    "chat": ["READ", "CHAT"],
+    "ui_navigation": ["READ", "NAVIGATE"],
+    "research_tool": ["READ", "RESEARCH", "WRITE_RESEARCH"]
+  },
+  "global_denials": ["DELETE", "DESTRUCTIVE"],
+  "rule": "Actual capability = brain × permission × policy × scope × identity"
+}
