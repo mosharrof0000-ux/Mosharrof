@@ -22,8 +22,11 @@ jobs:
           python3 -m http.server 4173 --directory web > /tmp/mosharrof-http.log 2>&1 &
           sleep 2
       - name: Capture and inspect mobile design
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
         run: |
-          python3 scripts/mosharrof_visual_inspector.py --url http://127.0.0.1:4173 --out artifacts/visual-inspection
+          python3 scripts/mosharrof_visual_inspector.py --url http://127.0.0.1:4173 --baseline-url "$LIVE_URL" --out artifacts/visual-inspection
       - name: Upload screenshot and inspection report
         if: always()
         uses: actions/upload-artifact@v4
