@@ -1,44 +1,43 @@
 <!doctype html>
-<html lang="en">
+<html lang="bn">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#070a10">
-  <meta name="description" content="Mosharrof Karim — Intelligent Entity and AI Brain Architecture">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="stylesheet" href="./styles.css">
-  <title>Mosharrof Karim</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070a10">
+<meta name="description" content="Mosharrof Karim — Intelligent Entity and AI Brain Architecture">
+<link rel="manifest" href="./manifest.json">
+<link rel="stylesheet" href="./styles.css">
+<title>Mosharrof Karim</title>
 </head>
 <body>
-  <div class="shell">
-    <header class="top"><div class="brand">MOSHARROF CORE</div><div class="status">● Foundation online</div></header>
-    <main class="main">
-      <section class="hero">
-        <div class="status">ENTITY-FIRST · MODEL-AGNOSTIC</div>
-        <h1>Mosharrof</h1>
-        <p class="muted"><strong>Mosharrof Karim</strong> — Intelligent Entity and AI Brain Architecture.</p>
-        <p class="ok">Permanent safety boundary: DELETE and destructive operations are blocked.</p><section class="item" id="voice-engine"><strong>Voice Engine</strong><span class="muted">Smart punctuation · context-aware correction · explicit recording authorization · provider-neutral speech boundary</span></section>
-        <div class="grid">
-          <div class="item"><strong>Core</strong><span class="muted">Coordination and governance</span></div>
-          <div class="item"><strong>Entities</strong><span class="muted">Independent identity and responsibility</span></div>
-          <div class="item"><strong>Brains</strong><span class="muted">Replaceable model-adapter boundary</span></div>
-          <div class="item"><strong>Memory</strong><span class="muted">State, history and learning records</span></div>
-          <div class="item"><strong>Policy</strong><span class="muted">Permission and scope enforcement</span></div>
-          <div class="item"><strong>Audit</strong><span class="muted">Traceable changes and activation</span></div>
-        </div>
-        <div id="console" class="console" aria-live="polite"></div>
-      </section>
-    </main>
-    <div class="inputbar">
-      <form id="chatForm">
-        <input id="chatInput" autocomplete="off" placeholder="Ask the Mosharrof foundation...">
-        <button type="submit">Send</button>
-      </form>
-    </div>
-  </div>
-  <script src="./app.js"></script>
-  <script>
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  </script>
+<div class="shell">
+<header class="top"><div class="brand">MOSHARROF CORE</div><div class="status">● Foundation online</div></header>
+<main class="main">
+<section class="hero">
+<div class="status">ENTITY-FIRST · MODEL-AGNOSTIC</div>
+<h1>মোশাররফ</h1>
+<p class="muted"><strong>Mosharrof Karim</strong> — Intelligent Entity and AI Brain Architecture.</p>
+<p class="ok">Permanent safety boundary: DELETE and destructive operations are blocked.</p>
+<div class="grid">
+<div class="item"><strong>Core</strong><span class="muted">Coordination and governance</span></div>
+<div class="item"><strong>Entities</strong><span class="muted">Independent identity and responsibility</span></div>
+<div class="item"><strong>Brains</strong><span class="muted">Replaceable model-adapter boundary</span></div>
+<div class="item"><strong>Memory</strong><span class="muted">State, history and learning records</span></div>
+<div class="item"><strong>Policy</strong><span class="muted">Permission and scope enforcement</span></div>
+<div class="item"><strong>Audit</strong><span class="muted">Traceable changes and activation</span></div>
+</div>
+<div id="console" class="console" aria-live="polite"></div>
+</section>
+</main>
+<div class="inputbar">
+<form id="chatForm">
+<input id="chatInput" autocomplete="off" placeholder="Write a message..." aria-label="Message">
+<button type="submit">Send</button>
+</form>
+<div class="voicebar"><button id="voiceButton" type="button">🎙 Voice</button><span id="voiceStatus">Voice input ready.</span></div>
+</div>
+</div>
+<script src="./app.js"></script>
+<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});</script>
 </body>
 </html>
