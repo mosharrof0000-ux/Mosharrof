@@ -1,0 +1,48 @@
+name: Mosharrof Visual Inspection
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "URL to inspect"
+        required: false
+        default: "https://mosharrof0000-ux.github.io/Mosharrof/"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  visual-inspection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install browser inspection engine
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start candidate site
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/mosharrof-server.log 2>&1 &
+          echo $! >/tmp/mosharrof-server.pid
+
+      - name: Capture candidate and live screenshots
+        env:
+          TARGET_URL: \${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
+        run: |
+          node scripts/visual_inspector.mjs "$TARGET_URL"
+
+      - name: Upload visual inspection evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-inspection
+          path: visual-inspection/
