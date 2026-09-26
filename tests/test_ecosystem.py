@@ -69,7 +69,7 @@ def test_tool_factory_blocks_destructive_source(tmp_path):
 
 def test_runtime_import_smoke():
     import src.main
-    assert callable(src.main.boot_mosharrof_ai)
+    assert callable(src.main.boot_mosharrof)\n    assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
 
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
