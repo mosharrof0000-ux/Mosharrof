@@ -34,21 +34,37 @@ class ToolFactory:
     @staticmethod
     def _contains_blocked_operation(code_body: str) -> bool:
         """Reject common destructive or shell-spawning operations before registration."""
-        blocked = {
+        blocked_attributes = {
             "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
             "system", "popen", "run", "call", "check_call", "check_output",
+            "exec", "eval", "compile",
         }
+        blocked_names = {
+            "DELETE", "DELETE_FILE", "DELETE_DIRECTORY", "DESTROY",
+            "DESTROY_PROJECT", "ERASE", "PURGE", "DROP", "REMOVE",
+            "EXEC", "EVAL", "COMPILE", "__IMPORT__",
+        }
+        blocked_modules = {"subprocess", "shutil"}
+        blocked_attr_lower = {item.lower() for item in blocked_attributes}
         try:
             wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
             tree = ast.parse(wrapped)
         except SyntaxError:
             return True
         for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                if any(alias.name.split(".")[0].lower() in blocked_modules for alias in node.names):
+                    return True
             if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute) and node.func.attr in blocked:
+                if isinstance(node.func, ast.Attribute) and node.func.attr.lower() in blocked_attr_lower:
                     return True
-                if isinstance(node.func, ast.Name) and node.func.id.upper() in {"DELETE", "DESTROY", "ERASE"}:
+                if isinstance(node.func, ast.Name) and node.func.id.upper() in blocked_names:
                     return True
+                if isinstance(node.func, ast.Name) and node.func.id == "__import__":
+                    return True
+                if isinstance(node.func, ast.Name) and node.func.id == "getattr":
+                    if any(isinstance(arg, ast.Constant) and str(arg.value).lower() in blocked_attr_lower for arg in node.args):
+                        return True
         return False
 
     def _import_and_register(self, tool_name: str) -> bool:
