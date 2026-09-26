@@ -1,0 +1,47 @@
+name: Mosharrof Visual QA
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Optional public URL to inspect"
+        required: false
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: visual-qa
+  cancel-in-progress: true
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_URL: ${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --save-dev playwright
+          npx playwright install --with-deps chromium
+      - name: Start preview
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/mosharrof-preview.log 2>&1 &
+          sleep 2
+          curl -fsS http://127.0.0.1:4173/ >/dev/null
+      - name: Inspect preview
+        env:
+          PREVIEW_URL: http://127.0.0.1:4173/
+        run: node .github/visual-qa/inspect.mjs
+      - name: Inspect public URL
+        run: node .github/visual-qa/inspect-public.mjs
+      - name: Upload screenshots and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-qa
+          path: visual-qa-results/
