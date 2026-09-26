@@ -161,3 +161,18 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_voice_engine_smart_transcript_pipeline():
+    engine = VoiceJournalEngine()
+    assert engine.correct_contextual_grammar("আমি কোরআন নিয়ে গবেষণা করি") == "আমি কুরআন নিয়ে গবেষণা করি"
+    assert engine.apply_smart_punctuation("কীভাবে কাজ করবে") == "কীভাবে কাজ করবে?"
+    result = engine.process_transcript("মোশারফ কোরআন নিয়ে গবেষণা করে")
+    assert result["status"] == "SUCCESS"
+    assert result["text"] == "মোশাররফ কুরআন নিয়ে গবেষণা করে।"
+
+
+def test_voice_engine_raw_audio_requires_provider():
+    result = VoiceJournalEngine.sanitize_phonetic_speech(b"raw-audio")
+    assert result["status"] == "PROVIDER_REQUIRED"
+    assert result["provider_required"] is True
