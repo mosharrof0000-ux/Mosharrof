@@ -1,0 +1,1 @@
+{"entities":[{"id":"mosharrof.core","type":"core","name":"Mosharrof Core","responsibility":"Coordinate entities, policy, permissions, memory, tools, communication, audit and lifecycle.","brain":"mosharrof.core.brain","permission_profile":"core.safe-admin","scope":"ecosystem"}]}
