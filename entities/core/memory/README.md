@@ -1,3 +1,3 @@
-# Core Memory
+# core memory
 
-Reserved for audited Mosharrof Core memory and state.
+This directory is the entity-scoped memory boundary. Data must remain attributable to the entity and subject to project policy.
