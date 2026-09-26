@@ -182,3 +182,17 @@ def test_voice_audio_requires_authorization_and_provider():
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ।"
+
+
+def test_context_aware_voice_processing():
+    voice = VoiceJournalEngine()
+    result = voice.process_voice_text("কোরআন রিসার্চ কোথায়")
+    assert result["status"] == "SUCCESS"
+    assert result["corrected_text"] == "কুরআন রিসার্চ কোথায়"
+    assert result["text"].endswith("?")
+
+
+def test_voice_audio_provider_boundary():
+    voice = VoiceJournalEngine()
+    assert voice.sanitize_phonetic_speech(b"audio")["status"] == "PROVIDER_REQUIRED"
+    assert voice.sanitize_phonetic_speech("কোরআন রিসার্চ")["text"].endswith("।")
