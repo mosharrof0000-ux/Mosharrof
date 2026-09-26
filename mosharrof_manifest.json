@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "mosharrof-core",
+  "name": "Mosharrof",
+  "owner": "Mosharrof Karim",
+  "architecture": "modular-entity-brain",
+  "capability_formula": "AI_BRAIN x PERMISSION x POLICY x SCOPE x IDENTITY",
+  "permanent_rules": {"delete_operations": "DENIED", "destructive_operations": "DENIED",
+                      "entity_isolation": true, "audit_required": true}
+}
