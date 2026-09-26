@@ -1,1 +1,27 @@
-{"project":{"id":"mosharrof","name":"Mosharrof","owner":"Mosharrof Karim","version":"0.1.0","status":"core-repair-v1"},"architecture":{"pattern":"modular-entity-brain","capability_formula":"brain x permission x policy x scope x identity","model_policy":"model-agnostic","communication":"event-stream","delete_policy":"permanently-blocked"},"entities":[{"id":"core","role":"coordination and governance","brain":"core"},{"id":"chat","role":"user conversation","brain":"chat"},{"id":"sidebar","role":"navigation and entity discovery","brain":"sidebar"},{"id":"quran-research","role":"research tool","brain":"tool.quran-research"}]}
+{
+  "project": {
+    "id": "mosharrof.core",
+    "name": "Mosharrof",
+    "owner": "Mosharrof Karim",
+    "version": "0.2.0",
+    "status": "foundation-verified"
+  },
+  "first_read": [
+    "config/project_manifest.json",
+    "config/entity_registry.json",
+    "policies/CORE_POLICY.md",
+    "docs/ARCHITECTURE.md"
+  ],
+  "architecture": {
+    "pattern": "modular-entity-brain",
+    "capability_formula": "brain x permission x policy x scope x identity",
+    "model_policy": "model-agnostic",
+    "communication": "event-stream",
+    "delete_policy": "permanently-blocked"
+  },
+  "entity_registry": "config/entity_registry.json",
+  "entities": [
+    "core","chat","sidebar","ui","voice","storage","tool_factory","quran_research"
+  ],
+  "first_tool_project": "Al-Quran Research"
+}
