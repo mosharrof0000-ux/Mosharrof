@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "global_rules": {
+    "delete": "DENY_ALWAYS",
+    "destructive_operations": "DENY_ALWAYS",
+    "secrets_in_source": "DENY",
+    "child_entities_least_privilege": true,
+    "temporary_permission": {
+      "allowed": true,
+      "must_be_task_scoped": true,
+      "must_be_audited": true,
+      "must_expire": true
+    }
+  },
+  "capability_formula": "AI_BRAIN x PERMISSION x POLICY x SCOPE x IDENTITY"
+}
