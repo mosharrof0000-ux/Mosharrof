@@ -1,0 +1,6 @@
+{
+  "name":"mosharrof-visual-audit",
+  "private":true,
+  "scripts":{"audit":"node scripts/visual-audit.mjs"},
+  "devDependencies":{"@playwright/test":"^1.55.0","pixelmatch":"^6.0.0","pngjs":"^7.0.0"}
+}
