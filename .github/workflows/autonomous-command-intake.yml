@@ -1,0 +1,45 @@
+name: Mosharrof Autonomous Command Intake
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  classify:
+    if: contains(github.event.issue.labels.*.name, 'mosharrof-task')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate autonomous task boundary
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const body = context.payload.issue.body || "";
+            const forbidden = [
+              "delete repository",
+              "delete project",
+              "force push main",
+              "disable verification",
+              "bypass protection"
+            ];
+            const blocked = forbidden.some(x => body.toLowerCase().includes(x));
+            if (blocked) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: "এই কাজটি autonomous safety boundary-এর বাইরে। Main/Live protection bypass বা destructive operation অনুমোদিত নয়।"
+              });
+              core.setFailed("Blocked autonomous task");
+              return;
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "কাজটি গ্রহণ করা হয়েছে। বাস্তব implementation-এর জন্য isolated agent workspace → verification → PR → controlled promotion পথ ব্যবহার করতে হবে।"
+            });
