@@ -41,3 +41,12 @@ def test_full_ecosystem_flow():
     brain_res = brain.process_intent("আমাদের জীবনের গল্প ও ফাইল গুছিয়ে রাখো")
     assert brain_res["status"] == "SUCCESS"
     assert brain_res["intent_clarity"] == "100%"
+
+
+def test_voice_smart_processing_boundaries():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("মোশাররফ কি প্রস্তুত") == "মোশাররফ কি প্রস্তুত?"
+    assert voice.apply_smart_punctuation("মোশাররফ প্রস্তুত") == "মোশাররফ প্রস্তুত।"
+    assert voice.correct_contextual_grammar("  hello   world  ") == "hello world"
+    handoff = voice.sanitize_phonetic_speech(b"audio")
+    assert handoff["status"] == "ADAPTER_REQUIRED"
