@@ -33,7 +33,11 @@ Every meaningful component is represented under `entities/<entity-id>/` where ap
 
 `src/core/brain_adapter.py` separates entity identity from the underlying model/provider. A model can be replaced without changing the entity's identity, responsibility, memory, permission, scope or audit history.
 
-### First research tool
+### Voice processing
+
+The voice entity supports conservative smart punctuation and explicit transcript-correction adapters. Audio-to-text remains model/provider agnostic; the foundation never fabricates an audio transcript.
+
+## First research tool
 
 Al-Quran Research remains an independent project until explicit integration.
 
