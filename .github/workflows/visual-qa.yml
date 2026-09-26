@@ -21,6 +21,8 @@ jobs:
           node-version: 22
       - name: Install image comparison dependency
         run: python3 -m pip install pillow
+      - name: Install image comparison dependency
+        run: python3 -m pip install pillow
       - name: Install browser
         run: npx --yes playwright@1.55.0 install --with-deps chromium
       - name: Start proposed site
