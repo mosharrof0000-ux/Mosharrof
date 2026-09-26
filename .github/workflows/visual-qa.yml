@@ -1,0 +1,40 @@
+name: Mosharrof Visual QA Inspector
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Optional URL to inspect"
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with: {fetch-depth: 0}
+      - run: git worktree add ../mosharrof-main origin/main
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12"}
+      - run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - run: |
+          python -m http.server 4173 --directory web >/tmp/proposed.log 2>&1 &
+          python -m http.server 4174 --directory ../mosharrof-main/web >/tmp/stable.log 2>&1 &
+          sleep 2
+      - name: Capture and inspect screenshots
+        env:
+          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+        run: python scripts/visual_qa.py --candidate http://127.0.0.1:4173/ --baseline http://127.0.0.1:4174/ --output visual-qa
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-qa-\${{ github.run_id }}
+          path: visual-qa/
+      - run: grep -q '^PASS$' visual-qa/VERDICT.txt
