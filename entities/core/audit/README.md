@@ -1,3 +1,3 @@
-# Core Audit
+# core audit
 
-Reserved for immutable action and activation audit records.
+Append-only lifecycle and capability decisions for this entity. DELETE and destructive operations are never granted.
