@@ -1,0 +1,18 @@
+{
+  "autonomous": {
+    "enabled": true,
+    "cadence_hours": 6,
+    "max_changed_files": 12,
+    "allowed_paths": ["web/","src/","backend/","tests/","config/","docs/"],
+    "denied_paths": [".github/workflows/","CODEOWNERS"],
+    "require_tests": true,
+    "require_pull_request": true,
+    "require_live_health_check": true
+  },
+  "permanent": {
+    "delete_allowed": false,
+    "destructive_operations_allowed": false,
+    "direct_main_write_allowed": false,
+    "force_push_allowed": false
+  }
+}
