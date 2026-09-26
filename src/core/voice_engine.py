@@ -31,7 +31,6 @@ class VoiceJournalEngine:
         "করতেছেন": "করছেন",
         "মশারফ": "মোশাররফ",
         "মোশরফ": "মোশাররফ",
-        "মোশারফ এর": "মোশাররফের",
         "কোরান": "কুরআন",
         "কুরান": "কুরআন",
     }
@@ -92,15 +91,12 @@ class VoiceJournalEngine:
                     text = text[:offset].rstrip() + ", " + text[offset:].lstrip()
 
         if not re.search(r"[?!।]$", text):
-            question_starts = ("কি ", "কী ", "কেন ", "কীভাবে ", "কিভাবে ", "কোথায় ", "কোথায় ", "কখন ", "কে ", "কোন ", "কত ")
-            words = [word.strip(".,!?।") for word in text.split()]
-            recent_question_words = set(words[-4:]).intersection(
-                {word.strip() for word in ("কি", "কী", "কেন", "কীভাবে", "কিভাবে", "কোথায়", "কোথায়", "কখন", "কে", "কোন", "কত")}
-            )
+            question_starts = ("কি ", "কী ", "কেন ", "কীভাবে ", "কিভাবে ", "কোথায় ", "কোথায় ", "কখন ", "কে ", "কোন ", "কত ", "where ", "when ", "why ", "how ", "who ", "what ", "which ")
+            words = [word.strip(" ,") for word in text.lower().split()]
             inferred_question = (
                 text.startswith(question_starts)
-                or text.endswith((" কি", " কী", " কেন", " কীভাবে", " কিভাবে"))
-                or bool(recent_question_words)
+                or text.endswith((" কি", " কেন", " কীভাবে", " কিভাবে"))
+                or any(word in {"কি", "কী", "কেন", "কোথায়", "কোথায়", "কখন", "কিভাবে", "কীভাবে", "কে", "কার", "কাকে", "কোন", "কত", "where", "when", "why", "how", "who", "what", "which"} for word in words)
             )
             if question_hint is True or inferred_question:
                 text += "?"
