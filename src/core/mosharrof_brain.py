@@ -28,11 +28,8 @@ class MosharrofCoreBrain:
         if permission["status"] != "ALLOWED":
             self.memory_ledger.record_event("ACTION_DENIED", permission)
             return permission
-        policy = self.policy_engine.check(
-            operation=operation,
-            scope=scope,
-            entity_scope=entity_scope or entity_id,
-        )
+        policy = self.policy_engine.check(operation=operation, scope=scope,
+                                          entity_scope=entity_scope or entity_id)
         if not policy["allowed"]:
             result = {"status": "DENIED", "operation": operation.upper(),
                       "reason": policy["reason"]}
@@ -49,9 +46,18 @@ class MosharrofCoreBrain:
             {"command_type": command_type, "payload": payload})
 
     def monitor_sub_agent(self, entity_name: str, action_report: Dict[str, Any]) -> Dict[str, Any]:
-        decision = "APPROVED" if action_report.get("status") == "PROCESSING" else "REJECTED"
-        result = {"decision": decision, "entity": entity_name,
-                  "integrity_check": "PASSED" if decision == "APPROVED" else "FAILED"}
+        operation = action_report.get("operation", "READ")
+        authorization = self.authorize_action(
+            entity_id=entity_name,
+            operation=operation,
+            scope=action_report.get("scope", ""),
+            entity_scope=action_report.get("entity_scope", ""),
+        )
+        allowed = action_report.get("status") == "PROCESSING" and authorization["status"] == "ALLOWED"
+        result = {"decision": "APPROVED" if allowed else "REJECTED",
+                  "entity": entity_name,
+                  "integrity_check": "PASSED" if allowed else "FAILED",
+                  "authorization": authorization}
         self.memory_ledger.record_event("ENTITY_DECISION", result)
         return result
 
