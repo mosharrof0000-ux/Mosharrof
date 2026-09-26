@@ -165,7 +165,7 @@ def test_additional_delete_variants_are_denied():
 
 def test_context_aware_voice_pipeline():
     engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
+    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করছ?"
     assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
     result = engine.process_voice_text("তুমি কি করতেছ")
     assert result["final_text"] == "তুমি কি করছ।"
