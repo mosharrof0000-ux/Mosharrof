@@ -1,0 +1,6 @@
+{
+  "entities": [
+    {"id": "core", "name": "Mosharrof Core", "type": "core", "responsibility": "Coordinate entities and route intents", "brain": "src/core/mosharrof_brain.py", "permissions": ["coordinate", "read", "write_non_destructive"], "delete_allowed": false},
+    {"id": "tool-system", "name": "Tool System", "type": "system", "responsibility": "Register and execute approved tools", "brain": "src/core/tool_factory.py", "permissions": ["create_tool", "execute_tool"], "delete_allowed": false}
+  ]
+}
