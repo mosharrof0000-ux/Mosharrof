@@ -147,7 +147,7 @@ body:after{
       <button>📖 শব্দ গবেষণা</button><button>⌕ আয়াত বিশ্লেষণ</button><button>▣ Research ID</button><button>⋯ আরও</button>
     </div>
     <div class="composer">
-      <button class="icon" aria-label="যোগ">＋</button>
+      <button class="icon" id="shot" aria-label="স্ক্রিনশট বিশ্লেষণ">▧</button><input id="shotFile" type="file" accept="image/*" hidden><button class="icon" aria-label="যোগ">＋</button>
       <input id="input" placeholder="আপনার প্রশ্ন লিখুন..." autocomplete="off">
       <button class="send" id="send" aria-label="পাঠান">➤</button>
     </div>
@@ -199,6 +199,9 @@ const drawer=document.getElementById('drawer'),scrim=document.getElementById('sc
 function toggleDrawer(){drawer.classList.toggle('open');scrim.classList.toggle('open')}
 document.getElementById('menu').onclick=toggleDrawer;scrim.onclick=toggleDrawer;
 const input=document.getElementById('input'),messages=document.getElementById('messages');
+const shot=document.getElementById('shot'),shotFile=document.getElementById('shotFile');
+shot.onclick=()=>shotFile.click();
+shotFile.onchange=async()=>{const file=shotFile.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{const a=document.createElement('article');a.className='message user';a.innerHTML='<div class="who">আপনি</div><p>📷 স্ক্রিনশট বিশ্লেষণ করছি...</p>';messages.appendChild(a);try{const r=await fetch("https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({image_base64:String(reader.result).split(",")[1],mime_type:file.type})});const j=await r.json();const b=document.createElement('article');b.className='message ai';b.innerHTML='<div class="who">MOSHARROF AI</div><p></p>';b.querySelector('p').textContent=j.text||j.error||'বিশ্লেষণ পাওয়া যায়নি।';messages.appendChild(b);messages.scrollTo({top:messages.scrollHeight,behavior:'smooth'});}catch{a.querySelector('p').textContent='স্ক্রিনশট বিশ্লেষণ সার্ভারে পৌঁছানো যায়নি।';}};reader.readAsDataURL(file)};
 function send(){
  const v=input.value.trim();if(!v)return;
  const a=document.createElement('article');a.className='message user';a.innerHTML='<div class="who">আপনি</div><p></p>';a.querySelector('p').textContent=v;messages.appendChild(a);input.value='';
