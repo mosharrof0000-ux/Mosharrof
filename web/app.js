@@ -1,1 +1,66 @@
-const $=s=>document.querySelector(s);const consoleEl=$("#console");const normalize=t=>String(t||"").trim().replace(/\s+/g," ").replace(/\s+([,।!?])/g,"$1").replace(/,{2,}/g,",").replace(/!{2,}/g,"!").replace(/\?{2,}/g,"?").replace(/।{2,}/g,"।");function correctContextualGrammar(text){let s=normalize(text);const rules=[["কি করতেছ","কি করছ"],["করতেছেন","করছেন"],["যাইতেছি","যাচ্ছি"],["আসতেছি","আসছি"],["করবেনা","করবে না"]];for(const [a,b] of rules)s=s.replaceAll(a,b);return s}function applySmartPunctuation(text){let s=normalize(text);if(!s)return "";if(!/[.!?।]$/.test(s))s+="।";return s}function processVoiceText(text){const corrected=correctContextualGrammar(text);return{corrected_text:corrected,final_text:applySmartPunctuation(corrected)}}async function loadContract(){try{const[m,r]=await Promise.all([fetch("../config/project_manifest.json").then(r=>r.json()),fetch("../config/entity_registry.json").then(r=>r.json())]);$("#status").textContent="● Core online · "+m.schema_version;const box=$("#entities");box.innerHTML="";r.entities.forEach(e=>{const el=document.createElement("div");el.className="item";el.innerHTML="<strong>"+e.name+"</strong><span class='muted'>"+e.responsibility+"</span><small>"+e.id+" · "+e.scope+"</small>";box.appendChild(el)});consoleEl.textContent="Project: "+m.name+"\nOwner: "+m.owner+"\nEntities registered: "+r.entities.length+"\nFirst read: "+m.first_read.join(" → ")}catch(e){$("#status").textContent="● Contract load error";consoleEl.textContent="The project contract could not be loaded."}}$("#chatForm").addEventListener("submit",e=>{e.preventDefault();const value=$("#chatInput").value.trim();if(!value)return;consoleEl.textContent+="\n\nUser: "+value+"\nMosharrof Core: Static Pages foundation is online. A model adapter is not connected in this build yet.";$("#chatInput").value=""});$("#voiceProcess").addEventListener("click",()=>{const result=processVoiceText($("#voiceInput").value);$("#voiceOutput").textContent=result.final_text||"No text supplied."});loadContract();
+const registry={
+  core:"coordination and governance",
+  chat:"conversation interface",
+  sidebar:"navigation and entity discovery",
+  ui:"presentation and adaptive layout",
+  voice:"context-aware smart voice input",
+  storage:"file indexing and organization",
+  tool_factory:"safe tool creation",
+  quran_research:"Quran language research and evidence-based research workflows"
+};
+const out=document.querySelector("#console");
+const form=document.querySelector("#chatForm");
+const input=document.querySelector("#chatInput");
+const voiceButton=document.querySelector("#voiceButton");
+const voiceStatus=document.querySelector("#voiceStatus");
+
+function smartPunctuation(text){
+  text=text.trim().replace(/\s+/g," ");
+  if(!text) return "";
+  if(/[?!.।]$/.test(text)) return text;
+  const q=/^(কি |কী |কেন |কিভাবে |কীভাবে |কখন |কোথায় |কোথায় |who |what |why |how |when |where |is |are |do |does |did )/i;
+  return q.test(text) ? text+"?" : (/[ঀ-৿]/.test(text) ? text+"।" : text+".");
+}
+function contextualCorrection(text){
+  return text
+    .replace(/মোশারফ প্রজেক্টের/g,"মোশাররফ প্রজেক্টের")
+    .replace(/মোশারফ প্রজেক্ট/g,"মোশাররফ প্রজেক্ট")
+    .replace(/মোশারফ (AI|ai)/g,"মোশাররফ AI")
+    .replace(/কোরান/g,"কুরআন")
+    .replace(/কোরআন/g,"কুরআন")
+    .replace(/করতেছি/g,"করছি")
+    .replace(/করতেছেন/g,"করছেন");
+}
+function processVoiceText(text){ return smartPunctuation(contextualCorrection(text)); }
+function renderRegistry(){
+  out.textContent=Object.entries(registry).map(([id,res])=>id+" — "+res).join("\n");
+}
+renderRegistry();
+
+form.addEventListener("submit",e=>{
+  e.preventDefault();
+  const value=input.value.trim();
+  if(!value) return;
+  out.textContent+="\n\nUser: "+value+"\nMosharrof Core: "+processVoiceText(value);
+  input.value="";
+});
+
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SpeechRecognition){
+  voiceButton.disabled=true;
+  voiceStatus.textContent="Browser speech recognition is unavailable; text input remains available.";
+}else{
+  const recognition=new SpeechRecognition();
+  recognition.lang="bn-BD";
+  recognition.interimResults=true;
+  recognition.continuous=false;
+  recognition.onstart=()=>{voiceButton.disabled=true;voiceStatus.textContent="Listening…";};
+  recognition.onresult=e=>{
+    let text="";
+    for(let i=e.resultIndex;i<e.results.length;i++) text+=e.results[i][0].transcript+" ";
+    input.value=processVoiceText(text);
+  };
+  recognition.onerror=e=>{voiceStatus.textContent="Voice error: "+e.error;};
+  recognition.onend=()=>{voiceButton.disabled=false;voiceStatus.textContent="Voice input ready.";};
+  voiceButton.addEventListener("click",()=>recognition.start());
+}
