@@ -11,9 +11,9 @@ def test_manifest_and_entity_registry_are_machine_readable():
     manifest = ProjectManifest()
     registry = EntityRegistry()
 
-    assert manifest.project_id == "mosharrof"
+    assert manifest.project_id == "mosharrof.core"
     assert manifest.project_name == "Mosharrof"
-    assert registry.get("mosharrof.core")["permission_profile"] == "core"
+    assert registry.get("core")["delete_allowed"] is False
 
 
 def test_delete_and_destructive_operations_are_always_denied():
@@ -32,4 +32,4 @@ def test_out_of_scope_operation_is_denied():
 
 def test_manifest_is_valid_json():
     data = json.loads(open("config/project_manifest.json", encoding="utf-8").read())
-    assert data["schema_version"] == "1.0.0"
+    assert data["schema_version"] == "1.1.0"
