@@ -13,6 +13,8 @@ from src.core.memory_ledger import MemoryLedger
 class VoiceJournalEngine:
     """Voice journal boundary plus context-aware transcript intelligence."""
 
+    QUESTION_WORDS = ("কি", "কী", "কেন", "কখন", "কোথায়", "কোথায়", "কত", "কার", "কাকে", "কীভাবে", "কিভাবে", "কোন", "কোনটি")
+
     DEFAULT_CORRECTIONS = {
         "গবেষনা": "গবেষণা",
         "প্রজেকট": "প্রজেক্ট",
