@@ -1,0 +1,28 @@
+name: Mosharrof Visual Inspection
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-inspection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Open and inspect Mosharrof
+        env:
+          MOSHARROF_URL: ${{ vars.MOSHARROF_TEST_URL || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
+        run: npx playwright test
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-visual-inspection
+          path: visual-baseline-*.png
+          if-no-files-found: warn
