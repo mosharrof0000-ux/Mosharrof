@@ -232,3 +232,15 @@ def test_tool_factory_blocks_dynamic_execution_and_dangerous_imports(tmp_path):
     assert factory.create_tool("bad_open", "return open('x')").startswith("DENIED:")
     assert factory.create_tool("bad_import", "import subprocess\nreturn 1").startswith("DENIED:")
     assert factory.create_tool("bad_import_os", "import os\nreturn 1").startswith("DENIED:")
+
+
+def test_tool_factory_blocks_python_escape_paths(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    blocked = [
+        'import importlib\\nreturn importlib.import_module("os")',
+        'import builtins\\nreturn builtins.open("x")',
+        'return __builtins__["open"]("x")',
+        'return getattr(__builtins__, "open")("x")',
+    ]
+    for index, source in enumerate(blocked):
+        assert factory.create_tool(f"escape_{index}", source).startswith("DENIED:")
