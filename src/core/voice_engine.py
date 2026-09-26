@@ -1,8 +1,8 @@
 """Context-aware voice journal boundary for Mosharrof.
 
-The engine deliberately separates audio capture from transcript processing.
-An external speech-to-text provider may supply text; this module then performs
-safe, deterministic punctuation and conservative context normalization.
+Audio capture and speech-to-text stay behind the provider/model boundary.
+This module safely processes transcripts with conservative punctuation and
+explicit lexical normalization; it never claims to perform raw audio STT.
 """
 
 import re
@@ -11,13 +11,22 @@ from src.core.memory_ledger import MemoryLedger
 
 
 class VoiceJournalEngine:
-    """Voice input boundary with authorization and context-aware text cleanup."""
+    """Authorized voice input boundary with context-aware transcript cleanup."""
 
     SAFE_CORRECTIONS = {
-        "মশাররফ এআই": "মোশাররফ AI",
+        "কোরান": "কুরআন",
+        "কোরআন": "কুরআন",
+        "মোশারফ": "মোশাররফ",
+        "মশাররফ": "মোশাররফ",
+        "মোশাররফ এআই": "মোশাররফ AI",
         "মোশারফ এআই": "মোশাররফ AI",
-        "মোশাররফ প্রজেক্ট": "মোশাররফ প্রজেক্ট",
     }
+
+    QUESTION_MARKERS = (
+        "কি ", "কী ", "কেন ", "কীভাবে ", "কখন ", "কোথায় ", "কোথায় ",
+        "will ", "what ", "why ", "how ", "when ", "where ", "can ",
+        "is ", "are ", "do ", "does "
+    )
 
     def __init__(self, memory_ledger: Optional[MemoryLedger] = None):
         self.ledger = memory_ledger or MemoryLedger()
@@ -33,7 +42,7 @@ class VoiceJournalEngine:
                     "reason": "EXPLICIT_AUTHORIZATION_REQUIRED"}
         self.is_listening = state
         self.recording_authorized = state and authorized
-        return {"listening_state": "ACTIVE" if self.is_listening else "INACTIVE",
+        return {"listening_state": "ACTIVE" if state else "INACTIVE",
                 "recording_authorized": self.recording_authorized}
 
     def identify_speaker(self, voice_signature: str) -> Dict[str, Any]:
@@ -42,51 +51,53 @@ class VoiceJournalEngine:
         return {"is_known": False, "speaker": "UNKNOWN_VOICE"}
 
     @classmethod
+    def correct_contextual_grammar(cls, raw_text: str) -> str:
+        text = re.sub(r"\s+", " ", (raw_text or "").strip())
+        for source, target in cls.SAFE_CORRECTIONS.items():
+            text = text.replace(source, target)
+        text = re.sub(r"\b(হ্যাঁ|না)(?:\s+\1)+\b", r"\1", text)
+        return text
+
+    @classmethod
     def apply_smart_punctuation(cls, raw_text: str) -> str:
-        """Add conservative Bengali punctuation without rewriting the meaning."""
         text = re.sub(r"\s+", " ", (raw_text or "").strip())
         if not text:
             return ""
         text = re.sub(r"\s+([,।?!])", r"\1", text)
         text = re.sub(r"([,।?!])(?=\S)", r"\1 ", text)
-        if text[-1] not in "।?!":
-            lowered = text.lower()
-            question_markers = ("কি ", "কেন ", "কীভাবে ", "কখন ", "কোথায় ",
-                                "কোথায় ", "কোথায়", "কোথায়", "কী ", "will ",
-                                "what ", "why ", "how ", "when ", "where ",
-                                "can ", "is ", "are ")
-            if any(marker in lowered for marker in question_markers):
-                text += "?"
-            else:
-                text += "।"
-        return text
+        if text[-1] in "।?!":
+            return text
+        lowered = text.lower()
+        if any(marker in lowered for marker in cls.QUESTION_MARKERS):
+            return text + "?"
+        return text + "।"
 
     @classmethod
-    def correct_contextual_grammar(cls, raw_text: str) -> str:
-        """Apply only conservative, explicit lexical normalizations."""
-        text = (raw_text or "").strip()
-        for source, target in cls.SAFE_CORRECTIONS.items():
-            text = re.sub(re.escape(source), target, text, flags=re.IGNORECASE)
-        text = re.sub(r"\b(হ্যাঁ|না)(?:\s+\1)+\b", r"\1", text, flags=re.IGNORECASE)
-        return text
-
-    @classmethod
-    def sanitize_phonetic_speech(cls, audio_stream: Any) -> str:
-        """Normalize an already-transcribed speech stream.
-
-        Actual speech-to-text is provider-specific and intentionally stays behind
-        the BrainAdapter/provider boundary. This method accepts transcript text
-        or an object exposing a transcript attribute and returns safe text.
-        """
-        transcript = audio_stream if isinstance(audio_stream, str) else getattr(audio_stream, "transcript", "")
-        return cls.apply_smart_punctuation(cls.correct_contextual_grammar(transcript))
+    def sanitize_phonetic_speech(cls, audio_stream: Any) -> Any:
+        """Normalize transcript text; raw audio requires an attached STT provider."""
+        if isinstance(audio_stream, str):
+            return cls.apply_smart_punctuation(cls.correct_contextual_grammar(audio_stream))
+        transcript = getattr(audio_stream, "transcript", None)
+        if isinstance(transcript, str):
+            return cls.apply_smart_punctuation(cls.correct_contextual_grammar(transcript))
+        return {"status": "PROVIDER_REQUIRED",
+                "reason": "RAW_AUDIO_REQUIRES_SPEECH_TO_TEXT_PROVIDER"}
 
     def process_transcript(self, raw_text: str) -> Dict[str, Any]:
-        corrected = self.correct_contextual_grammar(raw_text)
+        raw = (raw_text or "").strip()
+        if not raw:
+            result = {"status": "EMPTY", "raw_text": "", "text": "",
+                      "processed_text": "", "correction_applied": False}
+            return result
+        corrected = self.correct_contextual_grammar(raw)
         punctuated = self.apply_smart_punctuation(corrected)
-        result = {"status": "SUCCESS" if punctuated else "EMPTY",
-                  "raw_text": raw_text or "", "processed_text": punctuated,
-                  "correction_applied": corrected != (raw_text or "").strip()}
+        result = {
+            "status": "SUCCESS",
+            "raw_text": raw,
+            "text": punctuated,
+            "processed_text": punctuated,
+            "correction_applied": corrected != raw,
+        }
         self.ledger.record_event("VOICE_TRANSCRIPT_PROCESSED", result)
         return result
 
@@ -99,10 +110,10 @@ class VoiceJournalEngine:
         processed = self.process_transcript(transcript)
         self.ledger.record_event("SOCIAL_INTERACTION_LOGGED", {
             "speaker": speaker_info["speaker"],
-            "transcript": processed["processed_text"],
+            "transcript": processed["text"],
             "is_known_person": speaker_info["is_known"],
             "privacy_status": "LOCAL_ONLY",
         })
         return {"status": "SUCCESS", "detected_speaker": speaker_info["speaker"],
                 "is_known": speaker_info["is_known"],
-                "processed_text": processed["processed_text"]}
+                "processed_text": processed["text"]}
