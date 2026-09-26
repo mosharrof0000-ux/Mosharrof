@@ -1,0 +1,1 @@
+{"id":"mosharrof.chat_box","name":"Chat Box","type":"ui_entity","brain":{"adapter":"model_agnostic"},"responsibility":["conversation input","conversation output","chat state"],"permissions":["READ","WRITE","EXECUTE"],"denied":["DELETE","DESTRUCTIVE_OPERATION"]}

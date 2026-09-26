@@ -1,0 +1,18 @@
+{
+  "project_id": "MOSHARROF-CORE",
+  "name": "Mosharrof",
+  "owner": "Mosharrof Karim",
+  "version": "1.0.0",
+  "architecture": "modular_entity_brain",
+  "capability_formula": "AI_BRAIN x PERMISSION x POLICY x SCOPE x IDENTITY",
+  "hard_rule": {"delete_operations": "DENIED", "destructive_operations": "DENIED"},
+  "principles": [
+    "Every meaningful component is an Entity.",
+    "Every Entity has an explicit responsibility boundary.",
+    "Every Entity can use an independent Brain through a model adapter.",
+    "Identity, memory, policy, permission, tools, communication and audit are explicit.",
+    "The Core coordinates; it does not silently absorb every responsibility.",
+    "Model replacement must not erase Entity identity or durable state."
+  ],
+  "entrypoints": {"web": "site/index.html", "registry": "core/registry/entity_registry.json", "policy": "core/permissions/policy.json"}
+}

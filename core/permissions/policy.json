@@ -1,0 +1,8 @@
+{
+  "policy_version": "1.0.0",
+  "default_decision": "DENY",
+  "permanent_denials": ["DELETE", "DESTRUCTIVE_OPERATION"],
+  "temporary_permission": {"allowed":true,"requires":["specific_task","scope","audit_record","expiration","revocation"]},
+  "entity_rule": "An Entity receives only the permissions required for its declared responsibility.",
+  "model_rule": "A model cannot grant itself permissions."
+}

@@ -1,0 +1,10 @@
+[project]
+name = "mosharrof-core"
+version = "1.0.0"
+description = "Mosharrof modular Entity and AI Brain architecture"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

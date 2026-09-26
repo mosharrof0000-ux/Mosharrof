@@ -1,0 +1,10 @@
+{
+  "registry_version": "1.0.0",
+  "core_entity": "mosharrof.core",
+  "entities": [
+    {"id":"mosharrof.core","kind":"core","responsibility":"coordinate entities, policy, registry, communication and lifecycle"},
+    {"id":"mosharrof.chat_box","kind":"ui_entity","responsibility":"user conversation interface and chat interaction state"},
+    {"id":"mosharrof.sidebar","kind":"ui_entity","responsibility":"navigation, entity discovery and tool selection"},
+    {"id":"mosharrof.al_quran_research","kind":"tool_entity","responsibility":"connect the existing Al-Quran Research project as a research tool without rewriting it"}
+  ]
+}

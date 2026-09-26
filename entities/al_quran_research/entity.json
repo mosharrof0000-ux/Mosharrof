@@ -1,0 +1,1 @@
+{"id":"mosharrof.al_quran_research","name":"Al-Quran Research","type":"research_tool","integration_mode":"external_existing_project","repository":"https://github.com/mosharrof0000-ux/al-quran-research","responsibility":"Quran research and evidence-oriented research workflows","migration_policy":"connect first; do not rewrite the existing project automatically"}

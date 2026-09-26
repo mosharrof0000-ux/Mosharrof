@@ -1,0 +1,1 @@
+{"id":"mosharrof.sidebar","name":"Sidebar","type":"ui_entity","brain":{"adapter":"model_agnostic"},"responsibility":["navigation","entity discovery","tool selection"],"permissions":["READ","WRITE"],"denied":["DELETE","DESTRUCTIVE_OPERATION"]}
