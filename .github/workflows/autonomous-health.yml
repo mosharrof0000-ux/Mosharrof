@@ -1,0 +1,40 @@
+name: Mosharrof Autonomous Health Cycle
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autonomous-health
+  cancel-in-progress: true
+
+jobs:
+  inspect:
+    name: Six-hour autonomous verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Run complete test suite
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pytest -q
+      - name: Verify permanent safety rules
+        shell: bash
+        run: |
+          grep -Rni "DELETE is permanently blocked" README.md
+          grep -Rni "Destructive operations are permanently blocked" README.md
+          grep -Rni "Activation without tests is blocked" README.md
+      - name: Verify Pages artifact
+        shell: bash
+        run: |
+          test -f web/index.html
+          grep -q "MOSHARROF AI" web/index.html
+      - name: Record autonomous result
+        run: echo "AUTONOMOUS HEALTH CHECK: PASS"
