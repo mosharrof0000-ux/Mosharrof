@@ -31,12 +31,12 @@
     </main>
     <div class="inputbar">
       <form id="chatForm">
-        <input id="chatInput" autocomplete="off" placeholder="Ask the Mosharrof foundation...">
-        <button type="submit">Send</button>
+        <input id="chatInput" autocomplete="off" placeholder="Ask the Mosharrof foundation..."><span id="voiceStatus" class="voice-status" aria-live="polite">Voice ready</span>
+        <button id="voiceButton" type="button" aria-label="Start voice input">🎙</button><button type="submit">Send</button>
       </form>
     </div>
   </div>
-  <script src="./app.js"></script>
+  <script src="./app.js"></script>\n  <script src="./entities/voice/voice_ui.js"></script>
   <script>
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
   </script>
