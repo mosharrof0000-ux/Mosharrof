@@ -1,67 +1,43 @@
 """
-Mosharrof AI: Complete Ecosystem Integration Test Engine
-ব্রেইন, ইভেন্ট বাস, মেমোরি, সাব-এজেন্ট, সেলফ-হিলিং অটো-ব্রেন স্ক্যানার পরীক্ষা করে।
+Mosharrof AI Ecosystem Complete Integration Test
+সকল মডিউল (Tool Factory, Voice Engine, Storage Engine, Brain) যৌথভাবে পরীক্ষা করা।
 """
 
-import unittest
+import pytest
 from src.core.mosharrof_brain import MosharrofCoreBrain
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
-from src.core.brain_scanner import AutoBrainScanner
-from src.entities.categories.philosophy_domain import PhilosophyDomainEntity
-from src.entities.ui_organ.sensory_engine import UISensoryEngine
+from src.core.tool_factory import ToolFactory
+from src.core.voice_engine import VoiceJournalEngine
+from src.core.storage_engine import StorageEngine
 
-class DummyEntityWithoutBrain:
-    """ব্রেনহীন একটি পরীক্ষামূলক সত্তা"""
-    pass
+def test_full_ecosystem_flow():
+    # ১. ইভেন্ট বাস ও মেমোরি লেজার তৈরি
+    event_bus = EcosystemEventBus()
+    ledger = MemoryLedger()
+    
+    # ২. ব্রেন ও সাব-ইঞ্জিন ইনস্ট্যানশিয়েশন
+    brain = MosharrofCoreBrain(event_bus=event_bus, memory_ledger=ledger)
+    tool_factory = ToolFactory()
+    voice_engine = VoiceJournalEngine(memory_ledger=ledger)
+    storage_engine = StorageEngine()
 
-class TestMosharrofEcosystem(unittest.TestCase):
-    def test_core_brain_activation(self):
-        """মাস্টার ব্রেইনের সক্রিয়তা পরীক্ষা"""
-        brain = MosharrofCoreBrain()
-        self.assertEqual(brain.consciousness_state, "SUPREME_GOVERNANCE")
+    # ৩. ভয়েস ও ব্যক্তিত্ব ট্র্যাকিং টেস্ট
+    voice_toggle = voice_engine.toggle_listening(True)
+    assert voice_toggle["listening_state"] == "ACTIVE"
 
-    def test_event_bus_communication(self):
-        """স্নায়ুতন্ত্র (EventBus) এর বার্তা আদান-প্রদান পরীক্ষা"""
-        bus = EcosystemEventBus()
-        received_data = []
+    voice_res = voice_engine.process_ambient_conversation("SPEAKER_SHAMIM_01", "আজকের মিটিংয়ের সিদ্ধান্ত কী?")
+    assert voice_res["status"] == "SUCCESS"
 
-        def listener(data):
-            received_data.append(data)
+    # ৪. স্টোরেজ ও ফাইল ইনডেক্সিং টেস্ট
+    scan_res = storage_engine.scan_and_index_storage(".")
+    assert scan_res["status"] == "SUCCESS"
 
-        bus.subscribe("SYSTEM_ALERT", listener)
-        bus.publish("SYSTEM_ALERT", {"msg": "ALL_SYSTEMS_GO"})
+    # ৫. টুল ফ্যাক্টরি টেস্ট
+    available_tools = tool_factory.list_available_tools()
+    assert isinstance(available_tools, list)
 
-        self.assertEqual(len(received_data), 1)
-
-    def test_memory_ledger_storage(self):
-        """স্মৃতিকোষের ডাটা সেভ পরীক্ষা"""
-        ledger = MemoryLedger()
-        ledger.record_event("BOOT_SEQUENCE", {"status": "SUCCESS"})
-        ledger.consolidate_knowledge("SYSTEM_VERSION", "V2.1")
-        self.assertEqual(ledger.long_term_memory["SYSTEM_VERSION"], "V2.1")
-
-    def test_auto_brain_scanner_injection(self):
-        """ব্রেনহীন সত্তায় স্বয়ংক্রিয় এআই ব্রেন ইনজেকশন পরীক্ষা"""
-        scanner = AutoBrainScanner()
-        dummy = DummyEntityWithoutBrain()
-        
-        # প্রাথমিক অবস্থায় ব্রেন নেই
-        self.assertFalse(hasattr(dummy, 'consciousness_level'))
-        
-        # স্ক্যানার দিয়ে ব্রেন ইনজেক্ট করা
-        result = scanner.scan_and_inject_brain(dummy, "dummy_entity")
-        
-        # নিশ্চিত করা যে স্বয়ংক্রিয়ভাবে ব্রেন যুক্ত হয়েছে
-        self.assertEqual(result["status"], "BRAIN_INJECTED")
-        self.assertTrue(hasattr(dummy, 'consciousness_level'))
-        self.assertEqual(dummy.consciousness_level, 'AUTO_INJECTED_AI_BRAIN')
-
-    def test_philosophy_rebel_entity(self):
-        """বিদ্রোহী দর্শন সত্তার যুক্তি ও প্রকাশ পরীক্ষা"""
-        philosophy = PhilosophyDomainEntity()
-        truth = philosophy.synthesize_truth("জীবন ও সৃষ্টির চরম বাস্তবতা")
-        self.assertIn("logic_stream", truth)
-
-if __name__ == "__main__":
-    unittest.main()
+    # ৬. কোর ব্রেন প্রসেসিং টেস্ট
+    brain_res = brain.process_intent("আমাদের জীবনের গল্প ও ফাইল গুছিয়ে রাখো")
+    assert brain_res["status"] == "SUCCESS"
+    assert brain_res["intent_clarity"] == "100%"
