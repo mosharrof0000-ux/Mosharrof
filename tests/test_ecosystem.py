@@ -1,10 +1,11 @@
 """
 Mosharrof AI: Ecosystem Integration Test Engine
-সব সাব-এজেন্ট, সেন্ট্রাল ব্রেইন ও ইউআই সত্তার হেলথ-চেক ও সংবেদনশীলতা টেস্ট করে।
+সব সাব-এজেন্ট, সেন্ট্রাল ব্রেইন, ইউআই সত্তা ও ইভেন্ট বাসের সমন্বয় পরীক্ষা করে।
 """
 
 import unittest
 from src.core.mosharrof_brain import MosharrofCoreBrain
+from src.core.event_bus import EcosystemEventBus
 from src.entities.categories.base_category_entity import LivingCategoryEntity
 from src.entities.ui_organ.sensory_engine import UISensoryEngine
 
@@ -13,6 +14,20 @@ class TestMosharrofEcosystem(unittest.TestCase):
         """মাস্টার ব্রেণের সক্রিয়তা পরীক্ষা"""
         brain = MosharrofCoreBrain()
         self.assertEqual(brain.consciousness_state, "SUPREME_GOVERNANCE")
+
+    def test_event_bus_communication(self):
+        """স্নায়ুতন্ত্র (EventBus) এর বার্তা আদান-প্রদান পরীক্ষা"""
+        bus = EcosystemEventBus()
+        received_data = []
+
+        def listener(data):
+            received_data.append(data)
+
+        bus.subscribe("SYSTEM_ALERT", listener)
+        bus.publish("SYSTEM_ALERT", {"msg": "ALL_SYSTEMS_GO"})
+
+        self.assertEqual(len(received_data), 1)
+        self.assertEqual(received_data[0]["msg"], "ALL_SYSTEMS_GO")
 
     def test_ui_sensory_perception(self):
         """ইউআই অর্গানের সেন্সর প্রতিক্রিয়া পরীক্ষা"""
@@ -28,4 +43,3 @@ class TestMosharrofEcosystem(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-  
