@@ -14,8 +14,8 @@ DELETE and destructive operations are permanently blocked.
 
 ### First-read architecture files
 
-- `core/project_manifest.json`
-- `core/entity_registry.json`
+- `config/project_manifest.json`
+- `config/entity_registry.json`
 - `policies/CORE_POLICY.md`
 - `docs/ARCHITECTURE.md`
 
