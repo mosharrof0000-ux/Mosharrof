@@ -24,7 +24,7 @@ def test_manifest_and_registry_loaders():
     assert manifest.project_id == "mosharrof.core"
     assert manifest.project_name == "Mosharrof"
     assert registry.get("core")["delete_allowed"] is False
-    assert registry.get("quran_research")["scope"] == "tools/quran_research"
+    assert registry.get("quran_research")["scope"] == "quran_research/*"
 
 
 def test_model_adapter_contract():
