@@ -1,3 +1,3 @@
-# Chat Audit
+# chat audit
 
-Reserved for chat entity audit records.
+Append-only lifecycle and capability decisions for this entity. DELETE and destructive operations are never granted.
