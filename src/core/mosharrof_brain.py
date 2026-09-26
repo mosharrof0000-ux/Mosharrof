@@ -25,7 +25,14 @@ class MosharrofCoreBrain:
         self.memory_ledger.record_event(command_type, payload)
 
     def monitor_sub_agent(self, entity_name: str, action_report: Dict[str, Any]) -> Dict[str, Any]:
-        allowed = action_report.get("status") == "PROCESSING"
+        if action_report.get("operation") == "DELETE" or action_report.get("destructive") is True:
+            return {
+                "decision": "REJECTED",
+                "entity": entity_name,
+                "integrity_check": "FAILED",
+                "reason": "DELETE_AND_DESTRUCTIVE_OPERATIONS_BLOCKED",
+            }
+        allowed = action_report.get("status") in {"PROCESSING", "READY", "SUCCESS"}
         return {
             "decision": "APPROVED" if allowed else "REJECTED",
             "entity": entity_name,
