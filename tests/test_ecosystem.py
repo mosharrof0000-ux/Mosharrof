@@ -182,3 +182,9 @@ def test_voice_audio_requires_authorization_and_provider():
     result = engine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ।"
+
+
+def test_smart_punctuation_detects_strong_question_markers():
+    engine = VoiceJournalEngine()
+    assert engine.apply_smart_punctuation("কীভাবে কাজ করবে") == "কীভাবে কাজ করবে?"
+    assert engine.apply_smart_punctuation("তুমি আজ এসেছ") == "তুমি আজ এসেছ।"
