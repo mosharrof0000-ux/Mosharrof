@@ -33,21 +33,43 @@ class ToolFactory:
 
     @staticmethod
     def _contains_blocked_operation(code_body: str) -> bool:
-        """Reject common destructive or shell-spawning operations before registration."""
-        blocked = {
+        """Reject destructive or shell-spawning operations, including common aliases."""
+        blocked_attributes = {
             "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
             "system", "popen", "run", "call", "check_call", "check_output",
         }
+        blocked_modules = {"subprocess"}
+        blocked_names = {"DELETE", "DESTROY", "ERASE", "PURGE", "DROP", "REMOVE"}
         try:
             wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
             tree = ast.parse(wrapped)
         except SyntaxError:
             return True
+
+        blocked_aliases = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for item in node.names:
+                    if item.name in blocked_modules:
+                        blocked_aliases.add(item.asname or item.name.split(".")[0])
+            elif isinstance(node, ast.ImportFrom):
+                if node.module in {"os", "shutil", "subprocess"}:
+                    for item in node.names:
+                        if item.name in blocked_attributes:
+                            blocked_aliases.add(item.asname or item.name)
+
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute) and node.func.attr in blocked:
-                    return True
-                if isinstance(node.func, ast.Name) and node.func.id.upper() in {"DELETE", "DESTROY", "ERASE"}:
+                if isinstance(node.func, ast.Attribute):
+                    if node.func.attr in blocked_attributes:
+                        return True
+                    if isinstance(node.func.value, ast.Name) and node.func.value.id in blocked_aliases:
+                        return True
+                if isinstance(node.func, ast.Name):
+                    if node.func.id.upper() in blocked_names or node.func.id in blocked_aliases:
+                        return True
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+                if node.value.id in blocked_aliases and node.attr in blocked_attributes:
                     return True
         return False
 
