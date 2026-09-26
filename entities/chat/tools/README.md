@@ -1,3 +1,3 @@
-# Chat Tools
+# chat tools
 
-Only chat-scoped tools may be attached here.
+Only tools explicitly assigned to this entity belong here. Tool access is constrained by permission, policy and scope.
