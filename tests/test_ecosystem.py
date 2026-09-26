@@ -180,3 +180,11 @@ def test_voice_smart_punctuation_question():
 def test_voice_raw_audio_requires_provider():
     result = VoiceJournalEngine.sanitize_phonetic_speech(b"audio")
     assert result["status"] == "PROVIDER_REQUIRED"
+
+
+def test_context_aware_voice_processing():
+    engine = VoiceJournalEngine()
+    assert engine.apply_smart_punctuation("তুমি কি আসবে") == "তুমি কি আসবে?"
+    assert engine.apply_smart_punctuation("আমি আজ গবেষণা করছি") == "আমি আজ গবেষণা করছি।"
+    assert engine.correct_contextual_grammar("মোশারফ এআই") == "মোশাররফ AI"
+    assert engine.sanitize_phonetic_speech("মোশারফ এআই তুমি কি আসবে") == "মোশাররফ AI তুমি কি আসবে?"
