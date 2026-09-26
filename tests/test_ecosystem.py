@@ -20,9 +20,11 @@ def test_full_ecosystem_flow(tmp_path):
     assert brain.system_status()["delete_operations"] == "BLOCKED"
     assert voice_engine.toggle_listening(True)["listening_state"] == "BLOCKED"
     assert voice_engine.toggle_listening(True, authorized=True)["listening_state"] == "ACTIVE"
-    assert voice_engine.process_ambient_conversation(
+    result = voice_engine.process_ambient_conversation(
         "SPEAKER_TEST_01", "Test conversation"
-    )["status"] == "SUCCESS"
+    )
+    assert result["status"] == "SUCCESS"
+    assert result["transcript"] == "Test conversation।"
 
     sample = tmp_path / "sample.txt"
     sample.write_text("test", encoding="utf-8")
@@ -75,6 +77,7 @@ def test_runtime_import_smoke():
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
 
+
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
     folder.mkdir()
@@ -120,7 +123,9 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
@@ -161,3 +166,25 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_smart_voice_punctuation_and_context_correction():
+    engine = VoiceJournalEngine()
+    assert engine.apply_smart_punctuation("আপনি কেমন আছেন") == "আপনি কেমন আছেন।"
+    assert engine.apply_smart_punctuation("কুরআন কি") == "কুরআন কি?"
+    assert engine.correct_contextual_grammar("মোশারফ কোরআন কোরান") == "মোশাররফ কুরআন কুরআন"
+    normalized = engine.normalize_transcript("মোশারফ কোরআন কি")
+    assert normalized["normalized_text"] == "মোশাররফ কুরআন কি?"
+    assert normalized["corrections_applied"] is True
+
+
+def test_phonetic_speech_uses_injected_transcriber():
+    engine = VoiceJournalEngine()
+    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
+    engine.toggle_listening(True, authorized=True)
+    result = engine.sanitize_phonetic_speech(
+        b"audio", transcriber=lambda _: "মোশারফ কোরআন কি"
+    )
+    assert result["status"] == "SUCCESS"
+    assert result["input_mode"] == "AUDIO"
+    assert result["normalized_text"] == "মোশাররফ কুরআন কি?"
