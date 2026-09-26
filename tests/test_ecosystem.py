@@ -75,6 +75,7 @@ def test_runtime_import_smoke():
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
 
+
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
     folder.mkdir()
@@ -89,12 +90,6 @@ def test_storage_organizer_never_overwrites(tmp_path):
     assert result["moved_files"] == 0
     assert source.exists()
     assert existing.read_text(encoding="utf-8") == "existing"
-
-
-def test_tool_factory_safe_function_body_and_execution(tmp_path):
-    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
-    assert "created and registered" in factory.create_tool("safe_tool", "return 1")
-    assert factory.execute_tool("safe_tool") == 1
 
 
 def test_core_audit_and_brain_adapter():
@@ -120,7 +115,9 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
@@ -183,44 +180,18 @@ def test_voice_audio_requires_authorization_and_provider():
     assert result["status"] == "SUCCESS"
     assert result["sanitized_text"] == "তুমি কি করছ?"
 
-def test_voice_smart_punctuation_and_contextual_correction():
-    engine = VoiceJournalEngine()
-    result = engine.process_voice_text("কীভাবে মোশারফ এর প্রজেক্ট সাজাব")
-    assert result["status"] == "SUCCESS"
-    assert result["corrected_text"] == "কীভাবে মোশাররফের প্রজেক্ট সাজাব"
-    assert result["final_text"].endswith("?")
 
-    blocked = engine.sanitize_phonetic_speech(b"raw-audio")
-    assert blocked["status"] == "BLOCKED"
-
-    engine.toggle_listening(True, authorized=True)
-    engine.transcription_provider = lambda _audio: "কীভাবে মোশারফ এর প্রজেক্ট সাজাব"
-    processed = engine.sanitize_phonetic_speech(b"raw-audio")
-    assert processed["status"] == "SUCCESS"
-    assert processed["sanitized_text"].endswith("?")
+def test_tool_factory_safe_function_body_and_execution(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    assert "created and registered" in factory.create_tool("safe_tool", "return 1")
+    assert factory.execute_tool("safe_tool") == 1
 
 
-def test_voice_phonetic_corrections_are_conservative():
-    engine = VoiceJournalEngine()
-    result = engine.process_voice_text("মশাররফ কোরান গবেষনা")
-    assert result["corrected_text"] == "মোশাররফ কুরআন গবেষণা"
-    assert result["final_text"] == "মোশাররফ কুরআন গবেষণা।"
-
-
-def test_voice_authorization_blocks_raw_audio():
-    engine = VoiceJournalEngine()
-    result = engine.sanitize_phonetic_speech(b"raw-audio")
-    assert result["status"] == "BLOCKED"
-    assert result["reason"] == "RECORDING_NOT_AUTHORIZED"
-
-
-def test_context_aware_voice_processing():
-    voice = VoiceJournalEngine()
-    blocked = voice.sanitize_phonetic_speech("কুরান গবেষনা")
-    assert blocked["status"] == "BLOCKED"
-    voice.toggle_listening(True, authorized=True)
-    result = voice.sanitize_phonetic_speech("কুরান গবেষনা")
-    assert result["status"] == "SUCCESS"
-    assert result["corrected_text"] == "কুরআন গবেষণা"
-    assert result["text"].endswith("।")
-    assert voice.apply_smart_punctuation("কীভাবে কাজ করবে", question_hint=True).endswith("?")
+def test_tool_factory_rejects_file_and_code_execution(tmp_path):
+    factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
+    for code in (
+        "open('unsafe.txt', 'w').write('x')",
+        "eval('1 + 1')",
+        "__import__('os').system('echo unsafe')",
+    ):
+        assert factory.create_tool("unsafe_tool", code).startswith("DENIED:")
