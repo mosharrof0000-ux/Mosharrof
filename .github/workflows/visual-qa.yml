@@ -3,6 +3,8 @@ name: Mosharrof Visual QA
 on:
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
       url:
@@ -11,41 +13,33 @@ on:
         default: "https://mosharrof0000-ux.github.io/Mosharrof/"
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   visual-qa:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-
       - name: Install browser test tools
         run: |
-          npm init -y
-          npm install --save-dev playwright pixelmatch pngjs
+          npm install
           npx playwright install --with-deps chromium
-
       - name: Start local candidate
         run: |
           python3 -m http.server 4173 --directory web > /tmp/mosharrof-server.log 2>&1 &
           sleep 2
-
       - name: Capture candidate and live screenshots
         env:
-          TARGET_URL: \${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}
+          TARGET_URL: "${{ inputs.url || 'https://mosharrof0000-ux.github.io/Mosharrof/' }}"
         run: node scripts/visual_qa.mjs "http://127.0.0.1:4173/" "$TARGET_URL"
-
       - name: AI visual inspection
-        if: \${{ secrets.GEMINI_API_KEY != '' }}
+        if: "${{ secrets.GEMINI_API_KEY != '' }}"
         env:
-          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}"
         run: python3 scripts/visual_ai_review.py
-
       - name: Enforce visual regression threshold
         run: |
           test -f visual-qa/report.json
@@ -53,14 +47,16 @@ jobs:
           import json
           r=json.load(open("visual-qa/report.json"))
           print(json.dumps(r,indent=2,ensure_ascii=False))
-          assert r["candidate"]["status"] == "ok"
-          assert r["live"]["status"] == "ok"
-          assert r["diff"]["changed_ratio"] <= 0.35, "Large visual change: manual review required"
+          assert r["candidate"]["status"] == 200
+          assert r["live"]["status"] == 200
+          assert not r["candidate"]["errors"]
+          assert not r["live"]["errors"]
+          assert r["diff"]["changed_ratio"] <= 0.35, "Large visual change"
           PY
-
       - name: Upload visual evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-visual-qa
+          name: mosharrof-visual-qa-${{ github.run_id }}
           path: visual-qa/
+          if-no-files-found: ignore
