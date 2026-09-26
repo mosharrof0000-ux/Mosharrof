@@ -1,0 +1,8 @@
+{
+  "project": {"id":"mosharrof","name":"Mosharrof","owner":"Mosharrof Karim","version":"0.1.0","status":"foundation"},
+  "architecture": {"entity_first":true,"model_agnostic":true,"separate_responsibility":true,"audit_required":true},
+  "capability_formula":"AI_BRAIN * PERMISSION * POLICY * SCOPE",
+  "security":{"delete_operations":"PERMANENTLY_BLOCKED"},
+  "entities": [],
+  "next_entity":"al-quran-research"
+}
