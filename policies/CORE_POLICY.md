@@ -1,23 +1,13 @@
 # Mosharrof Core Policy
 
-## Capability boundary
-Actual capability is bounded by:
+1. Every entity has an explicit identity and responsibility.
+2. Every entity is isolated by permission and scope.
+3. AI models are replaceable through a model-adapter boundary.
+4. DELETE and destructive operations are permanently blocked.
+5. Temporary permissions are task-scoped, audited, and revoked after completion.
+6. Changes are tested before activation.
+7. Existing Al-Quran Research remains a separate project until explicitly connected.
 
-AI Brain × Permission × Policy × Scope × Identity
 
-A model never grants itself permission.
-
-## Permanent safety rules
-1. DELETE operations are always denied.
-2. Destructive operations are always denied.
-3. No entity may act outside its declared scope.
-4. Every privileged action must be attributable to an entity.
-5. New tools must pass policy validation before activation.
-6. Memory and audit records must remain traceable.
-7. Model changes must not silently replace entity identity, memory, responsibility or policy.
-
-## Change lifecycle
-Create → Review → Test → Approve → Activate → Audit → Version
-
-## Entity rule
-Every meaningful component may be represented as an independent entity with its own identity, brain adapter, memory, responsibility, permissions, policy, tools, communication channel and audit boundary.
+## Additional verification rule
+The project manifest and entity registry are machine-readable first-read maps. New tools must pass the existing destructive-operation validator before activation.
