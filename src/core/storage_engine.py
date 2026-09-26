@@ -84,7 +84,13 @@ class StorageEngine:
                     target_dir = os.path.join(folder_path, cat)
                     target_path = os.path.join(target_dir, file)
                     if os.path.exists(target_path):
-                        continue
+                        stem, suffix = os.path.splitext(file)
+                        counter = 1
+                        while os.path.exists(target_path):
+                            target_path = os.path.join(
+                                target_dir, f"{stem}__{counter}{suffix}"
+                            )
+                            counter += 1
                     os.makedirs(target_dir, exist_ok=True)
                     shutil.move(file_path, target_path)
                     moved_count += 1
@@ -92,5 +98,5 @@ class StorageEngine:
         return {
             "status": "SUCCESS",
             "moved_files": moved_count,
-            "message": f"{moved_count} টি ফাইল ক্যাটাগরি অনুযায়ী ফোল্ডারে গুছিয়ে সাজানো হয়েছে।",
+            "message": f"{moved_count} টি ফাইল ক্যাটাগরি অনুযায়ী ফোল্ডারে গুছিয়ে সাজানো হয়েছে; কোনো ফাইল delete করা হয়নি।",
         }
