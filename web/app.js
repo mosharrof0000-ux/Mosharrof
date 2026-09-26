@@ -1,0 +1,1 @@
+const status=document.querySelector("#status");fetch("../config/project_manifest.json").then(r=>r.json()).then(m=>{status.textContent="Core manifest loaded · "+m.project.version+" · "+m.architecture.model_strategy;}).catch(()=>{status.textContent="Core manifest is available in the repository.";});
