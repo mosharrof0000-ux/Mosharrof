@@ -33,6 +33,18 @@ Every meaningful component is represented under `entities/<entity-id>/` where ap
 
 `src/core/brain_adapter.py` separates entity identity from the underlying model/provider. A model can be replaced without changing the entity's identity, responsibility, memory, permission, scope or audit history.
 
+### Context-aware voice engine
+
+The Voice Journal Engine provides an explicit authorization boundary plus a provider-neutral voice-processing pipeline:
+
+- Smart punctuation for transcript text.
+- High-confidence contextual Bengali normalization.
+- Provider-backed phonetic/audio sanitization without pretending that raw audio can be decoded locally.
+- Transcript normalization before social-memory logging.
+- Recording remains blocked unless explicit authorization is supplied.
+
+The implementation lives in `src/core/voice_engine.py` and is covered by ecosystem tests.
+
 ### First research tool
 
 Al-Quran Research remains an independent project until explicit integration.
