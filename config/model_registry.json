@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0.0",
+  "strategy": "model-agnostic",
+  "providers": [],
+  "rule": "Changing a model must not change entity identity, memory, responsibility, permissions, scope, or audit history."
+}
