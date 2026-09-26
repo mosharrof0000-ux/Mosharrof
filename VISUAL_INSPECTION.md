@@ -1,0 +1,3 @@
+# Mosharrof Visual Inspection Engine
+
+Mosharrof opens the application in Chromium and checks the real rendered interface, not only source code. It captures mobile and desktop screenshots, checks required UI elements and top/bottom fade zones, and supports visual regression baselines. Scheduled runs can inspect the live URL. This workflow should be a required status check in the protected main ruleset before automatic promotion.
