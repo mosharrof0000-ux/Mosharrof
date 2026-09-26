@@ -1,1 +1,13 @@
-{"id":"core","type":"core","owner":"Mosharrof Karim","brain":"core","responsibility":"Coordinate the ecosystem and enforce global policy.","scope":"mosharrof/*","permission_profile":"core","memory":"entities/core/memory","tools":"entities/core/tools","audit":"entities/core/audit"}
+{
+  "id":"core",
+  "type":"core",
+  "owner":"Mosharrof Karim",
+  "brain":"core",
+  "responsibility":"Coordinate the ecosystem and enforce global policy.",
+  "scope":"core/*",
+  "permission_profile":"core",
+  "memory":"entities/core/memory",
+  "tools":"entities/core/tools",
+  "audit":"entities/core/audit",
+  "delete_allowed":false
+}
