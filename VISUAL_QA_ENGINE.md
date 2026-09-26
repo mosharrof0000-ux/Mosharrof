@@ -1,5 +1,10 @@
 # Mosharrof Visual QA Engine
 
-The autonomous review opens the proposed site in Chromium, captures real screenshots at mobile, wide-mobile and desktop sizes, compares them with main, and optionally sends both sets to Gemini Vision for semantic review.
+Every candidate build can be opened in Chromium and captured at mobile and desktop sizes before promotion.
 
-This is evidence for the protected-main promotion gate. A candidate should not be promoted until its visual and functional checks pass.
+Evidence includes:
+- mobile screenshot
+- desktop screenshot
+- required UI/safe-area invariants
+
+The next review layer can send these images to a vision-capable connected model to compare the candidate with the previous stable build and detect additions, removals, overlap, clipping, spacing changes, and regressions. A visual failure should block promotion.
