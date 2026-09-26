@@ -1,0 +1,18 @@
+{
+  "policy_version": "1.0.0",
+  "permanent_denials": [
+    "DELETE",
+    "DESTRUCTIVE",
+    "DELETE_FILE",
+    "DELETE_DIRECTORY",
+    "DROP_DATABASE",
+    "DESTROY_PROJECT"
+  ],
+  "temporary_permission_rule": {
+    "supported": true,
+    "scope": "specific_task_only",
+    "requires_audit": true,
+    "expires_after_task": true
+  },
+  "principle": "A powerful model does not receive authority beyond its explicit permission and policy scope."
+}
