@@ -161,3 +161,20 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_context_aware_voice_processing():
+    engine = VoiceJournalEngine()
+    assert engine.apply_smart_punctuation("তুমি কেমন আছ") == "তুমি কেমন আছ।"
+    assert engine.apply_smart_punctuation("কীভাবে কাজ করবে") == "কীভাবে কাজ করবে?"
+    assert engine.correct_contextual_grammar("মোশারফ প্রজেক্ট") == "মোশাররফ প্রজেক্ট"
+    result = engine.sanitize_phonetic_speech("মোশারফ প্রজেক্ট")
+    assert result["status"] == "SUCCESS"
+    assert result["text"] == "মোশাররফ প্রজেক্ট।"
+
+
+def test_voice_audio_provider_boundary():
+    engine = VoiceJournalEngine()
+    result = engine.sanitize_phonetic_speech(b"\xff\xfe")
+    assert result["status"] == "UNSUPPORTED_AUDIO"
+    assert result["reason"] == "ASR_PROVIDER_REQUIRED"
