@@ -32,3 +32,19 @@ def test_full_ecosystem_flow(tmp_path):
     assert intent["status"] == "SUCCESS"
     assert intent["intent"] == "STORAGE"
     assert intent["intent_clarity"] == 1.0
+
+def test_core_permission_boundary():
+    brain = MosharrofCoreBrain()
+    denied = brain.monitor_sub_agent(
+        "storage",
+        {"status": "PROCESSING", "operation": "DELETE", "scope": "storage/files", "entity_scope": "storage"},
+    )
+    assert denied["decision"] == "REJECTED"
+    assert denied["permission"]["status"] == "DENIED"
+
+    allowed = brain.monitor_sub_agent(
+        "storage",
+        {"status": "PROCESSING", "operation": "READ", "scope": "storage/files", "entity_scope": "storage"},
+    )
+    assert allowed["decision"] == "APPROVED"
+    assert allowed["permission"]["status"] == "ALLOWED"
