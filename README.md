@@ -33,17 +33,9 @@ Every meaningful component is represented under `entities/<entity-id>/` where ap
 
 `src/core/brain_adapter.py` separates entity identity from the underlying model/provider. A model can be replaced without changing the entity's identity, responsibility, memory, permission, scope or audit history.
 
-### Context-aware voice engine
+### Voice intelligence
 
-The Voice Journal Engine provides an explicit authorization boundary plus a provider-neutral voice-processing pipeline:
-
-- Smart punctuation for transcript text.
-- High-confidence contextual Bengali normalization.
-- Provider-backed phonetic/audio sanitization without pretending that raw audio can be decoded locally.
-- Transcript normalization before social-memory logging.
-- Recording remains blocked unless explicit authorization is supplied.
-
-The implementation lives in `src/core/voice_engine.py` and is covered by ecosystem tests.
+The Voice Entity provides conservative smart punctuation and contextual transcript normalization, while real audio transcription remains behind a replaceable ASR provider boundary. See `docs/VOICE_ENGINE.md`.
 
 ### First research tool
 
@@ -52,3 +44,6 @@ Al-Quran Research remains an independent project until explicit integration.
 ## Live site
 
 GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
+
+Expected project-site URL after a successful Pages deployment:
+`https://mosharrof0000-ux.github.io/Mosharrof/`
