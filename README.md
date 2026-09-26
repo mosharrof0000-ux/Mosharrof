@@ -4,39 +4,50 @@ Mosharrof Karim — Intelligent Entity and AI Brain Architecture.
 
 ## Foundation
 
-Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful component has a machine-readable identity, brain assignment, responsibility, memory boundary, tools, permission profile, policy, scope and audit boundary.
+Mosharrof is an entity-first, model-agnostic AI ecosystem. Each meaningful component can have its own identity, brain adapter, memory, responsibility, tools, permissions, policy, communication and audit boundary.
 
 **Actual Capability = AI Brain × Permission × Policy × Scope × Identity**
 
-### Permanent safety rules
+### Permanent safety rule
 
-- DELETE is permanently blocked.
-- Destructive operations are permanently blocked.
-- Scope escape is blocked.
-- Activation without tests is blocked.
+DELETE and destructive operations are permanently blocked and cannot be granted temporarily.
 
-### First-read architecture
+### First-read architecture files
 
-1. `config/project_manifest.json`
-2. `config/entity_registry.json`
-3. `config/model_registry.json`
-4. `config/policy.json`
-5. `config/permission_profiles.json`
-6. `policies/CORE_POLICY.md`
-7. `docs/ARCHITECTURE.md`
+- `config/project_manifest.json`
+- `config/entity_registry.json`
+- `policies/CORE_POLICY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/AI_ONBOARDING.md`
 
-### Entity structure
+### Entity layout
 
-Every meaningful component is represented under `entities/<entity-id>/` where appropriate. The registry is the authoritative machine-readable map for identity, responsibility, brain, scope and permission boundaries.
+Each entity has its own folder and separate boundaries for:
 
-### Model independence
+- `ENTITY.json`
+- `memory/`
+- `tools/`
+- `audit/`
 
-`src/core/brain_adapter.py` separates entity identity from the underlying model/provider. A model can be replaced without changing the entity's identity, responsibility, memory, permission, scope or audit history.
+Current foundation entities:
+
+- Core
+- Chat
+- Sidebar
+- Al-Quran Research (external project boundary)
+
+### Brain and model boundary
+
+Entity identity, memory, permissions and audit history are independent of the model provider. The Core uses a brain-adapter boundary so a future model can be introduced without rebuilding the entity architecture.
+
+### Testing
+
+The repository test suite validates core orchestration, storage/voice integration, intent routing, scope boundaries, permanent DELETE blocking, temporary permission rules, audit recording and machine-readable configuration.
 
 ### First research tool
 
-Al-Quran Research remains an independent project until explicit integration.
+Al-Quran Research remains an independent project until explicit integration. This repository must not silently modify that project.
 
 ## Live site
 
-GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml`.
+GitHub Pages deployment is handled by `.github/workflows/deploy-pages.yml` and is gated by the test suite.
