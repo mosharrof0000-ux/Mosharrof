@@ -1,0 +1,6 @@
+{
+  "entities": [
+    {"id":"core","name":"Mosharrof Core","type":"core","responsibility":"Coordinate entities, route intents, enforce system policy.","brain":"model-adapter://core","permissions":"policy://core","scope":"ecosystem"},
+    {"id":"chat-box","name":"Chat Box","type":"interface-entity","responsibility":"Receive user input and present responses.","brain":"model-adapter://chat","permissions":"policy://chat-box","scope":"chat"}
+  ]
+}
