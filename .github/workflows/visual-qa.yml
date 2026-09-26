@@ -27,7 +27,7 @@ jobs:
       - name: Install browser test tools
         run: |
           npm init -y
-          npm install --save-dev playwright
+          npm install --save-dev playwright pixelmatch pngjs
           npx playwright install --with-deps chromium
 
       - name: Start local candidate
