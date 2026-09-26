@@ -1,0 +1,5 @@
+{
+  "version":"1.0.0",
+  "global":{"delete":"DENY","destructive":"DENY","raw_model_authority":"DENY"},
+  "profiles":{"core.safe":{"allowed":["READ","WRITE","CREATE","UPDATE","EXECUTE","MOVE"],"denied":["DELETE","DESTRUCTIVE"]}}
+}
