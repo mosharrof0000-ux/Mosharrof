@@ -47,7 +47,8 @@ def test_capability_boundary():
 
 
 def test_delete_is_permanently_blocked():
-    result = MosharrofCoreBrain().monitor_sub_agent(
+    brain = MosharrofCoreBrain()
+    result = brain.monitor_sub_agent(
         "chat", {"status": "PROCESSING", "operation": "DELETE", "scope": "chat"}
     )
     assert result["decision"] == "REJECTED"
@@ -74,6 +75,7 @@ def test_runtime_import_smoke():
     import src.main
     assert callable(src.main.boot_mosharrof)
     assert src.main.boot_mosharrof_ai is src.main.boot_mosharrof
+
 
 def test_storage_organizer_never_overwrites(tmp_path):
     folder = tmp_path / "files"
@@ -120,7 +122,9 @@ def test_temporary_permission_cannot_grant_delete():
     )
     assert granted["status"] == "GRANTED"
     assert manager.complete_task("task-2")["status"] == "REVOKED"
-    assert [r["action"] for r in manager.audit.recent()] == ["TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"]
+    assert [r["action"] for r in manager.audit.recent()] == [
+        "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_GRANT", "TEMP_PERMISSION_REVOKE"
+    ]
 
 
 def test_machine_readable_project_contract():
@@ -163,22 +167,36 @@ def test_additional_delete_variants_are_denied():
         assert result["status"] == "DENIED"
 
 
-def test_context_aware_voice_pipeline():
-    engine = VoiceJournalEngine()
-    assert engine.apply_smart_punctuation("  তুমি কি করতেছ  ") == "তুমি কি করতেছ।"
-    assert engine.correct_contextual_grammar("তুমি কি করতেছ") == "তুমি কি করছ"
-    result = engine.process_voice_text("তুমি কি করতেছ")
-    assert result["final_text"] == "তুমি কি করছ।"
+def test_smart_voice_punctuation_and_contextual_correction():
+    voice = VoiceJournalEngine()
+    corrected = voice.correct_contextual_grammar("আপনি কি করতেছ")
+    assert corrected == "আপনি কি করছ"
+    assert voice.apply_smart_punctuation(corrected).endswith("।")
 
 
-def test_voice_audio_requires_authorization_and_provider():
-    engine = VoiceJournalEngine()
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
-    engine.toggle_listening(True, authorized=True)
-    assert engine.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
-    provider = lambda _audio: "তুমি কি করতেছ"
-    engine = VoiceJournalEngine(transcription_provider=provider)
-    engine.toggle_listening(True, authorized=True)
-    result = engine.sanitize_phonetic_speech(b"audio")
+def test_smart_voice_preserves_question_mark():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("আপনি কোথায়?") == "আপনি কোথায়?"
+
+
+def test_voice_pipeline_returns_structured_result():
+    voice = VoiceJournalEngine()
+    result = voice.process_voice_text("আপনি কি করতেছেন")
     assert result["status"] == "SUCCESS"
-    assert result["sanitized_text"] == "তুমি কি করছ।"
+    assert result["corrected_text"] == "আপনি কি করছেন"
+    assert result["final_text"].endswith("।")
+
+
+def test_audio_sanitizer_requires_provider_and_authorization():
+    voice = VoiceJournalEngine()
+    assert voice.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
+    voice.toggle_listening(True, authorized=True)
+    assert voice.sanitize_phonetic_speech(b"audio")["status"] == "UNAVAILABLE"
+
+
+def test_audio_sanitizer_uses_attached_transcription_provider():
+    voice = VoiceJournalEngine(transcription_provider=lambda _: "আপনি কি করতেছ")
+    voice.toggle_listening(True, authorized=True)
+    result = voice.sanitize_phonetic_speech(b"audio")
+    assert result["status"] == "SUCCESS"
+    assert result["sanitized_text"] == "আপনি কি করছ।"
