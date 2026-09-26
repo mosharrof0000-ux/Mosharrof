@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "entities": [
+    {
+      "id": "mosharrof.core",
+      "type": "core",
+      "name": "Mosharrof Core",
+      "responsibility": "Coordinate entities, enforce policy, route work, maintain system integrity.",
+      "brain": "mosharrof.core.brain",
+      "permission_profile": "core.max-necessary-no-delete",
+      "scope": "ecosystem",
+      "status": "active"
+    },
+    {
+      "id": "mosharrof.chat",
+      "type": "ui_entity",
+      "name": "Chat Box",
+      "responsibility": "Receive user input and route work to the responsible entity.",
+      "brain": "mosharrof.chat.brain",
+      "permission_profile": "chat.standard",
+      "scope": "chat",
+      "status": "foundation"
+    }
+  ],
+  "future_entity_contract": {
+    "required": ["identity","brain","responsibility","permission","policy","memory","tools","communication","audit","version"],
+    "isolation": "No entity may exceed its declared scope."
+  }
+}
