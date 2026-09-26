@@ -2,16 +2,14 @@ name: Mosharrof Visual QA
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: "30 */6 * * *"
-
+    inputs:
+      url:
+        description: "URL to inspect"
+        required: false
+        default: "https://mosharrof0000-ux.github.io/Mosharrof/"
 permissions:
   contents: read
-  pull-requests: read
-
 jobs:
   visual-qa:
     runs-on: ubuntu-latest
@@ -20,20 +18,17 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-      - name: Install browser test tools
-        run: |
+      - run: |
           npm init -y
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-      - name: Run visual QA
+      - run: python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &
+      - name: Capture screenshots and inspect UI
         env:
-          LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python3 scripts/mosharrof_visual_qa.py
-      - name: Upload visual evidence
-        if: always()
-        uses: actions/upload-artifact@v4
+          TARGET_URL: ${{ inputs.url || 'http://127.0.0.1:4173/' }}
+        run: node scripts/visual_qa.mjs "$TARGET_URL"
+      - uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-visual-qa-${{ github.run_id }}
-          path: visual-qa-result.json
-          if-no-files-found: ignore
+          name: mosharrof-visual-qa-${{ github.sha }}
+          path: visual-qa/
+          retention-days: 30
