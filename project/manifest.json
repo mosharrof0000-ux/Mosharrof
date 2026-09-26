@@ -1,0 +1,20 @@
+{
+  "project_id": "mosharrof",
+  "project_name": "Mosharrof",
+  "owner_identity": "Mosharrof Karim",
+  "architecture_version": "1.0.0",
+  "architecture": "entity_brain_modular",
+  "default_branch": "main",
+  "live_target": "github-pages",
+  "hard_rules": {
+    "delete_operations": "DENIED",
+    "destructive_operations": "DENIED",
+    "child_entities_must_stay_within_scope": true,
+    "model_must_be_replaceable": true,
+    "audit_required_for_privileged_actions": true
+  },
+  "registries": {
+    "entities": "project/entities/registry.json",
+    "permissions": "project/policies/permissions.json"
+  }
+}
