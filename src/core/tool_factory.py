@@ -10,6 +10,16 @@ from src.core.permission_engine import PermissionEngine
 
 
 class ToolFactory:
+    BLOCKED_IMPORTS = {
+        "os", "subprocess", "shutil", "socket", "ctypes", "pathlib",
+        "urllib", "http", "ftplib", "pickle",
+    }
+    BLOCKED_CALLS = {
+        "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
+        "system", "popen", "run", "call", "check_call", "check_output",
+        "open", "eval", "exec", "compile", "__import__", "input", "breakpoint",
+    }
+
     def __init__(self, tools_dir: str = "src/tools"):
         self.tools_dir = tools_dir
         self.registry: Dict[str, Callable] = {}
@@ -31,40 +41,25 @@ class ToolFactory:
                     continue
                 self._import_and_register(tool_name)
 
-    @staticmethod
-    def _contains_blocked_operation(code_body: str) -> bool:
-        """Reject common destructive or shell-spawning operations before registration."""
-        blocked_attributes = {
-            "remove", "unlink", "rmtree", "rmdir", "rename", "replace",
-            "system", "popen", "run", "call", "check_call", "check_output",
-            "exec", "eval", "compile",
-        }
-        blocked_names = {
-            "DELETE", "DELETE_FILE", "DELETE_DIRECTORY", "DESTROY",
-            "DESTROY_PROJECT", "ERASE", "PURGE", "DROP", "REMOVE",
-            "EXEC", "EVAL", "COMPILE", "__IMPORT__",
-        }
-        blocked_modules = {"subprocess", "shutil"}
-        blocked_attr_lower = {item.lower() for item in blocked_attributes}
+    @classmethod
+    def _contains_blocked_operation(cls, code_body: str) -> bool:
+        """Reject unsafe imports, file access and shell/code execution."""
         try:
             wrapped = "def _probe():\n" + textwrap.indent(code_body, "    ")
             tree = ast.parse(wrapped)
         except SyntaxError:
             return True
+
         for node in ast.walk(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
-                if any(alias.name.split(".")[0].lower() in blocked_modules for alias in node.names):
+                names = [alias.name.split(".")[0].lower() for alias in node.names]
+                if any(name in cls.BLOCKED_IMPORTS for name in names):
                     return True
             if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute) and node.func.attr.lower() in blocked_attr_lower:
+                if isinstance(node.func, ast.Attribute) and node.func.attr.lower() in cls.BLOCKED_CALLS:
                     return True
-                if isinstance(node.func, ast.Name) and node.func.id.upper() in blocked_names:
+                if isinstance(node.func, ast.Name) and node.func.id.lower() in cls.BLOCKED_CALLS:
                     return True
-                if isinstance(node.func, ast.Name) and node.func.id == "__import__":
-                    return True
-                if isinstance(node.func, ast.Name) and node.func.id == "getattr":
-                    if any(isinstance(arg, ast.Constant) and str(arg.value).lower() in blocked_attr_lower for arg in node.args):
-                        return True
         return False
 
     def _import_and_register(self, tool_name: str) -> bool:
