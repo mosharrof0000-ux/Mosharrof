@@ -1,7 +1,7 @@
 """Context-aware Mosharrof voice processing with explicit recording authorization.
 
-Speech-to-text remains an external boundary. This module normalizes the resulting
-transcript with conservative punctuation and context-aware corrections.
+Speech-to-text remains an external boundary. This module normalizes transcripts
+with conservative punctuation and configurable contextual corrections.
 """
 
 import re
@@ -10,13 +10,18 @@ from src.core.memory_ledger import MemoryLedger
 
 
 class VoiceJournalEngine:
-    """Voice journal boundary plus conservative transcript intelligence."""
-
     DEFAULT_CORRECTIONS = {
         "গবেষনা": "গবেষণা",
         "প্রজেকট": "প্রজেক্ট",
         "খুজে": "খুঁজে",
         "খুজুন": "খুঁজুন",
+        "করতেছ": "করছ",
+        "করতেছে": "করছে",
+        "করতেছেন": "করছেন",
+        "যাইতেছি": "যাচ্ছি",
+        "আসতেছি": "আসছি",
+        "হইতেছে": "হচ্ছে",
+        "হইছে": "হয়েছে",
     }
 
     QUESTION_WORDS = (
@@ -28,6 +33,7 @@ class VoiceJournalEngine:
         self,
         memory_ledger: Optional[MemoryLedger] = None,
         correction_map: Optional[Dict[str, str]] = None,
+        transcription_provider: Any = None,
     ):
         self.ledger = memory_ledger or MemoryLedger()
         self.is_listening = False
@@ -36,6 +42,7 @@ class VoiceJournalEngine:
         self.correction_map = dict(self.DEFAULT_CORRECTIONS)
         if correction_map:
             self.correction_map.update(correction_map)
+        self.transcription_provider = transcription_provider
 
     def toggle_listening(self, state: bool, authorized: bool = False) -> Dict[str, Any]:
         if state and not authorized:
@@ -60,7 +67,7 @@ class VoiceJournalEngine:
 
     @staticmethod
     def _clean_spacing(text: str) -> str:
-        text = re.sub(r"[ \t]+", " ", text.strip())
+        text = re.sub(r"[ \t]+", " ", (text or "").strip())
         text = re.sub(r"\s+([,।?!])", r"\1", text)
         text = re.sub(r"([,]){2,}", ",", text)
         return text
@@ -70,26 +77,14 @@ class VoiceJournalEngine:
         raw_text: str,
         pause_boundaries: Optional[Sequence[int]] = None,
     ) -> str:
-        """Add conservative punctuation to an STT transcript.
-
-        Pause markers can be represented as [pause]. Provider timing offsets
-        are accepted for API compatibility; punctuation remains conservative
-        when only raw text is available.
-        """
-        text = self._clean_spacing(raw_text or "")
+        text = self._clean_spacing(raw_text)
         if not text:
             return ""
 
         text = re.sub(r"\s*\[pause\]\s*", "। ", text, flags=re.IGNORECASE)
-
         if not re.search(r"[?!।]$", text):
-            words = text.split()
-            if words and any(
-                word.strip(".,!?।") in self.QUESTION_WORDS for word in words[-4:]
-            ):
-                text += "?"
-            else:
-                text += "।"
+            first_word = text.split()[0].strip(".,!?।") if text.split() else ""
+            text += "?" if first_word in self.QUESTION_WORDS else "।"
 
         text = re.sub(r"।{2,}", "।", text)
         text = re.sub(r"\?+", "?", text)
@@ -105,19 +100,13 @@ class VoiceJournalEngine:
         raw_text: str,
         context: Optional[Iterable[str]] = None,
     ) -> str:
-        """Apply only explicit, conservative transcript corrections.
-
-        Unknown or ambiguous speech is preserved rather than guessed.
-        """
-        text = self._clean_spacing(raw_text or "")
+        text = self._clean_spacing(raw_text)
         if not text:
             return ""
 
-        context_text = " ".join(context or ())
         for source, target in self.correction_map.items():
             pattern = rf"(?<!\S){re.escape(source)}(?!\S)"
-            if context_text or source in {"গবেষনা", "প্রজেকট", "খুজে", "খুজুন"}:
-                text = re.sub(pattern, target, text)
+            text = re.sub(pattern, target, text)
         return text
 
     def sanitize_phonetic_speech(
@@ -127,10 +116,24 @@ class VoiceJournalEngine:
         transcript: Optional[str] = None,
         context: Optional[Iterable[str]] = None,
     ) -> Dict[str, Any]:
-        """Normalize provider transcript without pretending to perform STT."""
+        if not self.recording_authorized:
+            return {"status": "BLOCKED", "reason": "RECORDING_NOT_AUTHORIZED"}
+
         raw_text = transcript if transcript is not None else (
             audio_stream if isinstance(audio_stream, str) else ""
         )
+
+        if not raw_text and not isinstance(audio_stream, str):
+            if self.transcription_provider is None:
+                return {
+                    "status": "UNAVAILABLE",
+                    "reason": "NO_TRANSCRIPTION_PROVIDER_ATTACHED",
+                }
+            if hasattr(self.transcription_provider, "transcribe"):
+                raw_text = self.transcription_provider.transcribe(audio_stream)
+            else:
+                raw_text = self.transcription_provider(audio_stream)
+
         corrected = self.correct_contextual_grammar(raw_text, context=context)
         punctuated = self.apply_smart_punctuation(corrected)
         return {
@@ -138,7 +141,18 @@ class VoiceJournalEngine:
             "raw_text": raw_text,
             "corrected_text": corrected,
             "text": punctuated,
+            "sanitized_text": punctuated,
             "stt_provider": "EXTERNAL_BOUNDARY",
+        }
+
+    def process_voice_text(self, raw_text: str, context: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        result = self.sanitize_phonetic_speech(
+            raw_text, transcript=raw_text, context=context
+        )
+        return {
+            "status": result["status"],
+            "final_text": result.get("text", ""),
+            "corrected_text": result.get("corrected_text", ""),
         }
 
     def process_voice_transcript(
