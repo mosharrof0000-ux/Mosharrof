@@ -1,0 +1,7 @@
+{
+  "version":"1.0.0",
+  "global":{"allow_delete":false,"allow_destructive_operations":false},
+  "temporary_permissions":{"enabled":true,"requires_scope":true,"requires_audit":true,"expires_after_task":true},
+  "entity_rule":"Least authority required by responsibility.",
+  "model_rule":"A model never grants itself permission."
+}
