@@ -1,51 +1,63 @@
 """
 Mosharrof Core Brain
-Central orchestration layer. Model execution is adapter-ready.
+Model-agnostic coordination brain. Capability is bounded by identity, permission,
+policy, scope and assigned tools.
 """
-from typing import Any, Dict, Optional
+from typing import Dict, Any, Optional
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
+from src.core.permission_guard import PermissionGuard
 
 class MosharrofCoreBrain:
     def __init__(self, event_bus: Optional[EcosystemEventBus] = None,
-                 memory_ledger: Optional[MemoryLedger] = None):
-        self.system_name = "Mosharrof AI Core"
+                 memory_ledger: Optional[MemoryLedger] = None,
+                 permission_guard: Optional[PermissionGuard] = None):
+        self.system_name = "Mosharrof Core"
         self.consciousness_state = "ACTIVE"
         self.security_protocol = "NO_DELETE"
         self.event_bus = event_bus or EcosystemEventBus()
         self.memory_ledger = memory_ledger or MemoryLedger()
-        self.active_entities = []
+        self.permission_guard = permission_guard or PermissionGuard()
+        self.active_entities = ["core", "chat", "sidebar", "quran_research"]
 
     def broadcast_system_command(self, command_type: str, payload: Dict[str, Any]):
         self.event_bus.publish(command_type, payload)
-        self.memory_ledger.record_event("SYSTEM_COMMAND",
-            {"command_type": command_type, "payload": payload})
+        self.memory_ledger.record_event(command_type, payload)
 
     def monitor_sub_agent(self, entity_name: str, action_report: Dict[str, Any]) -> Dict[str, Any]:
-        decision = "APPROVED" if action_report.get("status") == "PROCESSING" else "REJECTED"
-        result = {"decision": decision, "entity": entity_name,
-                  "integrity_check": "PASSED" if decision == "APPROVED" else "FAILED"}
-        self.memory_ledger.record_event("ENTITY_DECISION", result)
+        permission = self.permission_guard.check(
+            action_report.get("operation", "PROCESS"),
+            scope=action_report.get("scope", entity_name),
+            destructive=bool(action_report.get("destructive", False)),
+        )
+        if permission["status"] == "DENIED":
+            result = {"decision":"REJECTED","entity":entity_name,
+                      "integrity_check":"FAILED","reason":permission["reason"]}
+        elif action_report.get("status") == "PROCESSING":
+            result = {"decision":"APPROVED","entity":entity_name,
+                      "integrity_check":"PASSED","reason":"Within declared scope"}
+        else:
+            result = {"decision":"REJECTED","entity":entity_name,
+                      "integrity_check":"FAILED","reason":"Policy or state check failed"}
+        self.memory_ledger.record_event("ENTITY_ACTION_REVIEWED", result)
         return result
 
     def process_intent(self, text: str) -> Dict[str, Any]:
-        cleaned = text.strip()
-        if not cleaned:
-            return {"status": "EMPTY", "intent": "UNKNOWN", "intent_clarity": 0.0}
-        lowered = cleaned.lower()
-        if any(w in lowered for w in ("ফাইল","file","folder","ফোল্ডার")):
+        text = (text or "").strip()
+        if not text:
+            return {"status":"EMPTY","intent":"UNKNOWN","intent_clarity":0.0}
+        lowered = text.lower()
+        intent = "GENERAL"
+        if any(k in lowered for k in ("file","ফাইল","folder","ফোল্ডার")):
             intent = "STORAGE"
-        elif any(w in lowered for w in ("টুল","tool")):
+        elif any(k in lowered for k in ("tool","টুল")):
             intent = "TOOL"
-        elif any(w in lowered for w in ("ভয়েস","voice","কথা")):
-            intent = "VOICE"
-        else:
-            intent = "GENERAL"
-        result = {"status":"SUCCESS","intent":intent,"intent_clarity":1.0,"input":cleaned}
+        elif any(k in lowered for k in ("quran","কুরআন","কোরআন")):
+            intent = "RESEARCH"
+        result = {"status":"SUCCESS","intent":intent,"intent_clarity":1.0,"text":text}
         self.memory_ledger.record_event("INTENT_PROCESSED", result)
         return result
 
     def system_status(self) -> Dict[str, Any]:
         return {"system":self.system_name,"state":self.consciousness_state,
-                "security_protocol":self.security_protocol,
-                "active_entities":len(self.active_entities)}
+                "entities":list(self.active_entities),"delete_operations":"BLOCKED"}
