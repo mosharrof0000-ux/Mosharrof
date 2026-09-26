@@ -1,9 +1,8 @@
 """Mosharrof context-aware voice journal engine.
 
-The engine keeps recording authorization explicit and provides a model-agnostic
-text normalization boundary for smart punctuation, contextual correction and
-phonetic sanitization. Actual audio-to-text transcription is delegated to an
-attached provider; this module never pretends to decode raw audio by itself.
+Recording authorization stays explicit. Text normalization is model-agnostic:
+smart punctuation, conservative contextual correction, and provider-backed
+speech-to-text sanitization are kept behind the voice entity boundary.
 """
 
 from typing import Any, Callable, Dict, Optional
@@ -47,28 +46,42 @@ class VoiceJournalEngine:
 
     @staticmethod
     def apply_smart_punctuation(raw_text: str) -> str:
-        """Apply conservative punctuation without changing lexical content."""
+        """Infer a conservative terminal mark without inventing lexical content."""
         text = re.sub(r"\s+", " ", (raw_text or "").strip())
         if not text:
             return ""
+
         text = re.sub(r"\s+([,।!?])", r"\1", text)
         text = re.sub(r",+", ",", text)
         text = re.sub(r"!+", "!", text)
         text = re.sub(r"\?+", "?", text)
         text = re.sub(r"।+", "।", text)
 
-        # Respect an already supplied terminal mark.
-        if text[-1] not in ".!?।":
-            text += "।"
-        return text
+        if text[-1] in ".!?।":
+            return text
+
+        # These are high-signal Bengali interrogative forms. Ambiguous text
+        # remains a statement rather than being silently converted to a question.
+        question_patterns = (
+            r"(^|\s)কি($|\s)",
+            r"(^|\s)কী($|\s)",
+            r"(^|\s)কেন($|\s)",
+            r"(^|\s)কোথায়($|\s)",
+            r"(^|\s)কোথায়($|\s)",
+            r"(^|\s)কখন($|\s)",
+            r"(^|\s)কিভাবে($|\s)",
+            r"(^|\s)কীভাবে($|\s)",
+            r"(^|\s)কত($|\s)",
+            r"(^|\s)কে($|\s)",
+            r"\?$",
+        )
+        if any(re.search(pattern, text) for pattern in question_patterns):
+            return text + "?"
+        return text + "।"
 
     @staticmethod
     def correct_contextual_grammar(raw_text: str, context: str = "") -> str:
-        """Perform only high-confidence, context-safe normalization.
-
-        This deliberately avoids inventing corrections. A future language-model
-        provider can be attached at this boundary for richer contextual repair.
-        """
+        """Perform only high-confidence, context-safe normalization."""
         text = re.sub(r"\s+", " ", (raw_text or "").strip())
         if not text:
             return ""
@@ -85,10 +98,7 @@ class VoiceJournalEngine:
         return text
 
     def sanitize_phonetic_speech(self, audio_stream: Any) -> Dict[str, Any]:
-        """Transcribe authorized audio through the configured provider.
-
-        Raw audio decoding/STT is provider-specific and therefore not faked here.
-        """
+        """Transcribe authorized audio through the configured provider."""
         if not self.recording_authorized:
             return {"status": "BLOCKED", "reason": "RECORDING_NOT_AUTHORIZED"}
         if self.transcription_provider is None:
@@ -96,13 +106,20 @@ class VoiceJournalEngine:
                 "status": "UNAVAILABLE",
                 "reason": "NO_TRANSCRIPTION_PROVIDER_ATTACHED",
             }
-        transcript = self.transcription_provider(audio_stream)
-        normalized = self.correct_contextual_grammar(transcript)
-        normalized = self.apply_smart_punctuation(normalized)
+        try:
+            transcript = self.transcription_provider(audio_stream)
+            normalized = self.process_voice_text(transcript)
+        except Exception as exc:
+            return {
+                "status": "ERROR",
+                "reason": "TRANSCRIPTION_PROVIDER_FAILED",
+                "detail": str(exc),
+            }
         return {
-            "status": "SUCCESS",
+            "status": normalized["status"],
             "raw_transcript": transcript,
-            "sanitized_text": normalized,
+            "sanitized_text": normalized["final_text"],
+            "corrections_applied": normalized["corrected_text"] != transcript.strip(),
         }
 
     def process_voice_text(self, raw_text: str, context: str = "") -> Dict[str, Any]:
