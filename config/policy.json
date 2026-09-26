@@ -1,0 +1,8 @@
+{
+  "version":"1.0.0",
+  "default_decision":"DENY_UNTIL_ALLOWED",
+  "hard_blocks":["DELETE","DESTRUCTIVE"],
+  "temporary_permission":{"enabled":true,"must_have_task_scope":true,"must_be_audited":true,"revoked_after_task":true},
+  "entity_isolation":true,
+  "model_swap_preserves_identity":true
+}
