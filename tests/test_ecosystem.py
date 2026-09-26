@@ -20,9 +20,12 @@ def test_full_ecosystem_flow(tmp_path):
     assert brain.system_status()["delete_operations"] == "BLOCKED"
     assert voice_engine.toggle_listening(True)["listening_state"] == "BLOCKED"
     assert voice_engine.toggle_listening(True, authorized=True)["listening_state"] == "ACTIVE"
-    assert voice_engine.process_ambient_conversation(
-        "SPEAKER_TEST_01", "Test conversation"
-    )["status"] == "SUCCESS"
+    conversation = voice_engine.process_ambient_conversation(
+        "SPEAKER_TEST_01", "গবেষণার জন্য কোরআন নিয়ে কথা বলি"
+    )
+    assert conversation["status"] == "SUCCESS"
+    assert conversation["text"].endswith("।")
+    assert "কুরআন" in conversation["text"]
 
     sample = tmp_path / "sample.txt"
     sample.write_text("test", encoding="utf-8")
@@ -161,3 +164,17 @@ def test_additional_delete_variants_are_denied():
     for operation in ("DELETE_FILE", "DELETE_DIRECTORY", "DROP_DATABASE", "DESTROY_PROJECT"):
         result = brain.authorize_action(entity_id="core", operation=operation, scope="core")
         assert result["status"] == "DENIED"
+
+
+def test_voice_smart_punctuation_and_context_correction():
+    voice = VoiceJournalEngine()
+    assert voice.apply_smart_punctuation("এটা কী") == "এটা কী?"
+    assert voice.apply_smart_punctuation("আমি কুরআন পড়ি") == "আমি কুরআন পড়ি।"
+    assert voice.correct_contextual_grammar("আল কোরআন গবেষণা") == "আল-কুরআন গবেষণা"
+
+
+def test_voice_audio_adapter_requires_authorization():
+    voice = VoiceJournalEngine()
+    assert voice.sanitize_phonetic_speech(b"audio")["status"] == "BLOCKED"
+    voice.toggle_listening(True, authorized=True)
+    assert voice.sanitize_phonetic_speech(b"audio")["status"] == "TRANSCRIPTION_ADAPTER_REQUIRED"
