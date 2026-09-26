@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0.0",
+  "delete_policy": "DENY_ALWAYS",
+  "destructive_policy": "DENY_ALWAYS",
+  "child_entities": "least_privilege",
+  "temporary_permissions": {"allowed": true, "scope_required": true, "audit_required": true, "expiry_required": true},
+  "capability_formula": "brain x permission x policy x scope x identity"
+}
