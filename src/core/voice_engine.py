@@ -91,8 +91,12 @@ class VoiceJournalEngine:
         if not re.search(r"[?!।]$", text):
             if question_hint is True:
                 text += "?"
-            else:
+            elif question_hint is False:
                 text += "।"
+            else:
+                first_word = text.split()[0].strip(".,!?।") if text.split() else ""
+                question_starters = {"কীভাবে", "কিভাবে", "কেন", "কখন", "কোথায়", "কোথায়", "কত", "কার", "কাকে", "কোন", "কোনটি"}
+                text += "?" if first_word in question_starters else "।"
 
         text = re.sub(r"।{2,}", "।", text)
         text = re.sub(r"\?+", "?", text)
@@ -113,6 +117,7 @@ class VoiceJournalEngine:
             return ""
 
         context_text = " ".join(context or ())
+        text = re.sub(r"(?<!\S)(মোশারফ|মোশরফ|মশারফ)\s+এর(?!\S)", "মোশাররফের", text)
         for source, target in sorted(self.correction_map.items(), key=lambda item: -len(item[0])):
             pattern = rf"(?<!\S){re.escape(source)}(?!\S)"
             if context_text or source in self.correction_map:
