@@ -1,0 +1,12 @@
+{
+  "name": "mosharrof-visual-qa",
+  "private": true,
+  "scripts": {
+    "visual:test": "node scripts/visual_qa.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0",
+    "pixelmatch": "^6.0.0",
+    "pngjs": "^7.0.0"
+  }
+}
