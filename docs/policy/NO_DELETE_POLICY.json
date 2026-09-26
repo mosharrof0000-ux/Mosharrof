@@ -1,0 +1,26 @@
+{
+  "policy_id": "mosharrof.no-delete.v1",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "NO_DELETE",
+      "effect": "DENY",
+      "operations": ["DELETE", "DESTRUCTIVE"]
+    },
+    {
+      "id": "LEAST_PRIVILEGE",
+      "effect": "REQUIRE",
+      "description": "Each entity receives only permissions required for its responsibility."
+    },
+    {
+      "id": "AUDIT_MUTATIONS",
+      "effect": "REQUIRE",
+      "description": "Every write, permission change, tool creation, and deployment is auditable."
+    },
+    {
+      "id": "TEMPORARY_PERMISSION",
+      "effect": "ALLOW_WITH_AUDIT",
+      "description": "Temporary elevated permission may be granted for a defined task and must expire after completion."
+    }
+  ]
+}
