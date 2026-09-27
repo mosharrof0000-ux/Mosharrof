@@ -11,10 +11,7 @@ on:
     - cron: "17 */6 * * *"
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-  checks: read
+  contents: read
 
 concurrency:
   group: mosharrof-autonomous
@@ -25,12 +22,25 @@ jobs:
     name: Isolated task + tests + visual QA + PR
     runs-on: ubuntu-latest
     steps:
+      - name: Create short-lived GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.MOSHARROF_APP_CLIENT_ID }}
+          private-key: ${{ secrets.MOSHARROF_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: Mosharrof
+          permission-contents: write
+          permission-pull-requests: write
+          permission-checks: read
+
       - name: Checkout main
         uses: actions/checkout@v6
         with:
           ref: main
           fetch-depth: 0
-          token: \${{ secrets.AGENT_ACCESS_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: true
 
       - name: Install test and browser dependencies
         run: |
@@ -42,7 +52,7 @@ jobs:
       - name: Select request
         id: request
         env:
-          INPUT_REQUEST: \${{ inputs.request }}
+          INPUT_REQUEST: ${{ inputs.request }}
         run: |
           if [ -n "$INPUT_REQUEST" ]; then
             printf '%s' "$INPUT_REQUEST" > /tmp/request.txt
@@ -52,10 +62,11 @@ jobs:
 
       - name: Run guarded autonomous implementation
         env:
-          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: \${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
-          REPOSITORY: \${{ github.repository }}
-          GITHUB_RUN_ID: \${{ github.run_id }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
+          REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
           REQUEST_FILE: /tmp/request.txt
         run: python3 scripts/mosharrof_autonomous_engine.py
 
@@ -63,7 +74,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-autonomous-evidence-\${{ github.run_id }}
+          name: mosharrof-autonomous-evidence-${{ github.run_id }}
           path: artifacts/
           if-no-files-found: ignore
 

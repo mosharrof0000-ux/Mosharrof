@@ -34,19 +34,19 @@ for(const view of views){
         messageCount:document.querySelectorAll(".message").length,
         bodyOverflow:getComputedStyle(document.body).overflow,
         composerPosition:composer?getComputedStyle(composer).position:"missing",
-        fadeTop:!!document.querySelector(".messages:before"),
-        fadeBottom:!!document.querySelector(".messages:after")
+        fadeTop:(()=>{const e=document.querySelector(".messages"); return !!e && getComputedStyle(e,"::before").content !== "none";})(),
+        fadeBottom:(()=>{const e=document.querySelector(".messages"); return !!e && getComputedStyle(e,"::after").content !== "none";})()
       };
     });
 
     fs.writeFileSync(
-      \`artifacts/visual/\${view.name}.json\`,
+      `artifacts/visual/${view.name}.json`,
       JSON.stringify(checks,null,2)
     );
 
-    await page.screenshot({path:\`artifacts/visual/\${view.name}.png\`,fullPage:false});
+    await page.screenshot({path:`artifacts/visual/${view.name}.png`,fullPage:false});
     await page.waitForTimeout(2000);
-    await page.screenshot({path:\`artifacts/visual/\${view.name}-after-2s.png\`,fullPage:false});
+    await page.screenshot({path:`artifacts/visual/${view.name}-after-2s.png`,fullPage:false});
 
     if(
       !checks.header ||
@@ -61,7 +61,7 @@ for(const view of views){
     ) failed=true;
   }catch(error){
     fs.writeFileSync(
-      \`artifacts/visual/\${view.name}-error.txt\`,
+      `artifacts/visual/${view.name}-error.txt`,
       String(error.stack || error)
     );
     failed=true;
