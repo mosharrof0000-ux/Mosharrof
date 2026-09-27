@@ -20,7 +20,8 @@ for(const view of views){
   });
 
   try{
-    await page.goto(base,{waitUntil:"networkidle",timeout:60000});
+    await page.goto(base,{waitUntil:"domcontentloaded",timeout:60000});
+    await page.waitForTimeout(1500);
 
     const checks=await page.evaluate(()=>{
       const composer=document.querySelector(".composer");
