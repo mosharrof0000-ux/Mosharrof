@@ -1,22 +1,30 @@
 {
   "name": "mosharrof-autonomous-operation",
-  "version": "1.0",
-  "mode": "verified-autonomous",
+  "version": "2.0",
+  "mode": "verified-proposal",
   "rules": {
     "main_direct_write": false,
     "delete": false,
     "destructive_operations": false,
-    "promotion_requires_verification": true,
+    "force_push": false,
+    "workflow_policy_edit": false,
+    "promotion_requires_protected_pr": true,
+    "candidate_tests_required": true,
+    "mobile_visual_qa_required": true,
+    "desktop_visual_qa_required": true,
     "live_health_check_required": true
   },
   "flow": [
-    "instruction_or_schedule",
+    "instruction_or_scheduled_cycle",
     "isolated_task_branch",
-    "agent_execution",
-    "tests_and_policy_verification",
-    "controlled_promotion",
+    "implementation",
+    "unit_tests",
+    "mobile_desktop_visual_qa",
+    "pull_request",
+    "protected_promotion",
+    "pages_deploy",
     "live_health_check",
-    "audit_record"
+    "audit_evidence"
   ],
   "scheduled_checks": {
     "enabled": true,
