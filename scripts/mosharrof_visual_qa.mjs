@@ -34,8 +34,8 @@ for(const view of views){
         messageCount:document.querySelectorAll(".message").length,
         bodyOverflow:getComputedStyle(document.body).overflow,
         composerPosition:composer?getComputedStyle(composer).position:"missing",
-        fadeTop:!!document.querySelector(".messages:before"),
-        fadeBottom:!!document.querySelector(".messages:after")
+        fadeTop:(()=>{const e=document.querySelector(".messages"); return !!e && getComputedStyle(e,"::before").content !== "none";})(),
+        fadeBottom:(()=>{const e=document.querySelector(".messages"); return !!e && getComputedStyle(e,"::after").content !== "none";})()
       };
     });
 
