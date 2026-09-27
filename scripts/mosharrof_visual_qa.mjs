@@ -40,13 +40,13 @@ for(const view of views){
     });
 
     fs.writeFileSync(
-      \`artifacts/visual/\${view.name}.json\`,
+      `artifacts/visual/${view.name}.json`,
       JSON.stringify(checks,null,2)
     );
 
-    await page.screenshot({path:\`artifacts/visual/\${view.name}.png\`,fullPage:false});
+    await page.screenshot({path:`artifacts/visual/${view.name}.png`,fullPage:false});
     await page.waitForTimeout(2000);
-    await page.screenshot({path:\`artifacts/visual/\${view.name}-after-2s.png\`,fullPage:false});
+    await page.screenshot({path:`artifacts/visual/${view.name}-after-2s.png`,fullPage:false});
 
     if(
       !checks.header ||
@@ -61,7 +61,7 @@ for(const view of views){
     ) failed=true;
   }catch(error){
     fs.writeFileSync(
-      \`artifacts/visual/\${view.name}-error.txt\`,
+      `artifacts/visual/${view.name}-error.txt`,
       String(error.stack || error)
     );
     failed=true;
