@@ -55,7 +55,7 @@ jobs:
       - name: Capture mobile and desktop screenshots
         run: |
           mkdir -p artifacts/visual
-          node scripts/mosharrof_visual_qa.mjs http://127.0.0.1:4173
+          node scripts/mosharrof_visual_qa.mjs http://127.0.0.1:4173/
 
       - name: Verify screenshots are valid and UI changes over time
         run: |
