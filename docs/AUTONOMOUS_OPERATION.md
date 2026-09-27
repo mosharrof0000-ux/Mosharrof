@@ -1,19 +1,32 @@
 # Mosharrof Autonomous Operation
 
-## Purpose
-Mosharrof may perform scheduled inspection and verified project work without requiring a new human message for every maintenance cycle.
+## One canonical path
 
-## Six-hour cycle
-Every six hours the system runs tests, policy checks and the live-artifact integrity check.
+1. User instruction or scheduled maintenance cycle
+2. Isolated implementation branch
+3. Guarded code generation
+4. Unit tests
+5. Mobile and desktop browser QA
+6. Pull request to protected main
+7. Protected promotion
+8. GitHub Pages deployment
+9. Live HTTP health check
+10. Evidence retained as workflow artifacts
 
-## Feature requests
-A human instruction such as "add screenshot analysis" is treated as a task request. The implementation must occur outside main, pass tests and policy verification, and only then become eligible for controlled promotion.
+## Safety boundary
 
-## Live boundary
-Main/Live is a protected output boundary. Agents do not edit Live directly. Promotion is a separate controlled step.
+The autonomous coding engine cannot delete files, repositories, branches, secrets, deployments, or user data. It cannot force-push, change workflow policy, or write main directly.
 
-## Screenshot analysis
-Screenshot-analysis capability must use an authorized image-capable runtime/input path. No fake or guessed image-processing capability is permitted. If the required image provider credential/input connector is absent, the task remains pending rather than being promoted as a non-functional feature.
+The live site is produced by the Pages deployment workflow only after a change reaches main.
 
-## Safety
-DELETE and destructive operations remain blocked. Failed verification never promotes.
+## Visual gate
+
+Every autonomous candidate is tested at 390x844 and 1440x900. The gate checks the header, drawer, message area, composer, message presence, fixed composer behavior, overflow behavior, and top/bottom fade elements.
+
+## Promotion
+
+The existing repository main protection remains authoritative. The autonomous engine creates a verified PR; it does not bypass protection.
+
+## Cleanup rule
+
+Only this workflow and this visual QA script are the canonical autonomous path. Older experimental branches and duplicate PRs are not production systems.
