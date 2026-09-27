@@ -1,136 +1,78 @@
-name: Mosharrof Autonomous Agent
+name: Mosharrof Autonomous Pipeline
 
 on:
-  schedule:
-    - cron: '17 */6 * * *'
-  issues:
-    types: [labeled]
   workflow_dispatch:
+    inputs:
+      request:
+        description: "Task for Mosharrof"
+        required: false
+        type: string
+  schedule:
+    - cron: "17 */6 * * *"
 
 permissions:
   contents: write
   issues: write
   pull-requests: write
+  checks: read
 
 concurrency:
-  group: mosharrof-autopilot
+  group: mosharrof-autonomous
   cancel-in-progress: false
 
 jobs:
-  auto-task:
-    if: >
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'issues' && github.event.label.name == 'mosharrof-auto')
+  propose:
+    name: Isolated task + tests + visual QA + PR
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.AGENT_ACCESS_TOKEN }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
     steps:
-      - name: Guard required credentials
-        run: |
-          test -n "$GH_TOKEN" || { echo "AGENT_ACCESS_TOKEN is not configured"; exit 1; }
-          test -n "$GEMINI_API_KEY" || { echo "GEMINI_API_KEY is not configured"; exit 1; }
-
-      - uses: actions/checkout@v6
+      - name: Checkout main
+        uses: actions/checkout@v6
         with:
           ref: main
-          token: ${{ secrets.AGENT_ACCESS_TOKEN }}
+          fetch-depth: 0
+          token: \${{ secrets.AGENT_ACCESS_TOKEN }}
 
-      - name: Select task
-        id: task
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
+      - name: Install test and browser dependencies
         run: |
-          if [ "$EVENT_NAME" = "issues" ]; then
-            {
-              echo 'task<<EOF'
-              echo "$ISSUE_TITLE"
-              echo "$ISSUE_BODY"
-              echo 'EOF'
-            } >> "$GITHUB_OUTPUT"
+          python3 -m pip install -r requirements.txt
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Select request
+        id: request
+        env:
+          INPUT_REQUEST: \${{ inputs.request }}
+        run: |
+          if [ -n "$INPUT_REQUEST" ]; then
+            printf '%s' "$INPUT_REQUEST" > /tmp/request.txt
           else
-            {
-              echo 'task<<EOF'
-              echo 'Scheduled Mosharrof maintenance audit. Inspect the current project for a clear, safe, user-visible defect or missing small feature. If none exists, make no change.'
-              echo 'EOF'
-            } >> "$GITHUB_OUTPUT"
+            printf '%s' 'Scheduled Mosharrof maintenance audit: inspect for a clear safe user-visible defect or small missing feature; if none exists, make no change.' > /tmp/request.txt
           fi
 
-      - name: Build bounded project snapshot
+      - name: Run guarded autonomous implementation
         env:
-          TASK: ${{ steps.task.outputs.task }}
-        run: |
-          python3 - <<'PY'
-          import os, pathlib
-          allowed=('web/','tests/','scripts/','docs/')
-          parts=[]
-          for root in allowed:
-              p=pathlib.Path(root)
-              if not p.exists(): continue
-              for f in sorted(p.rglob('*')):
-                  if f.is_file() and f.stat().st_size < 200000:
-                      parts.append(f"FILE: {f}\n"+f.read_text(errors='ignore'))
-          for f in ('README.md','requirements.txt'):
-              p=pathlib.Path(f)
-              if p.exists() and p.stat().st_size < 200000:
-                  parts.append(f"FILE: {p}\n"+p.read_text(errors='ignore'))
-          pathlib.Path('/tmp/snapshot.txt').write_text('\n\n'.join(parts))
-          PY
+          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: \${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
+          REPOSITORY: \${{ github.repository }}
+          GITHUB_RUN_ID: \${{ github.run_id }}
+          REQUEST_FILE: /tmp/request.txt
+        run: python3 scripts/mosharrof_autonomous_engine.py
 
-      - name: Ask guarded AI agent for a change
-        id: agent
-        env:
-          MOSHARROF_TASK: ${{ steps.task.outputs.task }}
-          MOSHARROF_SNAPSHOT: ${{ steps.task.outputs.task }}
-        run: |
-          export MOSHARROF_SNAPSHOT="$(cat /tmp/snapshot.txt)"
-          python3 scripts/mosharrof_autopilot.py > /tmp/agent.json
-          python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/agent.json'))
-          print(d.get('summary',''))
-          open('/tmp/summary.txt','w').write(d.get('summary',''))
-          PY
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-autonomous-evidence-\${{ github.run_id }}
+          path: artifacts/
+          if-no-files-found: ignore
 
-      - name: Apply guarded changes
-        run: |
-          python3 - <<'PY'
-          import json, pathlib, sys
-          d=json.load(open('/tmp/agent.json'))
-          allowed=('web/','tests/','scripts/','docs/')
-          files=d.get('files',[])
-          if not files:
-              print("NO_CHANGE")
-              raise SystemExit(0)
-          for item in files:
-              path=item.get('path','')
-              if not path.startswith(allowed) or '.github/' in path or '..' in pathlib.PurePosixPath(path).parts:
-                  raise SystemExit(f"Blocked path: {path}")
-              p=pathlib.Path(path)
-              p.parent.mkdir(parents=True,exist_ok=True)
-              p.write_text(item.get('content',''))
-          PY
-
-      - name: Verify and test
-        run: |
-          grep -RniE 'git push --force|git reset --hard|rm -rf|gh repo delete|delete-repository' web tests scripts docs 2>/dev/null && exit 1 || true
-          python3 -m pip install -r requirements.txt
-          python3 -m pytest -q
-
-      - name: Create isolated branch and PR
-        if: success()
-        run: |
-          if git diff --quiet; then echo "No changes."; exit 0; fi
-          BRANCH="agent/auto-${{ github.run_id }}"
-          git config user.name "Mosharrof Auto-Agent"
-          git config user.email "mosharrof-auto-agent@users.noreply.github.com"
-          git switch -c "$BRANCH"
-          git add web tests scripts docs README.md requirements.txt
-          git commit -m "Auto: guarded Mosharrof maintenance"
-          git push --set-upstream origin "$BRANCH"
-          gh pr create --base main --head "$BRANCH" --title "Auto: Mosharrof guarded maintenance" --body "Generated in an isolated branch. Verification runs must pass before promotion."
-          gh pr merge --auto --squash --delete-branch
+  boundary:
+    name: Protected promotion boundary
+    needs: propose
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Autonomous coding ends at a verified pull request."
+          echo "Main remains protected."
+          echo "Pages deploys only after an approved change reaches main."
