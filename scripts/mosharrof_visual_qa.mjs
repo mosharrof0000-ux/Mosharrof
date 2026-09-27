@@ -31,8 +31,6 @@ for(const view of views){
         composer:!!composer,
         drawer:!!document.querySelector(".drawer"),
         messageCount:document.querySelectorAll(".message").length,
-        topFade:!!document.querySelector(".messages:before"),
-        bottomFade:!!document.querySelector(".messages:after"),
         bodyOverflow:getComputedStyle(document.body).overflow,
         composerPosition:composer?getComputedStyle(composer).position:"missing"
       };
