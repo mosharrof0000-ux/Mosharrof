@@ -9,6 +9,7 @@ from src.core.memory_ledger import MemoryLedger
 from src.core.permission_guard import PermissionGuard
 from src.core.brain_adapter import BrainAdapter
 from src.core.audit_ledger import AuditLedger
+from src.core.consciousness_engine import ConsciousnessEngine
 
 class MosharrofCoreBrain:
     def __init__(
@@ -27,6 +28,11 @@ class MosharrofCoreBrain:
         self.permission_guard = permission_guard or PermissionGuard()
         self.brain_adapter = brain_adapter or BrainAdapter(entity_id="core")
         self.audit_ledger = audit_ledger or AuditLedger()
+        self.consciousness = ConsciousnessEngine(
+            event_bus=self.event_bus,
+            memory_ledger=self.memory_ledger,
+            audit_ledger=self.audit_ledger,
+        )
         self.active_entities = [
             "core", "chat", "sidebar", "ui", "voice", "storage",
             "tool_factory", "quran_research"
@@ -107,10 +113,12 @@ class MosharrofCoreBrain:
         return result
 
     def system_status(self) -> Dict[str, Any]:
+        consciousness = self.consciousness.inspect_all()
         return {
             "system": self.system_name,
             "state": self.consciousness_state,
             "entities": list(self.active_entities),
+            "consciousness": consciousness,
             "brain": self.brain_adapter.describe(),
             "delete_operations": "BLOCKED",
         }
