@@ -1,0 +1,22 @@
+{
+  "name": "mosharrof-system-consciousness",
+  "version": "1.0",
+  "purpose": "Give every production component an explicit health identity, dependency map, and verification contract.",
+  "principles": {
+    "observe": true,
+    "verify": true,
+    "self_report": true,
+    "auto_repair": false,
+    "destructive_actions": false
+  },
+  "organs": [
+    {"id":"frontend","paths":["web/"],"checks":["entrypoint","required-ui-contract"]},
+    {"id":"autonomous-engine","paths":["scripts/mosharrof_autonomous_engine.py"],"checks":["engine-entrypoint","guarded-promotion"]},
+    {"id":"visual-qa","paths":["scripts/mosharrof_visual_qa.mjs"],"checks":["script-present"]},
+    {"id":"tests","paths":["tests/"],"checks":["test-suite-present"]},
+    {"id":"verification-gate","paths":[".github/workflows/verification-gate.yml"],"checks":["workflow-present"]},
+    {"id":"pages-deploy","paths":[".github/workflows/deploy-pages.yml"],"checks":["workflow-present"]},
+    {"id":"autonomous-pipeline","paths":[".github/workflows/mosharrof-autonomous.yml"],"checks":["workflow-present","protected-pr-path"]},
+    {"id":"operation-policy","paths":["config/autonomous_operation.json",".github/AUTONOMOUS_RULES.md"],"checks":["policy-present"]}
+  ]
+}
