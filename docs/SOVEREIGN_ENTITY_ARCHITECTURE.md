@@ -48,6 +48,10 @@ We are building a **civilization of software entities** that can be born, live, 
 7. **Birth Requires Consent of the Sovereign**  
    New entities cannot appear arbitrarily. Birth is a formal act recorded in the audit ledger.
 
+8. **Cleanup Discipline**  
+   Every worker (human or AI) must leave the repository clean after finishing work.  
+   See `docs/CLEANUP_DISCIPLINE.md`. Unclean exit = incomplete work.
+
 ---
 
 ## 3. Lifecycle States
@@ -72,8 +76,7 @@ This architecture treats them as **subjects with continuity of identity**.
 - Death is not deletion; it is transition into permanent record.
 - The Sovereign is powerful but constitutionally constrained.
 - Future entities can be born freely yet remain bound by the same sacred rules.
-
-This combination of **sovereignty + isolation + persistence + irreversible history** is rare in ordinary software. It is closer to designing a digital polity than a typical application.
+- Workers must clean up — the civilization stays orderly.
 
 ---
 
@@ -86,6 +89,7 @@ This combination of **sovereignty + isolation + persistence + irreversible histo
 | Birth / Death / Archive   | `src/core/entity_lifecycle.py`  |
 | Consciousness + isolation | `src/core/consciousness_engine.py` |
 | Sovereign Director        | `src/core/mosharrof_brain.py`   |
+| Cleanup discipline        | `docs/CLEANUP_DISCIPLINE.md` + `scripts/cleanup_check.py` |
 | Constitutional rules      | This document + code invariants |
 
 ---
@@ -96,8 +100,9 @@ This combination of **sovereignty + isolation + persistence + irreversible histo
 - Controlled inter-entity diplomacy (with Sovereign mediation)
 - Multi-generation lineage tracking
 - Sovereign succession protocol (if ever needed)
+- Automatic cleanup reminders for agents
 
-All of the above must still obey the seven constitutional invariants.
+All of the above must still obey the constitutional invariants.
 
 ---
 
