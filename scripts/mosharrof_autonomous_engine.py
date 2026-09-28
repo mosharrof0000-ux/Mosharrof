@@ -91,6 +91,9 @@ for item in changes:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(body, encoding="utf-8")
 
+# Every autonomous cycle must first prove that every registered entity has
+# a complete, non-destructive operational contract.
+subprocess.run(["python3", "scripts/mosharrof_vitality.py"], check=True)
 subprocess.run(["python3", "-m", "pytest", "-q"], check=True)
 
 Path("artifacts/visual").mkdir(parents=True, exist_ok=True)
