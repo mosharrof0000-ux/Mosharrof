@@ -10,6 +10,33 @@ key = os.environ.get("GEMINI_API_KEY", "").strip()
 model = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash").strip()
 run_id = os.environ.get("GITHUB_RUN_ID", "local")
 
+# Component consciousness = operational awareness, not human consciousness.
+# Load the registry first so every autonomous cycle knows the system organs,
+# their responsibilities, and their declared health contracts.
+registry_path = Path("config/autonomous_operation.json")
+if not registry_path.exists():
+    raise SystemExit("Component registry is missing.")
+try:
+    operation = json.loads(registry_path.read_text(encoding="utf-8"))
+except json.JSONDecodeError as exc:
+    raise SystemExit(f"Component registry is invalid JSON: {exc}")
+
+components = operation.get("components", [])
+if not isinstance(components, list) or not components:
+    raise SystemExit("Component registry has no components.")
+
+component_report = []
+for component in components:
+    cid = str(component.get("id", "")).strip()
+    path_text = str(component.get("path", "")).strip()
+    health = component.get("health", [])
+    if not cid or not path_text or not isinstance(health, list):
+        raise SystemExit("Invalid component registry entry.")
+    component_report.append(
+        f"- {cid}: path={path_text}; role={component.get('role','')}; "
+        f"health={'; '.join(map(str, health))}"
+    )
+
 if not request:
     raise SystemExit("No autonomous request supplied.")
 if not key:
@@ -42,6 +69,9 @@ Task:
 
 Repository:
 {repo}
+
+Component registry:
+{chr(10).join(component_report)}
 
 Rules:
 - Never delete anything.
@@ -92,6 +122,12 @@ for item in changes:
     path.write_text(body, encoding="utf-8")
 
 subprocess.run(["python3", "-m", "pytest", "-q"], check=True)
+
+# Re-check every registered component before promotion.
+for component in components:
+    path_text = str(component["path"])
+    if not Path(path_text).exists():
+        raise SystemExit(f"Component health failure: missing {path_text}")
 
 Path("artifacts/visual").mkdir(parents=True, exist_ok=True)
 subprocess.Popen(
