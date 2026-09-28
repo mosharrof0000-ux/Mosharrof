@@ -91,6 +91,8 @@ for item in changes:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(body, encoding="utf-8")
 
+subprocess.run(["python3", "scripts/component_awareness.py"], check=True)
+
 subprocess.run(["python3", "-m", "pytest", "-q"], check=True)
 
 Path("artifacts/visual").mkdir(parents=True, exist_ok=True)
