@@ -1,0 +1,22 @@
+{
+  "name": "Mosharrof Component Awareness",
+  "version": "1.0",
+  "purpose": "Give each registered project component a measurable health state, heartbeat, dependency view, and recovery guidance.",
+  "states": ["healthy", "degraded", "offline", "unknown"],
+  "components": [
+    {"id":"web-ui","path":"web/index.html","role":"user interface"},
+    {"id":"autonomous-engine","path":"scripts/mosharrof_autonomous_engine.py","role":"guarded task execution"},
+    {"id":"visual-qa","path":"scripts/mosharrof_visual_qa.mjs","role":"browser visual verification"},
+    {"id":"verification-gate","path":".github/workflows/verification-gate.yml","role":"promotion verification"},
+    {"id":"pages-deploy","path":".github/workflows/deploy-pages.yml","role":"production deployment"},
+    {"id":"autonomous-pipeline","path":".github/workflows/mosharrof-autonomous.yml","role":"scheduled and manual autonomous cycle"},
+    {"id":"tests","path":"tests","role":"automated project verification"}
+  ],
+  "policy": {
+    "observe_before_act": true,
+    "no_delete": true,
+    "no_direct_main_write": true,
+    "recovery_is_proposed": true,
+    "human_promotion_boundary": true
+  }
+}
