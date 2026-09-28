@@ -31,14 +31,15 @@ jobs:
           grep -q 'MOSHARROF AI' web/index.html
           grep -q 'setInterval' web/index.html
           grep -q '120000' web/index.html
-          grep -q 'messages:before' web/index.html
-          grep -q 'messages:after' web/index.html
+          grep -q 'class="messages"' web/index.html
+          grep -q 'class="composer"' web/index.html
+          grep -q 'class="drawer-left"' web/index.html
+          grep -q 'class="drawer-right"' web/index.html
 
       - name: Run project tests
         run: |
           python3 -m pip install -r requirements.txt
           python3 -m pytest -q
-
 
       - name: Start browser test server
         run: |
