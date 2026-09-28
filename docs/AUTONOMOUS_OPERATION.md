@@ -1,32 +1,19 @@
-# Mosharrof Autonomous Operation
+# Mosharrof Component Awareness
 
-## One canonical path
+Mosharrof now has a deterministic **component-awareness layer**.
 
-1. User instruction or scheduled maintenance cycle
-2. Isolated implementation branch
-3. Guarded code generation
-4. Unit tests
-5. Mobile and desktop browser QA
-6. Pull request to protected main
-7. Protected promotion
-8. GitHub Pages deployment
-9. Live HTTP health check
-10. Evidence retained as workflow artifacts
+It treats every registered entity in `config/entity_registry.json` as an observable system component and verifies, on each autonomous cycle, that it has:
+- an identity and registration record;
+- a defined responsibility and brain/adapter;
+- an explicit scope and permission profile;
+- memory, tools and audit locations;
+- an explicit non-deletion rule;
+- a machine-readable health state.
 
-## Safety boundary
+The monitor writes `artifacts/component-awareness/awareness.json` and fails the cycle if a registered component is incomplete or has deletion enabled.
 
-The autonomous coding engine cannot delete files, repositories, branches, secrets, deployments, or user data. It cannot force-push, change workflow policy, or write main directly.
+**Meaning of “awareness”:** this is software-level observability and self-description. It does not claim that the software is sentient or conscious.
 
-The live site is produced by the Pages deployment workflow only after a change reaches main.
+## Autonomous gate
 
-## Visual gate
-
-Every autonomous candidate is tested at 390x844 and 1440x900. The gate checks the header, drawer, message area, composer, message presence, fixed composer behavior, overflow behavior, and top/bottom fade elements.
-
-## Promotion
-
-The existing repository main protection remains authoritative. The autonomous engine creates a verified PR; it does not bypass protection.
-
-## Cleanup rule
-
-Only this workflow and this visual QA script are the canonical autonomous path. Older experimental branches and duplicate PRs are not production systems.
+The autonomous engine runs this monitor before the existing pytest and browser QA gates. Therefore a component-awareness failure stops promotion before a PR is created.
