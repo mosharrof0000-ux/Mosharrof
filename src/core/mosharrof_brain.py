@@ -2,6 +2,11 @@
 Mosharrof Core Brain
 Model-agnostic coordination brain. Capability is bounded by identity, permission,
 policy, scope and assigned tools.
+
+Integrated entity consciousness coordination layer (Grok resolution 2026-09-28):
+- ConsciousnessEngine: live state, heartbeat, shared awareness, audit/memory
+- EntityConsciousnessSystem + EntityConsciousnessMonitor retained for compatibility
+No sentience claim. No destructive capability. Full verification required before promotion.
 """
 from typing import Dict, Any, Optional
 from src.core.event_bus import EcosystemEventBus
@@ -12,6 +17,8 @@ from src.core.brain_adapter import BrainAdapter
 from src.core.audit_ledger import AuditLedger
 from src.core.entity_registry import EntityRegistry
 from src.core.consciousness_monitor import EntityConsciousnessMonitor
+from src.core.consciousness_engine import ConsciousnessEngine
+
 
 class MosharrofCoreBrain:
     def __init__(
@@ -36,8 +43,22 @@ class MosharrofCoreBrain:
             "core", "chat", "sidebar", "ui", "voice", "storage",
             "tool_factory", "quran_research"
         ]
-        self.consciousness = EntityConsciousnessSystem([{"id": x, "brain": x} for x in self.active_entities], event_bus=self.event_bus, memory_ledger=self.memory_ledger, permission_guard=self.permission_guard)
+        # Legacy / compatible consciousness system
+        self.consciousness = EntityConsciousnessSystem(
+            [{"id": x, "brain": x} for x in self.active_entities],
+            event_bus=self.event_bus,
+            memory_ledger=self.memory_ledger,
+            permission_guard=self.permission_guard,
+        )
         self.consciousness.awaken_all()
+
+        # New bounded coordination engine (from PR #280, resolved by Grok)
+        self.consciousness_engine = ConsciousnessEngine(
+            registry=self.entity_registry,
+            event_bus=self.event_bus,
+            memory_ledger=self.memory_ledger,
+            audit_ledger=self.audit_ledger,
+        )
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
         permission = self.permission_guard.check(
@@ -45,7 +66,11 @@ class MosharrofCoreBrain:
         )
         if permission["status"] == "DENIED":
             self.memory_ledger.record_event("ACTION_DENIED", permission)
-            self.audit_ledger.record(entity_id, "ACTION_DENIED", "DENIED", operation=permission["operation"], scope=permission["scope"], reason=permission["reason"])
+            self.audit_ledger.record(
+                entity_id, "ACTION_DENIED", "DENIED",
+                operation=permission["operation"], scope=permission["scope"],
+                reason=permission["reason"]
+            )
             return permission
         result = {
             "status": "ALLOWED",
@@ -54,7 +79,10 @@ class MosharrofCoreBrain:
             "scope": scope or entity_id,
         }
         self.memory_ledger.record_event("ACTION_ALLOWED", result)
-        self.audit_ledger.record(entity_id, "ACTION_ALLOWED", "ALLOWED", operation=result["operation"], scope=result["scope"])
+        self.audit_ledger.record(
+            entity_id, "ACTION_ALLOWED", "ALLOWED",
+            operation=result["operation"], scope=result["scope"]
+        )
         return result
 
     def broadcast_system_command(self, command_type: str, payload: Dict[str, Any]):
@@ -85,8 +113,9 @@ class MosharrofCoreBrain:
                 "integrity_check": "FAILED", "reason": "Policy or state check failed"
             }
         self.memory_ledger.record_event("ENTITY_ACTION_REVIEWED", result)
-        self.audit_ledger.record(entity_name, "ENTITY_ACTION_REVIEWED",
-                                 result["decision"], **result)
+        self.audit_ledger.record(
+            entity_name, "ENTITY_ACTION_REVIEWED", result["decision"], **result
+        )
         return result
 
     def process_intent(self, text: str) -> Dict[str, Any]:
@@ -115,18 +144,22 @@ class MosharrofCoreBrain:
 
     def consciousness_report(self) -> Dict[str, Any]:
         report = self.consciousness_monitor.scan()
-        self.audit_ledger.record("core", "CONSCIOUSNESS_SCAN", report["state"],
-                                 entity_count=report["entity_count"],
-                                 degraded_count=report["degraded_count"])
+        self.audit_ledger.record(
+            "core", "CONSCIOUSNESS_SCAN", report["state"],
+            entity_count=report["entity_count"],
+            degraded_count=report["degraded_count"]
+        )
         return report
 
     def system_status(self) -> Dict[str, Any]:
+        engine_snapshot = self.consciousness_engine.inspect_all()
         return {
             "system": self.system_name,
             "state": self.consciousness_state,
             "entities": list(self.active_entities),
             "brain": self.brain_adapter.describe(),
-            "consciousness": self.consciousness_report(),
+            "consciousness_monitor": self.consciousness_report(),
+            "consciousness_engine": engine_snapshot,
+            "consciousness_verify": self.consciousness.verify(),
             "delete_operations": "BLOCKED",
-            "consciousness": self.consciousness.verify(),
         }
