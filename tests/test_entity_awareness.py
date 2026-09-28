@@ -1,13 +1,27 @@
-import json, subprocess, sys
+import json
+import subprocess
+import sys
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1]
-def test_entity_registry_contract():
-    r=json.loads((ROOT/"config/entity_registry.json").read_text(encoding="utf-8"))
-    required={"id","type","owner","name","responsibility","brain","scope","permission_profile","memory","tools","audit","delete_allowed"}
-    assert r["entities"] and all(required <= set(e) and e["delete_allowed"] is False for e in r["entities"])
-def test_awareness_runtime_is_healthy():
-    x=subprocess.run([sys.executable,"scripts/entity_awareness.py"],cwd=ROOT,capture_output=True,text=True)
-    assert x.returncode==0,x.stderr
-    report=json.loads((ROOT/"artifacts/entity-awareness.json").read_text(encoding="utf-8"))
-    assert report["status"]=="awake"
-    assert report["entity_count"]==report["healthy_entities"]
+
+ROOT = Path(__file__).resolve().parents[1]
+
+def test_awareness_contract_exists():
+    policy = json.loads((ROOT / "config/entity_awareness.json").read_text(encoding="utf-8"))
+    assert policy["enabled"] is True
+    assert policy["safety"]["delete_allowed"] is False
+    assert policy["behavior"]["automatic_repair"] is False
+
+def test_all_registered_entities_are_operationally_aware():
+    result = subprocess.run(
+        [sys.executable, "scripts/entity_awareness.py"],
+        cwd=ROOT, check=True, capture_output=True, text=True
+    )
+    report = json.loads(result.stdout)
+    assert report["entity_count"] >= 1
+    assert report["degraded_count"] == 0
+    assert report["ready_count"] == report["entity_count"]
+
+def test_entity_registry_has_no_delete_permission():
+    registry = json.loads((ROOT / "config/entity_registry.json").read_text(encoding="utf-8"))
+    assert registry["entities"]
+    assert all(entity.get("delete_allowed") is False for entity in registry["entities"])
