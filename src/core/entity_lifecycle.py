@@ -72,13 +72,18 @@ class EntityLifecycle:
             meta["archived_at"] = self._now()
 
         self.store.save_meta(entity_id, meta)
+        # AuditLedger.record(entity_id, action, status, **details)
+        # First positional arg is entity_id — do not also pass entity_id= keyword
         self.audit.record(
-            actor, "LIFECYCLE_TRANSITION", "SUCCESS",
-            entity_id=entity_id, from_state=current, to_state=new_state, reason=reason
+            entity_id,
+            "LIFECYCLE_TRANSITION",
+            "SUCCESS",
+            actor=actor,
+            from_state=current,
+            to_state=new_state,
+            reason=reason,
         )
         return {"status": "SUCCESS", "entity_id": entity_id, "lifecycle": new_state, "meta": meta}
-
-    # ── Birth ───────────────────────────────────────────────────────────
 
     def birth(
         self,
@@ -90,10 +95,6 @@ class EntityLifecycle:
         scope: Optional[str] = None,
         reason: str = "Sovereign decree",
     ) -> Dict[str, Any]:
-        """
-        Formal birth of a new subject entity.
-        Only the Sovereign (core) should call this in normal operation.
-        """
         if actor not in {"core", "mosharrof"}:
             return {
                 "status": "DENIED",
@@ -130,19 +131,12 @@ class EntityLifecycle:
             })
         return result
 
-    # ── Death & Archive ─────────────────────────────────────────────────
-
     def retire(self, entity_id: str, *, actor: str = "core", reason: str = "Graceful retirement") -> Dict[str, Any]:
-        """Move to RETIRING state (optional graceful period)."""
         if actor not in {"core", "mosharrof"}:
             return {"status": "DENIED", "reason": "SOVEREIGN_ONLY"}
         return self._transition(entity_id, "RETIRING", actor=actor, reason=reason)
 
     def archive(self, entity_id: str, *, actor: str = "core", reason: str = "End of active life") -> Dict[str, Any]:
-        """
-        Final transition: seal the entity's entire history into immutable archive.
-        After this, the entity is dead to the world but remembered forever.
-        """
         if actor not in {"core", "mosharrof"}:
             return {"status": "DENIED", "reason": "SOVEREIGN_ONLY"}
 
@@ -151,7 +145,6 @@ class EntityLifecycle:
         if current == "ARCHIVED":
             return {"status": "DENIED", "reason": "ALREADY_ARCHIVED"}
 
-        # Collect full record
         memory = self.store.load_memory(entity_id)
         full_record = {
             "entity_id": entity_id,
@@ -161,17 +154,13 @@ class EntityLifecycle:
             "archived_by": actor,
         }
 
-        # Seal first (immutable)
         try:
             self.store.seal_archive(entity_id, full_record)
         except RuntimeError as e:
             return {"status": "DENIED", "reason": "ARCHIVE_SEAL_FAILED", "message": str(e)}
 
-        # Then transition
         result = self._transition(entity_id, "ARCHIVED", actor=actor, reason=reason)
         return result
-
-    # ── Queries ─────────────────────────────────────────────────────────
 
     def status(self, entity_id: str) -> Dict[str, Any]:
         meta = self.store.load_meta(entity_id)
@@ -187,7 +176,6 @@ class EntityLifecycle:
         }
 
     def read_archive(self, entity_id: str, *, actor: str = "core") -> Dict[str, Any]:
-        """Only the Sovereign may read the sealed archive of a dead entity."""
         if actor not in {"core", "mosharrof"}:
             return {
                 "status": "DENIED",
