@@ -1,0 +1,16 @@
+{
+  "name":"mosharrof-system-awareness",
+  "version":"1.0",
+  "purpose":"Continuous self-observation of Mosharrof components without destructive authority.",
+  "components":[
+    {"id":"web-ui","paths":["web/"]},
+    {"id":"autonomous-engine","paths":["scripts/mosharrof_autonomous_engine.py"]},
+    {"id":"visual-qa","paths":["scripts/mosharrof_visual_qa.mjs"]},
+    {"id":"verification","paths":[".github/workflows/verification-gate.yml"]},
+    {"id":"deployment","paths":[".github/workflows/deploy-pages.yml"]},
+    {"id":"security-policy","paths":[".github/AUTONOMOUS_RULES.md","AUTONOMOUS_ENGINE.md"]},
+    {"id":"operation-state","paths":["config/autonomous_operation.json"]}
+  ],
+  "health_states":["healthy","attention","blocked"],
+  "repair_boundary":{"direct_main_write":false,"destructive_change":false,"isolated_repair":true,"protected_pr_required":true}
+}
