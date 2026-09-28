@@ -41,6 +41,9 @@ jobs:
           python3 -m pip install -r requirements.txt
           python3 -m pytest -q
 
+      - name: Verify component awareness heartbeat
+        run: python3 scripts/mosharrof_component_awareness.py
+
       - name: Start browser test server
         run: |
           nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
