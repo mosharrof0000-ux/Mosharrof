@@ -1,0 +1,20 @@
+{
+  "name": "mosharrof-component-awareness",
+  "version": "1.0",
+  "purpose": "Operational awareness for every registered Mosharrof component: identity, presence, health, dependencies and evidence.",
+  "principles": [
+    "Every registered component has a unique identity.",
+    "Every component reports presence and health.",
+    "Missing or broken components are surfaced instead of silently ignored.",
+    "Awareness is observational and operational; it does not imply human consciousness."
+  ],
+  "components": [
+    {"id":"web-ui","path":"web/index.html","kind":"interface"},
+    {"id":"autonomous-engine","path":"scripts/mosharrof_autonomous_engine.py","kind":"engine"},
+    {"id":"visual-qa","path":"scripts/mosharrof_visual_qa.mjs","kind":"verification"},
+    {"id":"autonomous-operation","path":"config/autonomous_operation.json","kind":"governance"},
+    {"id":"verification-gate","path":".github/workflows/verification-gate.yml","kind":"workflow"},
+    {"id":"pages-deploy","path":".github/workflows/deploy-pages.yml","kind":"workflow"},
+    {"id":"autonomous-pipeline","path":".github/workflows/mosharrof-autonomous.yml","kind":"workflow"}
+  ]
+}
