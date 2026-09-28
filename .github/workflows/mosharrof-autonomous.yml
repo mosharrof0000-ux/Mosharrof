@@ -49,6 +49,12 @@ jobs:
           npm install --no-save playwright
           npx playwright install --with-deps chromium
 
+      - name: System awareness heartbeat
+        env:
+          AWARENESS_REPORT_FILE: /tmp/awareness_report.json
+          AWARENESS_REQUEST_FILE: /tmp/awareness_request.txt
+        run: python3 scripts/mosharrof_system_awareness.py
+
       - name: Select request
         id: request
         env:
@@ -56,6 +62,8 @@ jobs:
         run: |
           if [ -n "$INPUT_REQUEST" ]; then
             printf '%s' "$INPUT_REQUEST" > /tmp/request.txt
+          elif [ -s /tmp/awareness_request.txt ]; then
+            cp /tmp/awareness_request.txt /tmp/request.txt
           else
             printf '%s' 'Scheduled Mosharrof maintenance audit: inspect for a clear safe user-visible defect or small missing feature; if none exists, make no change.' > /tmp/request.txt
           fi
@@ -69,6 +77,13 @@ jobs:
           GITHUB_RUN_ID: ${{ github.run_id }}
           REQUEST_FILE: /tmp/request.txt
         run: python3 scripts/mosharrof_autonomous_engine.py
+
+      - name: Preserve awareness report
+        if: always()
+        run: |
+          mkdir -p artifacts/awareness
+          cp /tmp/awareness_report.json artifacts/awareness/report.json || true
+          cp /tmp/awareness_request.txt artifacts/awareness/request.txt || true
 
       - name: Upload evidence
         if: always()
