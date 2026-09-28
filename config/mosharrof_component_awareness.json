@@ -1,0 +1,15 @@
+{
+  "name": "mosharrof-component-awareness",
+  "version": "1.0",
+  "purpose": "Give every registered Mosharrof component an explicit observable state, health, capability, dependency, and failure record.",
+  "states": ["ready", "degraded", "blocked"],
+  "components": [
+    {"id":"web-ui","path":"web/index.html","kind":"interface","depends_on":[]},
+    {"id":"autonomous-engine","path":"scripts/mosharrof_autonomous_engine.py","kind":"agent","depends_on":["web-ui"]},
+    {"id":"visual-qa","path":"scripts/mosharrof_visual_qa.mjs","kind":"verification","depends_on":["web-ui"]},
+    {"id":"tests","path":"tests","kind":"verification","depends_on":["web-ui","autonomous-engine"]},
+    {"id":"autonomous-pipeline","path":".github/workflows/mosharrof-autonomous.yml","kind":"orchestrator","depends_on":["autonomous-engine","tests","visual-qa"]},
+    {"id":"pages-deployment","path":".github/workflows/deploy-pages.yml","kind":"deployment","depends_on":["web-ui"]},
+    {"id":"live-health","path":".github/workflows/deploy-pages.yml","kind":"health-check","depends_on":["pages-deployment"]}
+  ]
+}
