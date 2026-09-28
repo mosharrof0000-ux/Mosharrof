@@ -30,3 +30,8 @@ The existing repository main protection remains authoritative. The autonomous en
 ## Cleanup rule
 
 Only this workflow and this visual QA script are the canonical autonomous path. Older experimental branches and duplicate PRs are not production systems.
+
+
+## System awareness and safe self-healing
+
+The autonomous cycle begins with a system-awareness heartbeat. It checks the registered frontend, autonomous engine, visual QA, verification, deployment, CI, security, and documentation components. If a safe defect is detected, the heartbeat creates a repair request for the existing autonomous engine. Repairs remain isolated, are tested, and reach main only through the protected PR path. No delete, force-push, secret change, or direct-main write is permitted.
