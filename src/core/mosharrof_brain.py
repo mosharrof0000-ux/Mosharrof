@@ -6,6 +6,7 @@ policy, scope and assigned tools.
 from typing import Dict, Any, Optional
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
+from src.core.consciousness_system import EntityConsciousnessSystem
 from src.core.permission_guard import PermissionGuard
 from src.core.brain_adapter import BrainAdapter
 from src.core.audit_ledger import AuditLedger
@@ -35,6 +36,8 @@ class MosharrofCoreBrain:
             "core", "chat", "sidebar", "ui", "voice", "storage",
             "tool_factory", "quran_research"
         ]
+        self.consciousness = EntityConsciousnessSystem([{"id": x, "brain": x} for x in self.active_entities], event_bus=self.event_bus, memory_ledger=self.memory_ledger, permission_guard=self.permission_guard)
+        self.consciousness.awaken_all()
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
         permission = self.permission_guard.check(
@@ -125,4 +128,5 @@ class MosharrofCoreBrain:
             "brain": self.brain_adapter.describe(),
             "consciousness": self.consciousness_report(),
             "delete_operations": "BLOCKED",
+            "consciousness": self.consciousness.verify(),
         }
