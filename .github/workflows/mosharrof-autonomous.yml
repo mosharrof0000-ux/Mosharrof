@@ -60,6 +60,9 @@ jobs:
             printf '%s' 'Scheduled Mosharrof maintenance audit: inspect for a clear safe user-visible defect or small missing feature; if none exists, make no change.' > /tmp/request.txt
           fi
 
+      - name: Audit component awareness
+        run: python3 scripts/mosharrof_consciousness.py
+
       - name: Run guarded autonomous implementation
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
