@@ -244,3 +244,16 @@ def test_tool_factory_blocks_python_escape_paths(tmp_path):
     ]
     for index, source in enumerate(blocked):
         assert factory.create_tool(f"escape_{index}", source).startswith("DENIED:")
+
+
+def test_every_registered_entity_has_consciousness_links():
+    from src.core.consciousness_system import EntityConsciousnessSystem
+    system=EntityConsciousnessSystem([{"id":x,"brain":x} for x in ("core","chat","sidebar","ui","voice","storage","tool_factory","quran_research")])
+    assert system.verify()=={"status":"PASS","total_entities":8,"missing_consciousness_links":[]}
+    assert system.awaken_all()["alive_entities"]==8
+    assert system.heartbeat("chat")["status"]=="ALIVE"
+
+
+def test_unknown_entity_is_not_silently_awakened():
+    from src.core.consciousness_system import EntityConsciousnessSystem
+    assert EntityConsciousnessSystem([{"id":"core","brain":"core"}]).heartbeat("missing")["status"]=="UNKNOWN_ENTITY"
