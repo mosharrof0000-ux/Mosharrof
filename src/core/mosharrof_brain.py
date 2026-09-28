@@ -3,9 +3,9 @@ Mosharrof Core Brain
 Model-agnostic coordination brain. Capability is bounded by identity, permission,
 policy, scope and assigned tools.
 
-Integrated entity consciousness coordination layer (Grok resolution 2026-09-28):
-- ConsciousnessEngine: live state, heartbeat, shared awareness, audit/memory
-- EntityConsciousnessSystem + EntityConsciousnessMonitor retained for compatibility
+Layers (Grok 2026-09-28):
+1. ConsciousnessEngine — live state, heartbeat, awareness, per-entity memory, self-analysis
+2. EntityConsciousnessSystem + EntityConsciousnessMonitor — compatibility layer
 No sentience claim. No destructive capability. Full verification required before promotion.
 """
 from typing import Dict, Any, Optional
@@ -18,6 +18,7 @@ from src.core.audit_ledger import AuditLedger
 from src.core.entity_registry import EntityRegistry
 from src.core.consciousness_monitor import EntityConsciousnessMonitor
 from src.core.consciousness_engine import ConsciousnessEngine
+from src.core.entity_memory import EntityMemoryBank
 
 
 class MosharrofCoreBrain:
@@ -43,7 +44,7 @@ class MosharrofCoreBrain:
             "core", "chat", "sidebar", "ui", "voice", "storage",
             "tool_factory", "quran_research"
         ]
-        # Legacy / compatible consciousness system
+        # Compatibility consciousness system
         self.consciousness = EntityConsciousnessSystem(
             [{"id": x, "brain": x} for x in self.active_entities],
             event_bus=self.event_bus,
@@ -52,12 +53,16 @@ class MosharrofCoreBrain:
         )
         self.consciousness.awaken_all()
 
-        # New bounded coordination engine (from PR #280, resolved by Grok)
+        # Per-entity memory bank
+        self.memory_bank = EntityMemoryBank()
+
+        # Full consciousness engine with memory + self-analysis
         self.consciousness_engine = ConsciousnessEngine(
             registry=self.entity_registry,
             event_bus=self.event_bus,
             memory_ledger=self.memory_ledger,
             audit_ledger=self.audit_ledger,
+            memory_bank=self.memory_bank,
         )
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
@@ -161,5 +166,14 @@ class MosharrofCoreBrain:
             "consciousness_monitor": self.consciousness_report(),
             "consciousness_engine": engine_snapshot,
             "consciousness_verify": self.consciousness.verify(),
+            "memory_bank": self.memory_bank.inspect_all(),
             "delete_operations": "BLOCKED",
         }
+
+    def entity_self_analyze(self, entity_id: str) -> Dict[str, Any]:
+        """Public API: trigger self-analysis for any registered entity."""
+        return self.consciousness_engine.self_analyze(entity_id)
+
+    def entity_propose_improvement(self, entity_id: str) -> Dict[str, Any]:
+        """Public API: ask entity for bounded improvement proposals (never auto-executed)."""
+        return self.consciousness_engine.propose_improvement(entity_id)
