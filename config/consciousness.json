@@ -1,0 +1,20 @@
+{
+  "name": "mosharrof-operational-consciousness",
+  "version": "1.0",
+  "purpose": "Give each registered project component an observable operational state, heartbeat, capability record, and failure signal.",
+  "principles": {
+    "no_claim_of_sentience": true,
+    "read_only_health_audit": true,
+    "no_delete": true,
+    "main_direct_write": false,
+    "isolated_promotion_only": true
+  },
+  "components": [
+    {"id":"core-ui","kind":"ui","paths":["web/index.html"],"critical":true},
+    {"id":"autonomous-engine","kind":"engine","paths":["scripts/mosharrof_autonomous_engine.py"],"critical":true},
+    {"id":"visual-qa","kind":"verification","paths":["scripts/mosharrof_visual_qa.mjs"],"critical":true},
+    {"id":"operation-policy","kind":"policy","paths":["config/autonomous_operation.json",".github/AUTONOMOUS_RULES.md"],"critical":true},
+    {"id":"deployment","kind":"deployment","paths":[".github/workflows/deploy-pages.yml"],"critical":true},
+    {"id":"verification-gate","kind":"verification","paths":[".github/workflows/verification-gate.yml"],"critical":true}
+  ]
+}
