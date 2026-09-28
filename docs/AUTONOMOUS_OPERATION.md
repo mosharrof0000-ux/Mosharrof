@@ -30,3 +30,7 @@ The existing repository main protection remains authoritative. The autonomous en
 ## Cleanup rule
 
 Only this workflow and this visual QA script are the canonical autonomous path. Older experimental branches and duplicate PRs are not production systems.
+
+## Component awareness
+
+Mosharrof maintains a registry of its operational components in `config/mosharrof_consciousness.json`. The awareness audit checks each registered component for identity, presence, readability and health before autonomous work proceeds. This is operational observability, not a claim of human-like consciousness.
