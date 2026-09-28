@@ -12,12 +12,14 @@
     "candidate_tests_required": true,
     "mobile_visual_qa_required": true,
     "desktop_visual_qa_required": true,
-    "live_health_check_required": true
+    "live_health_check_required": true,
+    "entity_vitality_audit_required": true
   },
   "flow": [
     "instruction_or_scheduled_cycle",
     "isolated_task_branch",
     "implementation",
+    "entity_vitality_heartbeat",
     "unit_tests",
     "mobile_desktop_visual_qa",
     "pull_request",
