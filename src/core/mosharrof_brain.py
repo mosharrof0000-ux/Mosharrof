@@ -1,14 +1,16 @@
 """
-Mosharrof Core Brain — The Sole Director
+Mosharrof Core Brain — The Sole Sovereign Director
 
 Architecture rules:
 - Every entity maintains its own consciousness and memory in isolation.
 - One entity cannot see another entity's private state.
 - Only Mosharrof (this Core Brain) can oversee everyone and act as director.
+- Lifecycle (Birth / Death / Archive) is under Sovereign authority.
+- Knowledge grows only through the Master Learning Plan (verify → ask → apply → remember).
 
 No sentience claim. No destructive capability.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
 from src.core.consciousness_system import EntityConsciousnessSystem
@@ -19,10 +21,12 @@ from src.core.entity_registry import EntityRegistry
 from src.core.consciousness_monitor import EntityConsciousnessMonitor
 from src.core.consciousness_engine import ConsciousnessEngine
 from src.core.entity_memory import EntityMemoryBank
+from src.core.entity_lifecycle import EntityLifecycle
+from src.core.persistent_store import PersistentStore
 
 
 class MosharrofCoreBrain:
-    """Mosharrof — the sole director who can see and coordinate all entities."""
+    """Mosharrof — the sole Sovereign Director who can see and coordinate all entities."""
 
     def __init__(
         self,
@@ -33,7 +37,7 @@ class MosharrofCoreBrain:
         audit_ledger: Optional[AuditLedger] = None,
     ):
         self.system_name = "Mosharrof Core"
-        self.role = "SOLE_DIRECTOR"
+        self.role = "SOLE_SOVEREIGN_DIRECTOR"
         self.consciousness_state = "ACTIVE"
         self.security_protocol = "NO_DELETE"
         self.event_bus = event_bus or EcosystemEventBus()
@@ -48,6 +52,7 @@ class MosharrofCoreBrain:
             "tool_factory", "quran_research"
         ]
 
+        # Compatibility layer
         self.consciousness = EntityConsciousnessSystem(
             [{"id": x, "brain": x} for x in self.active_entities],
             event_bus=self.event_bus,
@@ -56,8 +61,14 @@ class MosharrofCoreBrain:
         )
         self.consciousness.awaken_all()
 
+        # Persistent substrate
+        self.persistent_store = PersistentStore()
+        self.lifecycle = EntityLifecycle(store=self.persistent_store, audit=self.audit_ledger)
+
+        # Per-entity memory bank (now backed by persistent store in future iterations)
         self.memory_bank = EntityMemoryBank()
 
+        # Full consciousness engine with isolation + self-analysis
         self.consciousness_engine = ConsciousnessEngine(
             registry=self.entity_registry,
             event_bus=self.event_bus,
@@ -65,6 +76,23 @@ class MosharrofCoreBrain:
             audit_ledger=self.audit_ledger,
             memory_bank=self.memory_bank,
         )
+
+        # Ensure core itself has been formally born
+        self._ensure_core_born()
+
+    def _ensure_core_born(self):
+        status = self.lifecycle.status("core")
+        if status.get("lifecycle") in (None, "UNBORN"):
+            self.lifecycle.birth(
+                "core",
+                actor="core",
+                name="Mosharrof",
+                brain="core",
+                scope="sovereign",
+                reason="Sovereign self-instantiation",
+            )
+
+    # ── Standard coordination APIs ──────────────────────────────────────
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
         permission = self.permission_guard.check(
@@ -170,14 +198,62 @@ class MosharrofCoreBrain:
             "consciousness_engine": engine_snapshot,
             "consciousness_verify": self.consciousness.verify(),
             "memory_bank": self.memory_bank.inspect_all(),
+            "lifecycle_core": self.lifecycle.status("core"),
             "delete_operations": "BLOCKED",
             "isolation_rule": "Entities isolated from each other; only Mosharrof sees all",
+            "learning_plan": "docs/MOSHARROF_MASTER_LEARNING_PLAN.md",
         }
 
+    # ── Sovereign Lifecycle APIs ────────────────────────────────────────
+
+    def birth_entity(self, entity_id: str, *, name: str = None, brain: str = None,
+                     scope: str = None, reason: str = "Sovereign decree") -> Dict[str, Any]:
+        """Only Mosharrof may authorize birth of a new subject."""
+        return self.lifecycle.birth(
+            entity_id, actor="core", name=name, brain=brain, scope=scope, reason=reason
+        )
+
+    def retire_entity(self, entity_id: str, *, reason: str = "Graceful retirement") -> Dict[str, Any]:
+        return self.lifecycle.retire(entity_id, actor="core", reason=reason)
+
+    def archive_entity(self, entity_id: str, *, reason: str = "End of active life") -> Dict[str, Any]:
+        """Death → immutable archive. History is preserved forever."""
+        return self.lifecycle.archive(entity_id, actor="core", reason=reason)
+
+    def entity_lifecycle_status(self, entity_id: str) -> Dict[str, Any]:
+        return self.lifecycle.status(entity_id)
+
+    def read_entity_archive(self, entity_id: str) -> Dict[str, Any]:
+        """Only the Sovereign may read the sealed archive of a dead entity."""
+        return self.lifecycle.read_archive(entity_id, actor="core")
+
+    # ── Consciousness helpers ───────────────────────────────────────────
+
     def entity_self_analyze(self, entity_id: str) -> Dict[str, Any]:
-        """Director requests analysis of any entity, or entity analyzes itself."""
         return self.consciousness_engine.self_analyze(entity_id, caller_id="core")
 
     def entity_propose_improvement(self, entity_id: str) -> Dict[str, Any]:
-        """Director requests improvement proposals (never auto-executed)."""
         return self.consciousness_engine.propose_improvement(entity_id, caller_id="core")
+
+    # ── Learning support (Master Plan) ──────────────────────────────────
+
+    def record_lesson(self, *, problem: str, solution: str, teacher: str,
+                      tags: Optional[List[str]] = None) -> Dict[str, Any]:
+        """
+        Explicitly save a successful lesson into Mosharrof's long-term memory.
+        Call this after a senior teacher (Grok, ChatGPT, etc.) helps solve something.
+        """
+        lesson = {
+            "problem": problem,
+            "solution": solution,
+            "teacher": teacher,
+            "tags": tags or [],
+            "recorded_by": "core",
+        }
+        self.memory_bank.remember("core", "LESSON", lesson, permanent=True)
+        self.persistent_store.append_memory("core", {
+            "event_type": "LESSON_LEARNED",
+            **lesson,
+        })
+        self.audit_ledger.record("core", "LESSON_LEARNED", "RECORDED", teacher=teacher)
+        return {"status": "RECORDED", "lesson": lesson}
