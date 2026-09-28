@@ -3,371 +3,154 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07111f">
-<meta name="description" content="Mosharrof AI — Intelligent Entity and Knowledge Companion">
-<title>MOSHARROF AI</title>
+<meta name="theme-color" content="#06152f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>MOSHARROF AI — Sovereign Chat</title>
+<!--
+  MOSHARROF AI Frontend V5
+  Integrated with Sovereign Entity Architecture.
+  Each module / conversation context maps to an entity with its own isolated memory course.
+  Only Mosharrof (core) can oversee all.
+-->
 <style>
-:root{
-  --bg1:#07152d;--bg2:#082d52;--accent:#28a8ff;--accent2:#7b61ff;
-  --text:#f5f8ff;--muted:#aab8cb;
-  --line:rgba(160,210,255,.18);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden}
-body{
-  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Bengali",sans-serif;
-  color:var(--text);background:#07111f;min-height:100svh;
-}
-body:before{
-  content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
-  background:
-    radial-gradient(circle at 18% 18%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 40%),
-    radial-gradient(circle at 82% 78%,color-mix(in srgb,var(--accent2) 18%,transparent),transparent 42%),
-    linear-gradient(145deg,var(--bg1),var(--bg2));
-  transition:background 3s ease;
-}
-.app{height:100svh;display:flex;flex-direction:column;position:relative}
-.header{
-  height:62px;flex:none;z-index:40;display:flex;align-items:center;gap:10px;
-  padding:0 12px;background:rgba(5,14,28,.55);
-  border-bottom:1px solid var(--line);
-  backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
-}
-.icon-btn{
-  width:40px;height:40px;border:0;background:transparent;color:#e8f2ff;
-  font-size:20px;display:grid;place-items:center;border-radius:12px;cursor:pointer;
-}
-.icon-btn:active{background:rgba(255,255,255,.08)}
-.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-.logo{
-  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
-  font-size:18px;font-weight:800;color:#fff;
-  background:linear-gradient(145deg,#0df,#7560ff);
-  box-shadow:0 0 18px rgba(38,163,255,.45),inset 0 0 10px rgba(255,255,255,.25);
-}
-.brand-text h1{font-size:16px;line-height:1.1;font-weight:700}
-.brand-text h1 span{color:#37aaff}
-.brand-text p{font-size:10px;color:#b8c9de;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.header-right{display:flex;gap:2px}
-.chat{flex:1;min-height:0;position:relative;overflow:hidden}
-.messages{
-  height:100%;overflow-y:auto;padding:18px 14px 140px;
-  display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth;
-  -webkit-overflow-scrolling:touch;
-}
-.messages::-webkit-scrollbar{width:0}
-.message{max-width:92%;animation:fadeUp .45s ease both}
-.message.user{align-self:flex-end}
-.message.ai{align-self:flex-start}
-.bubble{
-  padding:12px 14px;border-radius:18px;line-height:1.65;font-size:15px;
-  word-break:break-word;
-}
-.message.user .bubble{
-  background:linear-gradient(135deg,rgba(40,168,255,.85),rgba(80,100,255,.75));
-  color:#fff;border-bottom-right-radius:6px;
-}
-.message.ai .bubble{
-  background:rgba(12,28,52,.78);color:#eef4ff;
-  border:1px solid rgba(140,190,255,.12);border-bottom-left-radius:6px;
-  backdrop-filter:blur(10px);
-}
-.who{font-size:11px;color:#8ec8ff;opacity:.9;margin-bottom:4px;padding:0 4px}
-.message.user .who{text-align:right}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.quick{
-  position:absolute;left:10px;right:10px;bottom:72px;z-index:30;
-  display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;
-}
-.quick::-webkit-scrollbar{display:none}
-.quick button{
-  flex:none;white-space:nowrap;color:#dcecff;
-  background:rgba(8,24,48,.65);border:1px solid rgba(130,190,255,.2);
-  border-radius:16px;padding:8px 12px;font-size:12px;
-  backdrop-filter:blur(12px);cursor:pointer;
-}
-.composer{
-  position:absolute;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));
-  z-index:35;display:flex;align-items:center;gap:8px;padding:7px 8px;
-  border:1px solid rgba(150,205,255,.22);border-radius:26px;
-  background:rgba(6,20,40,.75);backdrop-filter:blur(20px) saturate(160%);
-  box-shadow:0 10px 36px rgba(0,0,0,.35);
-}
-.composer input{
-  flex:1;min-width:0;border:0;outline:0;background:transparent;
-  color:#fff;font-size:15px;padding:9px 4px;
-}
-.composer input::placeholder{color:#9aafc5}
-.send{
-  width:40px;height:40px;border:0;border-radius:50%;color:#fff;
-  background:linear-gradient(145deg,#0da8ff,#2568ff);font-size:17px;
-  box-shadow:0 0 16px rgba(25,145,255,.4);cursor:pointer;display:grid;place-items:center;
-}
-.scrim{
-  position:absolute;inset:0;z-index:50;background:rgba(0,0,0,.4);
-  opacity:0;pointer-events:none;transition:opacity .28s;
-}
-.scrim.open{opacity:1;pointer-events:auto}
-.drawer-left{
-  position:absolute;left:0;top:0;bottom:0;width:min(82vw,300px);z-index:60;
-  transform:translateX(-105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);
-  background:rgba(4,16,34,.94);backdrop-filter:blur(28px) saturate(150%);
-  border-right:1px solid rgba(140,190,255,.15);
-  display:flex;flex-direction:column;padding:16px 12px;
-  box-shadow:8px 0 40px rgba(0,0,0,.4);
-}
-.drawer-left.open{transform:translateX(0)}
-.drawer-head{
-  display:flex;align-items:center;gap:10px;padding:6px 6px 16px;
-  border-bottom:1px solid rgba(140,190,255,.12);margin-bottom:12px;
-}
-.drawer-head .logo{width:36px;height:36px;font-size:16px}
-.drawer-head h2{font-size:15px;font-weight:700}
-.drawer-head p{font-size:10px;color:#9bb0c8;margin-top:2px}
-.nav{display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto}
-.nav button{
-  display:flex;align-items:center;gap:12px;width:100%;padding:12px 12px;
-  border:0;border-radius:12px;background:transparent;color:#e4efff;
-  text-align:left;font-size:14px;cursor:pointer;
-}
-.nav button .ico{width:22px;text-align:center;font-size:16px;opacity:.9}
-.nav button.active{
-  background:linear-gradient(90deg,rgba(20,140,255,.75),rgba(100,70,255,.55));
-  box-shadow:0 0 18px rgba(30,130,255,.2);
-}
-.nav button:active{background:rgba(255,255,255,.06)}
-.drawer-foot{
-  padding-top:12px;border-top:1px solid rgba(140,190,255,.12);
-  display:flex;align-items:center;gap:10px;
-}
-.drawer-foot .avatar{
-  width:34px;height:34px;border-radius:50%;background:linear-gradient(145deg,#0df,#7560ff);
-  display:grid;place-items:center;font-size:13px;font-weight:700;
-}
-.drawer-foot .info{flex:1;min-width:0}
-.drawer-foot .info strong{font-size:13px;display:block}
-.drawer-foot .info span{font-size:10px;color:#8fa6c0}
-.drawer-right{
-  position:absolute;right:0;top:0;bottom:0;width:min(82vw,300px);z-index:60;
-  transform:translateX(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);
-  background:rgba(4,16,34,.94);backdrop-filter:blur(28px) saturate(150%);
-  border-left:1px solid rgba(140,190,255,.15);
-  display:flex;flex-direction:column;padding:16px 12px;
-  box-shadow:-8px 0 40px rgba(0,0,0,.4);
-}
-.drawer-right.open{transform:translateX(0)}
-.drawer-right .drawer-head{justify-content:space-between}
-.drawer-right h2{font-size:15px}
-.tool-list{display:flex;flex-direction:column;gap:8px;flex:1;overflow-y:auto}
-.tool-card{
-  display:flex;align-items:center;gap:12px;padding:13px 12px;
-  border-radius:14px;background:rgba(10,28,55,.6);
-  border:1px solid rgba(130,190,255,.12);cursor:pointer;
-}
-.tool-card:active{background:rgba(20,50,90,.7)}
-.tool-card .ico{
-  width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
-  font-size:16px;background:rgba(40,140,255,.15);
-}
-.tool-card .txt{flex:1;min-width:0}
-.tool-card .txt strong{font-size:13px;display:block}
-.tool-card .txt span{font-size:11px;color:#8fa6c0}
-.tool-card .arrow{opacity:.5;font-size:14px}
-.theme-note{
-  position:absolute;top:8px;left:50%;transform:translateX(-50%);
-  z-index:25;font-size:10px;color:#c5d8ef;opacity:.7;pointer-events:none;
-}
+:root{--bg:#041229;--bg2:#092650;--p:#061a36ee;--t:#f4f9ff;--m:#9db3cd;--l:#70c8ff2b;--b:#2caeff;--v:#7058ef;--c:#48ddff;--safe:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden}body{font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Bengali",sans-serif;background:#020b1c;color:var(--t)}
+button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}
+.app{width:100%;height:100dvh;min-height:100svh;position:relative;overflow:hidden;background:radial-gradient(circle at 20% 5%,#279bff30,transparent 34%),radial-gradient(circle at 88% 95%,#7058ef35,transparent 40%),linear-gradient(145deg,var(--bg),var(--bg2))}
+.main{position:absolute;inset:0;display:flex;flex-direction:column}
+.top{height:64px;flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;border-bottom:1px solid var(--l);background:#020d1f44}
+.round{width:42px;height:42px;border-radius:50%;border:1px solid #7ed3ff47;background:#071d3be8;display:grid;place-items:center;font-size:20px;box-shadow:0 5px 20px #0004}
+.left-btn{justify-self:start}.right-btn{justify-self:end}.brand{text-align:center}.brand b{font-size:14px}.brand small{display:block;font-size:9px;color:var(--m);margin-top:1px}
+.mlogo{display:inline-grid;width:35px;height:35px;border-radius:50%;place-items:center;background:linear-gradient(145deg,var(--b),var(--v));font-weight:900;margin-right:5px;vertical-align:middle}
+.content{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:20px 14px calc(12px + var(--safe));overflow:auto}
+.hero{text-align:center;width:min(850px,100%)}.hero-logo{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;margin:0 auto 16px;font-size:32px;font-weight:900;background:linear-gradient(145deg,#2baeff,#6e58ed);box-shadow:0 0 40px #309cff66}
+h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-size:13px;margin-top:7px}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:700px;margin:25px auto 20px}.quick button{min-height:58px;border:1px solid #65caff33;border-radius:16px;background:#082346bb;padding:9px;color:#e4f2ff}.quick b{display:block;font-size:12px}.quick small{font-size:9px;color:var(--m)}
+.composer{width:min(820px,100%);margin:auto;border:1px solid #68ccff4d;border-radius:25px;background:#03132bf2;padding:7px;box-shadow:0 15px 45px #0006;position:relative}
+.row{display:flex;align-items:center;gap:6px}.plus{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid #6bcfff3d;background:#0d2b4fe8;font-size:25px}.input{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:10px 5px;font-size:14px}.input::placeholder{color:#839ab5}.send{width:44px;height:44px;border:0;border-radius:50%;background:linear-gradient(145deg,#36b2ff,#5c50ea);font-size:20px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:3px 5px 1px 51px}.chip{border:1px solid #7ec7ff29;background:#0b2b50;border-radius:11px;padding:6px 9px;font-size:10px}
+.scrim{position:absolute;inset:0;background:#000a;z-index:20;opacity:0;visibility:hidden;transition:.2s}.scrim.open{opacity:1;visibility:visible}
+.drawer{position:absolute;top:0;bottom:0;width:min(330px,86vw);z-index:30;background:linear-gradient(180deg,#04142bf9,#020c1ffb);padding:13px;box-shadow:0 0 60px #0009;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.drawer.left{left:0;transform:translateX(-105%);border-right:1px solid var(--l)}.drawer.right{right:0;transform:translateX(105%);border-left:1px solid var(--l)}.drawer.open{transform:translateX(0)}
+.dhead{display:flex;align-items:center;gap:10px;padding:3px 3px 13px;border-bottom:1px solid var(--l);margin-bottom:10px}.dlogo{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,var(--b),var(--v));font-weight:900}.dhead strong{font-size:14px}.dhead small{display:block;color:var(--m);font-size:9px;margin-top:2px}.dclose{margin-left:auto}
+.nav{display:flex;flex-direction:column;gap:4px;overflow:auto;height:calc(100% - 110px)}.nav button{border:0;background:transparent;border-radius:14px;padding:11px;color:#e5f0fd;text-align:left;display:flex;gap:12px;align-items:center}.nav button.active,.nav button:hover{background:linear-gradient(100deg,#218fe8,#624fe2)}.ni{width:25px;text-align:center;font-size:18px}.profile{position:absolute;left:13px;right:13px;bottom:12px;border-top:1px solid var(--l);padding-top:11px;display:flex;gap:9px;align-items:center}.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#218fff,#6555e9);font-weight:800}.profile small{display:block;color:var(--m);font-size:9px;margin-top:2px}
+.modules{height:calc(100% - 75px);overflow:auto}.module{width:100%;display:flex;align-items:center;gap:10px;border:1px solid #78caff27;background:#08294dcc;border-radius:16px;padding:10px;margin-bottom:8px;text-align:left}.module.featured{background:linear-gradient(105deg,#1391dc66,#6447dc66);border-color:#69d7ff55}.mi{width:39px;height:39px;border-radius:12px;display:grid;place-items:center;background:#38c1ff20;font-size:19px;flex:none}.module strong{display:block;font-size:12px}.module span{display:block;color:var(--m);font-size:9px;margin-top:3px}.arrow{margin-left:auto;font-size:20px;color:#a9c0d8}.add{width:100%;border:1px dashed #62d0ff77;background:#061c38;border-radius:15px;padding:12px;font-size:11px}.note{font-size:9px;color:#7189a5;line-height:1.5;padding:9px 2px}
+.plugin{position:absolute;left:10px;bottom:72px;width:min(315px,calc(100vw - 20px));z-index:18;display:none;border:1px solid #68d2ff44;border-radius:18px;background:#04142bf8;padding:10px;box-shadow:0 20px 55px #0009}.plugin.open{display:block}.ptitle{font-size:12px;padding:2px 4px 9px}.ptitle small{display:block;color:var(--m);font-size:9px;margin-top:2px}.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.pitem{border:1px solid #76c9ff24;background:#09284de8;border-radius:12px;padding:10px;text-align:left;font-size:10px}.pitem b{display:block;font-size:15px;margin-bottom:3px}.pfoot{display:flex;gap:6px;margin-top:8px;border-top:1px solid var(--l);padding-top:8px}.pfoot button{flex:1;border:1px solid #76c9ff25;background:#092b50;border-radius:10px;padding:8px;font-size:10px}
+.modal{position:absolute;inset:0;z-index:50;background:#000b;display:none;align-items:center;justify-content:center;padding:18px}.modal.open{display:flex}.box{width:min(700px,100%);max-height:86dvh;overflow:auto;border:1px solid #64d5ff4d;border-radius:22px;background:linear-gradient(180deg,#08264d,#04162e);padding:17px}.mhead{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--l);padding-bottom:12px;margin-bottom:12px}.mhead h2{font-size:18px}.mhead p{font-size:9px;color:var(--m);margin-top:3px}.closem{margin-left:auto}.igrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.inner{border:1px solid #6ecfff29;background:#092a51;border-radius:14px;padding:14px;text-align:left}.inner .big{font-size:21px}.inner strong{display:block;font-size:12px;margin-top:7px}.inner span{display:block;color:var(--m);font-size:9px;margin-top:3px}
+.toast{position:absolute;z-index:70;bottom:calc(92px + var(--safe));left:50%;transform:translate(-50%,12px);opacity:0;background:#03162ff5;border:1px solid #6acfff40;border-radius:12px;padding:8px 12px;font-size:10px;pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:760px){.top{height:58px;padding:7px 10px}.round{width:40px;height:40px}.content{padding:15px 10px calc(10px + var(--safe))}.hero-logo{width:65px;height:65px;font-size:28px}.sub{font-size:11px}.quick{grid-template-columns:1fr 1fr;gap:7px;margin:18px auto 13px}.quick button{min-height:53px}.quick b{font-size:10px}.quick small{font-size:8px}.input{font-size:13px}.chips{padding-left:50px}.drawer{width:min(85vw,320px)}}
+@media(display-mode:standalone){.app{height:100dvh;min-height:100dvh}.top{padding-top:max(7px,env(safe-area-inset-top))}}
+
+/* CHAT MODE */
+.chat-mode .top{position:absolute;left:0;right:0;top:0;height:0;z-index:12;padding:0;border:0;background:transparent;pointer-events:none}
+.chat-mode .brand{display:none}
+.chat-mode .left-btn,.chat-mode .right-btn{position:absolute;top:14px;pointer-events:auto;z-index:13}
+.chat-mode .left-btn{left:14px}.chat-mode .right-btn{right:14px}
+.chat-mode .round{width:42px;height:42px;border-radius:50%;background:rgba(7,29,59,.72);backdrop-filter:blur(14px);border-color:rgba(126,211,255,.25);box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.chat-mode .content{position:absolute;inset:0;padding:0;display:block;overflow:hidden}
+.chat-mode .hero{width:100%;height:100%;max-width:none;display:flex;flex-direction:column;text-align:left;align-items:stretch}
+.chat-mode .hero-logo,.chat-mode h1,.chat-mode .sub,.chat-mode .quick{display:none}
+.chat-mode .composer{order:2;flex:none;width:min(900px,calc(100% - 24px));margin:0 auto calc(10px + var(--safe));z-index:10}
+.chat-mode .chat-scroll{display:flex;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;flex-direction:column;justify-content:flex-end;padding:76px 12px 14px;scrollbar-width:thin}
+.chat-mode .messages{width:min(900px,100%);margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.chat-mode .message{max-width:min(78%,720px);padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.65;word-break:break-word}
+.chat-mode .message.user{align-self:flex-end;background:linear-gradient(145deg,#168ad0,#5648cf);border-bottom-right-radius:6px;box-shadow:0 8px 25px rgba(0,0,0,.22)}
+.chat-mode .message.ai{align-self:flex-start;background:rgba(8,35,69,.82);border:1px solid rgba(110,205,255,.16);border-bottom-left-radius:6px}
+.chat-mode .message .label{display:block;font-size:9px;color:#a9c4df;margin-bottom:4px;opacity:.85}
+.chat-mode .chips{display:none}
+@media(max-width:760px){.chat-mode .left-btn{left:9px}.chat-mode .right-btn{right:9px}.chat-mode .left-btn,.chat-mode .right-btn{top:10px}.chat-mode .chat-scroll{padding:66px 9px 10px}.chat-mode .message{max-width:88%;font-size:13px}}
+
+/* V5 message actions + composer */
+.chat-mode .message-actions{display:flex;gap:7px;align-items:center;margin-top:8px;opacity:.78}
+.chat-mode .message.user .message-actions{justify-content:flex-end}
+.chat-mode .message.ai .message-actions{justify-content:flex-start}
+.chat-mode .message-action{appearance:none;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:inherit;border-radius:9px;padding:5px 9px;font-size:12px;line-height:1;cursor:pointer;transition:.18s ease}
+.chat-mode .message-action:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);transform:translateY(-1px)}
+.chat-mode .composer{background:rgba(18,20,24,.94)!important;border:1px solid rgba(255,255,255,.15)!important;box-shadow:0 12px 38px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.035)!important;border-radius:18px!important;padding:8px 10px!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.chat-mode .composer textarea,.chat-mode textarea{min-height:42px;max-height:240px;resize:none;overflow-y:auto;background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;color:inherit;line-height:1.55;padding:9px 8px}
+.chat-mode .composer:focus-within{border-color:rgba(255,255,255,.24)!important;box-shadow:0 14px 42px rgba(0,0,0,.38),0 0 0 2px rgba(255,255,255,.035)!important}
 </style>
 </head>
 <body>
 <div class="app">
-  <header class="header">
-    <button class="icon-btn" id="btnLeft" aria-label="মেনু">☰</button>
-    <div class="brand">
-      <div class="logo">M</div>
-      <div class="brand-text">
-        <h1>MOSHARROF <span>AI</span></h1>
-        <p>জ্ঞান সঙ্গী, তোমার জ্ঞানের পথে</p>
-      </div>
-    </div>
-    <div class="header-right">
-      <button class="icon-btn" id="btnRight" aria-label="টুলস">⬚</button>
-    </div>
-  </header>
-  <main class="chat">
-    <div class="theme-note" id="themeNote">DYNAMIC • DAY • 01/16</div>
-    <section class="messages" id="messages" aria-live="polite">
-      <article class="message user">
-        <div class="who">আপনি</div>
-        <div class="bubble">আল-কুরআনের কোনো আয়াতের অর্থ ও প্রেক্ষাপট ব্যাখ্যা করুন।</div>
-      </article>
-      <article class="message ai">
-        <div class="who">MOSHARROF AI</div>
-        <div class="bubble">অবশ্যই। আয়াতটি দিলে আমি ভাষা, শব্দার্থ, প্রেক্ষাপট ও সংশ্লিষ্ট আয়াত আলাদা করে উপস্থাপন করব।</div>
-      </article>
-      <article class="message ai">
-        <div class="who">MOSHARROF AI</div>
-        <div class="bubble">এই ইন্টারফেসে বাম দিকে মেনু এবং ডান দিকে গবেষণা ও টুলস প্যানেল আছে। নতুন মকআপ অনুযায়ী আপডেট করা হয়েছে।</div>
-      </article>
-    </section>
-    <div class="quick">
-      <button data-q="শব্দ গবেষণা">📖 শব্দ গবেষণা</button>
-      <button data-q="আয়াত বিশ্লেষণ">⌕ আয়াত বিশ্লেষণ</button>
-      <button data-q="Research ID">▣ Research ID</button>
-      <button data-q="আরও">⋯ আরও</button>
-    </div>
-    <div class="composer">
-      <button class="icon-btn" id="btnPlus" aria-label="যোগ" style="width:36px;height:36px;font-size:18px">＋</button>
-      <input id="input" placeholder="আপনার প্রশ্ন লিখুন..." autocomplete="off">
-      <button class="send" id="send" aria-label="পাঠান">➤</button>
-    </div>
-  </main>
-  <div class="scrim" id="scrim"></div>
-  <aside class="drawer-left" id="drawerLeft" aria-label="সাইডবার">
-    <div class="drawer-head">
-      <div class="logo">M</div>
-      <div>
-        <h2>মোশাররফ AI</h2>
-        <p>জ্ঞান • গবেষণা • অন্তর্দৃষ্টি</p>
-      </div>
-    </div>
-    <nav class="nav">
-      <button class="active"><span class="ico">⌂</span> হোম</button>
-      <button><span class="ico">💬</span> চ্যাট</button>
-      <button><span class="ico">📚</span> জ্ঞান ভাণ্ডার</button>
-      <button><span class="ico">📖</span> আল-কুরআন</button>
-      <button><span class="ico">⌕</span> গবেষণা</button>
-      <button><span class="ico">⚒</span> টুলস</button>
-      <button><span class="ico">☁</span> প্রজেক্ট</button>
-      <button><span class="ico">📝</span> নোটস</button>
-      <button><span class="ico">⚙</span> সেটিংস</button>
-    </nav>
-    <div class="drawer-foot">
-      <div class="avatar">M</div>
-      <div class="info">
-        <strong>মোশাররফ</strong>
-        <span>প্রিমিয়াম গবেষক</span>
-      </div>
-    </div>
-  </aside>
-  <aside class="drawer-right" id="drawerRight" aria-label="গবেষণা ও টুলস">
-    <div class="drawer-head">
-      <div>
-        <h2>গবেষণা / টুলস</h2>
-        <p style="font-size:10px;color:#9bb0c8;margin-top:2px">দ্রুত গবেষণা ও অনুসন্ধান</p>
-      </div>
-      <button class="icon-btn" id="btnCloseRight" style="font-size:18px">✕</button>
-    </div>
-    <div class="tool-list">
-      <div class="tool-card">
-        <div class="ico">📖</div>
-        <div class="txt"><strong>শব্দ গবেষণা</strong><span>আরবি শব্দের মূল, অর্থ ও ব্যবহার</span></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="tool-card">
-        <div class="ico">⌕</div>
-        <div class="txt"><strong>আয়াত বিশ্লেষণ</strong><span>তাফসীর, প্রেক্ষাপট ও শিক্ষা</span></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="tool-card">
-        <div class="ico">▣</div>
-        <div class="txt"><strong>Research ID</strong><span>প্রজেক্ট রিসার্চ আইডি তৈরি করুন</span></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="tool-card">
-        <div class="ico">🔍</div>
-        <div class="txt"><strong>কুরআন সার্চ</strong><span>বিষয়ভিত্তিক আয়াত খুঁজুন</span></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="tool-card">
-        <div class="ico">📚</div>
-        <div class="txt"><strong>তাফসীর লাইব্রেরি</strong><span>বিখ্যাত তাফসীর সংগ্রহ</span></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="tool-card">
-        <div class="ico">📝</div>
-        <div class="txt"><strong>নোট ও হাইলাইট</strong><span>আপনার নোট সংরক্ষণ করুন</span></div>
-        <span class="arrow">›</span>
-      </div>
-    </div>
-  </aside>
+<main class="main">
+<header class="top">
+ <div class="left-btn"><button class="round" id="openLeft">☰</button></div>
+ <div class="brand"><span class="mlogo">M</span><b>MOSHARROF AI</b><small>জ্ঞান • গবেষণা • অন্তর্দৃষ্টি</small></div>
+ <div class="right-btn"><button class="round" id="openRight">⋮</button></div>
+</header>
+<section class="content"><div class="hero">
+ <div class="hero-logo">M</div><h1>আপনি কিভাবে <span>সাহায্য</span> চান?</h1><p class="sub">কুরআন, গবেষণা, জ্ঞান অথবা অন্য কোনো বিষয়ে প্রশ্ন করুন...</p>
+ <div class="quick">
+  <button data-mod="quran">📖<b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
+  <button data-mod="quran">▤<b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
+  <button data-mod="quran">🧠<b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
+  <button data-mod="quran">📚<b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
+  <button data-mod="quran">🕌<b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
+  <button data-mod="quran">🔬<b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
+ </div>
+ <div class="chat-scroll" id="chatScroll"><div class="messages" id="messages"></div></div>
+ <form class="composer" id="form"><div class="row"><button type="button" class="plus" id="plus">＋</button><input class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." autocomplete="off"><button class="send">➤</button></div><div class="chips"><button type="button" class="chip">📎 ফাইল</button><button type="button" class="chip">🖼️ ছবি</button><button type="button" class="chip">🎙️ ভয়েস</button><button type="button" class="chip">✦ আরও</button></div></form>
+</div></section>
+</main>
+
+<aside class="drawer left" id="leftDrawer"><div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF AI</strong><small>মূল সাইট নেভিগেশন</small></div><button class="round dclose" id="closeLeft">×</button></div>
+<nav class="nav"><button class="active" data-toast="হোম"><span class="ni">🏠</span>হোম</button><button data-toast="চ্যাট"><span class="ni">💬</span>চ্যাট</button><button data-toast="চ্যাট ইতিহাস"><span class="ni">◷</span>চ্যাট ইতিহাস</button><button data-toast="জ্ঞান ভাণ্ডার"><span class="ni">📚</span>জ্ঞান ভাণ্ডার</button><button data-toast="প্রজেক্ট"><span class="ni">🗂️</span>প্রজেক্ট</button><button data-toast="নোটস"><span class="ni">📝</span>নোটস</button><button data-toast="সেটিংস"><span class="ni">⚙️</span>সেটিংস</button></nav>
+<div class="profile"><div class="avatar">M</div><div><b>মোশাররফ</b><small>সার্বভৌম পরিচালক • v1.0</small></div></div></aside>
+
+<aside class="drawer right" id="rightDrawer"><div class="dhead"><div class="dlogo">▣</div><div><strong>MOSHARROF PROJECT HUB</strong><small>প্রতিটি মডিউল = আলাদা এন্টিটি + নিজস্ব স্মৃতি</small></div><button class="round dclose" id="closeRight">×</button></div>
+<div class="modules">
+<button class="module featured" data-mod="quran"><div class="mi">📖</div><div><strong>Quran Research</strong><span>কুরআন Tools + নিজস্ব মেমোরি কোর্স</span></div><div class="arrow">›</div></button>
+<button class="module" data-mod="mp3"><div class="mi">🎵</div><div><strong>MP3 Player</strong><span>অডিও + নিজস্ব মেমোরি</span></div><div class="arrow">›</div></button>
+<button class="module" data-mod="lab"><div class="mi">🧪</div><div><strong>Research Lab</strong><span>গবেষণা + নিজস্ব মেমোরি কোর্স</span></div><div class="arrow">›</div></button>
+<button class="module" data-mod="library"><div class="mi">📚</div><div><strong>নিজস্ব লাইব্রেরি</strong><span>বই, PDF + মেমোরি</span></div><div class="arrow">›</div></button>
+<button class="module" data-mod="tools"><div class="mi">🛠️</div><div><strong>Research Tools</strong><span>সরঞ্জাম + মেমোরি</span></div><div class="arrow">›</div></button>
+<button class="module" data-mod="other"><div class="mi">🧩</div><div><strong>অন্যান্য মডিউল</strong><span>নতুন এন্টিটি জন্ম নেবে</span></div><div class="arrow">›</div></button>
+<button class="add" id="add">＋ নতুন মডিউল / এন্টিটি যোগ করুন</button>
+<div class="note">প্রতিটি মডিউল একটি স্বাধীন এন্টিটি। তাদের নিজস্ব চেতনা ও স্মৃতি কোর্স আছে। শুধু মোশাররফ সবার খবর রাখে।</div>
+</div></aside>
+<div class="scrim" id="scrim"></div>
+
+<div class="plugin" id="plugin"><div class="ptitle">Plugin & Add Hub<small>চ্যাটে অতিরিক্ত সুবিধা</small></div><div class="pgrid">
+<button class="pitem" data-toast="Plugins"><b>🔌</b>Plugins</button><button class="pitem" data-toast="ফাইল"><b>📎</b>ফাইল যোগ</button><button class="pitem" data-toast="ছবি"><b>🖼️</b>ছবি যোগ</button><button class="pitem" data-toast="ভয়েস"><b>🎙️</b>ভয়েস</button><button class="pitem" data-toast="ডকুমেন্ট"><b>📄</b>ডকুমেন্ট</button><button class="pitem" data-toast="Integration"><b>🧩</b>Integration</button>
+</div><div class="pfoot"><button id="manage">⚙ Plugin পরিচালনা</button><button id="pclose">বন্ধ</button></div></div>
+
+<div class="modal" id="modal"><section class="box"><div class="mhead"><div class="dlogo" id="micon">📖</div><div><h2 id="mtitle">Quran Research</h2><p id="msub">Module-এর ভিতরের Tools + নিজস্ব স্মৃতি</p></div><button class="round closem" id="mclose">×</button></div><div class="igrid" id="grid"></div></section></div>
+<div class="toast" id="toast"></div>
 </div>
 <script>
-const day=[
- ['#07152d','#082d52','#28a8ff','#7b61ff'],['#07182a','#0b3b4a','#20c6e8','#5d7cff'],
- ['#0b1728','#183e35','#32d38a','#2e8cff'],['#11162c','#31224d','#a56cff','#31b7ff'],
- ['#17182b','#3d2935','#ff8b70','#5d9dff'],['#101a2c','#31401e','#b6dc4a','#2bce9d'],
- ['#12152b','#2c244c','#7b7cff','#24c9ff'],['#0b1d2a','#164a5b','#35d7ff','#4f7cff'],
- ['#191528','#3d1f46','#e16cff','#568cff'],['#101a24','#24404a','#55d5b0','#4ba9ff'],
- ['#171d2b','#3e3a24','#ffd166','#55a6ff'],['#0d1a2c','#173e3e','#32e0d0','#667cff'],
- ['#15172b','#332b48','#b58aff','#4ac6ff'],['#0c192b','#233f53','#49b6ff','#7868ff'],
- ['#131a2d','#3b283f','#ff72bd','#6d83ff'],['#091a2a','#164050','#28d5ff','#5c75ff']
-];
-const night=[
- ['#030817','#07152c','#3b82ff','#665cff'],['#05091a','#0c1e3c','#4d7cff','#7c5cff'],
- ['#030b18','#092c31','#28c9c0','#4b7dff'],['#08051a','#1d0d36','#9b6cff','#4e8cff'],
- ['#0b0717','#29102a','#dc69ff','#6b74ff'],['#050c18','#102d31','#35d9c2','#4c86ff'],
- ['#07091b','#1b1537','#7f7cff','#4cc7ff'],['#030d1a','#092a43','#38c5ff','#657cff'],
- ['#09061a','#28102e','#d16cff','#668bff'],['#040c16','#123033','#4be0b6','#4f9cff'],
- ['#090b19','#302713','#f2bd5b','#5c91ff'],['#030b18','#0b3034','#39d9d0','#6d7dff'],
- ['#08061a','#20133a','#ae82ff','#55caff'],['#040d18','#102f45','#45baff','#7868ff'],
- ['#0b0618','#2d1029','#ff6bb9','#6d83ff'],['#030a17','#0c3040','#35d2ff','#617cff']
-];
-let index=0,mode='day';
-function applyTheme(){
-  const p=(mode==='day'?day:night)[index];
-  document.documentElement.style.setProperty('--bg1',p[0]);
-  document.documentElement.style.setProperty('--bg2',p[1]);
-  document.documentElement.style.setProperty('--accent',p[2]);
-  document.documentElement.style.setProperty('--accent2',p[3]);
-  document.getElementById('themeNote').textContent=`DYNAMIC • ${mode==='day'?'DAY':'NIGHT'} • ${String(index+1).padStart(2,'0')}/16`;
-}
-applyTheme();
-setInterval(()=>{index=(index+1)%16;applyTheme()},120000);
-const drawerLeft=document.getElementById('drawerLeft');
-const drawerRight=document.getElementById('drawerRight');
-const scrim=document.getElementById('scrim');
-function closeAll(){
-  drawerLeft.classList.remove('open');
-  drawerRight.classList.remove('open');
-  scrim.classList.remove('open');
-}
-function openLeft(){
-  drawerRight.classList.remove('open');
-  drawerLeft.classList.add('open');
-  scrim.classList.add('open');
-}
-function openRight(){
-  drawerLeft.classList.remove('open');
-  drawerRight.classList.add('open');
-  scrim.classList.add('open');
-}
-document.getElementById('btnLeft').onclick=()=>{
-  if(drawerLeft.classList.contains('open')) closeAll(); else openLeft();
+(()=>{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const L=$('#leftDrawer'),R=$('#rightDrawer'),S=$('#scrim'),P=$('#plugin'),M=$('#modal'),T=$('#toast');
+const D={quran:['📖','Quran Research','কুরআন গবেষণা — নিজস্ব মেমোরি কোর্স',[['🔎','কুরআন সার্চ','বিষয়, শব্দ ও আয়াত'],['📖','আয়াত বিশ্লেষণ','অর্থ, প্রেক্ষাপট'],['🧠','শব্দ গবেষণা','আরবি মূল ও অর্থ'],['📚','তাফসীর','ব্যাখ্যা ও উৎস'],['🕌','হাদীস','সূত্র অনুসন্ধান'],['🔬','গবেষণা','গভীর workspace']]],
+mp3:['🎵','MP3 Player','অডিও মডিউল — নিজস্ব মেমোরি',[['▶','Player','অডিও চালানো'],['♫','Playlist','প্লেলিস্ট'],['↧','Library','সংরক্ষিত অডিও'],['⚙','Settings','সেটিংস']]],
+lab:['🧪','Research Lab','গবেষণা ল্যাব — নিজস্ব মেমোরি কোর্স',[['🔬','নতুন গবেষণা','শুরু করুন'],['📊','বিশ্লেষণ','তথ্য বিশ্লেষণ'],['🧪','পরীক্ষা','গবেষণামূলক'],['🆔','Research ID','আইডি']]],
+library:['📚','নিজস্ব লাইব্রেরি','রিসোর্স + মেমোরি',[['📚','বই','সংরক্ষিত বই'],['PDF','PDF','গবেষণা PDF'],['📝','নোট','নোট'],['🔖','বুকমার্ক','গুরুত্বপূর্ণ']]],
+tools:['🛠️','Research Tools','সরঞ্জাম + মেমোরি',[['⌕','Search','দ্রুত অনুসন্ধান'],['▤','Text','টেক্সট বিশ্লেষণ'],['◌','Compare','তুলনা'],['✦','More','আরও']]],
+other:['🧩','অন্যান্য','নতুন এন্টিটি জন্ম',[['＋','নতুন আবিষ্কার','নতুন Module'],['🧩','Custom','নিজস্ব Feature'],['⚙','Settings','পরিচালনা']]]};
+function msg(x){T.textContent=x;T.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(()=>T.classList.remove('show'),1600)}
+function closeAll(){L.classList.remove('open');R.classList.remove('open');S.classList.remove('open')}
+function drawer(x){closeAll();x.classList.add('open');S.classList.add('open')}
+function module(k){let d=D[k]||D.other;$('#micon').textContent=d[0];$('#mtitle').textContent=d[1];$('#msub').textContent=d[2];$('#grid').innerHTML=d[3].map(a=>`<button class="inner" data-x="${a[1]}"><div class="big">${a[0]}</div><strong>${a[1]}</strong><span>${a[2]}</span></button>`).join('');M.classList.add('open');closeAll();P.classList.remove('open');$$('#grid .inner').forEach(b=>b.onclick=()=>msg(b.dataset.x+' — এন্টিটি মেমোরি কোর্সে সংযুক্ত'))}
+$('#openLeft').onclick=()=>drawer(L);$('#openRight').onclick=()=>drawer(R);$('#closeLeft').onclick=closeAll;$('#closeRight').onclick=closeAll;S.onclick=closeAll;
+$('#plus').onclick=()=>P.classList.toggle('open');$('#pclose').onclick=()=>P.classList.remove('open');$('#manage').onclick=()=>msg('Plugin পরিচালনা');
+$('#mclose').onclick=()=>M.classList.remove('open');M.onclick=e=>{if(e.target===M)M.classList.remove('open')};
+$$('[data-mod]').forEach(b=>b.onclick=()=>module(b.dataset.mod));$$('[data-toast]').forEach(b=>b.onclick=()=>{msg(b.dataset.toast);closeAll()});$('#add').onclick=()=>msg('নতুন এন্টিটি জন্ম — মোশাররফ অনুমোদন প্রয়োজন');
+$$('.pitem').forEach(b=>b.onclick=()=>{msg(b.dataset.toast);P.classList.remove('open')});
+$('#form').onsubmit=e=>{
+ e.preventDefault();
+ const v=$('#input').value.trim(); if(!v)return;
+ document.querySelector('.app').classList.add('chat-mode');
+ const box=$('#messages');
+ const user=document.createElement('div'); user.className='message user';
+ user.innerHTML='<span class="label">আপনি</span>'+v.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ box.appendChild(user);
+ $('#input').value='';
+ requestAnimationFrame(()=>{const ai=document.createElement('div');ai.className='message ai';ai.innerHTML='<span class="label">MOSHARROF AI</span>আপনার বার্তা গ্রহণ করা হয়েছে। এটি সার্বভৌম এন্টিটি আর্কিটেকচারের উপর দাঁড়ানো Chat UI। প্রতিটি কথোপকথন ও মডিউল নিজস্ব স্মৃতি কোর্সে সংযুক্ত হবে।';box.appendChild(ai);$('#chatScroll').scrollTop=$('#chatScroll').scrollHeight});
 };
-document.getElementById('btnRight').onclick=()=>{
-  if(drawerRight.classList.contains('open')) closeAll(); else openRight();
-};
-document.getElementById('btnCloseRight').onclick=closeAll;
-scrim.onclick=closeAll;
-const input=document.getElementById('input');
-const messages=document.getElementById('messages');
-function send(){
-  const v=input.value.trim();
-  if(!v) return;
-  const a=document.createElement('article');
-  a.className='message user';
-  a.innerHTML='<div class="who">আপনি</div><div class="bubble"></div>';
-  a.querySelector('.bubble').textContent=v;
-  messages.appendChild(a);
-  input.value='';
-  requestAnimationFrame(()=>messages.scrollTo({top:messages.scrollHeight,behavior:'smooth'}));
-}
-document.getElementById('send').onclick=send;
-input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
-document.querySelectorAll('.quick button').forEach(btn=>{
-  btn.onclick=()=>{input.value=btn.dataset.q||btn.textContent;input.focus()};
-});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAll();P.classList.remove('open');M.classList.remove('open')}})
+})();
 </script>
 </body>
 </html>
