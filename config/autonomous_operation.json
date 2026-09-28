@@ -29,5 +29,14 @@
   "scheduled_checks": {
     "enabled": true,
     "interval_hours": 6
+  },
+  "component_awareness": {
+    "enabled": true,
+    "meaning": "machine-readable awareness of registration, contract, scope, permission and health for every registered component; not sentience",
+    "registry": "config/entity_registry.json",
+    "monitor": "scripts/component_awareness.py",
+    "required_before_autonomous_pr": true,
+    "fail_on_missing_contract": true,
+    "fail_on_deletable_component": true
   }
 }
