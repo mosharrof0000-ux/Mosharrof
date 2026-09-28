@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "name": "Mosharrof Entity Awareness System",
+  "enabled": true,
+  "meaning": "Operational self-awareness, not sentience: every registered entity can identify itself, report state, permissions, dependencies and health.",
+  "required_facets": ["identity","brain","responsibility","memory","permissions","policy","tools","communication","state","health","audit","version"],
+  "states": ["initializing","ready","degraded","blocked","error","offline"],
+  "safety": {
+    "delete_allowed": false,
+    "destructive_operations_allowed": false,
+    "permission_escalation_allowed": false,
+    "direct_main_write_allowed": false,
+    "secret_exposure_allowed": false
+  },
+  "behavior": {
+    "self_check": true,
+    "dependency_check": true,
+    "permission_check": true,
+    "audit_event_required": true,
+    "automatic_repair": false,
+    "repair_requires_scoped_authorization": true
+  }
+}
