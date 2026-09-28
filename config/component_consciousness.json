@@ -1,0 +1,20 @@
+{
+  "name": "mosharrof-component-consciousness",
+  "version": "1.0",
+  "meaning": "চৈতন্য = স্ব-পর্যবেক্ষণ, স্বাস্থ্য-সচেতনতা, এবং নিরাপদ পুনরুদ্ধারযোগ্যতা; কোনো মানবসদৃশ চেতনার দাবি নয়।",
+  "components": [
+    "header","brand","theme-engine","chat","messages","message-renderer",
+    "quick-actions","composer","drawer-left","drawer-right","scrim",
+    "send-input","autonomous-engine","visual-qa","verification-gate",
+    "pages-deploy","live-health-check"
+  ],
+  "states": ["healthy","degraded","missing","inactive"],
+  "rules": {
+    "never_delete": true,
+    "never_modify_main_directly": true,
+    "detect_missing_components": true,
+    "detect_runtime_errors": true,
+    "report_degraded_state": true,
+    "safe_recovery_only": true
+  }
+}

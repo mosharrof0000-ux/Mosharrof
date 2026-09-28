@@ -1,0 +1,26 @@
+name: Mosharrof Component Consciousness
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "47 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  awareness:
+    name: Component awareness heartbeat
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run full component consciousness audit
+        run: python3 scripts/mosharrof_component_consciousness.py
+      - name: Verify autonomous engine is protected
+        run: |
+          grep -q 'gh", "pr", "merge", branch, "--auto", "--squash"' scripts/mosharrof_autonomous_engine.py
+          ! grep -q 'git", "push", "origin", "main' scripts/mosharrof_autonomous_engine.py

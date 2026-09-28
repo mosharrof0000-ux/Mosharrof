@@ -367,6 +367,34 @@ input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventD
 document.querySelectorAll('.quick button').forEach(btn=>{
   btn.onclick=()=>{input.value=btn.dataset.q||btn.textContent;input.focus()};
 });
+const MOSHARROF_COMPONENTS=['header','messages','composer','drawer-left','drawer-right','scrim','input','send'];
+window.MosharrofConsciousness={
+  version:'1.0',
+  state:'unknown',
+  lastCheck:null,
+  check(){
+    const missing=MOSHARROF_COMPONENTS.filter(id=>{
+      const byId=document.getElementById(id);
+      const byClass=document.querySelector('.'+id);
+      return !byId && !byClass;
+    });
+    const errors=[];
+    const state=missing.length?'degraded':'healthy';
+    this.state=state;
+    this.lastCheck=Date.now();
+    const report={state,missing,errors,timestamp:this.lastCheck};
+    window.dispatchEvent(new CustomEvent('mosharrof:consciousness',{detail:report}));
+    return report;
+  }
+};
+window.addEventListener('error',e=>{
+  if(window.MosharrofConsciousness){
+    window.MosharrofConsciousness.state='degraded';
+    window.MosharrofConsciousness.lastError=e.message||'runtime error';
+  }
+});
+requestAnimationFrame(()=>window.MosharrofConsciousness.check());
+
 </script>
 </body>
 </html>
