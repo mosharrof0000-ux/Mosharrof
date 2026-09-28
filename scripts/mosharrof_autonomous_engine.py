@@ -6,6 +6,8 @@ from pathlib import Path
 repo = os.environ["REPOSITORY"]
 request_file = Path(os.environ.get("REQUEST_FILE", "/tmp/request.txt"))
 request = request_file.read_text(encoding="utf-8").strip()
+
+# Verify that every registered entity is awake before any autonomous reasoning.\nsubprocess.run(["python3", "scripts/entity_awareness.py"], check=True)
 key = os.environ.get("GEMINI_API_KEY", "").strip()
 model = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash").strip()
 run_id = os.environ.get("GITHUB_RUN_ID", "local")
@@ -99,6 +101,7 @@ subprocess.Popen(
     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
 )
 subprocess.run(["node", "scripts/mosharrof_visual_qa.mjs", "http://127.0.0.1:4173"], check=True)
+subprocess.run(["python3", "scripts/entity_awareness.py"], check=True)
 
 slug = re.sub(r"[^a-z0-9-]+", "-", request.lower()).strip("-")[:48] or "task"
 branch = f"agent/auto-{slug}-{run_id}"
