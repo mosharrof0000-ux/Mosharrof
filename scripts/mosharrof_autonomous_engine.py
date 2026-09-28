@@ -127,4 +127,8 @@ subprocess.run([
     "gh", "pr", "create", "--base", "main", "--head", branch,
     "--title", "Auto: Mosharrof guarded task", "--body", body
 ], check=True)
-print(f"PR created from isolated branch: {branch}")
+
+# Hand promotion to GitHub's protected merge queue. GitHub evaluates required
+# checks and branch protection; the engine never pushes directly to main.
+subprocess.run(["gh", "pr", "merge", branch, "--auto", "--squash"], check=True)
+print(f"PR created and auto-merge requested: {branch}")
