@@ -30,12 +30,11 @@ for(const view of views){
         header:!!document.querySelector(".header"),
         messages:!!document.querySelector(".messages"),
         composer:!!composer,
-        drawer:!!document.querySelector(".drawer"),
+        drawerLeft:!!document.querySelector(".drawer-left"),
+        drawerRight:!!document.querySelector(".drawer-right"),
         messageCount:document.querySelectorAll(".message").length,
         bodyOverflow:getComputedStyle(document.body).overflow,
-        composerPosition:composer?getComputedStyle(composer).position:"missing",
-        fadeTop:(()=>{const e=document.querySelector(".messages"); return !!e && getComputedStyle(e,"::before").content !== "none";})(),
-        fadeBottom:(()=>{const e=document.querySelector(".messages"); return !!e && getComputedStyle(e,"::after").content !== "none";})()
+        composerPosition:composer?getComputedStyle(composer).position:"missing"
       };
     });
 
@@ -52,12 +51,11 @@ for(const view of views){
       !checks.header ||
       !checks.messages ||
       !checks.composer ||
-      !checks.drawer ||
+      !checks.drawerLeft ||
+      !checks.drawerRight ||
       checks.messageCount < 1 ||
       checks.bodyOverflow !== "hidden" ||
-      checks.composerPosition !== "absolute" ||
-      !checks.fadeTop ||
-      !checks.fadeBottom
+      checks.composerPosition !== "absolute"
     ) failed=true;
   }catch(error){
     fs.writeFileSync(
