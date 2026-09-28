@@ -1,0 +1,23 @@
+name: Mosharrof System Awareness
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  awareness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Run deterministic system awareness audit
+        run: python3 scripts/mosharrof_system_awareness.py
+      - name: Run awareness tests
+        run: |
+          python3 -m pip install -r requirements.txt
+          python3 -m pytest -q tests/test_system_awareness.py
