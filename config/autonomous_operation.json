@@ -1,7 +1,8 @@
 {
   "name": "mosharrof-autonomous-operation",
-  "version": "2.0",
-  "mode": "verified-proposal",
+  "version": "3.0",
+  "mode": "component-aware-verified-autonomy",
+  "purpose": "Give every production component a visible identity, health contract, responsibility boundary, and audit path without granting destructive authority.",
   "rules": {
     "main_direct_write": false,
     "delete": false,
@@ -12,10 +13,77 @@
     "candidate_tests_required": true,
     "mobile_visual_qa_required": true,
     "desktop_visual_qa_required": true,
-    "live_health_check_required": true
+    "live_health_check_required": true,
+    "component_health_audit_required": true
   },
+  "components": [
+    {
+      "id": "web-ui",
+      "path": "web/",
+      "role": "user-facing interface",
+      "health": [
+        "index.html exists",
+        "MOSHARROF AI contract present",
+        "visual QA passes"
+      ]
+    },
+    {
+      "id": "test-system",
+      "path": "tests/",
+      "role": "regression and contract protection",
+      "health": [
+        "pytest passes"
+      ]
+    },
+    {
+      "id": "autonomous-engine",
+      "path": "scripts/mosharrof_autonomous_engine.py",
+      "role": "guarded reasoning and isolated change orchestration",
+      "health": [
+        "destructive guard active",
+        "isolated branch only",
+        "protected PR promotion"
+      ]
+    },
+    {
+      "id": "visual-qa",
+      "path": "scripts/mosharrof_visual_qa.mjs",
+      "role": "mobile and desktop visual verification",
+      "health": [
+        "390x844",
+        "1440x900"
+      ]
+    },
+    {
+      "id": "operation-config",
+      "path": "config/autonomous_operation.json",
+      "role": "system identity, boundaries, and component registry",
+      "health": [
+        "valid JSON",
+        "all components have path and health contract"
+      ]
+    },
+    {
+      "id": "documentation",
+      "path": "docs/",
+      "role": "operating knowledge and audit trail",
+      "health": [
+        "canonical autonomous path documented"
+      ]
+    },
+    {
+      "id": "ci-verification",
+      "path": ".github/workflows/",
+      "role": "verification and deployment automation",
+      "health": [
+        "protected PR path",
+        "Pages deployment health check"
+      ]
+    }
+  ],
   "flow": [
     "instruction_or_scheduled_cycle",
+    "component_health_audit",
     "isolated_task_branch",
     "implementation",
     "unit_tests",
