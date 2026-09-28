@@ -1,12 +1,12 @@
 """
-Mosharrof Core Brain
-Model-agnostic coordination brain. Capability is bounded by identity, permission,
-policy, scope and assigned tools.
+Mosharrof Core Brain — The Sole Director
 
-Layers (Grok 2026-09-28):
-1. ConsciousnessEngine — live state, heartbeat, awareness, per-entity memory, self-analysis
-2. EntityConsciousnessSystem + EntityConsciousnessMonitor — compatibility layer
-No sentience claim. No destructive capability. Full verification required before promotion.
+Architecture rules:
+- Every entity maintains its own consciousness and memory in isolation.
+- One entity cannot see another entity's private state.
+- Only Mosharrof (this Core Brain) can oversee everyone and act as director.
+
+No sentience claim. No destructive capability.
 """
 from typing import Dict, Any, Optional
 from src.core.event_bus import EcosystemEventBus
@@ -22,6 +22,8 @@ from src.core.entity_memory import EntityMemoryBank
 
 
 class MosharrofCoreBrain:
+    """Mosharrof — the sole director who can see and coordinate all entities."""
+
     def __init__(
         self,
         event_bus: Optional[EcosystemEventBus] = None,
@@ -31,6 +33,7 @@ class MosharrofCoreBrain:
         audit_ledger: Optional[AuditLedger] = None,
     ):
         self.system_name = "Mosharrof Core"
+        self.role = "SOLE_DIRECTOR"
         self.consciousness_state = "ACTIVE"
         self.security_protocol = "NO_DELETE"
         self.event_bus = event_bus or EcosystemEventBus()
@@ -44,7 +47,7 @@ class MosharrofCoreBrain:
             "core", "chat", "sidebar", "ui", "voice", "storage",
             "tool_factory", "quran_research"
         ]
-        # Compatibility consciousness system
+
         self.consciousness = EntityConsciousnessSystem(
             [{"id": x, "brain": x} for x in self.active_entities],
             event_bus=self.event_bus,
@@ -53,10 +56,8 @@ class MosharrofCoreBrain:
         )
         self.consciousness.awaken_all()
 
-        # Per-entity memory bank
         self.memory_bank = EntityMemoryBank()
 
-        # Full consciousness engine with memory + self-analysis
         self.consciousness_engine = ConsciousnessEngine(
             registry=self.entity_registry,
             event_bus=self.event_bus,
@@ -157,9 +158,11 @@ class MosharrofCoreBrain:
         return report
 
     def system_status(self) -> Dict[str, Any]:
-        engine_snapshot = self.consciousness_engine.inspect_all()
+        """Director view: Mosharrof can see everything."""
+        engine_snapshot = self.consciousness_engine.inspect_all(caller_id="core")
         return {
             "system": self.system_name,
+            "role": self.role,
             "state": self.consciousness_state,
             "entities": list(self.active_entities),
             "brain": self.brain_adapter.describe(),
@@ -168,12 +171,13 @@ class MosharrofCoreBrain:
             "consciousness_verify": self.consciousness.verify(),
             "memory_bank": self.memory_bank.inspect_all(),
             "delete_operations": "BLOCKED",
+            "isolation_rule": "Entities isolated from each other; only Mosharrof sees all",
         }
 
     def entity_self_analyze(self, entity_id: str) -> Dict[str, Any]:
-        """Public API: trigger self-analysis for any registered entity."""
-        return self.consciousness_engine.self_analyze(entity_id)
+        """Director requests analysis of any entity, or entity analyzes itself."""
+        return self.consciousness_engine.self_analyze(entity_id, caller_id="core")
 
     def entity_propose_improvement(self, entity_id: str) -> Dict[str, Any]:
-        """Public API: ask entity for bounded improvement proposals (never auto-executed)."""
-        return self.consciousness_engine.propose_improvement(entity_id)
+        """Director requests improvement proposals (never auto-executed)."""
+        return self.consciousness_engine.propose_improvement(entity_id, caller_id="core")
