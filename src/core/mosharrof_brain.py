@@ -9,6 +9,8 @@ from src.core.memory_ledger import MemoryLedger
 from src.core.permission_guard import PermissionGuard
 from src.core.brain_adapter import BrainAdapter
 from src.core.audit_ledger import AuditLedger
+from src.core.entity_registry import EntityRegistry
+from src.core.consciousness_monitor import EntityConsciousnessMonitor
 
 class MosharrofCoreBrain:
     def __init__(
@@ -27,6 +29,8 @@ class MosharrofCoreBrain:
         self.permission_guard = permission_guard or PermissionGuard()
         self.brain_adapter = brain_adapter or BrainAdapter(entity_id="core")
         self.audit_ledger = audit_ledger or AuditLedger()
+        self.entity_registry = EntityRegistry()
+        self.consciousness_monitor = EntityConsciousnessMonitor(self.entity_registry.list())
         self.active_entities = [
             "core", "chat", "sidebar", "ui", "voice", "storage",
             "tool_factory", "quran_research"
@@ -106,11 +110,19 @@ class MosharrofCoreBrain:
         self.audit_ledger.record("core", "INTENT_PROCESSED", "SUCCESS", intent=intent)
         return result
 
+    def consciousness_report(self) -> Dict[str, Any]:
+        report = self.consciousness_monitor.scan()
+        self.audit_ledger.record("core", "CONSCIOUSNESS_SCAN", report["state"],
+                                 entity_count=report["entity_count"],
+                                 degraded_count=report["degraded_count"])
+        return report
+
     def system_status(self) -> Dict[str, Any]:
         return {
             "system": self.system_name,
             "state": self.consciousness_state,
             "entities": list(self.active_entities),
             "brain": self.brain_adapter.describe(),
+            "consciousness": self.consciousness_report(),
             "delete_operations": "BLOCKED",
         }
