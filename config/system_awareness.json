@@ -1,0 +1,23 @@
+{
+  "name": "mosharrof-system-awareness",
+  "version": "1.0",
+  "enabled": true,
+  "principle": "Every registered component reports its state; detected safe defects become isolated repair requests and follow the protected PR pipeline.",
+  "components": [
+    {"id":"frontend","paths":["web/index.html"],"checks":["MOSHARROF AI",".header",".messages",".composer",".drawer-left",".drawer-right"]},
+    {"id":"autonomous-engine","paths":["scripts/mosharrof_autonomous_engine.py"],"checks":["pytest","visual_qa","gh pr create","gh pr merge --auto --squash"]},
+    {"id":"visual-qa","paths":["scripts/mosharrof_visual_qa.mjs"],"checks":["390","1440"]},
+    {"id":"verification-gate","paths":[".github/workflows/verification-gate.yml"],"checks":["pytest","visual QA"]},
+    {"id":"pages-deploy","paths":[".github/workflows/deploy-pages.yml"],"checks":["GitHub Pages","health"]},
+    {"id":"ci","paths":[".github/workflows"],"checks":["required checks"]},
+    {"id":"security","paths":[".github","CODEOWNERS"],"checks":["main protection","no force push","no deletion"]},
+    {"id":"documentation","paths":["docs/AUTONOMOUS_OPERATION.md"],"checks":["canonical path"]}
+  ],
+  "safe_repair_policy": {
+    "delete": false,
+    "direct_main_write": false,
+    "force_push": false,
+    "repair_only_via_isolated_pr": true,
+    "required_verification": true
+  }
+}
