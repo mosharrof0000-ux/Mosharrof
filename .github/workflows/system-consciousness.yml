@@ -1,0 +1,44 @@
+name: Mosharrof System Consciousness
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "47 */6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mosharrof-system-consciousness
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Install test dependencies
+        run: python3 -m pip install -r requirements.txt
+
+      - name: Audit every registered organ
+        run: python3 scripts/system_consciousness.py
+
+      - name: Run project tests
+        run: python3 -m pytest -q
+
+      - name: Publish health summary
+        if: always()
+        run: |
+          {
+            echo "## Mosharrof System Consciousness"
+            echo ""
+            echo "- Every registered organ: audited"
+            echo "- Destructive operations: disabled"
+            echo "- Main direct write: disabled"
+            echo "- Result: see preceding audit/test steps"
+          } >> "$GITHUB_STEP_SUMMARY"
