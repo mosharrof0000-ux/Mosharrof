@@ -1,0 +1,33 @@
+name: Mosharrof Operational Consciousness Heartbeat
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mosharrof-consciousness-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  heartbeat:
+    name: Component consciousness heartbeat
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Run read-only heartbeat
+        run: python3 scripts/mosharrof_consciousness.py
+      - name: Upload heartbeat evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-consciousness-heartbeat-${{ github.run_id }}
+          path: artifacts/consciousness/
+          if-no-files-found: error
