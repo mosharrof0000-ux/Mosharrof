@@ -141,7 +141,7 @@ S.onclick=closeAll;
 $$('[data-toast]').forEach(b=>b.onclick=()=>{msg(b.dataset.toast);closeAll()});
 $$('[data-mod]').forEach(b=>b.onclick=()=>msg((b.querySelector('strong')||{}).textContent+' — এন্টিটি মেমোরি কোর্স'));
 $('#add')&&($('#add').onclick=()=>msg('নতুন এন্টিটি জন্ম — মোশাররফ অনুমোদন প্রয়োজন'));
-$('#form').onsubmit=e=>{
+$('#form').onsubmit=async e=>{
  e.preventDefault();
  const v=$('#input').value.trim(); if(!v)return;
  document.querySelector('.app').classList.add('chat-mode');
