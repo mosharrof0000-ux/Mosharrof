@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>MOSHARROF AI — Full Screen V5</title>
-<!-- Mosharrof V5 Chat UI — live deploy fix 2026-09-28 -->
+<!-- Mosharrof V5 Chat UI — P1 real chat wire 2026-09-29 -->
 <style>
 :root{--bg:#041229;--bg2:#092650;--p:#061a36ee;--t:#f4f9ff;--m:#9db3cd;--l:#70c8ff2b;--b:#2caeff;--v:#7058ef;--c:#48ddff;--safe:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden}body{font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Bengali",sans-serif;background:#020b1c;color:var(--t)}
@@ -141,21 +141,74 @@ S.onclick=closeAll;
 $$('[data-toast]').forEach(b=>b.onclick=()=>{msg(b.dataset.toast);closeAll()});
 $$('[data-mod]').forEach(b=>b.onclick=()=>msg((b.querySelector('strong')||{}).textContent+' — এন্টিটি মেমোরি কোর্স'));
 $('#add')&&($('#add').onclick=()=>msg('নতুন এন্টিটি জন্ম — মোশাররফ অনুমোদন প্রয়োজন'));
-$('#form').onsubmit=e=>{
+/* === P1 Real Chat: production provider = Cloudflare Worker /chat (Gemini) ===
+   Set CHAT_WORKER_URL to the live workers.dev base after deploy-screenshot-worker runs.
+   Example: https://mosharrof-screenshot-analysis.<account>.workers.dev
+   Leave empty to show honest "provider not configured" instead of fake AI. */
+const CHAT_WORKER_URL = '';  // <-- paste live Worker base URL here after deploy
+
+function esc(s){return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>')}
+function addMsg(role, text){
+  const box=$('#messages');
+  const el=document.createElement('div');
+  el.className='message '+(role==='user'?'user':'ai');
+  const label=role==='user'?'আপনি':'MOSHARROF AI';
+  el.innerHTML='<span class="label">'+label+'</span>'+esc(text);
+  box.appendChild(el);
+  $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
+  return el;
+}
+async function askMosharrof(text){
+  if(!CHAT_WORKER_URL){
+    return {ok:false, error:'chat_provider_not_configured', detail:'CHAT_WORKER_URL খালি। Worker deploy করে URL বসান।'};
+  }
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),45000);
+  try{
+    const res=await fetch(CHAT_WORKER_URL.replace(/\/$/,'')+'/chat',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({text}),
+      signal:ctrl.signal
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok){
+      return {ok:false, error:data.error||('http_'+res.status), detail:data.error||('HTTP '+res.status)};
+    }
+    if(!data.ok || !data.text){
+      return {ok:false, error:data.error||'empty_model_response', detail:'মডেল থেকে খালি উত্তর'};
+    }
+    return {ok:true, text:data.text, model:data.model||''};
+  }catch(err){
+    if(err.name==='AbortError') return {ok:false, error:'timeout', detail:'৪৫ সেকেন্ডে উত্তর আসেনি'};
+    return {ok:false, error:'network', detail:'নেটওয়ার্ক ত্রুটি — Worker URL বা CORS চেক করুন'};
+  }finally{
+    clearTimeout(timer);
+  }
+}
+$('#form').onsubmit=async e=>{
  e.preventDefault();
  const v=$('#input').value.trim(); if(!v)return;
  document.querySelector('.app').classList.add('chat-mode');
- const box=$('#messages');
- const user=document.createElement('div'); user.className='message user';
- user.innerHTML='<span class="label">আপনি</span>'+v.replace(/</g,'&lt;');
- box.appendChild(user);
+ addMsg('user', v);
  $('#input').value='';
- requestAnimationFrame(()=>{
-  const ai=document.createElement('div'); ai.className='message ai';
-  ai.innerHTML='<span class="label">MOSHARROF AI</span>আপনার বার্তা গ্রহণ করা হয়েছে। এটি আপনার দেওয়া V5 ডিজাইন — লাইভ।';
-  box.appendChild(ai);
-  $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
- });
+ const sendBtn=$('.send'); if(sendBtn) sendBtn.disabled=true;
+ const thinking=addMsg('ai', 'চিন্তা করছি…');
+ const result=await askMosharrof(v);
+ if(result.ok){
+   thinking.innerHTML='<span class="label">MOSHARROF AI</span>'+esc(result.text);
+ }else{
+   const map={
+     chat_provider_not_configured:'রিয়েল চ্যাট এখনো কনফিগার হয়নি। Cloudflare Worker deploy করে CHAT_WORKER_URL সেট করুন।',
+     chat_provider_failed:'মডেল প্রোভাইডার ব্যর্থ হয়েছে। GEMINI_API_KEY ও Worker লগ চেক করুন।',
+     empty_model_response:'মডেল খালি উত্তর দিয়েছে।',
+     timeout:'সময় শেষ — আবার চেষ্টা করুন।',
+     network:'নেটওয়ার্ক/CORS সমস্যা। Worker URL ও Origin চেক করুন।'
+   };
+   thinking.innerHTML='<span class="label">MOSHARROF AI</span>'+esc(map[result.error]||result.detail||'অজানা ত্রুটি');
+ }
+ $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
+ if(sendBtn) sendBtn.disabled=false;
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
 })();
