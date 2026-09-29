@@ -9,18 +9,36 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' && secrets.GEMINI_API_KEY != '' }}
     steps:
+      - name: Verify required secrets are present
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          missing=0
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then echo "MISSING: CLOUDFLARE_API_TOKEN"; missing=1; fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then echo "MISSING: CLOUDFLARE_ACCOUNT_ID"; missing=1; fi
+          if [ -z "$GEMINI_API_KEY" ]; then echo "MISSING: GEMINI_API_KEY"; missing=1; fi
+          if [ "$missing" -ne 0 ]; then
+            echo "Add the missing secrets under Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          echo "All required secrets are present."
+
       - uses: actions/checkout@v6
+
       - uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
           command: deploy
-      - name: Set Gemini secret
+
+      - name: Set Gemini secret on Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: printf '%s' "$GEMINI_API_KEY" | npx wrangler@4 secret put GEMINI_API_KEY --config worker/wrangler.toml
+        run: |
+          printf '%s' "$GEMINI_API_KEY" | npx wrangler@4 secret put GEMINI_API_KEY --config worker/wrangler.toml
