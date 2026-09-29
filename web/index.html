@@ -150,12 +150,20 @@ $('#form').onsubmit=e=>{
  user.innerHTML='<span class="label">আপনি</span>'+v.replace(/</g,'&lt;');
  box.appendChild(user);
  $('#input').value='';
- requestAnimationFrame(()=>{
-  const ai=document.createElement('div'); ai.className='message ai';
-  ai.innerHTML='<span class="label">MOSHARROF AI</span>আপনার বার্তা গ্রহণ করা হয়েছে। এটি আপনার দেওয়া V5 ডিজাইন — লাইভ।';
+ const ai=document.createElement('div'); ai.className='message ai';
+  ai.innerHTML='<span class="label">MOSHARROF AI</span><span class="ai-text">সংযোগ হচ্ছে…</span>';
   box.appendChild(ai);
   $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
- });
+  try{
+   const res=await fetch('https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:v})});
+   const data=await res.json().catch(()=>({}));
+   if(!res.ok) throw new Error(data.error||'chat_request_failed');
+   ai.querySelector('.ai-text').textContent=data.text||'কোনো উত্তর পাওয়া যায়নি।';
+  }catch(err){
+   ai.querySelector('.ai-text').textContent='দুঃখিত, এই মুহূর্তে Gemini সংযোগে সমস্যা হয়েছে।';
+   console.error('Mosharrof Gemini chat error:',err);
+  }
+  $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
 })();
