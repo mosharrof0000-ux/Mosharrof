@@ -1,8 +1,8 @@
 # MOSHARROF — CONTINUITY / HANDOFF CONTROL
-Version: 2026-09-28
-Status: P1 CONTRACT VERIFIED; PROVIDER IDENTIFICATION REQUIRED
-Branch: handoff/mosharrof-continuity-2026-09-28
-Base commit: 555f982ebe02311bce836b149a97c5eb2e885ae3
+Version: 2026-09-29
+Status: P1 PROVIDER IDENTIFIED; FRONTEND WIRED; LIVE WORKER URL REQUIRED
+Branch: feature/p1-real-chat-gemini-worker
+Base commit: 989c8db1db3e5a6d8015af46689bf26a4448ecb0
 
 ## PURPOSE
 This is the first file an AI/agent must read when continuing Mosharrof work.
@@ -20,7 +20,7 @@ Never assume unfinished work is complete.
 
 ## IMPLEMENTATION ROADMAP
 P0 Foundation — DONE
-P1 Real Chat — IN PROGRESS
+P1 Real Chat — PROVIDER FOUND + UI WIRED (pending live Worker URL + verify)
 P2 Memory / History
 P3 Entity Integration
 P4 Library / Project
@@ -37,40 +37,35 @@ RIGHT = active work/research: Quran Research, Research Lab, Research Memory, Kno
 P1 — REAL CHAT
 
 ## LAST COMPLETED ACTION
-Inspected V5 UI and the backend/core chat path. Created docs/CHAT_INTEGRATION_CONTRACT.md documenting the verified integration contract and blocker.
-
-## LAST VERIFIED COMMIT
-a969f775830d0f941721ef4811ed151651e54c68
-
-## FILES CHANGED
-- PROJECT_HANDOFF.md
-- docs/CHAT_INTEGRATION_CONTRACT.md
+Identified production model provider: Cloudflare Worker `worker/screenshot-analysis.js` with `POST /chat` using `GEMINI_API_KEY`. Wired V5 Pages UI (`web/index.html`) to call that endpoint with honest error fallbacks. Updated `config/model_registry.json` and contract docs.
 
 ## VERIFIED FINDINGS
-- V5 chat currently shows a local dummy acknowledgement.
-- MosharrofCoreBrain has BrainAdapter and process_intent().
-- BrainAdapter requires a BrainProvider for real generation.
-- model_adapter.py has only abstract + DeterministicAdapter; no production remote transport.
-- web_server.py /api/process_thought returns a hard-coded response and does not generate through the brain.
+- Provider script: worker/screenshot-analysis.js
+- Chat contract: POST /chat body `{text}` → `{ok, model, text}`
+- Secret: GEMINI_API_KEY (Cloudflare Worker secret, set by deploy-screenshot-worker.yml)
+- CORS locked to https://mosharrof0000-ux.github.io
+- Pages artifact path: ./web (web/index.html)
+- Live Worker URL was not present in repo; must be filled into CHAT_WORKER_URL after deploy
 
 ## TESTS
-Repository branch creation: SUCCESS.
-Contract inspection: SUCCESS.
-Real model integration: NOT YET IMPLEMENTED.
-Live deployment: NOT VERIFIED in this step.
+Branch creation: SUCCESS
+Provider identification: SUCCESS
+Frontend wiring: DONE on this branch
+Live chat with Gemini: NOT YET VERIFIED (needs deployed Worker URL + secrets)
 
-## BLOCKER
-The actual production model provider/gateway, request/response contract, and secret location must be identified before real chat can be wired safely.
+## BLOCKER (remaining)
+1. Cloudflare Worker must be deployed (secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, GEMINI_API_KEY).
+2. Set `CHAT_WORKER_URL` in web/index.html to the live workers.dev base URL.
+3. Live verify a real reply, then promote via PR.
 
 ## EXACT NEXT ACTION
-Find the existing Mosharrof production model gateway/provider (including workflows, Worker/API configuration, environment secret names, or existing client code). Do not invent a provider. Once verified, implement the thin provider adapter and wire V5 chat.
+Deploy worker → paste live base URL into CHAT_WORKER_URL → open Pages (or PR preview) → send a message → confirm Gemini reply → merge.
 
 ## DO NOT TOUCH
-- main/live
-- existing core modules for deletion
+- main/live without verification
+- hard-coded API keys in browser
 - V5 UI wholesale replacement
-- hard-coded API keys
-- fake "AI" success responses
+- fake AI success responses
 
 ## CONTINUITY MARKER
-MOSHARROF-P1-2026-09-28-A969
+MOSHARROF-P1-PROVIDER-FOUND-2026-09-29

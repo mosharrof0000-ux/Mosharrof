@@ -1,6 +1,21 @@
 {
   "schema_version": "1.0.0",
   "strategy": "model-agnostic",
-  "providers": [],
+  "providers": [
+    {
+      "id": "gemini-cloudflare-worker",
+      "name": "Gemini via Cloudflare Worker",
+      "transport": "cloudflare-worker",
+      "endpoint_path": "/chat",
+      "worker_script": "worker/screenshot-analysis.js",
+      "secret_name": "GEMINI_API_KEY",
+      "default_model": "gemini-2.5-flash",
+      "model_env": "GEMINI_CHAT_MODEL",
+      "request": {"method": "POST", "body": {"text": "string"}},
+      "response_ok": {"ok": true, "model": "string", "text": "string"},
+      "cors_origin": "https://mosharrof0000-ux.github.io",
+      "notes": "Deployed by .github/workflows/deploy-screenshot-worker.yml. Frontend must use the live workers.dev URL after deploy."
+    }
+  ],
   "rule": "Changing a model must not change entity identity, memory, responsibility, permissions, scope, or audit history."
 }
