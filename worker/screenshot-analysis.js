@@ -20,6 +20,7 @@ async function chat(request,env){
 
 export default {async fetch(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
+  if(request.method==="GET"&&new URL(request.url).pathname==="/health")return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,chat_model:env.GEMINI_CHAT_MODEL||"gemini-3.6-flash",vision_model:env.GEMINI_VISION_MODEL||"gemini-3.8-flash"},200);
   const origin=request.headers.get("Origin")||"";
   if(origin&&origin!==ORIGIN)return reply({error:"origin_not_allowed"},403);
   if(request.method!=="POST")return reply({error:"POST only"},405);
