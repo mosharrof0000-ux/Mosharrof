@@ -14,7 +14,7 @@ if not key:
 def enc(x): return base64.b64encode(Path(x).read_bytes()).decode()
 prompt='Compare candidate and live screenshots. Detect missing existing UI, broken layout/overflow, regressions, and new requested features. Return JSON: {"pass":true,"confidence":0,"regressions":[],"missing_features":[],"new_features":[],"notes":[]}. Be conservative.'
 payload=json.dumps({"contents":[{"parts":[{"text":prompt},{"inline_data":{"mime_type":"image/png","data":enc(a.candidate)}},{"inline_data":{"mime_type":"image/png","data":enc(a.live)}}]}],"generationConfig":{"temperature":0,"responseMimeType":"application/json"}}).encode()
-req=urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",data=payload,headers={"Content-Type":"application/json","x-goog-api-key":key})
+req=urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",data=payload,headers={"Content-Type":"application/json","x-goog-api-key":key})
 with urllib.request.urlopen(req,timeout=180) as r: result=json.load(r)
 report=json.loads(result["candidates"][0]["content"]["parts"][0]["text"])
 Path(a.report).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
