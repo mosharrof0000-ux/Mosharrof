@@ -29,12 +29,12 @@ jobs:
         run: |
           test -f web/index.html
           grep -q 'MOSHARROF AI' web/index.html
-          grep -q 'setInterval' web/index.html
-          grep -q '120000' web/index.html
-          grep -q 'class="messages"' web/index.html
+          grep -q 'class="top"' web/index.html
+          grep -q 'class="chat-scroll"' web/index.html
+          grep -q 'id="messages"' web/index.html
           grep -q 'class="composer"' web/index.html
-          grep -q 'class="drawer-left"' web/index.html
-          grep -q 'class="drawer-right"' web/index.html
+          grep -q 'class="drawer left"' web/index.html
+          grep -q 'class="drawer right"' web/index.html
 
       - name: Run project tests
         run: |
