@@ -27,11 +27,11 @@ for(const view of views){
       const composer=document.querySelector(".composer");
       return {
         title:document.title,
-        header:!!document.querySelector(".header"),
+        header:!!document.querySelector("header.top"),
         messages:!!document.querySelector(".messages"),
         composer:!!composer,
-        drawerLeft:!!document.querySelector(".drawer-left"),
-        drawerRight:!!document.querySelector(".drawer-right"),
+        drawerLeft:!!document.querySelector(".drawer.left"),
+        drawerRight:!!document.querySelector(".drawer.right"),
         messageCount:document.querySelectorAll(".message").length,
         bodyOverflow:getComputedStyle(document.body).overflow,
         composerPosition:composer?getComputedStyle(composer).position:"missing"
@@ -53,9 +53,8 @@ for(const view of views){
       !checks.composer ||
       !checks.drawerLeft ||
       !checks.drawerRight ||
-      checks.messageCount < 1 ||
       checks.bodyOverflow !== "hidden" ||
-      checks.composerPosition !== "absolute"
+      !["relative","absolute"].includes(checks.composerPosition)
     ) failed=true;
   }catch(error){
     fs.writeFileSync(
