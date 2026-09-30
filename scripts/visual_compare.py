@@ -19,4 +19,6 @@ with urllib.request.urlopen(req,timeout=180) as r: result=json.load(r)
 report=json.loads(result["candidates"][0]["content"]["parts"][0]["text"])
 Path(a.report).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
 print(json.dumps(report,ensure_ascii=False,indent=2))
-if not report.get("pass") or int(report.get("confidence",0))<80: raise SystemExit("VISUAL QA FAILED")
+confidence=float(report.get("confidence",0) or 0)
+threshold=0.80 if confidence <= 1 else 80
+if not report.get("pass") or confidence < threshold: raise SystemExit("VISUAL QA FAILED")
