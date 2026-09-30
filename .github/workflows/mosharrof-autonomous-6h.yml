@@ -34,14 +34,17 @@ jobs:
       - name: Baseline verification
         run: python -m pytest -q
       - name: Autonomous work
-        if: ${{ secrets.GEMINI_API_KEY != '' && secrets.AGENT_ACCESS_TOKEN != '' }}
+        env:
+          HAS_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY != '' }}
+          HAS_AGENT_ACCESS_TOKEN: ${{ secrets.AGENT_ACCESS_TOKEN != '' }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AGENT_ACCESS_TOKEN: ${{ secrets.AGENT_ACCESS_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           AUTONOMOUS_REQUEST: ${{ inputs.request }}
           GH_REPO: ${{ github.repository }}
+        if: ${{ env.HAS_GEMINI_API_KEY == 'true' && env.HAS_AGENT_ACCESS_TOKEN == 'true' }}
         run: python scripts/autonomous_agent.py
       - name: Safe pause
-        if: ${{ secrets.GEMINI_API_KEY == '' || secrets.AGENT_ACCESS_TOKEN == '' }}
+        if: ${{ env.HAS_GEMINI_API_KEY != 'true' || env.HAS_AGENT_ACCESS_TOKEN != 'true' }}
         run: echo "No autonomous write performed; required secrets are not configured."
