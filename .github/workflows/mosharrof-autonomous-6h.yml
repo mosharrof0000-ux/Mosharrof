@@ -37,7 +37,6 @@ jobs:
         env:
           HAS_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY != '' }}
           HAS_AGENT_ACCESS_TOKEN: ${{ secrets.AGENT_ACCESS_TOKEN != '' }}
-        env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AGENT_ACCESS_TOKEN: ${{ secrets.AGENT_ACCESS_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
