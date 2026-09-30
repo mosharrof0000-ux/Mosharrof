@@ -29,9 +29,23 @@ Last reviewed: 2026-09-30
 - Scheduled/on-demand visual inspection: `.github/workflows/mosharrof-visual-qa.yml`
 
 ### Autonomous work
-- Autonomous implementation workflow: `.github/workflows/mosharrof-autonomous.yml`
-- Read-only health/audit workflow: `.github/workflows/autonomous-scheduler.yml`
-- Command intake boundary: `.github/workflows/autonomous-command-intake.yml`
+- **Canonical implementation pipeline:** `.github/workflows/mosharrof-autonomous.yml`
+  - Uses the guarded autonomous engine.
+  - Runs isolated task implementation, tests/visual QA, and ends at a PR/promotion boundary.
+- **Canonical read-only audit:** `.github/workflows/autonomous-scheduler.yml`
+  - Six-hour repository audit; records the result as an issue.
+- **Command intake boundary:** `.github/workflows/autonomous-command-intake.yml`
+  - Validates labeled autonomous requests and blocks destructive/bypass requests.
+
+#### Autonomous workflows under consolidation
+These files remain present while their historical roles are reviewed. They must not be treated as additional canonical automation:
+- `.github/workflows/autonomous-health.yml` — overlaps the read-only audit and currently adds no unique promotion capability.
+- `.github/workflows/autonomous-cycle.yml` — older write-capable cycle using `.github/scripts/mosharrof_agent.py`; separate from the canonical guarded pipeline.
+- `.github/workflows/mosharrof-autonomous-engine.yml` — older direct runner for `scripts/mosharrof_autonomous_engine.py`; the canonical pipeline wraps this engine with the safer isolated/App-token path.
+- `.github/workflows/mosharrof-autonomous-6h.yml` — older agent path using `scripts/autonomous_agent.py` and `AGENT_ACCESS_TOKEN`.
+- `.github/workflows/ai-agent.yml` — legacy GitHub-App authentication workflow; its authentication dependency is being replaced separately.
+
+**Rule:** only `mosharrof-autonomous.yml` is the canonical autonomous implementation path. Do not add another scheduled autonomous writer without first updating this map and retiring/consolidating the older path.
 
 ## Change discipline
 
