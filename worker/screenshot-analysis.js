@@ -9,10 +9,10 @@ async function chat(request,env){
   if(!text)return reply({error:"text_required"},400);
   if(text.length>12000)return reply({error:"text_too_large"},413);
   if(!env.GEMINI_API_KEY)return reply({error:"chat_provider_not_configured"},503);
-  const model=env.GEMINI_CHAT_MODEL||"gemini-2.5-flash";
+  const model=env.GEMINI_CHAT_MODEL||"gemini-3.6-flash";
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},body:JSON.stringify({contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\nUser:\n"+text}]}]})});
-  const data=await upstream.json();
-  if(!upstream.ok)return reply({error:"chat_provider_failed"},502);
+  const data=await upstream.json().catch(()=>({}));
+  if(!upstream.ok)return reply({error:"chat_provider_failed",provider_status:upstream.status,provider_message:data?.error?.message||null},502);
   const answer=data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
   if(!answer)return reply({error:"empty_model_response"},502);
   return reply({ok:true,model,text:answer},200);
