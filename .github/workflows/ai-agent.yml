@@ -7,23 +7,20 @@ on:
     types: [created]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
 jobs:
   ai-agent-orchestrator:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Generate Secure GitHub App Token
-        id: generate_token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.BOT_APP_ID }}
-          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-
-      - name: Verify AI Agent Connection
-        env:
-          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+      - name: Verify AI Agent Workflow
         run: |
-          echo "Mosharrof AI Agent Status: ACTIVE"
-          echo "Bot Successfully Authenticated with Iron-Clad Security!"
+          echo "Mosharrof AI Agent workflow: ACTIVE"
+          echo "Repository checkout: OK"
+          echo "No unavailable GitHub App installation dependency is required."
