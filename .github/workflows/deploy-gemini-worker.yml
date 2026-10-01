@@ -57,29 +57,68 @@ jobs:
 
           if [ -z "$TOKEN" ]; then
             echo "ERROR: CLOUDFLARE_API_TOKEN secret is empty or missing."
-            echo "Go to: Repo Settings → Secrets and variables → Actions"
-            echo "Add secret named exactly: CLOUDFLARE_API_TOKEN"
             exit 1
           fi
-
           if [ -z "$ACCOUNT" ]; then
             echo "ERROR: CLOUDFLARE_ACCOUNT_ID secret is empty or missing."
-            echo "Go to: Repo Settings → Secrets and variables → Actions"
-            echo "Add secret named exactly: CLOUDFLARE_ACCOUNT_ID"
-            echo "(From Cloudflare Dashboard → right sidebar Account ID)"
             exit 1
           fi
 
           echo "Token length: ${#TOKEN}"
-          echo "Account ID length: ${#ACCOUNT}"
+          echo "Account ID (first 8): ${ACCOUNT:0:8}..."
           echo "CLOUDFLARE_API_TOKEN=$TOKEN" >> "$GITHUB_ENV"
           echo "CLOUDFLARE_ACCOUNT_ID=$ACCOUNT" >> "$GITHUB_ENV"
+
+      - name: Verify token against Cloudflare API
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== Token verify (GET /user/tokens/verify) ==="
+          VERIFY="$(curl -sS -w "\nHTTP:%{http_code}" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/user/tokens/verify" || true)"
+          echo "$VERIFY"
+          if ! echo "$VERIFY" | grep -q '"status":"active"'; then
+            echo "ERROR: Cloudflare API token is not active or invalid."
+            echo "Create a new token with permissions: Account → Workers Scripts → Edit"
+            echo "Also include: Account → Account Settings → Read"
+            exit 1
+          fi
+
+          echo "=== List accounts visible to this token ==="
+          ACCTS="$(curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts?per_page=20" || true)"
+          echo "$ACCTS" | head -c 2000
+          echo
+
+          if ! echo "$ACCTS" | grep -q "$CLOUDFLARE_ACCOUNT_ID"; then
+            echo "ERROR: CLOUDFLARE_ACCOUNT_ID does not match any account visible to this token."
+            echo "Expected account id: $CLOUDFLARE_ACCOUNT_ID"
+            echo "Fix: copy Account ID from Cloudflare Dashboard (right sidebar) into GitHub secret CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          fi
+          echo "Account ID matches token. OK."
 
       - name: Deploy Worker
         working-directory: worker
         run: |
           set -euo pipefail
-          npx --yes wrangler@3 deploy --config wrangler.toml
+          echo "Deploying with account $CLOUDFLARE_ACCOUNT_ID ..."
+          npx --yes wrangler@3 deploy --config wrangler.toml 2>&1 | tee /tmp/wrangler-deploy.log
+          echo "Deploy command finished."
+
+      - name: Enable workers.dev subdomain for script
+        shell: bash
+        run: |
+          set -euo pipefail
+          SCRIPT="mosharrof-screenshot-analysis"
+          echo "Enabling workers.dev route for $SCRIPT ..."
+          RESP="$(curl -sS -w "\nHTTP:%{http_code}" -X POST \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"enabled":true,"previews_enabled":false}' \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$SCRIPT/subdomain" || true)"
+          echo "$RESP"
 
       - name: Set Gemini secret
         working-directory: worker
@@ -90,17 +129,17 @@ jobs:
           GEMINI="$(printf '%s' "$RAW_GEMINI" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
           if [ -z "$GEMINI" ]; then
             echo "ERROR: GEMINI_API_KEY secret is empty or missing."
-            echo "Add secret named exactly: GEMINI_API_KEY"
             exit 1
           fi
+          echo "Gemini key length: ${#GEMINI}"
           printf '%s' "$GEMINI" | npx --yes wrangler@3 secret put GEMINI_API_KEY --config wrangler.toml
 
       - name: Verify Worker health
         run: |
           set -euo pipefail
           URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health"
-          echo "Waiting for Worker edge propagation..."
-          for i in {1..12}; do
+          echo "Waiting for Worker edge propagation at $URL ..."
+          for i in {1..15}; do
             if curl -fsS --connect-timeout 5 --max-time 10 "$URL" > /tmp/health.json; then
               cat /tmp/health.json
               grep -q '"ok":true' /tmp/health.json
@@ -111,4 +150,6 @@ jobs:
             sleep 5
           done
           echo "ERROR: Worker health endpoint did not become reachable."
+          echo "Trying alternate subdomain mosharrof000 ..."
+          curl -sS "https://mosharrof-screenshot-analysis.mosharrof000.workers.dev/health" || true
           exit 1
