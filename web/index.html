@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>MOSHARROF AI — Full Screen V5</title>
-<!-- Mosharrof V5 Chat UI — live deploy fix 2026-09-28 -->
+<!-- Mosharrof V5 Chat UI — animation + streaming 2026-10-02 -->
 <style>
 :root{--bg:#041229;--bg2:#092650;--p:#061a36ee;--t:#f4f9ff;--m:#9db3cd;--l:#70c8ff2b;--b:#2caeff;--v:#7058ef;--c:#48ddff;--safe:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden}body{font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Bengali",sans-serif;background:#020b1c;color:var(--t)}
@@ -42,13 +42,16 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 .chat-mode .hero{width:100%;height:100%;max-width:none;display:flex;flex-direction:column;text-align:left;align-items:stretch}
 .chat-mode .hero-logo,.chat-mode h1,.chat-mode .sub,.chat-mode .quick{display:none}
 .chat-mode .composer{order:2;flex:none;width:min(900px,calc(100% - 24px));margin:0 auto calc(10px + var(--safe));z-index:10}
-.chat-mode .chat-scroll{display:flex;flex:1;min-height:0;overflow-y:auto;flex-direction:column;justify-content:flex-end;padding:76px 12px 14px}
+.chat-mode .chat-scroll{display:flex;flex:1;min-height:0;overflow-y:auto;flex-direction:column;justify-content:flex-end;padding:76px 12px 14px;scroll-behavior:smooth}
 .chat-mode .messages{width:min(900px,100%);margin:0 auto;display:flex;flex-direction:column;gap:12px}
-.chat-mode .message{max-width:min(78%,720px);padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.65;word-break:break-word}
+.chat-mode .message{max-width:min(78%,720px);padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.65;word-break:break-word;animation:msgAppear .48s cubic-bezier(.22,1,.36,1) both;will-change:opacity,transform,filter}
 .chat-mode .message.user{align-self:flex-end;background:linear-gradient(145deg,#168ad0,#5648cf);border-bottom-right-radius:6px}
 .chat-mode .message.ai{align-self:flex-start;background:rgba(8,35,69,.82);border:1px solid rgba(110,205,255,.16);border-bottom-left-radius:6px}
 .chat-mode .message .label{display:block;font-size:9px;color:#a9c4df;margin-bottom:4px}
+.chat-mode .message .ai-text.streaming::after{content:"▋";display:inline-block;margin-left:2px;opacity:.75;animation:caretBlink .85s step-end infinite}
 .chat-mode .chips{display:none}
+@keyframes msgAppear{from{opacity:0;filter:blur(6px);transform:translateY(16px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
+@keyframes caretBlink{50%{opacity:0}}
 </style>
 </head>
 <body>
@@ -119,20 +122,57 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 </div>
 <script>
 (()=>{
-/* Clear stale service workers from old foundation UI */
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(rs => {
-    rs.forEach(r => r.unregister());
-  });
-  if (window.caches) {
-    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-  }
+  navigator.serviceWorker.getRegistrations().then(rs => { rs.forEach(r => r.unregister()); });
+  if (window.caches) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
 }
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const L=$('#leftDrawer'),R=$('#rightDrawer'),S=$('#scrim'),T=$('#toast');
+const scrollEl=$('#chatScroll');
+let streamTimer=null;
+
 function msg(x){T.textContent=x;T.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(()=>T.classList.remove('show'),1600)}
 function closeAll(){L.classList.remove('open');R.classList.remove('open');S.classList.remove('open')}
 function drawer(x){closeAll();x.classList.add('open');S.classList.add('open')}
+
+function smoothScrollBottom(){
+  if(!scrollEl) return;
+  requestAnimationFrame(()=>{
+    scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+  });
+}
+
+function stopStream(){
+  if(streamTimer){ clearInterval(streamTimer); streamTimer=null; }
+}
+
+/** Typewriter stream — chunks by grapheme/word for Bengali safety */
+function streamText(el, fullText, opts={}){
+  stopStream();
+  const text=String(fullText||'');
+  const cps=opts.charsPerTick || 2;
+  const delay=opts.delayMs || 18;
+  el.classList.add('streaming');
+  el.textContent='';
+  let i=0;
+  return new Promise(resolve=>{
+    streamTimer=setInterval(()=>{
+      if(i>=text.length){
+        stopStream();
+        el.classList.remove('streaming');
+        el.textContent=text;
+        smoothScrollBottom();
+        resolve();
+        return;
+      }
+      const next=Math.min(i+cps, text.length);
+      el.textContent=text.slice(0, next);
+      i=next;
+      if(i%8===0 || next===text.length) smoothScrollBottom();
+    }, delay);
+  });
+}
+
 $('#openLeft').onclick=()=>drawer(L);
 $('#openRight').onclick=()=>drawer(R);
 $('#closeLeft').onclick=closeAll;
@@ -141,30 +181,44 @@ S.onclick=closeAll;
 $$('[data-toast]').forEach(b=>b.onclick=()=>{msg(b.dataset.toast);closeAll()});
 $$('[data-mod]').forEach(b=>b.onclick=()=>msg((b.querySelector('strong')||{}).textContent+' — এন্টিটি মেমোরি কোর্স'));
 $('#add')&&($('#add').onclick=()=>msg('নতুন এন্টিটি জন্ম — মোশাররফ অনুমোদন প্রয়োজন'));
+
 $('#form').onsubmit=async e=>{
  e.preventDefault();
  const v=$('#input').value.trim(); if(!v)return;
  document.querySelector('.app').classList.add('chat-mode');
  const box=$('#messages');
+
  const user=document.createElement('div'); user.className='message user';
- user.innerHTML='<span class="label">আপনি</span>'+v.replace(/</g,'&lt;');
+ user.innerHTML='<span class="label">আপনি</span>'+v.replace(/</g,'<');
  box.appendChild(user);
  $('#input').value='';
+ smoothScrollBottom();
+
  const ai=document.createElement('div'); ai.className='message ai';
-  ai.innerHTML='<span class="label">MOSHARROF AI</span><span class="ai-text">সংযোগ হচ্ছে…</span>';
-  box.appendChild(ai);
-  $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
-  try{
-   const res=await fetch('https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:v})});
-   const data=await res.json().catch(()=>({}));
-   if(!res.ok) throw new Error(data.error||'chat_request_failed');
-   ai.querySelector('.ai-text').textContent=data.text||'কোনো উত্তর পাওয়া যায়নি।';
-  }catch(err){
-   ai.querySelector('.ai-text').textContent='দুঃখিত, এই মুহূর্তে Gemini সংযোগে সমস্যা হয়েছে।';
-   console.error('Mosharrof Gemini chat error:',err);
-  }
-  $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
+ ai.innerHTML='<span class="label">MOSHARROF AI</span><span class="ai-text streaming">সংযোগ হচ্ছে…</span>';
+ box.appendChild(ai);
+ smoothScrollBottom();
+
+ const textEl=ai.querySelector('.ai-text');
+ try{
+  const res=await fetch('https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text:v})
+  });
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||'chat_request_failed');
+  const answer=data.text||'কোনো উত্তর পাওয়া যায়নি।';
+  await streamText(textEl, answer, { charsPerTick: 2, delayMs: 16 });
+ }catch(err){
+  stopStream();
+  textEl.classList.remove('streaming');
+  textEl.textContent='দুঃখিত, এই মুহূর্তে Gemini সংযোগে সমস্যা হয়েছে।';
+  console.error('Mosharrof Gemini chat error:',err);
+  smoothScrollBottom();
+ }
 };
+
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
 })();
 </script>
