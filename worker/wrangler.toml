@@ -2,3 +2,4 @@ name = "mosharrof-screenshot-analysis"
 main = "screenshot-analysis.js"
 compatibility_date = "2026-09-27"
 workers_dev = true
+account_id = "5deb168bbc31c47db0419913860fce21"
