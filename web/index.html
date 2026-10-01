@@ -24,7 +24,7 @@ button,input{font:inherit;color:inherit}button{cursor:pointer}
 .hero{text-align:center;width:min(850px,100%)}.hero-logo{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;margin:0 auto 16px;font-size:32px;font-weight:900;background:linear-gradient(145deg,#2baeff,#6e58ed)}
 h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-size:13px;margin-top:7px}
 .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:700px;margin:25px auto 20px}.quick button{min-height:58px;border:1px solid #65caff33;border-radius:16px;background:#082346bb;padding:9px;color:#e4f2ff}.quick b{display:block;font-size:12px}.quick small{font-size:9px;color:var(--m)}
-.composer{width:min(820px,100%);margin:auto;border:1px solid #68ccff4d;border-radius:25px;background:#03132bf2;padding:7px;box-shadow:0 15px 45px #0006}
+.composer{position:relative;width:min(820px,100%);margin:auto;border:1px solid #68ccff4d;border-radius:25px;background:#03132bf2;padding:7px;box-shadow:0 15px 45px #0006}
 .row{display:flex;align-items:center;gap:6px}.plus{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid #6bcfff3d;background:#0d2b4fe8;font-size:25px}.input{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:10px 5px;font-size:14px}.input::placeholder{color:#839ab5}.send{width:44px;height:44px;border:0;border-radius:50%;background:linear-gradient(145deg,#36b2ff,#5c50ea);font-size:20px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;padding:3px 5px 1px 51px}.chip{border:1px solid #7ec7ff29;background:#0b2b50;border-radius:11px;padding:6px 9px;font-size:10px}
 .scrim{position:absolute;inset:0;background:#000a;z-index:20;opacity:0;visibility:hidden;transition:.2s}.scrim.open{opacity:1;visibility:visible}
@@ -44,7 +44,7 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 .chat-mode .content{position:absolute;inset:0;padding:0;display:block;overflow:hidden}
 .chat-mode .hero{width:100%;height:100%;max-width:none;display:flex;flex-direction:column;text-align:left;align-items:stretch}
 .chat-mode .hero-logo,.chat-mode h1,.chat-mode .sub,.chat-mode .quick{display:none}
-.chat-mode .composer{order:2;flex:none;width:min(900px,calc(100% - 24px));margin:0 auto calc(10px + var(--safe));z-index:10}
+.chat-mode .composer{order:2;flex:none;width:min(900px,calc(100% - 24px));margin:0 auto calc(10px + var(--safe));z-index:10;position:relative}
 .chat-mode .chat-scroll{display:flex;flex:1;min-height:0;overflow-y:auto;flex-direction:column;justify-content:flex-end;padding:76px 0 18px;scroll-behavior:smooth}
 .chat-mode .messages{width:100%;max-width:48rem;margin:0 auto;padding:0 16px;display:flex;flex-direction:column;gap:22px}
 .chat-mode .message.user{align-self:flex-end;max-width:min(78%,34rem);padding:12px 16px;border-radius:18px 18px 6px 18px;background:linear-gradient(145deg,#168ad0,#5648cf);font-size:15px;line-height:1.6;word-break:break-word;animation:msgAppear .45s cubic-bezier(.22,1,.36,1) both}
@@ -148,9 +148,9 @@ function stopStream(){ if(streamTimer){ clearInterval(streamTimer); streamTimer=
 
 function escapeHtml(s){
   return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;');
+    .replace(/&/g,'&')
+    .replace(/</g,'<')
+    .replace(/>/g,'>');
 }
 
 function formatRich(text){
