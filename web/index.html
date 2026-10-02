@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>MOSHARROF AI — Full Screen V5</title>
+<link rel="manifest" href="./manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -130,7 +131,6 @@ var $=function(s){return document.querySelector(s);};
 var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
 var L=$('#leftDrawer'),R=$('#rightDrawer'),S=$('#scrim'),T=$('#toast');
 var scrollEl=$('#chatScroll');
-var streamTimer=null;
 var CHAT_URL='https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat';
 
 function msg(x){T.textContent=x;T.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(function(){T.classList.remove('show');},1600);}
@@ -140,7 +140,6 @@ function smoothScrollBottom(){
   if(!scrollEl) return;
   requestAnimationFrame(function(){ scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' }); });
 }
-function stopStream(){ if(streamTimer){ clearInterval(streamTimer); streamTimer=null; } }
 function startResponseTimer(label){
   var started=performance.now();
   if(label) label.textContent='00:00';
@@ -179,15 +178,14 @@ function formatRich(text){
 }
 
 function streamText(el, fullText){
-  stopStream();
   var text=String(fullText||'');
   el.classList.add('streaming');
   el.textContent='';
   var i=0;
   return new Promise(function(resolve){
-    streamTimer=setInterval(function(){
+    var timerId=setInterval(function(){
       if(i>=text.length){
-        stopStream();
+        clearInterval(timerId);
         el.classList.remove('streaming');
         try{ el.innerHTML=formatRich(text); }catch(e){ el.textContent=text; }
         smoothScrollBottom();
@@ -248,7 +246,6 @@ $('#form').onsubmit=async function(e){
     var answer=data.text || 'কোনো উত্তর পাওয়া যায়নি।';
     await streamText(textEl, answer);
   }catch(err){
-    stopStream();
     textEl.classList.remove('streaming');
     var reason=(err && err.message) ? String(err.message) : 'unknown';
     textEl.textContent='দুঃখিত, সংযোগে সমস্যা হয়েছে। ('+reason+') একটু পর আবার চেষ্টা করুন।';
@@ -259,6 +256,7 @@ $('#form').onsubmit=async function(e){
   }
 };
 
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(function(err){ console.warn('Mosharrof service worker registration failed:', err); }); }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeAll(); });
 })();
 </script>
