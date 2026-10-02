@@ -58,8 +58,13 @@ export default {async fetch(request,env){
     return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
-  if(origin && origin!==ORIGIN && !origin.startsWith("http://localhost") && !origin.startsWith("http://127.0.0.1")){
-    return reply({error:"origin_not_allowed",origin},403);
+  if(origin){
+    let allowed=origin===ORIGIN;
+    try{
+      const u=new URL(origin);
+      allowed=allowed || (u.protocol==="http:" && (u.hostname==="localhost" || u.hostname==="127.0.0.1"));
+    }catch{}
+    if(!allowed)return reply({error:"origin_not_allowed",origin},403);
   }
   if(request.method!=="POST")return reply({error:"POST only"},405);
   try{
