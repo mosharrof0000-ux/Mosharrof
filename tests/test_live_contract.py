@@ -15,6 +15,8 @@ def test_live_pages_contract():
     assert (web / "sw.js").is_file()
     html = (web / "index.html").read_text(encoding="utf-8")
     assert "Mosharrof" in html
+    assert '<link rel="manifest" href="./manifest.json">' in html
+    assert "navigator.serviceWorker.register('./sw.js')" in html
 
 
 def test_pages_workflow_contract():
