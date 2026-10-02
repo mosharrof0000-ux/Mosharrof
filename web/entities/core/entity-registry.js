@@ -1,0 +1,3 @@
+import {EntityBus} from './entity-bus.js';import {EntityState} from './entity-state.js';import {bindEntityTouch} from './entity-touch.js';
+const defs=new Map();
+export const EntityRegistry={register(def){if(!def?.id)throw new Error('Entity id required');defs.set(def.id,def);return def},get(id){return defs.get(id)},all(){return [...defs.values()]},mount(el,id,context={}){const def=defs.get(id);if(!def)throw new Error('Unknown entity: '+id);const entity={id,def,el,context,state:EntityState.get(id)};el.dataset.entity=id;el.classList.add('mos-ui-icon');if(def.icon)el.innerHTML=def.icon;if(def.bind)def.bind(entity);bindEntityTouch(el,entity);EntityBus.emit('entity:mounted',entity);return entity}};

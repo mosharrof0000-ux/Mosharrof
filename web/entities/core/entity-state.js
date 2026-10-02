@@ -1,0 +1,1 @@
+export const EntityState=(()=>{const store=new Map();function get(id){return store.get(id)||'idle'}function set(id,state){store.set(id,state);return state}function clear(id){store.delete(id)}function snapshot(){return Object.fromEntries(store)}return{get,set,clear,snapshot}})();
