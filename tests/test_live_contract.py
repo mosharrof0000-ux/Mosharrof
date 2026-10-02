@@ -38,3 +38,9 @@ def test_machine_readable_contract_is_consistent():
     assert manifest["immutable_safety_rules"]["delete"] is False
     ids = {entity["id"] for entity in registry["entities"]}
     assert {"core", "chat", "sidebar", "voice", "storage", "tool_factory", "quran_research"} <= ids
+
+
+def test_legacy_web_server_escapes_dynamic_ai_output():
+    legacy = (ROOT / "src" / "web_server.py").read_text(encoding="utf-8")
+    assert "aiNode.innerHTML" not in legacy
+    assert "document.createTextNode(' ' + String(data.response || ''))" in legacy
