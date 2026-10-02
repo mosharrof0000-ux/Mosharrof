@@ -1,0 +1,1 @@
+import {EntityBus} from './entity-bus.js';export const EntityConnection={connect(source,event,target,targetEvent=event){return EntityBus.on(event,p=>{if(!p?.entity||p.entity.id!==source)return;EntityBus.emit(targetEvent,{...p,source,target})})},broadcast(event,payload){EntityBus.emit(event,payload)}};
