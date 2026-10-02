@@ -62,6 +62,28 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 @keyframes msgAppear{from{opacity:0;filter:blur(5px);transform:translateY(14px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
 @keyframes caretBlink{50%{opacity:0}}
 @media(max-width:760px){.chat-mode .messages{padding:0 14px}.chat-mode .message.ai .ai-text{font-size:15px}}
+
+/* MOSHARROF Entity Engine — original message-entity language */
+.mos-entity-rail{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin-top:12px;padding:0 2px;min-height:38px;opacity:0;transform:translateY(5px);transition:opacity .28s ease,transform .28s ease}
+.message.ai:hover .mos-entity-rail,.message.ai:focus-within .mos-entity-rail,.mos-entity-rail.ready{opacity:1;transform:none}
+.mos-entity{--entity-scale:1;position:relative;display:inline-flex;align-items:center;justify-content:center;width:calc(34px * var(--entity-scale));height:calc(34px * var(--entity-scale));min-width:calc(34px * var(--entity-scale));padding:0;border:1px solid rgba(154,220,255,.22);color:rgba(235,250,255,.88);background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(77,154,255,.055));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 24px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.13);cursor:pointer;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,opacity .2s ease}
+.mos-entity:hover{transform:translateY(-2px) scale(1.04);border-color:rgba(129,221,255,.58);box-shadow:0 10px 28px rgba(39,155,255,.16),inset 0 1px 0 rgba(255,255,255,.2)}
+.mos-entity:active{transform:translateY(1px) scale(.96)}
+.mos-entity svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mos-entity .entity-core{display:flex;align-items:center;justify-content:center;width:100%;height:100%;transition:transform .25s ease}
+.mos-entity[data-state="processing"] .entity-core{animation:mosEntityPulse 1s ease-in-out infinite}
+.mos-entity[data-state="completed"] .entity-core{transform:scale(1.08)}
+.mos-entity[data-state="error"]{border-color:rgba(255,130,130,.5)}
+.mos-entity[data-action="coffee"]{border-radius:14px 20px 12px 18px}
+.mos-entity[data-action="like"]{border-radius:20px 12px 18px 10px}
+.mos-entity[data-action="voice"]{border-radius:50%}
+.mos-entity[data-action="share"]{border-radius:11px 18px 11px 18px}
+.mos-entity[data-action="branch"]{border-radius:18px 8px 18px 8px}
+.mos-entity[data-state="active"][data-action="like"]{color:#ff9fca;border-color:rgba(255,130,190,.55);box-shadow:0 10px 28px rgba(255,90,170,.13)}
+.mos-entity .entity-mark{position:absolute;right:-3px;bottom:-3px;width:9px;height:9px;border-radius:50%;background:rgba(114,224,255,.8);box-shadow:0 0 10px rgba(114,224,255,.55);opacity:0;transform:scale(.5);transition:.2s}
+.mos-entity[data-state="processing"] .entity-mark{opacity:1;transform:scale(1)}
+@keyframes mosEntityPulse{50%{transform:scale(.84);opacity:.58}}
+@media (max-width:560px){.mos-entity-rail{opacity:1;transform:none}.mos-entity{width:33px;height:33px}}
 </style>
 </head>
 <body>
@@ -192,6 +214,80 @@ function formatRich(text){
   return t || escapeHtml(text);
 }
 
+
+/* MOSHARROF Entity Engine: registry + state + adaptive layout + per-message memory */
+var MosharrofEntityEngine=(function(){
+  var registry=Object.create(null), sequence=0, memory=Object.create(null);
+  var ICONS={
+    coffee:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5.5A4.5 4.5 0 0 1 11.5 19H9.5A4.5 4.5 0 0 1 5 14.5V9Z"/><path d="M16 11h1.8a2.7 2.7 0 0 1 0 5.4H16"/><path d="M8 5.5c1 1 .9 1.8 0 2.7M11 5.2c1 1 .9 1.8 0 2.7"/></svg>',
+    like:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v10H4.5A1.5 1.5 0 0 1 3 18.5v-7A1.5 1.5 0 0 1 4.5 10H7Z"/><path d="M7 20h9.2a2 2 0 0 0 1.9-1.4l2.2-6.6A2 2 0 0 0 18.4 9H14l.7-3.1A2.3 2.3 0 0 0 12.5 3L7 10v10Z"/></svg>',
+    voice:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="12" rx="4"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>',
+    share:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.2"/><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="19" r="2.2"/><path d="m8 11 7.8-4.7M8 13l7.8 4.7"/></svg>',
+    branch:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v8a4 4 0 0 0 4 4h6"/><path d="m14 14 3 3-3 3"/><circle cx="7" cy="5" r="2"/><circle cx="17" cy="19" r="2"/></svg>'
+  };
+  var LABELS={coffee:'সমর্থন',like:'পছন্দ',voice:'শুনুন',share:'শেয়ার',branch:'শাখা'};
+
+  function register(type,definition){registry[type]=definition;}
+  function remember(id,state){memory[id]=state;return state;}
+  function transition(entity,state){
+    entity.state=state; entity.el.dataset.state=state; remember(entity.id,state);
+    if(entity.onState) entity.onState(state,entity);
+    return entity;
+  }
+  function adaptiveScale(message){
+    var len=((message.querySelector('.ai-text')||{}).textContent||'').trim().length;
+    return Math.max(.9,Math.min(1.24,.9+(Math.min(len,900)/900)*.34));
+  }
+  function create(type,message,context){
+    var def=registry[type]; if(!def) return null;
+    var id='mos-ent-'+(++sequence);
+    var button=document.createElement('button');
+    button.type='button'; button.className='mos-entity'; button.dataset.action=type;
+    button.dataset.entityId=id; button.dataset.sourceMessageId=context.messageId;
+    button.setAttribute('aria-label',LABELS[type]||type);
+    button.title=LABELS[type]||type;
+    button.innerHTML='<span class="entity-core">'+ICONS[type]+'</span><span class="entity-mark"></span>';
+    var entity={id:id,type:type,el:button,message:message,context:context,state:memory[id]||'idle'};
+    button.style.setProperty('--entity-scale',adaptiveScale(message));
+    button.onclick=function(){def.activate(entity);};
+    transition(entity,entity.state);
+    return entity;
+  }
+  function mount(message,context){
+    var rail=document.createElement('div'); rail.className='mos-entity-rail'; rail.dataset.engine='mosharrof-entity-engine';
+    var entities=[];
+    Object.keys(registry).forEach(function(type){var e=create(type,message,context);if(e){rail.appendChild(e.el);entities.push(e);}});
+    message.appendChild(rail);
+    requestAnimationFrame(function(){rail.classList.add('ready');});
+    return entities;
+  }
+
+  register('coffee',{activate:function(e){transition(e,'processing');msg('সমর্থন এন্টিটি সক্রিয় হয়েছে');setTimeout(function(){transition(e,'completed');},360);}});
+  register('like',{activate:function(e){transition(e,e.state==='active'?'idle':'active');msg(e.state==='active'?'এই উত্তরটি পছন্দ হিসেবে রাখা হলো':'পছন্দ সরানো হলো');}});
+  register('voice',{activate:function(e){
+    if(!('speechSynthesis' in window)){transition(e,'error');msg('এই ব্রাউজারে ভয়েস সুবিধা নেই');return;}
+    if(e.state==='processing'){speechSynthesis.cancel();transition(e,'completed');msg('পাঠ থামানো হয়েছে');return;}
+    var text=(e.message.querySelector('.ai-text')||{}).textContent||'';
+    if(!text.trim()) return;
+    transition(e,'processing');speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);u.lang='bn-BD';
+    u.onend=function(){transition(e,'completed');};u.onerror=function(){transition(e,'error');msg('ভয়েস এন্টিটিতে সমস্যা হয়েছে');};
+    speechSynthesis.speak(u);
+  }});
+  register('share',{activate:function(e){
+    var text=(e.message.querySelector('.ai-text')||{}).textContent||'';
+    transition(e,'processing');
+    var done=function(){transition(e,'completed');msg('উত্তর শেয়ার করা হয়েছে');};
+    var fail=function(){transition(e,'error');msg('শেয়ার করা যায়নি');};
+    if(navigator.share){navigator.share({title:'MOSHARROF AI',text:text}).then(done).catch(function(err){if(err&&err.name==='AbortError')transition(e,'idle');else fail();});}
+    else if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){transition(e,'completed');msg('উত্তর কপি করা হয়েছে');}).catch(fail);}
+    else{transition(e,'error');fail();}
+  }});
+  register('branch',{activate:function(e){transition(e,'processing');e.context.branchSource=e.context.messageId;setTimeout(function(){transition(e,'completed');msg('নতুন শাখা এই উত্তরের প্রসঙ্গ থেকে প্রস্তুত');},280);}});
+
+  return {mount:mount,transition:transition,register:register,version:'1.0-mosharrof'};
+})();
+
 function streamText(el, fullText){
   var text=String(fullText||'');
   el.classList.add('streaming');
@@ -261,12 +357,14 @@ $('#form').onsubmit=async function(e){
     }
     var answer=data.text || 'কোনো উত্তর পাওয়া যায়নি।';
     await streamText(textEl, answer);
+    MosharrofEntityEngine.mount(ai,{messageId:'m-'+Date.now()+'-'+Math.random().toString(36).slice(2),source:'assistant'});
   }catch(err){
     textEl.classList.remove('streaming');
     var reason=(err && err.message) ? String(err.message) : 'unknown';
     textEl.textContent='দুঃখিত, সংযোগে সমস্যা হয়েছে। ('+reason+') একটু পর আবার চেষ্টা করুন।';
     console.error('Mosharrof chat error:', err);
     smoothScrollBottom();
+    MosharrofEntityEngine.mount(ai,{messageId:'m-'+Date.now()+'-'+Math.random().toString(36).slice(2),source:'assistant'});
   }finally{
     stopResponseTimer();
   }
