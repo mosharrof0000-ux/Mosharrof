@@ -136,17 +136,23 @@ function msg(x){T.textContent=x;T.classList.add('show');clearTimeout(msg.t);msg.
 function closeAll(){L.classList.remove('open');R.classList.remove('open');S.classList.remove('open');}
 function drawer(x){closeAll();x.classList.add('open');S.classList.add('open');}
 var autoFollowChat=true;
+var manualScrollIntent=false;
 function updateChatScrollMode(){
   if(!scrollEl) return;
   var distance=scrollEl.scrollHeight-scrollEl.scrollTop-scrollEl.clientHeight;
-  autoFollowChat=distance<48;
+  if(distance<48) manualScrollIntent=false;
+  autoFollowChat=!manualScrollIntent && distance<48;
 }
-if(scrollEl) scrollEl.addEventListener('scroll',updateChatScrollMode,{passive:true});
+if(scrollEl){
+  scrollEl.addEventListener('scroll',updateChatScrollMode,{passive:true});
+  scrollEl.addEventListener('touchmove',function(){ manualScrollIntent=true; autoFollowChat=false; },{passive:true});
+  scrollEl.addEventListener('wheel',function(){ manualScrollIntent=true; autoFollowChat=false; },{passive:true});
+}
 function smoothScrollBottom(force){
-  if(!scrollEl || (!force && !autoFollowChat)) return;
+  if(!scrollEl || (!force && (!autoFollowChat || manualScrollIntent))) return;
   requestAnimationFrame(function(){
-    if(!scrollEl || (!force && !autoFollowChat)) return;
-    scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: force ? 'auto' : 'auto' });
+    if(!scrollEl || (!force && (!autoFollowChat || manualScrollIntent))) return;
+    scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior:'auto' });
   });
 }
 function startResponseTimer(label){
