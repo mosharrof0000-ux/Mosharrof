@@ -15,6 +15,8 @@ def test_live_pages_contract():
     assert (web / "sw.js").is_file()
     html = (web / "index.html").read_text(encoding="utf-8")
     assert "Mosharrof" in html
+    assert '<link rel="manifest" href="./manifest.json">' in html
+    assert "navigator.serviceWorker.register('./sw.js')" in html
 
 
 def test_pages_workflow_contract():
@@ -36,3 +38,13 @@ def test_machine_readable_contract_is_consistent():
     assert manifest["immutable_safety_rules"]["delete"] is False
     ids = {entity["id"] for entity in registry["entities"]}
     assert {"core", "chat", "sidebar", "voice", "storage", "tool_factory", "quran_research"} <= ids
+
+
+def test_web_output_escapes_untrusted_text():
+    html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+    assert ".replace(/&/g,'&amp;')" in html
+    assert ".replace(/</g,'&lt;')" in html
+    assert ".replace(/>/g,'&gt;')" in html
+    legacy = (ROOT / "src" / "web_server.py").read_text(encoding="utf-8")
+    assert "userNode.innerHTML" not in legacy
+    assert "aiNode.innerHTML" not in legacy
