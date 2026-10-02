@@ -127,9 +127,10 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 </div>
 <script>
 (()=>{
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});
-  if(window.caches){caches.keys().then(function(keys){keys.forEach(function(k){caches.delete(k);});});}
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").catch(function(err){
+    console.warn("Mosharrof service worker registration failed:", err);
+  });
 }
 var $=function(s){return document.querySelector(s);};
 var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
