@@ -126,10 +126,6 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 </div>
 <script>
 (()=>{
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});
-  if(window.caches){caches.keys().then(function(keys){keys.forEach(function(k){caches.delete(k);});});}
-}
 var $=function(s){return document.querySelector(s);};
 var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
 var L=$('#leftDrawer'),R=$('#rightDrawer'),S=$('#scrim'),T=$('#toast');
@@ -143,7 +139,6 @@ function smoothScrollBottom(){
   if(!scrollEl) return;
   requestAnimationFrame(function(){ scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' }); });
 }
-function stopStream(){ if(streamTimer){ clearInterval(streamTimer); streamTimer=null; } }
 function startResponseTimer(label){
   var started=performance.now();
   if(label) label.textContent='00:00';
