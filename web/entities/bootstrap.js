@@ -1,5 +1,5 @@
 import {EntityRegistry} from './core/entity-registry.js';
-import {EntityBus} from './core/entity-bus.js';
+import {EntityBus} from './core/entity-bus.js';import {MosharrofAppBuilder} from '../app-builder/app-builder.js';
 import './home/home.js';import './chat/chat.js';import './history/history.js';import './library/library.js';import './project/project.js';import './notes/notes.js';import './settings/settings.js';import './quran/quran.js';import './research/research.js';import './ai/ai.js';import './branch/branch.js';
 const shapeRules={home:'14px 10px 16px 11px',chat:'10px 16px 12px 16px',history:'50%',library:'8px 16px 10px 16px',project:'15px 8px 15px 8px',notes:'9px 15px 9px 15px',settings:'50%',quran:'12px 18px 9px 17px',research:'50% 12px 18px 12px',ai:'50%',branch:'18px 8px 18px 8px'};
 document.querySelectorAll('[data-ui-entity]').forEach(el=>{const id=el.dataset.uiEntity;if(shapeRules[id])el.style.borderRadius=shapeRules[id];try{EntityRegistry.mount(el,id,{surface:el.closest('[data-surface]')?.dataset.surface||'site'});}catch(err){console.error('[MOSHARROF Entity Bootstrap]',id,err);}});
