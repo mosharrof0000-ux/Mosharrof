@@ -135,9 +135,19 @@ var CHAT_URL='https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/ch
 function msg(x){T.textContent=x;T.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(function(){T.classList.remove('show');},1600);}
 function closeAll(){L.classList.remove('open');R.classList.remove('open');S.classList.remove('open');}
 function drawer(x){closeAll();x.classList.add('open');S.classList.add('open');}
-function smoothScrollBottom(){
+var autoFollowChat=true;
+function updateChatScrollMode(){
   if(!scrollEl) return;
-  requestAnimationFrame(function(){ scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' }); });
+  var distance=scrollEl.scrollHeight-scrollEl.scrollTop-scrollEl.clientHeight;
+  autoFollowChat=distance<48;
+}
+if(scrollEl) scrollEl.addEventListener('scroll',updateChatScrollMode,{passive:true});
+function smoothScrollBottom(force){
+  if(!scrollEl || (!force && !autoFollowChat)) return;
+  requestAnimationFrame(function(){
+    if(!scrollEl || (!force && !autoFollowChat)) return;
+    scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: force ? 'auto' : 'auto' });
+  });
 }
 function startResponseTimer(label){
   var started=performance.now();
@@ -221,13 +231,13 @@ $('#form').onsubmit=async function(e){
   user.textContent=v;
   box.appendChild(user);
   $('#input').value='';
-  smoothScrollBottom();
+  smoothScrollBottom(true);
 
   var ai=document.createElement('div');
   ai.className='message ai';
   ai.innerHTML='<span class="label"><span>MOSHARROF AI</span><span class="timer">00:00</span></span><span class="ai-text streaming">উত্তর আসছে…</span>';
   box.appendChild(ai);
-  smoothScrollBottom();
+  smoothScrollBottom(true);
   var textEl=ai.querySelector('.ai-text');
   var stopResponseTimer=startResponseTimer(ai.querySelector('.timer'));
 
