@@ -178,7 +178,11 @@ SEAMLESS_HTML_TEMPLATE = """
                 
                 const userNode = document.createElement('div');
                 userNode.className = 'shadow-thought-stream';
-                userNode.innerHTML = `<span style="color: #38bdf8;">আপনি:</span> ${val}`;
+                const userLabel = document.createElement('span');
+                userLabel.style.color = '#38bdf8';
+                userLabel.textContent = 'আপনি:';
+                userNode.appendChild(userLabel);
+                userNode.appendChild(document.createTextNode(' ' + val));
                 container.appendChild(userNode);
 
                 input.value = '';
@@ -193,8 +197,19 @@ SEAMLESS_HTML_TEMPLATE = """
                 .then(data => {
                     const aiNode = document.createElement('div');
                     aiNode.className = 'shadow-thought-stream';
-                    aiNode.innerHTML = `<span class="rebel-accent">মোশারফ:</span> ${data.response}`;
+                    const aiLabel = document.createElement('span');
+                    aiLabel.className = 'rebel-accent';
+                    aiLabel.textContent = 'মোশাররফ:';
+                    aiNode.appendChild(aiLabel);
+                    aiNode.appendChild(document.createTextNode(' ' + String(data.response || '')));
                     container.appendChild(aiNode);
+                    container.scrollTop = container.scrollHeight;
+                })
+                .catch(() => {
+                    const errorNode = document.createElement('div');
+                    errorNode.className = 'shadow-thought-stream';
+                    errorNode.textContent = 'দুঃখিত, অনুরোধটি সম্পন্ন করা যায়নি।';
+                    container.appendChild(errorNode);
                     container.scrollTop = container.scrollHeight;
                 });
             }
