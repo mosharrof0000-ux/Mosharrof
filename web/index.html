@@ -64,7 +64,7 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 @media(max-width:760px){.chat-mode .messages{padding:0 14px}.chat-mode .message.ai .ai-text{font-size:15px}}
 
 /* MOSHARROF Entity Engine — original message-entity language */
-.mos-entity-rail{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin-top:12px;padding:0 2px;min-height:38px;opacity:0;transform:translateY(5px);transition:opacity .28s ease,transform .28s ease}
+.mos-entity-rail{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin-top:12px;padding:0 2px;min-height:38px;opacity:1;transform:none;transition:opacity .28s ease,transform .28s ease}
 .message.ai:hover .mos-entity-rail,.message.ai:focus-within .mos-entity-rail,.mos-entity-rail.ready{opacity:1;transform:none}
 .mos-entity{--entity-scale:1;position:relative;display:inline-flex;align-items:center;justify-content:center;width:calc(34px * var(--entity-scale));height:calc(34px * var(--entity-scale));min-width:calc(34px * var(--entity-scale));padding:0;border:1px solid rgba(154,220,255,.22);color:rgba(235,250,255,.88);background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(77,154,255,.055));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 24px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.13);cursor:pointer;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,opacity .2s ease}
 .mos-entity:hover{transform:translateY(-2px) scale(1.04);border-color:rgba(129,221,255,.58);box-shadow:0 10px 28px rgba(39,155,255,.16),inset 0 1px 0 rgba(255,255,255,.2)}
