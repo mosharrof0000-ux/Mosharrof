@@ -85,6 +85,29 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 .mos-entity[data-state="processing"] .entity-mark{opacity:1;transform:scale(1)}
 @keyframes mosEntityPulse{50%{transform:scale(.84);opacity:.58}}
 @media (max-width:560px){.mos-entity-rail{opacity:1;transform:none}.mos-entity{width:33px;height:33px}}
+
+/* MOSHARROF Site Entity Family — original glass UI language */
+.mos-ui-icon{--ui-scale:1;width:30px;height:30px;display:inline-grid;place-items:center;flex:none;border:1px solid rgba(154,220,255,.20);border-radius:12px;background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(66,139,255,.06));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 7px 18px rgba(0,0,0,.16);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.mos-ui-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.quick button .mos-ui-icon{margin:0 auto 5px;width:34px;height:34px}
+.nav button .mos-ui-icon{width:30px;height:30px}
+.module .mos-ui-icon{width:39px;height:39px}
+.top .round,.dclose{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 8px 24px rgba(0,0,0,.18)}
+.mos-ui-icon[data-ui-icon="home"]{border-radius:14px 10px 16px 11px}
+.mos-ui-icon[data-ui-icon="chat"]{border-radius:10px 16px 12px 16px}
+.mos-ui-icon[data-ui-icon="history"]{border-radius:50%}
+.mos-ui-icon[data-ui-icon="library"]{border-radius:8px 16px 10px 16px}
+.mos-ui-icon[data-ui-icon="project"]{border-radius:15px 8px 15px 8px}
+.mos-ui-icon[data-ui-icon="notes"]{border-radius:9px 15px 9px 15px}
+.mos-ui-icon[data-ui-icon="settings"]{border-radius:50%}
+.mos-ui-icon[data-ui-icon="quran"]{border-radius:12px 18px 9px 17px}
+.mos-ui-icon[data-ui-icon="research"]{border-radius:50% 12px 18px 12px}
+.mos-ui-icon[data-ui-icon="tools"]{border-radius:17px 9px 17px 9px}
+.mos-ui-icon[data-ui-icon="branch"]{border-radius:18px 8px 18px 8px}
+.mos-ui-icon[data-ui-icon="ai"]{border-radius:50% 15px 50% 15px}
+.mos-ui-icon[data-ui-icon="signal"]{border-radius:10px 20px 10px 20px}
+.quick button:hover .mos-ui-icon,.nav button:hover .mos-ui-icon,.module:hover .mos-ui-icon{transform:translateY(-2px) scale(1.04);border-color:rgba(129,221,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.20),0 10px 24px rgba(39,155,255,.14)}
+.quick button:active .mos-ui-icon,.nav button:active .mos-ui-icon,.module:active .mos-ui-icon{transform:scale(.95)}
 </style>
 </head>
 <body>
@@ -100,12 +123,12 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
  <h1>আপনি কিভাবে <span>সাহায্য</span> চান?</h1>
  <p class="sub">কুরআন, গবেষণা, জ্ঞান অথবা অন্য কোনো বিষয়ে প্রশ্ন করুন...</p>
  <div class="quick">
-  <button data-mod="quran">📖<b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
-  <button data-mod="quran">▤<b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
-  <button data-mod="quran">🧠<b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
-  <button data-mod="quran">📚<b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
-  <button data-mod="quran">🕌<b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
-  <button data-mod="quran">🔬<b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-icon="quran"></span><b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-icon="research"></span><b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-icon="ai"></span><b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-icon="library"></span><b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-icon="quran"></span><b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-icon="research"></span><b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
  </div>
  <div class="chat-scroll" id="chatScroll"><div class="messages" id="messages"></div></div>
  <form class="composer" id="form">
@@ -126,21 +149,21 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 <aside class="drawer left" id="leftDrawer">
  <div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF AI</strong><small>মূল সাইট নেভিগেশন</small></div><button class="round dclose" id="closeLeft">×</button></div>
  <nav class="nav">
-  <button class="active" data-toast="হোম"><span class="ni">🏠</span>হোম</button>
-  <button data-toast="চ্যাট"><span class="ni">💬</span>চ্যাট</button>
-  <button data-toast="চ্যাট ইতিহাস"><span class="ni">◷</span>চ্যাট ইতিহাস</button>
-  <button data-toast="জ্ঞান ভাণ্ডার"><span class="ni">📚</span>জ্ঞান ভাণ্ডার</button>
-  <button data-toast="প্রজেক্ট"><span class="ni">🗂️</span>প্রজেক্ট</button>
-  <button data-toast="নোটস"><span class="ni">📝</span>নোটস</button>
-  <button data-toast="সেটিংস"><span class="ni">⚙️</span>সেটিংস</button>
+  <button class="active" data-toast="হোম"><span class="mos-ui-icon" data-ui-icon="home"></span>হোম</button>
+  <button data-toast="চ্যাট"><span class="mos-ui-icon" data-ui-icon="chat"></span>চ্যাট</button>
+  <button data-toast="চ্যাট ইতিহাস"><span class="mos-ui-icon" data-ui-icon="history"></span>চ্যাট ইতিহাস</button>
+  <button data-toast="জ্ঞান ভাণ্ডার"><span class="mos-ui-icon" data-ui-icon="library"></span>জ্ঞান ভাণ্ডার</button>
+  <button data-toast="প্রজেক্ট"><span class="mos-ui-icon" data-ui-icon="project"></span>প্রজেক্ট</button>
+  <button data-toast="নোটস"><span class="mos-ui-icon" data-ui-icon="notes"></span>নোটস</button>
+  <button data-toast="সেটিংস"><span class="mos-ui-icon" data-ui-icon="settings"></span>সেটিংস</button>
  </nav>
  <div class="profile"><div class="avatar">M</div><div><b>মোশাররফ</b><small>সার্বভৌম পরিচালক • v1.0</small></div></div>
 </aside>
 <aside class="drawer right" id="rightDrawer">
  <div class="dhead"><div class="dlogo">▣</div><div><strong>MOSHARROF PROJECT HUB</strong><small>প্রতিটি মডিউল = আলাদা এন্টিটি</small></div><button class="round dclose" id="closeRight">×</button></div>
  <div class="modules">
-  <button class="module featured" data-mod="quran"><div class="mi">📖</div><div><strong>Quran Research</strong><span>কুরআন Tools</span></div><div class="arrow">›</div></button>
-  <button class="module" data-mod="lab"><div class="mi">🧪</div><div><strong>Research Lab</strong><span>গবেষণা</span></div><div class="arrow">›</div></button>
+  <button class="module featured" data-mod="quran"><div class="mi"><span class="mos-ui-icon" data-ui-icon="quran"></span></div><div><strong>Quran Research</strong><span>কুরআন Tools</span></div><div class="arrow">›</div></button>
+  <button class="module" data-mod="lab"><div class="mi"><span class="mos-ui-icon" data-ui-icon="research"></span></div><div><strong>Research Lab</strong><span>গবেষণা</span></div><div class="arrow">›</div></button>
   <button class="add" id="add">＋ নতুন মডিউল</button>
  </div>
 </aside>
@@ -153,6 +176,27 @@ var $=function(s){return document.querySelector(s);};
 var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
 var L=$('#leftDrawer'),R=$('#rightDrawer'),S=$('#scrim'),T=$('#toast');
 var scrollEl=$('#chatScroll');
+
+var SITE_ICONS={
+ home:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-5.5 4v-4.7A2.5 2.5 0 0 1 4 12.5v-7Z"/></svg>',
+ history:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2M4 6l2-2M4 6h3"/></svg>',
+ library:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Z"/><path d="M7 4v14M9.5 8h6M9.5 12h6"/></svg>',
+ project:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5h7l2 2h9v9A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-11Z"/><path d="M3 9.5h18"/></svg>',
+ notes:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>',
+ settings:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19 13 1.2 1-.9 1.8-1.6-.4-1.3 1.3.4 1.6-1.8.9-1-1.2h-2l-1 1.2-1.8-.9.4-1.6-1.3-1.3-1.6.4-.9-1.8L5 13v-2l-1.2-1 .9-1.8 1.6.4 1.3-1.3-.4-1.6L9 4.8l1 1.2h2l1-1.2 1.8.9-.4 1.6 1.3 1.3 1.6-.4.9 1.8-1.2 1v2Z"/></svg>',
+ quran:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v18H7.5A2.5 2.5 0 0 0 5 22V4.5Z"/><path d="M5 4.5V19M9 6h6M9 10h6M9 14h5"/></svg>',
+ research:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5M10.5 8v5"/></svg>',
+ tools:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M5 19l7-7M13 4a4 4 0 0 0 5 5l-6 6-3-3 6-6a4 4 0 0 0-5-5l3 3-3 3-3-3 3-3 3 3Z"/></svg>',
+ ai:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5A3.5 3.5 0 0 1 10.5 2h3A3.5 3.5 0 0 1 17 5.5v13a3.5 3.5 0 0 1-3.5 3h-3A3.5 3.5 0 0 1 7 18.5v-13Z"/><path d="M10 8h4M10 12h4M10 16h2"/></svg>',
+ signal:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18v-3M9.5 18v-6M14 18V9M18.5 18V5"/></svg>',
+ branch:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v8a4 4 0 0 0 4 4h6"/><path d="m14 14 3 3-3 3"/><circle cx="7" cy="5" r="2"/><circle cx="17" cy="19" r="2"/></svg>'
+};
+document.querySelectorAll('.mos-ui-icon[data-ui-icon]').forEach(function(el){
+  var key=el.dataset.uiIcon;
+  el.innerHTML=SITE_ICONS[key]||SITE_ICONS.ai;
+});
+
 var CHAT_URL='https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat';
 
 function msg(x){T.textContent=x;T.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(function(){T.classList.remove('show');},1600);}
