@@ -1,3 +1,3 @@
 import {EntityRegistry} from '../core/entity-registry.js';import {EntityBus} from '../core/entity-bus.js';import {EntityState} from '../core/entity-state.js';import {icons} from '../shared/entity-icons.js';
-const shape="quran";
+const id="quran";const icon="quran";const shape="quran";
 EntityRegistry.register({id,icon:icons[icon],bind(entity){entity.el.dataset.shape=shape;entity.el.addEventListener('click',()=>{EntityState.set(entity.id,'active');entity.el.dataset.state='active';EntityBus.emit('entity:activated',{entity});setTimeout(()=>{EntityState.set(entity.id,'idle');entity.el.dataset.state='idle';},220);});EntityBus.on('entity:error',p=>{if(p?.target===entity.id){EntityState.set(entity.id,'error');entity.el.dataset.state='error';}});}});
