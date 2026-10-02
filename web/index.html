@@ -141,7 +141,7 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
  <div class="modules">
   <button class="module featured" data-mod="quran"><div class="mi mos-ui-icon" data-ui-entity="quran" data-surface="module"></div><div><strong>Quran Research</strong><span>কুরআন Tools</span></div><div class="arrow">›</div></button>
   <button class="module" data-mod="lab"><div class="mi mos-ui-icon" data-ui-entity="research" data-surface="module"></div><div><strong>Research Lab</strong><span>গবেষণা</span></div><div class="arrow">›</div></button>
-  <button class="add" id="add">＋ নতুন মডিউল</button>
+  <button class="add" id="installApp" hidden>⇩ MOSHARROF অ্যাপ ইনস্টল</button>\n  <button class="add" id="add">＋ নতুন মডিউল</button>
  </div>
 </aside>
 <div class="scrim" id="scrim"></div>
@@ -154,6 +154,7 @@ var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s
 var L=$('#leftDrawer'),R=$('#rightDrawer'),S=$('#scrim'),T=$('#toast');
 var scrollEl=$('#chatScroll');
 var CHAT_URL='https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat';
+var deferredInstallPrompt=null;function setupInstall(){var b=$('#installApp');if(!b)return;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstallPrompt=e;b.hidden=false;});b.onclick=async function(){if(!deferredInstallPrompt){msg('ব্রাউজারের মেনু থেকে Install app / Add to Home screen নির্বাচন করুন।');return;}deferredInstallPrompt.prompt();try{await deferredInstallPrompt.userChoice;}catch(_){}deferredInstallPrompt=null;b.hidden=true;};window.addEventListener('appinstalled',function(){deferredInstallPrompt=null;b.hidden=true;msg('MOSHARROF অ্যাপ ইনস্টল হয়েছে।');});if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true)b.hidden=true;}setupInstall();if('serviceWorker'in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('MOSHARROF service worker:',e);});});
 
 function msg(x){T.textContent=x;T.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(function(){T.classList.remove('show');},1600);}
 function closeAll(){L.classList.remove('open');R.classList.remove('open');S.classList.remove('open');}
