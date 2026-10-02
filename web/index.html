@@ -9,7 +9,7 @@
 <title>MOSHARROF AI — Full Screen V5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="./entities/shared/entity-glass.css">\n<link rel="stylesheet" href="./entities/shared/entity-shapes.css">
 <style>
 :root{--bg:#041229;--bg2:#092650;--t:#f4f9ff;--m:#9db3cd;--l:#70c8ff2b;--b:#2caeff;--v:#7058ef;--safe:env(safe-area-inset-bottom,0px);--text:#eef4ff}
 *{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden}body{font-family:"Inter","Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;background:#020b1c;color:var(--t);-webkit-font-smoothing:antialiased}
@@ -91,21 +91,21 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 <div class="app">
 <main class="main">
 <header class="top">
- <div class="left-btn"><button class="round" id="openLeft">☰</button></div>
+ <div class="left-btn"><button class="round mos-ui-icon" data-ui-entity="home" data-surface="top" id="openLeft" aria-label="মেনু"></button></div>
  <div class="brand"><span class="mlogo">M</span><b>MOSHARROF AI</b><small>Mosharrof — জ্ঞান • গবেষণা • অন্তর্দৃষ্টি</small></div>
- <div class="right-btn"><button class="round" id="openRight">⋮</button></div>
+ <div class="right-btn"><button class="round mos-ui-icon" data-ui-entity="project" data-surface="top" id="openRight" aria-label="প্রজেক্ট হাব"></button></div>
 </header>
 <section class="content"><div class="hero">
  <div class="hero-logo">M</div>
  <h1>আপনি কিভাবে <span>সাহায্য</span> চান?</h1>
  <p class="sub">কুরআন, গবেষণা, জ্ঞান অথবা অন্য কোনো বিষয়ে প্রশ্ন করুন...</p>
  <div class="quick">
-  <button data-mod="quran">📖<b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
-  <button data-mod="quran">▤<b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
-  <button data-mod="quran">🧠<b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
-  <button data-mod="quran">📚<b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
-  <button data-mod="quran">🕌<b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
-  <button data-mod="quran">🔬<b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="quran" data-surface="quick"></span><b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"></span><b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="ai" data-surface="quick"></span><b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="library" data-surface="quick"></span><b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="chat" data-surface="quick"></span><b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"></span><b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
  </div>
  <div class="chat-scroll" id="chatScroll"><div class="messages" id="messages"></div></div>
  <form class="composer" id="form">
@@ -126,21 +126,21 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 <aside class="drawer left" id="leftDrawer">
  <div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF AI</strong><small>মূল সাইট নেভিগেশন</small></div><button class="round dclose" id="closeLeft">×</button></div>
  <nav class="nav">
-  <button class="active" data-toast="হোম"><span class="ni">🏠</span>হোম</button>
-  <button data-toast="চ্যাট"><span class="ni">💬</span>চ্যাট</button>
-  <button data-toast="চ্যাট ইতিহাস"><span class="ni">◷</span>চ্যাট ইতিহাস</button>
-  <button data-toast="জ্ঞান ভাণ্ডার"><span class="ni">📚</span>জ্ঞান ভাণ্ডার</button>
-  <button data-toast="প্রজেক্ট"><span class="ni">🗂️</span>প্রজেক্ট</button>
-  <button data-toast="নোটস"><span class="ni">📝</span>নোটস</button>
-  <button data-toast="সেটিংস"><span class="ni">⚙️</span>সেটিংস</button>
+  <button class="active" data-toast="হোম"><span class="ni mos-ui-icon" data-ui-entity="home" data-surface="nav"></span>হোম</button>
+  <button data-toast="চ্যাট"><span class="ni mos-ui-icon" data-ui-entity="chat" data-surface="nav"></span>চ্যাট</button>
+  <button data-toast="চ্যাট ইতিহাস"><span class="ni mos-ui-icon" data-ui-entity="history" data-surface="nav"></span>চ্যাট ইতিহাস</button>
+  <button data-toast="জ্ঞান ভাণ্ডার"><span class="ni mos-ui-icon" data-ui-entity="library" data-surface="nav"></span>জ্ঞান ভাণ্ডার</button>
+  <button data-toast="প্রজেক্ট"><span class="ni mos-ui-icon" data-ui-entity="project" data-surface="nav"></span>প্রজেক্ট</button>
+  <button data-toast="নোটস"><span class="ni mos-ui-icon" data-ui-entity="notes" data-surface="nav"></span>নোটস</button>
+  <button data-toast="সেটিংস"><span class="ni mos-ui-icon" data-ui-entity="settings" data-surface="nav"></span>সেটিংস</button>
  </nav>
  <div class="profile"><div class="avatar">M</div><div><b>মোশাররফ</b><small>সার্বভৌম পরিচালক • v1.0</small></div></div>
 </aside>
 <aside class="drawer right" id="rightDrawer">
- <div class="dhead"><div class="dlogo">▣</div><div><strong>MOSHARROF PROJECT HUB</strong><small>প্রতিটি মডিউল = আলাদা এন্টিটি</small></div><button class="round dclose" id="closeRight">×</button></div>
+ <div class="dhead"><div class="dlogo mos-ui-icon" data-ui-entity="project" data-surface="drawer"></div><div><strong>MOSHARROF PROJECT HUB</strong><small>প্রতিটি মডিউল = আলাদা এন্টিটি</small></div><button class="round dclose" id="closeRight">×</button></div>
  <div class="modules">
-  <button class="module featured" data-mod="quran"><div class="mi">📖</div><div><strong>Quran Research</strong><span>কুরআন Tools</span></div><div class="arrow">›</div></button>
-  <button class="module" data-mod="lab"><div class="mi">🧪</div><div><strong>Research Lab</strong><span>গবেষণা</span></div><div class="arrow">›</div></button>
+  <button class="module featured" data-mod="quran"><div class="mi mos-ui-icon" data-ui-entity="quran" data-surface="module"></div><div><strong>Quran Research</strong><span>কুরআন Tools</span></div><div class="arrow">›</div></button>
+  <button class="module" data-mod="lab"><div class="mi mos-ui-icon" data-ui-entity="research" data-surface="module"></div><div><strong>Research Lab</strong><span>গবেষণা</span></div><div class="arrow">›</div></button>
   <button class="add" id="add">＋ নতুন মডিউল</button>
  </div>
 </aside>
@@ -389,5 +389,5 @@ $('#form').onsubmit=async function(e){
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeAll(); });
 })();
 </script>
-</body>
+<script type="module" src="./entities/bootstrap.js"></script>\n</body>
 </html>
