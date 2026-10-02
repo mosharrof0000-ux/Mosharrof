@@ -1,0 +1,9 @@
+{
+  "schema":"mosharrof.app-build.v1",
+  "purpose":"Single-instruction app construction contract for MOSHARROF.",
+  "input":{"instruction":"Natural-language app request","name":"Optional app name","requirements":[],"target_devices":["phone","tablet","desktop","tv"],"language":"bn","visual_direction":"MOSHARROF deep-glass unless explicitly overridden"},
+  "pipeline":["interpret","specify","plan","isolate_branch","implement","test","visual_qa","open_pr","required_checks","protected_merge","pages_deploy","live_health_check","document"],
+  "rules":{"main_is_protected":true,"direct_main_write":false,"destructive_operations":false,"credential_read":false,"force_push":false,"device_adaptation_required":true,"full_viewport_required":true,"safe_area_required":true,"preserve_entity_isolation":true,"preserve_existing_ai_connection":true},
+  "device_contract":{"phone":"100dvw x 100dvh","phone-compact":"compact vertical layout with reduced decoration","tablet":"fluid tablet layout","desktop":"fluid desktop/laptop layout","tv":"fluid large-display layout; no fixed phone canvas"},
+  "definition_of_done":["Requested behavior implemented","Complete available viewport used","No fixed device-sized canvas creates avoidable gaps","Entity modules remain independently replaceable","Automated tests pass","Visual QA passes for compact phone, phone, tablet/desktop and large-display profiles","PR checks pass before protected promotion","Pages deployment and live health check pass"]
+}
