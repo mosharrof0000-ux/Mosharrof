@@ -193,7 +193,11 @@ SEAMLESS_HTML_TEMPLATE = """
                 .then(data => {
                     const aiNode = document.createElement('div');
                     aiNode.className = 'shadow-thought-stream';
-                    aiNode.innerHTML = `<span class="rebel-accent">মোশারফ:</span> ${data.response}`;
+                    const aiLabel = document.createElement('span');
+                    aiLabel.className = 'rebel-accent';
+                    aiLabel.textContent = 'মোশারফ:';
+                    aiNode.appendChild(aiLabel);
+                    aiNode.appendChild(document.createTextNode(' ' + String(data.response || '')));
                     container.appendChild(aiNode);
                     container.scrollTop = container.scrollHeight;
                 });
