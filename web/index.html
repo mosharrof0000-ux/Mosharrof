@@ -45,8 +45,8 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 .chat-mode .hero{width:100%;height:100%;max-width:none;display:flex;flex-direction:column;text-align:left;align-items:stretch}
 .chat-mode .hero-logo,.chat-mode h1,.chat-mode .sub,.chat-mode .quick{display:none}
 .chat-mode .composer{order:2;flex:none;width:min(900px,calc(100% - 24px));margin:0 auto calc(10px + var(--safe));z-index:10;position:relative}
-.chat-mode .chat-scroll{display:flex;flex:1;min-height:0;overflow-y:auto;flex-direction:column;justify-content:flex-end;padding:76px 0 18px;scroll-behavior:smooth}
-.chat-mode .messages{width:100%;max-width:48rem;margin:0 auto;padding:0 16px;display:flex;flex-direction:column;gap:22px}
+.chat-mode .chat-scroll{display:block;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:76px 0 18px;scroll-behavior:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y}
+.chat-mode .messages{width:100%;min-height:100%;max-width:48rem;margin:0 auto;padding:0 16px;display:flex;flex-direction:column;justify-content:flex-end;gap:22px}
 .chat-mode .message.user{align-self:flex-end;max-width:min(78%,34rem);padding:12px 16px;border-radius:18px 18px 6px 18px;background:linear-gradient(145deg,#168ad0,#5648cf);font-size:15px;line-height:1.6;word-break:break-word;animation:msgAppear .45s cubic-bezier(.22,1,.36,1) both}
 .chat-mode .message.ai{align-self:stretch;width:100%;max-width:100%;padding:4px 0 8px;background:transparent;border:0;animation:msgAppear .5s cubic-bezier(.22,1,.36,1) both}
 .chat-mode .message.ai .label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#8eb4d8;margin-bottom:10px}.chat-mode .message.ai .timer{margin-left:auto;color:#70c8ff;font-variant-numeric:tabular-nums;font-size:10px;opacity:.9}
