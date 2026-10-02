@@ -1,0 +1,41 @@
+/* MOSHARROF Adaptive Shell Foundation */
+:root{--mos-vw:100vw;--mos-vh:100dvh;--mos-safe-top:env(safe-area-inset-top,0px);--mos-safe-right:env(safe-area-inset-right,0px);--mos-safe-bottom:env(safe-area-inset-bottom,0px);--mos-safe-left:env(safe-area-inset-left,0px);--mos-ui-scale:1;--mos-content-gutter:clamp(10px,2vw,32px);--mos-section-gap:clamp(10px,1.6vw,28px);--mos-topbar-height:clamp(54px,5.2vw,84px)}
+html,body{width:100%;min-width:0;min-height:100%;margin:0}html{background:#020b1c;overflow:hidden}body{min-height:100dvh;min-height:100svh;width:100dvw;max-width:none;overflow:hidden;background:#020b1c}
+.mos-adaptive-ready .app{width:100dvw;height:100dvh;min-height:100svh;min-width:0;max-width:none;overflow:hidden;padding:var(--mos-safe-top) var(--mos-safe-right) var(--mos-safe-bottom) var(--mos-safe-left)}
+.mos-adaptive-ready .main,.mos-adaptive-ready .content,.mos-adaptive-ready .drawer,.mos-adaptive-ready .scrim{min-width:0}
+.mos-adaptive-ready .top{min-height:var(--mos-topbar-height);height:var(--mos-topbar-height);padding-inline:var(--mos-content-gutter)}
+.mos-adaptive-ready .content{padding-inline:var(--mos-content-gutter)}
+.mos-adaptive-ready .hero{width:min(92vw,1200px)}
+.mos-adaptive-ready .quick{width:min(100%,1100px);gap:clamp(7px,1vw,16px)}
+.mos-adaptive-ready .composer{width:min(92vw,1100px)}
+.mos-adaptive-ready .drawer{width:min(390px,32vw);padding:clamp(12px,1.5vw,26px)}
+.mos-adaptive-ready .nav button,.mos-adaptive-ready .module{min-height:clamp(44px,4vw,68px)}
+.mos-adaptive-ready .chat-mode .composer{width:min(92vw,1100px);margin-bottom:clamp(8px,1vw,18px)}
+.mos-adaptive-ready .chat-mode .messages{width:min(92vw,980px);max-width:980px;padding-inline:clamp(12px,2vw,30px)}
+.mos-adaptive-ready .chat-mode .message.ai .ai-text{font-size:clamp(15px,1.15vw,20px);line-height:clamp(1.55,1.7vw,1.82)}
+html[data-mos-device="phone-compact"]{--mos-content-gutter:10px;--mos-section-gap:8px;--mos-topbar-height:52px}
+html[data-mos-device="phone-compact"] .hero-logo{width:58px;height:58px;margin-bottom:9px}
+html[data-mos-device="phone-compact"] .quick{margin-top:14px;margin-bottom:12px}
+html[data-mos-device="phone-compact"] .quick button{min-height:48px;padding:7px}
+html[data-mos-device="phone-compact"] .sub{display:none}
+html[data-mos-device="phone-compact"] .composer{border-radius:21px}
+html[data-mos-device="phone-compact"] .chips{display:none}
+html[data-mos-device="phone"] .mos-ui-icon{--entity-size:38px}
+html[data-mos-device="tablet"] .quick{grid-template-columns:repeat(3,minmax(0,1fr))}
+html[data-mos-device="desktop"] .quick,html[data-mos-device="tv"] .quick{grid-template-columns:repeat(6,minmax(0,1fr))}
+html[data-mos-device="desktop"] .hero-logo,html[data-mos-device="tv"] .hero-logo{width:clamp(80px,6vw,126px);height:clamp(80px,6vw,126px)}
+html[data-mos-device="desktop"] .drawer,html[data-mos-device="tv"] .drawer{width:min(440px,28vw)}
+html[data-mos-device="tv"]{--mos-content-gutter:clamp(28px,3vw,72px);--mos-section-gap:clamp(18px,2vw,42px)}
+html[data-mos-device="tv"] .hero{width:min(88vw,1800px)}
+html[data-mos-device="tv"] .quick{gap:clamp(12px,1.2vw,26px)}
+html[data-mos-device="tv"] .quick button{min-height:clamp(72px,6vw,118px);border-radius:clamp(16px,1.4vw,28px)}
+html[data-mos-device="tv"] .quick b{font-size:clamp(13px,1vw,20px)}
+html[data-mos-device="tv"] .quick small{font-size:clamp(10px,.75vw,15px)}
+html[data-mos-device="tv"] .chat-mode .message.user{max-width:min(62%,58rem)}
+html[data-mos-device="tv"] .chat-mode .message.ai .ai-text{font-size:clamp(17px,1.25vw,28px)}
+html[data-mos-device="tv"] .mos-entity{width:clamp(38px,3vw,58px);height:clamp(38px,3vw,58px)}
+html[data-mos-device="tv"] .mos-entity svg{width:clamp(19px,1.4vw,30px);height:clamp(19px,1.4vw,30px)}
+@media (orientation:landscape) and (max-height:600px){.mos-adaptive-ready .content{align-items:flex-start;overflow:auto}.mos-adaptive-ready .hero{padding-block:8px 14px}}
+@media (min-aspect-ratio:2/1){.mos-adaptive-ready .hero{width:min(82vw,1500px)}}
+@media (display-mode:standalone),(display-mode:fullscreen){.mos-adaptive-ready .app{width:100dvw;height:100dvh}}
+@media (prefers-reduced-motion:reduce){.mos-adaptive-ready *,.mos-adaptive-ready *::before,.mos-adaptive-ready *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
