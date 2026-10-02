@@ -181,9 +181,8 @@ function streamText(el, fullText){
   el.classList.add('streaming');
   el.textContent='';
   var i=0;
-  var timerId=null;
   return new Promise(function(resolve){
-    timerId=setInterval(function(){
+    var timerId=setInterval(function(){
       if(i>=text.length){
         clearInterval(timerId);
         el.classList.remove('streaming');
