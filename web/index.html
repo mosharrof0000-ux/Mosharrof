@@ -90,12 +90,12 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 @media (max-width:560px){.mos-entity-rail{opacity:1;transform:none}.mos-entity{width:33px;height:33px}}
 
 /* MOSHARROF floating system glass: content passes beneath protected status/navigation zones. */
-.system-glass{position:absolute;left:0;right:0;pointer-events:none;z-index:14;overflow:hidden;isolation:isolate}
+.system-glass{display:none;position:absolute;left:0;right:0;pointer-events:none;z-index:14;overflow:hidden;isolation:isolate}
 .system-glass::before{content:"";position:absolute;inset:0;background:rgba(4,18,41,.22);backdrop-filter:blur(12px) saturate(125%);-webkit-backdrop-filter:blur(12px) saturate(125%);border:1px solid rgba(126,211,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 30px rgba(0,0,0,.08)}
 .system-glass.top-zone{top:0;height:calc(54px + var(--safe-top));padding-top:var(--safe-top);border-radius:0 0 22px 22px}
 .system-glass.bottom-zone{bottom:0;height:calc(78px + var(--safe));padding-bottom:var(--safe);border-radius:22px 22px 0 0}
 .system-glass .zone-content{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-.chat-mode .system-glass.top-zone{height:calc(66px + var(--safe-top))}
+.chat-mode .system-glass{display:block}.chat-mode .system-glass.top-zone{height:calc(66px + var(--safe-top))}
 .chat-mode .system-glass.bottom-zone{height:calc(92px + var(--safe))}
 .chat-mode .system-glass::after{content:"";position:absolute;left:14%;right:14%;height:1px;border-radius:99px;background:rgba(255,255,255,.08);filter:blur(.4px)}
 .chat-mode .system-glass.top-zone::after{top:calc(7px + var(--safe-top))}
@@ -124,12 +124,12 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
  <h1>আপনি কিভাবে <span>সাহায্য</span> চান?</h1>
  <p class="sub">কুরআন, গবেষণা, জ্ঞান অথবা অন্য কোনো বিষয়ে প্রশ্ন করুন...</p>
  <div class="quick">
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="quran" data-surface="quick"></span><b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"></span><b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="ai" data-surface="quick"></span><b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="library" data-surface="quick"></span><b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="chat" data-surface="quick"></span><b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"></span><b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="quran" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3Z"/><path d="M5 4v16M9 8h6M9 12h6"/></svg></span><b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M10 7v6M7 10h6"/></svg></span><b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="ai" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/></svg></span><b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="library" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2Z"/><path d="M7 4v16M10 8h5M10 12h5"/></svg></span><b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="chat" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4Z"/><path d="M8 9h8M8 12h5"/></svg></span><b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M10 7v6M7 10h6"/></svg></span><b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
  </div>
  <div class="chat-scroll" id="chatScroll"><div class="messages" id="messages"></div></div>
  <form class="composer" id="form">
