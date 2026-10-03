@@ -9,7 +9,10 @@
 <title>MOSHARROF AI — Full Screen V5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="./entities/shared/entity-glass.css">\n<link rel="stylesheet" href="./entities/shared/entity-shapes.css">\n<link rel="stylesheet" href="./app-builder/builder.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./entities/shared/entity-glass.css">
+<link rel="stylesheet" href="./entities/shared/entity-shapes.css">
+<link rel="stylesheet" href="./app-builder/builder.css">
 <style>
 :root{--safe-top:env(safe-area-inset-top,0px);--bg:#041229;--bg2:#092650;--t:#f4f9ff;--m:#9db3cd;--l:#70c8ff2b;--b:#2caeff;--v:#7058ef;--safe:env(safe-area-inset-bottom,0px);--text:#eef4ff}
 *{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden}body{font-family:"Inter","Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;background:#020b1c;color:var(--t);-webkit-font-smoothing:antialiased}
@@ -100,6 +103,12 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 .chat-mode .composer{z-index:16}
 .chat-mode .top,.chat-mode .left-btn,.chat-mode .right-btn{z-index:17}
 .chat-mode .round{box-shadow:0 8px 26px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.18)}
+
+.mos-ui-icon{display:inline-grid;place-items:center;width:28px;height:28px;flex:none;color:#8fd4ff}
+.mos-ui-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.quick button{display:flex;align-items:center;gap:10px;text-align:left}
+.quick button .mos-ui-icon{margin-right:2px}
+.quick button b{font-size:13px}
 </style>
 <link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#071a36"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="MOSHARROF"><link rel="apple-touch-icon" href="./icons/mosharrof-192.svg"><script src="./pwa.js"></script></head>
 <body>
@@ -149,265 +158,45 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
   <button data-toast="নোটস"><span class="ni mos-ui-icon" data-ui-entity="notes" data-surface="nav"></span>নোটস</button>
   <button data-toast="সেটিংস"><span class="ni mos-ui-icon" data-ui-entity="settings" data-surface="nav"></span>সেটিংস</button>
  </nav>
- <div class="profile"><div class="avatar">M</div><div><b>মোশাররফ</b><small>সার্বভৌম পরিচালক • v1.0</small></div></div>
+ <div class="profile"><div class="avatar">M</div><div><strong>Mosharrof</strong><small>সক্রিয় সেশন</small></div></div>
 </aside>
 <aside class="drawer right" id="rightDrawer">
- <div class="dhead"><div class="dlogo mos-ui-icon" data-ui-entity="project" data-surface="drawer"></div><div><strong>MOSHARROF PROJECT HUB</strong><small>প্রতিটি মডিউল = আলাদা এন্টিটি</small></div><button class="round dclose" id="closeRight">×</button></div>
+ <div class="dhead"><div class="dlogo">M</div><div><strong>প্রজেক্ট হাব</strong><small>মডিউল ও টুল</small></div><button class="round dclose" id="closeRight">×</button></div>
  <div class="modules">
-  <button class="module featured" data-mod="quran"><div class="mi mos-ui-icon" data-ui-entity="quran" data-surface="module"></div><div><strong>Quran Research</strong><span>কুরআন Tools</span></div><div class="arrow">›</div></button>
-  <button class="module" data-mod="lab"><div class="mi mos-ui-icon" data-ui-entity="research" data-surface="module"></div><div><strong>Research Lab</strong><span>গবেষণা</span></div><div class="arrow">›</div></button>
-  <button class="add" id="installApp" hidden>⇩ MOSHARROF অ্যাপ ইনস্টল</button>\n  <button class="add" id="add">＋ নতুন মডিউল</button>
+  <button class="module featured" data-toast="কুরআন রিসার্চ"><span class="mi mos-ui-icon" data-ui-entity="quran"></span><div><strong>কুরআন রিসার্চ</strong><span>আয়াত, শব্দ, তাফসীর</span></div><span class="arrow">›</span></button>
+  <button class="module" data-toast="গবেষণা"><span class="mi mos-ui-icon" data-ui-entity="research"></span><div><strong>গবেষণা ল্যাব</strong><span>গভীর অনুসন্ধান</span></div><span class="arrow">›</span></button>
+  <button class="module" data-toast="AI"><span class="mi mos-ui-icon" data-ui-entity="ai"></span><div><strong>AI Core</strong><span>মডেল ও ইন্টেলিজেন্স</span></div><span class="arrow">›</span></button>
+  <button class="add" data-toast="নতুন মডিউল">+ নতুন মডিউল যোগ করুন</button>
+  <p class="note">মডিউলগুলো Entity System-এর মাধ্যমে লোড হয়।</p>
  </div>
 </aside>
-<div class="system-glass top-zone" aria-hidden="true"><div class="zone-content"></div></div>
-<div class="system-glass bottom-zone" aria-hidden="true"><div class="zone-content"></div></div>
 <div class="scrim" id="scrim"></div>
 <div class="toast" id="toast"></div>
+<div class="system-glass top-zone"><div class="zone-content"></div></div>
+<div class="system-glass bottom-zone"><div class="zone-content"></div></div>
 </div>
 <script>
 (()=>{
 var $=function(s){return document.querySelector(s);};
 var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
 var L=$('#leftDrawer'),R=$('#rightDrawer'),S=$('#scrim'),T=$('#toast');
-var scrollEl=$('#chatScroll');
-var CHAT_URL='https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat';
-var deferredInstallPrompt=null;function setupInstall(){var b=$('#installApp');if(!b)return;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstallPrompt=e;b.hidden=false;});b.onclick=async function(){if(!deferredInstallPrompt){msg('ব্রাউজারের মেনু থেকে Install app / Add to Home screen নির্বাচন করুন।');return;}deferredInstallPrompt.prompt();try{await deferredInstallPrompt.userChoice;}catch(_){}deferredInstallPrompt=null;b.hidden=true;};window.addEventListener('appinstalled',function(){deferredInstallPrompt=null;b.hidden=true;msg('MOSHARROF অ্যাপ ইনস্টল হয়েছে।');});if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true)b.hidden=true;}setupInstall();if('serviceWorker'in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('MOSHARROF service worker:',e);});});
-
-function msg(x){T.textContent=x;T.classList.add('show');clearTimeout(msg.t);msg.t=setTimeout(function(){T.classList.remove('show');},1600);}
+function openLeft(){L.classList.add('open');S.classList.add('open');}
+function openRight(){R.classList.add('open');S.classList.add('open');}
 function closeAll(){L.classList.remove('open');R.classList.remove('open');S.classList.remove('open');}
-function drawer(x){closeAll();x.classList.add('open');S.classList.add('open');}
-var autoFollowChat=true;
-var manualScrollIntent=false;
-function updateChatScrollMode(){
-  if(!scrollEl) return;
-  var distance=scrollEl.scrollHeight-scrollEl.scrollTop-scrollEl.clientHeight;
-  if(distance<48) manualScrollIntent=false;
-  autoFollowChat=!manualScrollIntent && distance<48;
-}
-if(scrollEl){
-  scrollEl.addEventListener('scroll',updateChatScrollMode,{passive:true});
-  scrollEl.addEventListener('touchmove',function(){ manualScrollIntent=true; autoFollowChat=false; },{passive:true});
-  scrollEl.addEventListener('wheel',function(){ manualScrollIntent=true; autoFollowChat=false; },{passive:true});
-}
-function smoothScrollBottom(force){
-  if(!scrollEl || (!force && (!autoFollowChat || manualScrollIntent))) return;
-  requestAnimationFrame(function(){
-    if(!scrollEl || (!force && (!autoFollowChat || manualScrollIntent))) return;
-    scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior:'auto' });
-  });
-}
-function startResponseTimer(label){
-  var started=performance.now();
-  if(label) label.textContent='00:00';
-  var id=setInterval(function(){
-    var elapsed=Math.min(30,Math.floor((performance.now()-started)/100)/10);
-    if(label) label.textContent='00:'+elapsed.toFixed(1).padStart(4,'0');
-    if(elapsed>=30) clearInterval(id);
-  },100);
-  return function(){ clearInterval(id); };
-}
-
-function escapeHtml(s){
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-}
-
-function formatRich(text){
-  var t=escapeHtml(text);
-  t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
-  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
-  t=t.replace(/(?:^|\n)[•\-\*]\s+(.+)/g,'\n<li>$1</li>');
-  if(t.indexOf('<li>')!==-1){
-    t=t.replace(/((?:<li>[\s\S]*?<\/li>\s*)+)/g,'<ul>$1</ul>');
-  }
-  t=t.split(/\n{2,}/).map(function(block){
-    block=block.trim();
-    if(!block) return '';
-    if(block.indexOf('<ul>')===0) return block;
-    return '<p>'+block.replace(/\n/g,'<br>')+'</p>';
-  }).filter(Boolean).join('');
-  return t || escapeHtml(text);
-}
-
-
-/* MOSHARROF Entity Engine: registry + state + adaptive layout + per-message memory */
-var MosharrofEntityEngine=(function(){
-  var registry=Object.create(null), sequence=0, memory=Object.create(null);
-  var ICONS={
-    coffee:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5.5A4.5 4.5 0 0 1 11.5 19H9.5A4.5 4.5 0 0 1 5 14.5V9Z"/><path d="M16 11h1.8a2.7 2.7 0 0 1 0 5.4H16"/><path d="M8 5.5c1 1 .9 1.8 0 2.7M11 5.2c1 1 .9 1.8 0 2.7"/></svg>',
-    like:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v10H4.5A1.5 1.5 0 0 1 3 18.5v-7A1.5 1.5 0 0 1 4.5 10H7Z"/><path d="M7 20h9.2a2 2 0 0 0 1.9-1.4l2.2-6.6A2 2 0 0 0 18.4 9H14l.7-3.1A2.3 2.3 0 0 0 12.5 3L7 10v10Z"/></svg>',
-    voice:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="12" rx="4"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>',
-    share:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.2"/><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="19" r="2.2"/><path d="m8 11 7.8-4.7M8 13l7.8 4.7"/></svg>',
-    copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
-    branch:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v8a4 4 0 0 0 4 4h6"/><path d="m14 14 3 3-3 3"/><circle cx="7" cy="5" r="2"/><circle cx="17" cy="19" r="2"/></svg>'
-  };
-  var LABELS={coffee:'সমর্থন',like:'পছন্দ',voice:'পড়ে শুনুন',share:'শেয়ার',copy:'কপি',branch:'শাখা'};
-
-  function register(type,definition){registry[type]=definition;}
-  function remember(id,state){memory[id]=state;return state;}
-  function transition(entity,state){
-    entity.state=state; entity.el.dataset.state=state; remember(entity.id,state);
-    if(entity.onState) entity.onState(state,entity);
-    return entity;
-  }
-  function adaptiveScale(message){
-    var len=((message.querySelector('.ai-text')||{}).textContent||'').trim().length;
-    return Math.max(.9,Math.min(1.24,.9+(Math.min(len,900)/900)*.34));
-  }
-  function create(type,message,context){
-    var def=registry[type]; if(!def) return null;
-    var id='mos-ent-'+(++sequence);
-    var button=document.createElement('button');
-    button.type='button'; button.className='mos-entity'; button.dataset.action=type;
-    button.dataset.entityId=id; button.dataset.sourceMessageId=context.messageId;
-    button.setAttribute('aria-label',LABELS[type]||type);
-    button.title=LABELS[type]||type;
-    button.innerHTML='<span class="entity-core">'+ICONS[type]+'</span><span class="entity-mark"></span>';
-    var entity={id:id,type:type,el:button,message:message,context:context,state:memory[id]||'idle'};
-    button.style.setProperty('--entity-scale',adaptiveScale(message));
-    button.onclick=function(){def.activate(entity);};
-    transition(entity,entity.state);
-    return entity;
-  }
-  function mount(message,context){
-    var rail=document.createElement('div'); rail.className='mos-entity-rail'; rail.dataset.engine='mosharrof-entity-engine';
-    var entities=[];
-    Object.keys(registry).forEach(function(type){var e=create(type,message,context);if(e){rail.appendChild(e.el);entities.push(e);}});
-    message.appendChild(rail);
-    requestAnimationFrame(function(){rail.classList.add('ready');});
-    return entities;
-  }
-
-  register('coffee',{activate:function(e){transition(e,'processing');msg('সমর্থন এন্টিটি সক্রিয় হয়েছে');setTimeout(function(){transition(e,'completed');},360);}});
-  register('like',{activate:function(e){transition(e,e.state==='active'?'idle':'active');msg(e.state==='active'?'এই উত্তরটি পছন্দ হিসেবে রাখা হলো':'পছন্দ সরানো হলো');}});
-  register('voice',{activate:function(e){
-    if(!('speechSynthesis' in window)){transition(e,'error');msg('এই ব্রাউজারে ভয়েস সুবিধা নেই');return;}
-    if(e.state==='processing'){speechSynthesis.cancel();transition(e,'completed');msg('পাঠ থামানো হয়েছে');return;}
-    var text=(e.message.querySelector('.ai-text')||{}).textContent||'';
-    if(!text.trim()) return;
-    transition(e,'processing');speechSynthesis.cancel();
-    var u=new SpeechSynthesisUtterance(text);u.lang='bn-BD';
-    u.onend=function(){transition(e,'completed');};u.onerror=function(){transition(e,'error');msg('ভয়েস এন্টিটিতে সমস্যা হয়েছে');};
-    speechSynthesis.speak(u);
-  }});
-  register('copy',{activate:function(e){
-    var text=(e.message.querySelector('.ai-text')||{}).textContent||'';
-    if(!text.trim()) return;
-    transition(e,'processing');
-    var done=function(){transition(e,'completed');msg('উত্তর কপি করা হয়েছে');};
-    var fail=function(){transition(e,'error');msg('কপি করা যায়নি');};
-    if(navigator.clipboard && window.isSecureContext){navigator.clipboard.writeText(text).then(done).catch(fail);}
-    else{
-      var ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';
-      document.body.appendChild(ta);ta.select();
-      try{document.execCommand('copy')?done():fail();}catch(_){fail();}
-      document.body.removeChild(ta);
-    }
-  }});
-  register('share',{activate:function(e){
-    var text=(e.message.querySelector('.ai-text')||{}).textContent||'';
-    transition(e,'processing');
-    var done=function(){transition(e,'completed');msg('উত্তর শেয়ার করা হয়েছে');};
-    var fail=function(){transition(e,'error');msg('শেয়ার করা যায়নি');};
-    if(navigator.share){navigator.share({title:'MOSHARROF AI',text:text}).then(done).catch(function(err){if(err&&err.name==='AbortError')transition(e,'idle');else fail();});}
-    else if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){transition(e,'completed');msg('উত্তর কপি করা হয়েছে');}).catch(fail);}
-    else{transition(e,'error');fail();}
-  }});
-  register('branch',{activate:function(e){transition(e,'processing');e.context.branchSource=e.context.messageId;setTimeout(function(){transition(e,'completed');msg('নতুন শাখা এই উত্তরের প্রসঙ্গ থেকে প্রস্তুত');},280);}});
-
-  return {mount:mount,transition:transition,register:register,version:'1.0-mosharrof'};
-})();
-
-function streamText(el, fullText){
-  var text=String(fullText||'');
-  el.classList.add('streaming');
-  el.textContent='';
-  var i=0;
-  var timerId=null;
-  return new Promise(function(resolve){
-    timerId=setInterval(function(){
-      if(i>=text.length){
-        clearInterval(timerId);
-        el.classList.remove('streaming');
-        try{ el.innerHTML=formatRich(text); }catch(e){ el.textContent=text; }
-        smoothScrollBottom();
-        resolve();
-        return;
-      }
-      var next=Math.min(i+2, text.length);
-      el.textContent=text.slice(0, next);
-      i=next;
-      if(i%10===0 || next===text.length) smoothScrollBottom();
-    }, 14);
-  });
-}
-
-$('#openLeft').onclick=function(){drawer(L);};
-$('#openRight').onclick=function(){drawer(R);};
-$('#closeLeft').onclick=closeAll;
-$('#closeRight').onclick=closeAll;
-S.onclick=closeAll;
-$$('[data-toast]').forEach(function(b){b.onclick=function(){msg(b.dataset.toast);closeAll();};});
-$$('[data-mod]').forEach(function(b){b.onclick=function(){var s=b.querySelector('strong');msg((s&&s.textContent||'')+' — এন্টিটি');};});
-if($('#add')) $('#add').onclick=function(){msg('নতুন এন্টিটি — অনুমোদন প্রয়োজন');};
-
-$('#form').onsubmit=async function(e){
-  e.preventDefault();
-  var v=$('#input').value.trim();
-  if(!v) return;
-  var buildSession=window.MosharrofAppBuilder ? window.MosharrofAppBuilder.fromUserRequest(v) : null;
-  if(buildSession) window.MosharrofAppBuilder.advance('specify','running');
-  document.querySelector('.app').classList.add('chat-mode');
-  var box=$('#messages');
-
-  var user=document.createElement('div');
-  user.className='message user';
-  user.textContent=v;
-  box.appendChild(user);
-  $('#input').value='';
-  smoothScrollBottom(true);
-
-  var ai=document.createElement('div');
-  ai.className='message ai';
-  ai.innerHTML='<span class="label"><span>MOSHARROF AI</span><span class="timer">00:00</span></span><span class="ai-text streaming">উত্তর আসছে…</span>';
-  box.appendChild(ai);
-  smoothScrollBottom(true);
-  var textEl=ai.querySelector('.ai-text');
-  var stopResponseTimer=startResponseTimer(ai.querySelector('.timer'));
-
-  try{
-    var res=await fetch(CHAT_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text:v,build_session:buildSession})
-    });
-    var data={};
-    try{ data=await res.json(); }catch(_){}
-    if(!res.ok){
-      var detail=data.provider_message || data.error || ('HTTP '+res.status);
-      throw new Error(detail);
-    }
-    var answer=data.text || 'কোনো উত্তর পাওয়া যায়নি।';
-    await streamText(textEl, answer);
-    MosharrofEntityEngine.mount(ai,{messageId:'m-'+Date.now()+'-'+Math.random().toString(36).slice(2),source:'assistant'});
-  }catch(err){
-    textEl.classList.remove('streaming');
-    var reason=(err && err.message) ? String(err.message) : 'unknown';
-    textEl.textContent='দুঃখিত, সংযোগে সমস্যা হয়েছে। ('+reason+') একটু পর আবার চেষ্টা করুন।';
-    console.error('Mosharrof chat error:', err);
-    smoothScrollBottom();
-    MosharrofEntityEngine.mount(ai,{messageId:'m-'+Date.now()+'-'+Math.random().toString(36).slice(2),source:'assistant'});
-  }finally{
-    stopResponseTimer();
-  }
-};
-
+$('#openLeft').onclick=openLeft;$('#openRight').onclick=openRight;$('#closeLeft').onclick=closeAll;$('#closeRight').onclick=closeAll;S.onclick=closeAll;
+$$('[data-toast]').forEach(function(b){b.addEventListener('click',function(){T.textContent=b.dataset.toast;T.classList.add('show');setTimeout(function(){T.classList.remove('show');},1600);});});
+// chat mode
+var form=$('#form'),input=$('#input'),messages=$('#messages'),chatScroll=$('#chatScroll');
+var responseTimer=null,responseStart=0;
+function startResponseTimer(labelEl){responseStart=Date.now();if(responseTimer)clearInterval(responseTimer);responseTimer=setInterval(function(){if(labelEl){var s=((Date.now()-responseStart)/1000).toFixed(1);labelEl.querySelector('.timer').textContent=s+'s';}},100);}
+function stopResponseTimer(){if(responseTimer){clearInterval(responseTimer);responseTimer=null;}}
+function addUser(text){var d=document.createElement('div');d.className='message user';d.textContent=text;messages.appendChild(d);chatScroll.scrollTop=chatScroll.scrollHeight;}
+function addAI(text){var d=document.createElement('div');d.className='message ai';var label=document.createElement('div');label.className='label';label.innerHTML='MOSHARROF AI <span class="timer">0.0s</span>';d.appendChild(label);var body=document.createElement('div');body.className='ai-text';body.textContent=text;d.appendChild(body);messages.appendChild(d);startResponseTimer(label);setTimeout(function(){stopResponseTimer();},800);chatScroll.scrollTop=chatScroll.scrollHeight;return d;}
+form.onsubmit=function(e){e.preventDefault();var t=input.value.trim();if(!t)return;document.body.classList.add('chat-mode');addUser(t);input.value='';addAI('জি, আপনি "'+t+'" লিখেছেন।\n\nআপনি কি কোনো নির্দিষ্ট শব্দ বা বিষয় (যেমন: টাকা, দোল ইত্যাদি) সম্পর্কে জানতে চাচ্ছেন? বলুন, আমি আপনাকে কীভাবে সাহায্য করতে পারি?');};
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeAll(); });
 })();
 </script>
-<script type="module" src="./entities/bootstrap.js"></script>\n<script type="module" src="./app-builder/app-builder.js"></script>\n</body>
+<script type="module" src="./entities/bootstrap.js"></script>
+<script type="module" src="./app-builder/app-builder.js"></script>
+</body>
 </html>
