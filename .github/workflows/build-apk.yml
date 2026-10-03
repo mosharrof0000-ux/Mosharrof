@@ -1,0 +1,72 @@
+name: Build MOSHARROF Android APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout MOSHARROF
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Prepare Capacitor Android wrapper
+        run: |
+          npm init -y
+          npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir web --npm-client npm
+          npx cap add android
+          npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Verify APK
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          unzip -t android/app/build/outputs/apk/debug/app-debug.apk >/dev/null
+          echo "APK size:"
+          du -h android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MOSHARROF-AI-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="apk-${{ github.run_number }}"
+          gh release create "$TAG" \
+            android/app/build/outputs/apk/debug/app-debug.apk \
+            --title "MOSHARROF AI Android APK ${{ github.run_number }}" \
+            --notes "Built and verified from main commit ${{ github.sha }}."
