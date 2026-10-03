@@ -189,6 +189,11 @@ body{
   isolation:isolate;
 }
 
+.drawer{z-index:90 !important}
+.plugin{z-index:91 !important}
+.modal{z-index:95 !important}
+.toast{z-index:100 !important}
+
 /* Extra protection for very short screens. */
 @media(max-height:620px){
   .content{
