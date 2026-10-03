@@ -1,0 +1,208 @@
+/* MOSHARROF AI — true edge-to-edge / Gemini-style floating UI
+   Web layer: full viewport canvas + floating chrome + soft system-zone protection.
+*/
+:root{
+  --mos-safe-top:env(safe-area-inset-top,0px);
+  --mos-safe-bottom:env(safe-area-inset-bottom,0px);
+  --mos-safe-left:env(safe-area-inset-left,0px);
+  --mos-safe-right:env(safe-area-inset-right,0px);
+}
+
+html,body{
+  width:100%;
+  height:100%;
+  min-height:100%;
+  margin:0;
+  overflow:hidden;
+  background:#020b1c;
+}
+
+body{
+  overscroll-behavior:none;
+}
+
+.app{
+  position:fixed !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100dvh !important;
+  min-height:100svh !important;
+  max-height:none !important;
+  overflow:hidden !important;
+}
+
+/* Full canvas: nothing is reserved for the bars. */
+.main{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  min-height:100% !important;
+  padding:0 !important;
+}
+
+/* Header floats over the canvas and respects only the unsafe top area. */
+.top{
+  position:absolute !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  z-index:80 !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:58px !important;
+  padding:
+    calc(7px + var(--mos-safe-top))
+    max(10px,var(--mos-safe-right))
+    7px
+    max(10px,var(--mos-safe-left)) !important;
+  border:0 !important;
+  background:linear-gradient(
+    180deg,
+    rgba(2,13,31,.72) 0%,
+    rgba(2,13,31,.38) 58%,
+    rgba(2,13,31,0) 100%
+  ) !important;
+  backdrop-filter:blur(16px) saturate(125%);
+  -webkit-backdrop-filter:blur(16px) saturate(125%);
+}
+
+/* Main content fills the exact viewport and scrolls under floating chrome. */
+.content{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  padding:
+    calc(78px + var(--mos-safe-top))
+    max(12px,var(--mos-safe-right))
+    calc(155px + var(--mos-safe-bottom))
+    max(12px,var(--mos-safe-left)) !important;
+  overflow:auto !important;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Home composer is a floating dock, not a block that reserves layout height. */
+.content>.hero>.composer{
+  position:fixed !important;
+  left:max(12px,var(--mos-safe-left)) !important;
+  right:max(12px,var(--mos-safe-right)) !important;
+  bottom:calc(12px + var(--mos-safe-bottom)) !important;
+  width:auto !important;
+  max-width:900px !important;
+  margin:0 auto !important;
+  z-index:85 !important;
+}
+
+/* Two soft protection zones: content visibly continues behind them. */
+.app::before,
+.app::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  z-index:60;
+  pointer-events:none;
+  -webkit-backdrop-filter:blur(10px) saturate(120%);
+  backdrop-filter:blur(10px) saturate(120%);
+}
+
+.app::before{
+  top:0;
+  height:calc(150px + var(--mos-safe-top));
+  background:linear-gradient(
+    180deg,
+    rgba(2,13,31,.58) 0%,
+    rgba(2,13,31,.24) 48%,
+    rgba(2,13,31,0) 100%
+  );
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 35%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0%,#000 35%,transparent 100%);
+}
+
+.app::after{
+  bottom:0;
+  height:calc(235px + var(--mos-safe-bottom));
+  background:linear-gradient(
+    0deg,
+    rgba(2,13,31,.84) 0%,
+    rgba(2,13,31,.45) 38%,
+    rgba(2,13,31,0) 100%
+  );
+  -webkit-mask-image:linear-gradient(0deg,#000 0%,#000 38%,transparent 100%);
+  mask-image:linear-gradient(0deg,#000 0%,#000 38%,transparent 100%);
+}
+
+/* Chat mode: true full-height scrolling surface + floating composer. */
+.chat-mode .content{
+  padding:0 !important;
+  overflow:hidden !important;
+}
+
+.chat-mode .chat-scroll{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  padding:
+    calc(78px + var(--mos-safe-top))
+    0
+    calc(170px + var(--mos-safe-bottom)) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  z-index:5 !important;
+  -webkit-overflow-scrolling:touch;
+}
+
+.chat-mode .messages{
+  min-height:100% !important;
+  padding:
+    0
+    max(14px,var(--mos-safe-left))
+    0
+    max(14px,var(--mos-safe-right)) !important;
+}
+
+.chat-mode .composer{
+  position:fixed !important;
+  left:max(12px,var(--mos-safe-left)) !important;
+  right:max(12px,var(--mos-safe-right)) !important;
+  bottom:calc(10px + var(--mos-safe-bottom)) !important;
+  width:auto !important;
+  max-width:900px !important;
+  margin:0 auto !important;
+  z-index:85 !important;
+}
+
+/* Keep interactive chrome above the blur zones. */
+.top,
+.chat-mode .left-btn,
+.chat-mode .right-btn,
+.chat-mode .composer,
+.drawer,
+.plugin,
+.modal,
+.toast{
+  isolation:isolate;
+}
+
+/* Extra protection for very short screens. */
+@media(max-height:620px){
+  .content{
+    padding-bottom:calc(135px + var(--mos-safe-bottom)) !important;
+  }
+  .app::before{height:calc(120px + var(--mos-safe-top))}
+  .app::after{height:calc(185px + var(--mos-safe-bottom))}
+  .chat-mode .chat-scroll{
+    padding-top:calc(66px + var(--mos-safe-top)) !important;
+    padding-bottom:calc(145px + var(--mos-safe-bottom)) !important;
+  }
+}
+
+/* Reduced-motion users keep the same layout without blur/scroll animation. */
+@media(prefers-reduced-motion:reduce){
+  .chat-mode .chat-scroll{scroll-behavior:auto !important}
+}
