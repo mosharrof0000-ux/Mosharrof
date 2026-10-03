@@ -30,6 +30,17 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Verify edge-to-edge web contract
+        run: |
+          test -s web/index.html
+          test -s web/edge-to-edge.css
+          grep -q 'viewport-fit=cover' web/index.html
+          grep -q 'edge-to-edge' web/edge-to-edge.css
+          grep -q 'safe-area-inset-top' web/edge-to-edge.css
+          grep -q 'safe-area-inset-bottom' web/edge-to-edge.css
+          grep -q 'backdrop-filter' web/edge-to-edge.css
+          echo "Edge-to-edge web contract: PASS"
+
       - name: Prepare Capacitor Android wrapper
         run: |
           npm init -y
@@ -37,6 +48,67 @@ jobs:
           npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir web
           npx cap add android
           npx cap sync android
+
+      - name: Apply native Android edge-to-edge shell
+        run: |
+          mkdir -p android/app/src/main/java/com/mosharrof/ai
+          cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
+          package com.mosharrof.ai;
+
+          import android.graphics.Color;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.view.Window;
+          import android.view.WindowManager;
+
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
+
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  Window window = getWindow();
+
+                  // Draw the WebView behind the status/navigation bars.
+                  WindowCompat.setDecorFitsSystemWindows(window, false);
+
+                  // Transparent bars: the MOSHARROF canvas supplies the background.
+                  window.setStatusBarColor(Color.TRANSPARENT);
+                  window.setNavigationBarColor(Color.TRANSPARENT);
+
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                      window.setNavigationBarContrastEnforced(false);
+                  }
+
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                      WindowManager.LayoutParams lp = window.getAttributes();
+                      lp.layoutInDisplayCutoutMode =
+                          WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+                      window.setAttributes(lp);
+                  }
+
+                  window.setSoftInputMode(
+                      WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                  );
+
+                  WindowInsetsControllerCompat controller =
+                      WindowCompat.getInsetsController(window, window.getDecorView());
+
+                  if (controller != null) {
+                      controller.setAppearanceLightStatusBars(false);
+                      controller.setAppearanceLightNavigationBars(false);
+                  }
+              }
+          }
+          JAVA
+
+          grep -q 'WindowCompat.setDecorFitsSystemWindows'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'setNavigationBarContrastEnforced(false)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          echo "Native Android edge-to-edge shell: PASS"
 
       - name: Build debug APK
         working-directory: android
@@ -65,7 +137,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="apk-${{ github.run_number }}"
-          gh release create "$TAG" \
-            android/app/build/outputs/apk/debug/app-debug.apk \
-            --title "MOSHARROF AI Android APK ${{ github.run_number }}" \
-            --notes "Built and verified from main commit ${{ github.sha }}."
+          gh release create "$TAG"             android/app/build/outputs/apk/debug/app-debug.apk             --title "MOSHARROF AI Android APK ${{ github.run_number }}"             --notes "Built and verified from main commit ${{ github.sha }}."
