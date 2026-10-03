@@ -34,7 +34,7 @@ jobs:
         run: |
           npm init -y
           npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir web --npm-client npm
+          npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir web
           npx cap add android
           npx cap sync android
 
