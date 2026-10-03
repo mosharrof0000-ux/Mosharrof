@@ -90,12 +90,12 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 @media (max-width:560px){.mos-entity-rail{opacity:1;transform:none}.mos-entity{width:33px;height:33px}}
 
 /* MOSHARROF floating system glass: content passes beneath protected status/navigation zones. */
-.system-glass{position:absolute;left:0;right:0;pointer-events:none;z-index:14;overflow:hidden;isolation:isolate}
+.system-glass{display:none;position:absolute;left:0;right:0;pointer-events:none;z-index:14;overflow:hidden;isolation:isolate}
 .system-glass::before{content:"";position:absolute;inset:0;background:rgba(4,18,41,.22);backdrop-filter:blur(12px) saturate(125%);-webkit-backdrop-filter:blur(12px) saturate(125%);border:1px solid rgba(126,211,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 30px rgba(0,0,0,.08)}
 .system-glass.top-zone{top:0;height:calc(54px + var(--safe-top));padding-top:var(--safe-top);border-radius:0 0 22px 22px}
 .system-glass.bottom-zone{bottom:0;height:calc(78px + var(--safe));padding-bottom:var(--safe);border-radius:22px 22px 0 0}
 .system-glass .zone-content{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-.chat-mode .system-glass.top-zone{height:calc(66px + var(--safe-top))}
+.chat-mode .system-glass{display:block}.chat-mode .system-glass.top-zone{height:calc(66px + var(--safe-top))}
 .chat-mode .system-glass.bottom-zone{height:calc(92px + var(--safe))}
 .chat-mode .system-glass::after{content:"";position:absolute;left:14%;right:14%;height:1px;border-radius:99px;background:rgba(255,255,255,.08);filter:blur(.4px)}
 .chat-mode .system-glass.top-zone::after{top:calc(7px + var(--safe-top))}
@@ -115,21 +115,21 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 <div class="app">
 <main class="main">
 <header class="top">
- <div class="left-btn"><button class="round mos-ui-icon" data-ui-entity="home" data-surface="top" id="openLeft" aria-label="মেনু"></button></div>
+ <div class="left-btn"><button class="round mos-ui-icon" data-ui-entity="home" data-surface="top" id="openLeft" aria-label="মেনু"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M9 21v-6h6v6"/></svg></button></div>
  <div class="brand"><span class="mlogo">M</span><b>MOSHARROF AI</b><small>Mosharrof — জ্ঞান • গবেষণা • অন্তর্দৃষ্টি</small></div>
- <div class="right-btn"><button class="round mos-ui-icon" data-ui-entity="project" data-surface="top" id="openRight" aria-label="প্রজেক্ট হাব"></button></div>
+ <div class="right-btn"><button class="round mos-ui-icon" data-ui-entity="project" data-surface="top" id="openRight" aria-label="প্রজেক্ট হাব"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h6l2 2h8v10H4Z"/><path d="M8 13h8M8 16h5"/></svg></button></div>
 </header>
 <section class="content"><div class="hero">
  <div class="hero-logo">M</div>
  <h1>আপনি কিভাবে <span>সাহায্য</span> চান?</h1>
  <p class="sub">কুরআন, গবেষণা, জ্ঞান অথবা অন্য কোনো বিষয়ে প্রশ্ন করুন...</p>
  <div class="quick">
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="quran" data-surface="quick"></span><b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"></span><b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="ai" data-surface="quick"></span><b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="library" data-surface="quick"></span><b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="chat" data-surface="quick"></span><b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
-  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"></span><b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="quran" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3Z"/><path d="M5 4v16M9 8h6M9 12h6"/></svg></span><b>কুরআন সার্চ</b><small>আয়াত খুঁজুন</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M10 7v6M7 10h6"/></svg></span><b>আয়াত বিশ্লেষণ</b><small>প্রেক্ষাপট ও শিক্ষা</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="ai" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/></svg></span><b>শব্দ গবেষণা</b><small>আরবি মূল ও অর্থ</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="library" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2Z"/><path d="M7 4v16M10 8h5M10 12h5"/></svg></span><b>তাফসীর</b><small>ব্যাখ্যা ও উৎস</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="chat" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4Z"/><path d="M8 9h8M8 12h5"/></svg></span><b>হাদীস</b><small>সূত্র অনুসন্ধান</small></button>
+  <button data-mod="quran"><span class="mos-ui-icon" data-ui-entity="research" data-surface="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M10 7v6M7 10h6"/></svg></span><b>গবেষণা</b><small>গভীর অনুসন্ধান</small></button>
  </div>
  <div class="chat-scroll" id="chatScroll"><div class="messages" id="messages"></div></div>
  <form class="composer" id="form">
@@ -150,22 +150,22 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 <aside class="drawer left" id="leftDrawer">
  <div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF AI</strong><small>মূল সাইট নেভিগেশন</small></div><button class="round dclose" id="closeLeft">×</button></div>
  <nav class="nav">
-  <button class="active" data-toast="হোম"><span class="ni mos-ui-icon" data-ui-entity="home" data-surface="nav"></span>হোম</button>
-  <button data-toast="চ্যাট"><span class="ni mos-ui-icon" data-ui-entity="chat" data-surface="nav"></span>চ্যাট</button>
-  <button data-toast="চ্যাট ইতিহাস"><span class="ni mos-ui-icon" data-ui-entity="history" data-surface="nav"></span>চ্যাট ইতিহাস</button>
-  <button data-toast="জ্ঞান ভাণ্ডার"><span class="ni mos-ui-icon" data-ui-entity="library" data-surface="nav"></span>জ্ঞান ভাণ্ডার</button>
-  <button data-toast="প্রজেক্ট"><span class="ni mos-ui-icon" data-ui-entity="project" data-surface="nav"></span>প্রজেক্ট</button>
-  <button data-toast="নোটস"><span class="ni mos-ui-icon" data-ui-entity="notes" data-surface="nav"></span>নোটস</button>
-  <button data-toast="সেটিংস"><span class="ni mos-ui-icon" data-ui-entity="settings" data-surface="nav"></span>সেটিংস</button>
+  <button class="active" data-toast="হোম"><span class="ni mos-ui-icon" data-ui-entity="home" data-surface="nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M9 21v-6h6v6"/></svg></span>হোম</button>
+  <button data-toast="চ্যাট"><span class="ni mos-ui-icon" data-ui-entity="chat" data-surface="nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4Z"/><path d="M8 9h8M8 12h5"/></svg></span>চ্যাট</button>
+  <button data-toast="চ্যাট ইতিহাস"><span class="ni mos-ui-icon" data-ui-entity="history" data-surface="nav"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg></span>চ্যাট ইতিহাস</button>
+  <button data-toast="জ্ঞান ভাণ্ডার"><span class="ni mos-ui-icon" data-ui-entity="library" data-surface="nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2Z"/><path d="M7 4v16M10 8h5M10 12h5"/></svg></span>জ্ঞান ভাণ্ডার</button>
+  <button data-toast="প্রজেক্ট"><span class="ni mos-ui-icon" data-ui-entity="project" data-surface="nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h6l2 2h8v10H4Z"/><path d="M8 13h8M8 16h5"/></svg></span>প্রজেক্ট</button>
+  <button data-toast="নোটস"><span class="ni mos-ui-icon" data-ui-entity="notes" data-surface="nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z"/><path d="M15 3v5h4M9 12h6M9 16h4"/></svg></span>নোটস</button>
+  <button data-toast="সেটিংস"><span class="ni mos-ui-icon" data-ui-entity="settings" data-surface="nav"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l-2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.1-1.2L12.2 3H8.3l-.4 2.7A7 7 0 0 0 5.8 7L3.5 6 1.6 9.4l2 1.5A7 7 0 0 0 3.5 12l.1 1.2-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.1-1.2l.3 2.7h3.9l.4-2.7a7 7 0 0 0 2.1-1.2l2.3 1 2-3.4-2-1.5A7 7 0 0 0 19 12Z"/></svg></span>সেটিংস</button>
  </nav>
  <div class="profile"><div class="avatar">M</div><div><strong>Mosharrof</strong><small>সক্রিয় সেশন</small></div></div>
 </aside>
 <aside class="drawer right" id="rightDrawer">
  <div class="dhead"><div class="dlogo">M</div><div><strong>প্রজেক্ট হাব</strong><small>মডিউল ও টুল</small></div><button class="round dclose" id="closeRight">×</button></div>
  <div class="modules">
-  <button class="module featured" data-toast="কুরআন রিসার্চ"><span class="mi mos-ui-icon" data-ui-entity="quran"></span><div><strong>কুরআন রিসার্চ</strong><span>আয়াত, শব্দ, তাফসীর</span></div><span class="arrow">›</span></button>
-  <button class="module" data-toast="গবেষণা"><span class="mi mos-ui-icon" data-ui-entity="research"></span><div><strong>গবেষণা ল্যাব</strong><span>গভীর অনুসন্ধান</span></div><span class="arrow">›</span></button>
-  <button class="module" data-toast="AI"><span class="mi mos-ui-icon" data-ui-entity="ai"></span><div><strong>AI Core</strong><span>মডেল ও ইন্টেলিজেন্স</span></div><span class="arrow">›</span></button>
+  <button class="module featured" data-toast="কুরআন রিসার্চ"><span class="mi mos-ui-icon" data-ui-entity="quran"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3Z"/><path d="M5 4v16M9 8h6M9 12h6"/></svg></span><div><strong>কুরআন রিসার্চ</strong><span>আয়াত, শব্দ, তাফসীর</span></div><span class="arrow">›</span></button>
+  <button class="module" data-toast="গবেষণা"><span class="mi mos-ui-icon" data-ui-entity="research"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5M10 7v6M7 10h6"/></svg></span><div><strong>গবেষণা ল্যাব</strong><span>গভীর অনুসন্ধান</span></div><span class="arrow">›</span></button>
+  <button class="module" data-toast="AI"><span class="mi mos-ui-icon" data-ui-entity="ai"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/></svg></span><div><strong>AI Core</strong><span>মডেল ও ইন্টেলিজেন্স</span></div><span class="arrow">›</span></button>
   <button class="add" data-toast="নতুন মডিউল">+ নতুন মডিউল যোগ করুন</button>
   <p class="note">মডিউলগুলো Entity System-এর মাধ্যমে লোড হয়।</p>
  </div>
