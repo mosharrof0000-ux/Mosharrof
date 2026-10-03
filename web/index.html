@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="./entities/shared/entity-glass.css">\n<link rel="stylesheet" href="./entities/shared/entity-shapes.css">\n<link rel="stylesheet" href="./app-builder/builder.css">
 <style>
-:root{--bg:#041229;--bg2:#092650;--t:#f4f9ff;--m:#9db3cd;--l:#70c8ff2b;--b:#2caeff;--v:#7058ef;--safe:env(safe-area-inset-bottom,0px);--text:#eef4ff}
+:root{--safe-top:env(safe-area-inset-top,0px);--bg:#041229;--bg2:#092650;--t:#f4f9ff;--m:#9db3cd;--l:#70c8ff2b;--b:#2caeff;--v:#7058ef;--safe:env(safe-area-inset-bottom,0px);--text:#eef4ff}
 *{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden}body{font-family:"Inter","Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;background:#020b1c;color:var(--t);-webkit-font-smoothing:antialiased}
 button,input{font:inherit;color:inherit}button{cursor:pointer}
 .app{width:100%;height:100dvh;min-height:100svh;position:relative;overflow:hidden;background:radial-gradient(circle at 20% 5%,#279bff30,transparent 34%),radial-gradient(circle at 88% 95%,#7058ef35,transparent 40%),linear-gradient(145deg,var(--bg),var(--bg2))}
@@ -45,7 +45,7 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 .chat-mode .hero{width:100%;height:100%;max-width:none;display:flex;flex-direction:column;text-align:left;align-items:stretch}
 .chat-mode .hero-logo,.chat-mode h1,.chat-mode .sub,.chat-mode .quick{display:none}
 .chat-mode .composer{order:2;flex:none;width:min(900px,calc(100% - 24px));margin:0 auto calc(10px + var(--safe));z-index:10;position:relative}
-.chat-mode .chat-scroll{display:block;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:76px 0 18px;scroll-behavior:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y}
+.chat-mode .chat-scroll{display:block;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:76px 0 110px;scroll-behavior:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y}
 .chat-mode .messages{width:100%;min-height:100%;max-width:48rem;margin:0 auto;padding:0 16px;display:flex;flex-direction:column;justify-content:flex-end;gap:22px}
 .chat-mode .message.user{align-self:flex-end;max-width:min(78%,34rem);padding:12px 16px;border-radius:18px 18px 6px 18px;background:linear-gradient(145deg,#168ad0,#5648cf);font-size:15px;line-height:1.6;word-break:break-word;animation:msgAppear .45s cubic-bezier(.22,1,.36,1) both}
 .chat-mode .message.ai{align-self:stretch;width:100%;max-width:100%;padding:4px 0 8px;background:transparent;border:0;animation:msgAppear .5s cubic-bezier(.22,1,.36,1) both}
@@ -85,6 +85,21 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 .mos-entity[data-state="processing"] .entity-mark{opacity:1;transform:scale(1)}
 @keyframes mosEntityPulse{50%{transform:scale(.84);opacity:.58}}
 @media (max-width:560px){.mos-entity-rail{opacity:1;transform:none}.mos-entity{width:33px;height:33px}}
+
+/* MOSHARROF floating system glass: content passes beneath protected status/navigation zones. */
+.system-glass{position:absolute;left:0;right:0;pointer-events:none;z-index:14;overflow:hidden;isolation:isolate}
+.system-glass::before{content:"";position:absolute;inset:0;background:rgba(4,18,41,.22);backdrop-filter:blur(12px) saturate(125%);-webkit-backdrop-filter:blur(12px) saturate(125%);border:1px solid rgba(126,211,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 30px rgba(0,0,0,.08)}
+.system-glass.top-zone{top:0;height:calc(54px + var(--safe-top));padding-top:var(--safe-top);border-radius:0 0 22px 22px}
+.system-glass.bottom-zone{bottom:0;height:calc(78px + var(--safe));padding-bottom:var(--safe);border-radius:22px 22px 0 0}
+.system-glass .zone-content{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.chat-mode .system-glass.top-zone{height:calc(66px + var(--safe-top))}
+.chat-mode .system-glass.bottom-zone{height:calc(92px + var(--safe))}
+.chat-mode .system-glass::after{content:"";position:absolute;left:14%;right:14%;height:1px;border-radius:99px;background:rgba(255,255,255,.08);filter:blur(.4px)}
+.chat-mode .system-glass.top-zone::after{top:calc(7px + var(--safe-top))}
+.chat-mode .system-glass.bottom-zone::after{bottom:calc(5px + var(--safe))}
+.chat-mode .composer{z-index:16}
+.chat-mode .top,.chat-mode .left-btn,.chat-mode .right-btn{z-index:17}
+.chat-mode .round{box-shadow:0 8px 26px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.18)}
 </style>
 <link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#071a36"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="MOSHARROF"><link rel="apple-touch-icon" href="./icons/mosharrof-192.svg"><script src="./pwa.js"></script></head>
 <body>
@@ -144,6 +159,8 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
   <button class="add" id="installApp" hidden>⇩ MOSHARROF অ্যাপ ইনস্টল</button>\n  <button class="add" id="add">＋ নতুন মডিউল</button>
  </div>
 </aside>
+<div class="system-glass top-zone" aria-hidden="true"><div class="zone-content"></div></div>
+<div class="system-glass bottom-zone" aria-hidden="true"><div class="zone-content"></div></div>
 <div class="scrim" id="scrim"></div>
 <div class="toast" id="toast"></div>
 </div>
