@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#06152f">
+<meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>MOSHARROF AI — Sovereign Chat</title>
@@ -70,6 +70,211 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 .chat-mode .composer{background:rgba(18,20,24,.94)!important;border:1px solid rgba(255,255,255,.15)!important;box-shadow:0 12px 38px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.035)!important;border-radius:18px!important;padding:8px 10px!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .chat-mode .composer textarea,.chat-mode textarea{min-height:42px;max-height:240px;resize:none;overflow-y:auto;background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;color:inherit;line-height:1.55;padding:9px 8px}
 .chat-mode .composer:focus-within{border-color:rgba(255,255,255,.24)!important;box-shadow:0 14px 42px rgba(0,0,0,.38),0 0 0 2px rgba(255,255,255,.035)!important}
+
+/* MOSHARROF BLACK CHAT UI — visual-only redesign
+   Reference: clean black ChatGPT-style conversation screen.
+   Functionality, navigation, drawers and existing handlers remain unchanged. */
+:root{
+  --bg:#000;
+  --bg2:#000;
+  --p:#171717ee;
+  --t:#f5f5f5;
+  --m:#a1a1aa;
+  --l:rgba(255,255,255,.10);
+  --b:#d4d4d8;
+  --v:#71717a;
+  --c:#e4e4e7;
+}
+body{background:#000;color:#f5f5f5}
+.app{
+  background:#000!important;
+  color:#f5f5f5;
+}
+.main{background:#000}
+.top{
+  background:linear-gradient(180deg,rgba(0,0,0,.92),rgba(0,0,0,0))!important;
+  border:0!important;
+}
+.round{
+  background:#202123!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  color:#ececec!important;
+  box-shadow:0 3px 16px rgba(0,0,0,.45)!important;
+}
+.mlogo,.hero-logo,.dlogo,.avatar{
+  background:#2a2a2a!important;
+  box-shadow:none!important;
+}
+.brand b{color:#f5f5f5}
+.brand small,.sub{color:#a1a1aa!important}
+.content{background:#000}
+.hero{color:#f5f5f5}
+h1 span{color:#f5f5f5!important}
+.quick button{
+  background:#171717!important;
+  border-color:rgba(255,255,255,.09)!important;
+  color:#e5e5e5!important;
+}
+.composer{
+  background:#2f2f2f!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.55)!important;
+  border-radius:24px!important;
+}
+.plus{
+  background:#202123!important;
+  border-color:rgba(255,255,255,.10)!important;
+}
+.input::placeholder{color:#8e8e93}
+.send{
+  background:#f4f4f5!important;
+  color:#111!important;
+}
+.chip{
+  background:#202123!important;
+  border-color:rgba(255,255,255,.09)!important;
+}
+.drawer{
+  background:#171717!important;
+  border-color:rgba(255,255,255,.09)!important;
+  box-shadow:0 0 55px rgba(0,0,0,.75)!important;
+}
+.dhead{border-color:rgba(255,255,255,.09)!important}
+.nav button{color:#e5e5e5}
+.nav button.active,.nav button:hover{background:#2a2a2a!important}
+.profile{border-color:rgba(255,255,255,.09)!important}
+.module,.pitem,.add,.inner{
+  background:#202123!important;
+  border-color:rgba(255,255,255,.09)!important;
+}
+.module.featured{background:#2a2a2a!important;border-color:rgba(255,255,255,.12)!important}
+.plugin,.box{
+  background:#171717!important;
+  border-color:rgba(255,255,255,.10)!important;
+}
+.toast{
+  background:#2a2a2a!important;
+  border-color:rgba(255,255,255,.10)!important;
+}
+.scrim{background:rgba(0,0,0,.72)!important}
+
+/* Conversation view */
+.chat-mode .content{background:#000!important}
+.chat-mode .round{
+  background:#202123!important;
+  border-color:rgba(255,255,255,.08)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.chat-mode .chat-scroll{
+  padding-top:74px;
+  padding-bottom:12px;
+}
+.chat-mode .messages{
+  gap:26px;
+  padding-bottom:4px;
+}
+.chat-mode .message{
+  padding:0;
+  border-radius:0;
+  max-width:min(82%,760px);
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#ececec;
+  line-height:1.72;
+}
+.chat-mode .message.user{
+  align-self:flex-end;
+  background:#2f2f2f!important;
+  color:#f3f3f3;
+  padding:11px 16px;
+  border-radius:20px!important;
+  border-bottom-right-radius:6px!important;
+  max-width:min(78%,680px);
+}
+.chat-mode .message.ai{
+  align-self:flex-start;
+  color:#e8e8e8;
+  max-width:min(92%,760px);
+}
+.chat-mode .message .label{
+  color:#8e8e93!important;
+  font-size:11px;
+  margin-bottom:7px;
+  letter-spacing:.1px;
+}
+.chat-mode .message.user .label{
+  color:#b8b8bb!important;
+}
+.chat-mode .message-actions{opacity:.65}
+.chat-mode .message-action{
+  background:#202123!important;
+  border-color:rgba(255,255,255,.08)!important;
+}
+.chat-mode .composer{
+  width:min(820px,calc(100% - 20px));
+  margin-bottom:10px;
+  background:#2f2f2f!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  border-radius:26px!important;
+  padding:7px 8px!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.chat-mode .composer:focus-within{
+  border-color:rgba(255,255,255,.18)!important;
+  box-shadow:0 8px 30px rgba(0,0,0,.55)!important;
+}
+.chat-mode .input{
+  color:#f5f5f5!important;
+  font-size:15px;
+}
+.chat-mode .plus{
+  width:42px;height:42px;
+  background:transparent!important;
+  border:0!important;
+  color:#e5e5e5!important;
+  box-shadow:none!important;
+}
+.chat-mode .send{
+  width:40px;height:40px;
+  background:#f4f4f5!important;
+  color:#111!important;
+}
+@media(max-width:760px){
+  .chat-mode .left-btn{left:10px}
+  .chat-mode .right-btn{right:10px}
+  .chat-mode .round{width:40px;height:40px}
+  .chat-mode .messages{gap:22px}
+  .chat-mode .message{max-width:92%;font-size:15px}
+  .chat-mode .message.user{max-width:82%}
+  .chat-mode .composer{width:calc(100% - 16px);margin-bottom:8px}
+}
+/* The right control visually follows the compact compose/menu control in the reference. */
+.chat-mode .right-btn .round{
+  width:78px;
+  border-radius:24px;
+  font-size:0;
+  position:relative;
+}
+.chat-mode .right-btn .round:before{
+  content:'✎';
+  font-size:21px;
+  color:#e8e8e8;
+  position:absolute;
+  left:19px;
+  top:7px;
+}
+.chat-mode .right-btn .round:after{
+  content:'⋮';
+  font-size:22px;
+  color:#bdbdbf;
+  position:absolute;
+  right:16px;
+  top:6px;
+}
+
 </style>
 </head>
 <body>
