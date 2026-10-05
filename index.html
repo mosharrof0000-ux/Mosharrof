@@ -405,6 +405,73 @@ body{padding:0!important}
   .chat-mode .composer{bottom:7px!important;width:calc(100% - 14px)!important}
 }
 
+
+/* MOSHARROF AI — FINAL CLEAN BLACK DISPLAY
+   No visible header. Content remains the visual background beneath system chrome. */
+.top .left-btn .round,.top .right-btn .round{
+  font-size:0!important;
+  background:#101010!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  box-shadow:0 3px 16px rgba(0,0,0,.60)!important;
+}
+.top .left-btn .round:before,.top .right-btn .round:before{
+  content:'☰'!important;
+  display:block!important;
+  font-size:22px!important;
+  line-height:1!important;
+  color:#d8d8d8!important;
+}
+.top .left-btn .round:after,.top .right-btn .round:after{display:none!important}
+.top .right-btn .round{width:44px!important;height:44px!important}
+.chat-mode .chat-scroll{
+  padding-top:8px!important;
+  padding-bottom:78px!important;
+  background:#000!important;
+}
+.chat-mode .messages{gap:25px!important}
+.chat-mode .message.ai{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  color:#ededed!important;
+}
+.chat-mode .message.user{
+  background:#242424!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.chat-mode .message-actions{opacity:.55!important}
+.chat-mode .message-action{
+  background:#111!important;
+  border-color:rgba(255,255,255,.07)!important;
+}
+.chat-mode .composer{
+  background:#242424!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  box-shadow:0 5px 25px rgba(0,0,0,.72)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.chat-mode .composer:focus-within{
+  border-color:rgba(255,255,255,.16)!important;
+  box-shadow:0 6px 28px rgba(0,0,0,.78)!important;
+}
+/* soft readability only; no header/footer panel */
+.app:before{
+  height:54px!important;
+  background:linear-gradient(to bottom,rgba(0,0,0,.52),transparent)!important;
+}
+.app:after{
+  height:48px!important;
+  background:linear-gradient(to top,rgba(0,0,0,.62),transparent)!important;
+}
+@media(max-width:760px){
+  .chat-mode .chat-scroll{padding:6px 9px 76px!important}
+  .top .left-btn,.top .right-btn{top:8px!important}
+  .top .left-btn{left:8px!important}.top .right-btn{right:8px!important}
+}
+
 </style>
 </head>
 <body>
@@ -413,7 +480,7 @@ body{padding:0!important}
 <header class="top">
  <div class="left-btn"><button class="round" id="openLeft">☰</button></div>
  <div class="brand"><span class="mlogo">M</span><b>MOSHARROF AI</b><small>জ্ঞান • গবেষণা • অন্তর্দৃষ্টি</small></div>
- <div class="right-btn"><button class="round" id="openRight">⋮</button></div>
+ <div class="right-btn"><button class="round" id="openRight" aria-label="মেনু">☰</button></div>
 </header>
 <section class="content"><div class="hero">
  <div class="hero-logo">M</div><h1>আপনি কিভাবে <span>সাহায্য</span> চান?</h1><p class="sub">কুরআন, গবেষণা, জ্ঞান অথবা অন্য কোনো বিষয়ে প্রশ্ন করুন...</p>
