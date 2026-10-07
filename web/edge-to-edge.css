@@ -81,7 +81,7 @@ body{
   -webkit-overflow-scrolling:touch;
 }
 
-/* Home composer is a floating dock, not a block that reserves layout height. */
+/* Home composer is a floating dock */
 .content>.hero>.composer{
   position:fixed !important;
   left:max(12px,var(--mos-safe-left)) !important;
@@ -121,7 +121,7 @@ body{
   height:calc(120px + var(--mos-safe-bottom));
 }
 
-/* Chat mode: true full-height scrolling surface + floating composer. */
+/* Chat mode */
 .chat-mode .content{
   padding:0 !important;
   overflow:hidden !important;
@@ -163,7 +163,6 @@ body{
   z-index:85 !important;
 }
 
-/* Keep interactive chrome above zones. */
 .top,
 .chat-mode .left-btn,
 .chat-mode .right-btn,
@@ -180,7 +179,6 @@ body{
 .modal{z-index:95 !important}
 .toast{z-index:100 !important}
 
-/* Extra protection for very short screens. */
 @media(max-height:620px){
   .content{
     padding-bottom:calc(135px + var(--mos-safe-bottom)) !important;
