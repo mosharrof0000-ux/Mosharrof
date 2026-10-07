@@ -1,5 +1,5 @@
-/* MOSHARROF AI — true edge-to-edge / Gemini-style floating UI
-   Web layer: full viewport canvas + floating chrome + soft system-zone protection.
+/* MOSHARROF AI — true edge-to-edge / clean transparent glass (no blur, no border, no cloudy layer)
+   Web layer: full viewport canvas + floating chrome. Content scrolls clearly under glass.
 */
 :root{
   --mos-safe-top:env(safe-area-inset-top,0px);
@@ -41,7 +41,7 @@ body{
   padding:0 !important;
 }
 
-/* Header floats over the canvas and respects only the unsafe top area. */
+/* Header floats — clean transparent glass, no border, no blur */
 .top{
   position:absolute !important;
   top:0 !important;
@@ -57,14 +57,11 @@ body{
     7px
     max(10px,var(--mos-safe-left)) !important;
   border:0 !important;
-  background:linear-gradient(
-    180deg,
-    rgba(2,13,31,.72) 0%,
-    rgba(2,13,31,.38) 58%,
-    rgba(2,13,31,0) 100%
-  ) !important;
-  backdrop-filter:blur(16px) saturate(125%);
-  -webkit-backdrop-filter:blur(16px) saturate(125%);
+  outline:none !important;
+  box-shadow:none !important;
+  background:rgba(255,255,255,0.05) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
 }
 
 /* Main content fills the exact viewport and scrolls under floating chrome. */
@@ -96,7 +93,7 @@ body{
   z-index:85 !important;
 }
 
-/* Two soft protection zones: content visibly continues behind them. */
+/* Clean transparent zones — no blur, no dark/cloudy layer, no border */
 .app::before,
 .app::after{
   content:"";
@@ -105,34 +102,23 @@ body{
   right:0;
   z-index:60;
   pointer-events:none;
-  -webkit-backdrop-filter:blur(10px) saturate(120%);
-  backdrop-filter:blur(10px) saturate(120%);
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  mask-image:none !important;
+  -webkit-mask-image:none !important;
 }
 
 .app::before{
   top:0;
-  height:calc(150px + var(--mos-safe-top));
-  background:linear-gradient(
-    180deg,
-    rgba(2,13,31,.58) 0%,
-    rgba(2,13,31,.24) 48%,
-    rgba(2,13,31,0) 100%
-  );
-  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 35%,transparent 100%);
-  mask-image:linear-gradient(180deg,#000 0%,#000 35%,transparent 100%);
+  height:calc(80px + var(--mos-safe-top));
 }
 
 .app::after{
   bottom:0;
-  height:calc(235px + var(--mos-safe-bottom));
-  background:linear-gradient(
-    0deg,
-    rgba(2,13,31,.84) 0%,
-    rgba(2,13,31,.45) 38%,
-    rgba(2,13,31,0) 100%
-  );
-  -webkit-mask-image:linear-gradient(0deg,#000 0%,#000 38%,transparent 100%);
-  mask-image:linear-gradient(0deg,#000 0%,#000 38%,transparent 100%);
+  height:calc(120px + var(--mos-safe-bottom));
 }
 
 /* Chat mode: true full-height scrolling surface + floating composer. */
@@ -177,7 +163,7 @@ body{
   z-index:85 !important;
 }
 
-/* Keep interactive chrome above the blur zones. */
+/* Keep interactive chrome above zones. */
 .top,
 .chat-mode .left-btn,
 .chat-mode .right-btn,
@@ -199,15 +185,14 @@ body{
   .content{
     padding-bottom:calc(135px + var(--mos-safe-bottom)) !important;
   }
-  .app::before{height:calc(120px + var(--mos-safe-top))}
-  .app::after{height:calc(185px + var(--mos-safe-bottom))}
+  .app::before{height:calc(70px + var(--mos-safe-top))}
+  .app::after{height:calc(110px + var(--mos-safe-bottom))}
   .chat-mode .chat-scroll{
     padding-top:calc(66px + var(--mos-safe-top)) !important;
     padding-bottom:calc(145px + var(--mos-safe-bottom)) !important;
   }
 }
 
-/* Reduced-motion users keep the same layout without blur/scroll animation. */
 @media(prefers-reduced-motion:reduce){
   .chat-mode .chat-scroll{scroll-behavior:auto !important}
 }
