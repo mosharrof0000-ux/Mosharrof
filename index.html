@@ -453,7 +453,7 @@ $('#plus').onclick=()=>P.classList.toggle('open');$('#pclose').onclick=()=>P.cla
 $('#mclose').onclick=()=>M.classList.remove('open');M.onclick=e=>{if(e.target===M)M.classList.remove('open')};
 $$('[data-mod]').forEach(b=>b.onclick=()=>module(b.dataset.mod));$$('[data-toast]').forEach(b=>b.onclick=()=>{msg(b.dataset.toast);closeAll()});$('#add').onclick=()=>msg('নতুন এন্টিটি জন্ম — মোশাররফ অনুমোদন প্রয়োজন');
 $$('.pitem').forEach(b=>b.onclick=()=>{msg(b.dataset.toast);P.classList.remove('open')});
-$('#form').onsubmit=e=>{
+$('#form').onsubmit=async e=>{
  e.preventDefault();
  const v=$('#input').value.trim(); if(!v)return;
  document.querySelector('.app').classList.add('chat-mode');
@@ -462,7 +462,20 @@ $('#form').onsubmit=e=>{
  user.innerHTML='<span class="label">আপনি</span>'+v.replace(/</g,'&lt;').replace(/>/g,'&gt;');
  box.appendChild(user);
  $('#input').value='';
- requestAnimationFrame(()=>{const ai=document.createElement('div');ai.className='message ai';ai.innerHTML='<span class="label">MOSHARROF AI</span>আপনার বার্তা গ্রহণ করা হয়েছে। এটি সার্বভৌম এন্টিটি আর্কিটেকচারের উপর দাঁড়ানো Chat UI। প্রতিটি কথোপকথন ও মডিউল নিজস্ব স্মৃতি কোর্সে সংযুক্ত হবে।';box.appendChild(ai);$('#chatScroll').scrollTop=$('#chatScroll').scrollHeight});
+ const ai=document.createElement('div'); ai.className='message ai';
+ ai.innerHTML='<span class="label">MOSHARROF AI</span><span class="ai-text">সংযোগ হচ্ছে…</span>';
+ box.appendChild(ai);
+ $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
+ try{
+   const res=await fetch('https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:v})});
+   const data=await res.json().catch(()=>({}));
+   if(!res.ok) throw new Error(data.error||'chat_request_failed');
+   ai.querySelector('.ai-text').textContent=data.text||'কোনো উত্তর পাওয়া যায়নি।';
+ }catch(err){
+   ai.querySelector('.ai-text').textContent='দুঃখিত, এই মুহূর্তে Gemini সংযোগে সমস্যা হয়েছে।';
+   console.error('Mosharrof Gemini chat error:',err);
+ }
+ $('#chatScroll').scrollTop=$('#chatScroll').scrollHeight;
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAll();P.classList.remove('open');M.classList.remove('open')}})
 })();
