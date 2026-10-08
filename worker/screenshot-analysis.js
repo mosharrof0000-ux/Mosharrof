@@ -5,6 +5,7 @@ function reply(data,status){return new Response(JSON.stringify(data),{status,hea
 
 const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-2.5-flash"];
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
+const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 
 async function callGemini(env, model, body){
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
@@ -14,6 +15,30 @@ async function callGemini(env, model, body){
   });
   const data=await upstream.json().catch(()=>({}));
   return {upstream, data, model};
+}
+
+async function generateImage(request,env){
+  const body=await request.json();
+  const prompt=String(body.prompt||"").trim();
+  if(!prompt)return reply({error:"prompt_required"},400);
+  if(prompt.length>12000)return reply({error:"prompt_too_large"},413);
+  if(!env.GEMINI_API_KEY)return reply({error:"image_provider_not_configured"},503);
+  const preferred=env.GEMINI_IMAGE_MODEL ? [env.GEMINI_IMAGE_MODEL,...IMAGE_MODELS.filter(m=>m!==env.GEMINI_IMAGE_MODEL)] : IMAGE_MODELS;
+  let last=null;
+  for(const model of preferred){
+    try{
+      const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
+        method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
+        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:"image/png",aspect_ratio:String(body.aspect_ratio||"1:1"),image_size:String(body.image_size||"1K")}})
+      });
+      const data=await upstream.json().catch(()=>({}));
+      last={upstream,data,model};
+      if(!upstream.ok){if([404,429,500,503].includes(upstream.status))continue;return reply({error:"image_provider_failed",provider_status:upstream.status,provider_message:data?.error?.message||null,model},502);}
+      const image=data?.output_image;
+      if(image?.data){return reply({ok:true,model,mime_type:image.mime_type||"image/png",image_data:image.data},200);}
+    }catch(e){last={error:String(e&&e.message||e)};}
+  }
+  return reply({error:"image_provider_failed",provider_message:last?.data?.error?.message||last?.error||"no_image_returned",tried:preferred},502);
 }
 
 async function chat(request,env){
@@ -68,7 +93,9 @@ export default {async fetch(request,env){
   }
   if(request.method!=="POST")return reply({error:"POST only"},405);
   try{
-    if(new URL(request.url).pathname==="/chat")return await chat(request,env);
+    const pathname=new URL(request.url).pathname;
+    if(pathname==="/generate-image")return await generateImage(request,env);
+    if(pathname==="/chat")return await chat(request,env);
     const body=await request.json();
     if(!body.image_base64||!String(body.mime_type||"").startsWith("image/"))return reply({error:"image_base64 and image/* mime_type are required"},400);
     if(String(body.image_base64).length>MAX_BYTES*1.4)return reply({error:"image_too_large"},413);
