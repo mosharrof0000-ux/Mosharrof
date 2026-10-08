@@ -52,9 +52,9 @@ async function generateWithCloudflare(prompt,env){
   try{
     const model=env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell";
     const result=await env.AI.run(model,{prompt});
-    const bytes=result instanceof ArrayBuffer ? new Uint8Array(result) : new Uint8Array(await new Response(result).arrayBuffer());
-    if(!bytes.length)return {ok:false,provider:"cloudflare-workers-ai",model,reason:"empty_image"};
-    return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/png",image_data:bytesToBase64(bytes)};
+    const imageData=String(result?.image||"");
+    if(!imageData)return {ok:false,provider:"cloudflare-workers-ai",model,reason:"empty_image"};
+    return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/jpeg",image_data:imageData};
   }catch(e){
     return {ok:false,provider:"cloudflare-workers-ai",reason:String(e&&e.message||e)};
   }
