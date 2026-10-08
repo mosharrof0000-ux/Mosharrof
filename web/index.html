@@ -80,9 +80,19 @@ header.top{
 .dlogo{width:40px;height:40px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;font-weight:900}
 .dclose{margin-left:auto;padding:6px;font-size:18px}
 .nav{display:flex;flex-direction:column;gap:4px}
-.nav button{padding:12px;border-radius:14px;color:#e5e5e5;text-align:left;display:flex;flex-direction:column;gap:2px;align-items:flex-start;width:100%}
+.nav button{
+  padding:12px 14px;border-radius:14px;color:#e5e5e5;text-align:left;
+  display:flex;flex-direction:row;align-items:center;gap:14px;width:100%
+}
 .nav button:hover,.nav button.active{background:var(--surface2)}
-.nav button small{font-size:10px;color:var(--muted);font-weight:400}
+.nav button .ico{
+  width:36px;height:36px;flex:none;border-radius:10px;
+  background:var(--surface2);display:grid;place-items:center;font-size:18px
+}
+.nav button.active .ico{background:#2a2a2a}
+.nav button .lab{display:flex;flex-direction:column;gap:2px;min-width:0}
+.nav button .lab b{font-size:14px;font-weight:600}
+.nav button .lab small{font-size:10px;color:var(--muted);font-weight:400}
 .session-meta{font-size:11px;color:var(--muted);padding:8px 4px 12px;line-height:1.5;border-bottom:1px solid var(--border);margin-bottom:8px}
 .toast{position:fixed;z-index:10002;bottom:140px;left:50%;transform:translate(-50%,12px);opacity:0;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;font-size:12px;pointer-events:none;transition:.2s}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -123,6 +133,7 @@ header.top{
 <script>
 (function(){
   var REG={core:"coordination and governance",chat:"conversation interface",sidebar:"navigation and entity discovery",voice:"context-aware voice processing",storage:"file indexing and organization",tool_factory:"safe tool creation and execution",quran_research:"Quran language research"};
+  var ICONS={core:"◎",chat:"💬",sidebar:"☰",voice:"🎙️",storage:"📁",tool_factory:"⚙️",quran_research:"📖"};
   var STORE_KEY="mosharrof_chat_v1";
   function $(s){return document.querySelector(s);}
   var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
@@ -173,7 +184,15 @@ header.top{
   function clearMsg(){session.messages=[];session.lastActiveAt=nowISO();saveStore(session);msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");updateMeta();closeD();toast("Cleared");}
   dL.innerHTML='<div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF</strong><small>Entity System</small></div><button class="dclose" id="cL">✕</button></div><div class="session-meta" id="sessionMeta"></div><nav class="nav" id="navL"></nav>';
   dR.innerHTML='<div class="dhead"><div class="dlogo">⋮</div><div><strong>Options</strong></div><button class="dclose" id="cR">✕</button></div><nav class="nav"><button id="historyBtn">🕐 ইতিহাস<small>খোলা/বন্ধ সময়</small></button><button id="newChat">✦ New Chat</button><button id="clearMsg">⌫ Clear</button><button id="voiceBtn">🎙️ Voice</button></nav>';
-  var navL=$("#navL");Object.keys(REG).forEach(function(id){var b=document.createElement("button");if(id==="chat")b.className="active";b.innerHTML="<span>• "+id+"</span>";b.onclick=function(){Array.prototype.forEach.call(navL.children,function(x){x.classList.remove("active");});b.classList.add("active");toast(id+" — "+REG[id]);};navL.appendChild(b);});
+  var navL=$("#navL");
+  Object.keys(REG).forEach(function(id){
+    var b=document.createElement("button");
+    if(id==="chat")b.className="active";
+    var ico=ICONS[id]||"•";
+    b.innerHTML='<span class="ico" aria-hidden="true">'+ico+'</span><span class="lab"><b>'+id+'</b><small>'+REG[id]+'</small></span>';
+    b.onclick=function(){Array.prototype.forEach.call(navL.children,function(x){x.classList.remove("active");});b.classList.add("active");toast(id+" — "+REG[id]);};
+    navL.appendChild(b);
+  });
   updateMeta();
   var rec=null;
   function initV(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;rec=new SR();rec.lang="bn-BD";rec.continuous=false;rec.interimResults=true;rec.onstart=function(){showV("Listening…");};rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;var p=correct(t);input.value=punct(p.text);resize();showV(p.corrections.length?"Context corrected":"Voice ready");};rec.onerror=function(e){showV("Error: "+e.error);setTimeout(hideV,2000);};rec.onend=function(){if(vStatus.textContent==="Listening…")hideV();else setTimeout(hideV,1500);};}
