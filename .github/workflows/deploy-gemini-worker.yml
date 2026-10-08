@@ -120,6 +120,28 @@ jobs:
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$SCRIPT/subdomain" || true)"
           echo "$RESP"
 
+      - name: Generate and verify a real image
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/generate-image"
+          echo "Generating verification image through the deployed Worker..."
+          curl -fsS --connect-timeout 10 --max-time 120 -X POST \\
+            -H "Origin: https://mosharrof0000-ux.github.io" \\
+            -H "Content-Type: application/json" \\
+            --data '{"prompt":"A simple verification image: a blue circle on a white background, no text.","aspect_ratio":"1:1","image_size":"1K"}' \\
+            "$URL" > /tmp/image-response.json
+          python - <<'PY'
+          import base64,json
+          d=json.load(open("/tmp/image-response.json",encoding="utf-8"))
+          assert d.get("ok") is True, d
+          raw=base64.b64decode(d["image_data"])
+          assert len(raw)>1000, len(raw)
+          assert raw[:8] == b"\\x89PNG\\r\\n\\x1a\\n", raw[:8]
+          print("REAL IMAGE GENERATION VERIFIED: PNG bytes returned:", len(raw))
+          print("Model:", d.get("model"))
+          PY
+
       - name: Set Gemini secret
         working-directory: worker
         env:
