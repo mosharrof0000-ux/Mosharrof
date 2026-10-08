@@ -173,6 +173,7 @@ header.top{
     /* message-renderer contract markers: */ n.className='message ai'; if(role==="user")n.className='message user'; else n.className="message ai";
     var l=document.createElement("span");l.className="label";l.textContent=role==="user"?"আপনি":"MOSHARROF AI · core";
     n.appendChild(l);n.appendChild(document.createTextNode(text));
+    if(role==="ai" && text && text.indexOf("🖼️")!==0){var sp=document.createElement("button");sp.className="speak";sp.type="button";sp.textContent="🔊 শুনুন";sp.onclick=function(){speakText(text,sp);};n.appendChild(sp);}
     var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);n.appendChild(tm);
     msgEl.appendChild(n);bottom();
     if(!skipSave){session.messages.push({role:role,text:text,at:at});session.lastActiveAt=at;saveStore(session);updateMeta();}
@@ -182,6 +183,8 @@ header.top{
   function untype(){var t=$("#typing");if(t)t.remove();}
   var CHAT_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat";
   var IMAGE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/generate-image";
+  var TTS_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts";
+  var activeAudio=null;
   function coreReply(t,image){
     return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null})})
       .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
@@ -190,6 +193,11 @@ header.top{
         if(!answer)throw new Error("empty_response");
         return answer;
       });});
+  }
+  function speakText(t,button){
+    if(activeAudio){try{activeAudio.pause();}catch(e){}activeAudio=null;}
+    button.disabled=true;button.textContent="⏳ প্রস্তুত হচ্ছে…";showV("পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে…");
+    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),language_code:"bn-IN",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){if(!data.audio_data)throw new Error("no_audio");activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudio.onended=function(){button.textContent="🔊 শুনুন";hideV();activeAudio=null;};button.textContent="⏸ বন্ধ করুন";button.disabled=false;button.onclick=function(){if(activeAudio){activeAudio.pause();activeAudio=null;button.textContent="🔊 শুনুন";hideV();button.onclick=function(){speakText(t,button);};}};showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){});}).catch(function(){button.disabled=false;button.textContent="🔊 শুনুন";hideV();toast("ভয়েস সেবা এখন পাওয়া যাচ্ছে না");});
   }
   function imageReply(t){
     return fetch(IMAGE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:String(t||"").trim(),aspect_ratio:"1:1",image_size:"1K"})})
