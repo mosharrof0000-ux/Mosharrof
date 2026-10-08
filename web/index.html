@@ -46,6 +46,7 @@ header.top button{pointer-events:auto}
 .messages{width:min(900px,100%);margin:0 auto;display:flex;flex-direction:column;gap:20px}
 .message{max-width:min(88%,760px);font-size:15px;line-height:1.7;word-break:break-word;color:#ececec}
 .message .label{display:block;font-size:11px;color:#8e8e93;margin-bottom:6px}
+.message .time{display:block;font-size:10px;color:#6b6b70;margin-top:4px}
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
 .message.typing .dots{display:inline-flex;gap:4px}
@@ -53,43 +54,21 @@ header.top button{pointer-events:auto}
 .message.typing .dots span:nth-child(2){animation-delay:.2s}
 .message.typing .dots span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
-
-/* Raised high enough to clear Netlify drawer + mobile chrome */
 .composer{
-  position:fixed;
-  left:12px;right:12px;
-  bottom:72px;
-  max-width:820px;margin-left:auto;margin-right:auto;
-  z-index:9999;
-  background:#2f2f2f;
-  border:1px solid rgba(255,255,255,.18);
-  border-radius:24px;
-  padding:8px 10px;
-  box-shadow:0 8px 32px rgba(0,0,0,.7)
+  position:fixed;left:12px;right:12px;bottom:72px;
+  max-width:820px;margin-left:auto;margin-right:auto;z-index:9999;
+  background:#2f2f2f;border:1px solid rgba(255,255,255,.18);border-radius:24px;
+  padding:8px 10px;box-shadow:0 8px 32px rgba(0,0,0,.7)
 }
 .row{display:flex;align-items:flex-end;gap:6px}
 .plus{width:40px;height:40px;flex:none;border-radius:50%;color:#e5e5e5;font-size:22px;display:grid;place-items:center}
-.input{
-  flex:1;min-width:0;min-height:40px;max-height:120px;
-  border:0;outline:0;background:transparent;
-  padding:10px 6px;font-size:16px;line-height:1.4;
-  resize:none;overflow-y:auto;color:var(--text)
-}
+.input{flex:1;min-width:0;min-height:40px;max-height:120px;border:0;outline:0;background:transparent;padding:10px 6px;font-size:16px;line-height:1.4;resize:none;overflow-y:auto;color:var(--text)}
 .input::placeholder{color:#8e8e93}
-.send{
-  width:40px;height:40px;flex:none;border-radius:50%;
-  background:#f4f4f5;color:#111;font-size:18px;display:grid;place-items:center
-}
+.send{width:40px;height:40px;flex:none;border-radius:50%;background:#f4f4f5;color:#111;font-size:18px;display:grid;place-items:center}
 .send:disabled{opacity:.35}
-
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;opacity:0;visibility:hidden;transition:.2s}
 .scrim.open{opacity:1;visibility:visible}
-.drawer{
-  position:fixed;top:0;bottom:0;width:min(300px,85vw);z-index:10001;
-  background:var(--surface);padding:14px;
-  padding-top:calc(14px + var(--safe-t));padding-bottom:calc(14px + var(--safe-b));
-  transition:transform .28s cubic-bezier(.2,.8,.2,1)
-}
+.drawer{position:fixed;top:0;bottom:0;width:min(300px,85vw);z-index:10001;background:var(--surface);padding:14px;padding-top:calc(14px + var(--safe-t));padding-bottom:calc(14px + var(--safe-b));transition:transform .28s cubic-bezier(.2,.8,.2,1);overflow-y:auto}
 .drawer.left{left:0;transform:translateX(-105%);border-right:1px solid var(--border)}
 .drawer.right{right:0;transform:translateX(105%);border-left:1px solid var(--border)}
 .drawer.open{transform:translateX(0)}
@@ -97,23 +76,13 @@ header.top button{pointer-events:auto}
 .dlogo{width:40px;height:40px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;font-weight:900}
 .dclose{margin-left:auto;padding:6px;font-size:18px}
 .nav{display:flex;flex-direction:column;gap:4px}
-.nav button{padding:12px;border-radius:14px;color:#e5e5e5;text-align:left;display:flex;gap:12px;align-items:center}
+.nav button{padding:12px;border-radius:14px;color:#e5e5e5;text-align:left;display:flex;gap:12px;align-items:center;width:100%}
 .nav button:hover,.nav button.active{background:var(--surface2)}
-.toast{
-  position:fixed;z-index:10002;
-  bottom:140px;left:50%;
-  transform:translate(-50%,12px);opacity:0;
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:12px;padding:8px 14px;font-size:12px;
-  pointer-events:none;transition:.2s
-}
+.nav button small{display:block;font-size:10px;color:var(--muted);margin-top:2px;font-weight:400}
+.session-meta{font-size:11px;color:var(--muted);padding:8px 4px 12px;line-height:1.5;border-bottom:1px solid var(--border);margin-bottom:8px}
+.toast{position:fixed;z-index:10002;bottom:140px;left:50%;transform:translate(-50%,12px);opacity:0;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;font-size:12px;pointer-events:none;transition:.2s}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.voice-bar{
-  position:fixed;left:50%;
-  bottom:130px;
-  transform:translateX(-50%);z-index:9998;
-  font-size:11px;color:var(--muted);opacity:0;transition:.2s;pointer-events:none
-}
+.voice-bar{position:fixed;left:50%;bottom:130px;transform:translateX(-50%);z-index:9998;font-size:11px;color:var(--muted);opacity:0;transition:.2s;pointer-events:none}
 .voice-bar.show{opacity:1}
 </style>
 </head>
@@ -128,14 +97,11 @@ header.top button{pointer-events:auto}
     <div class="content">
       <div class="hero">
         <div class="chat-scroll" id="chatScroll">
-          <div class="messages" id="messages">
-            <div class="message ai"><span class="label">MOSHARROF AI · core</span>আমি কীভাবে আপনাকে সাহায্য করতে পারি?</div>
-          </div>
+          <div class="messages" id="messages"></div>
         </div>
       </div>
     </div>
   </main>
-
   <div class="composer" id="composer">
     <div class="row">
       <button class="plus" id="plusBtn" aria-label="Voice">+</button>
@@ -144,7 +110,6 @@ header.top button{pointer-events:auto}
     </div>
   </div>
   <div class="voice-bar" id="voiceStatus">Voice ready</div>
-
   <aside class="drawer left" id="drawerLeft" aria-hidden="true"></aside>
   <aside class="drawer right" id="drawerRight" aria-hidden="true"></aside>
   <div class="scrim" id="scrim"></div>
@@ -153,12 +118,68 @@ header.top button{pointer-events:auto}
 <script>
 (function(){
   var REG={core:"coordination and governance",chat:"conversation interface",sidebar:"navigation and entity discovery",voice:"context-aware voice processing",storage:"file indexing and organization",tool_factory:"safe tool creation and execution",quran_research:"Quran language research"};
+  var STORE_KEY="mosharrof_chat_v1";
   function $(s){return document.querySelector(s);}
   var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
   var leftBtn=$("#leftBtn"),rightBtn=$("#rightBtn"),scrim=$("#scrim"),dL=$("#drawerLeft"),dR=$("#drawerRight");
   var toastEl=$("#toast"),vStatus=$("#voiceStatus");
   var QE=["কি","কী","কেন","কোথায়","কোথায়","কখন","কীভাবে","কিভাবে","কত","কার","কে","কোন","কোনটি"];
   var CM={"গবেষনা":"গবেষণা","প্রজেকট":"প্রজেক্ট","খুজে":"খুঁজে","কোরান":"কুরআন","কুরান":"কুরআন","মোশারফ":"মোশাররফ","করতেছ":"করছ"};
+
+  function nowISO(){return new Date().toISOString();}
+  function fmtTime(iso){
+    if(!iso)return "—";
+    try{
+      var d=new Date(iso);
+      return d.toLocaleString("bn-BD",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true});
+    }catch(e){return iso;}
+  }
+  function shortTime(iso){
+    if(!iso)return "";
+    try{
+      return new Date(iso).toLocaleTimeString("bn-BD",{hour:"2-digit",minute:"2-digit",hour12:true});
+    }catch(e){return "";}
+  }
+
+  function loadStore(){
+    try{
+      var raw=localStorage.getItem(STORE_KEY);
+      if(!raw)return null;
+      return JSON.parse(raw);
+    }catch(e){return null;}
+  }
+  function saveStore(data){
+    try{localStorage.setItem(STORE_KEY,JSON.stringify(data));}catch(e){}
+  }
+
+  var session=loadStore();
+  if(!session||!session.messages){
+    session={openedAt:nowISO(),closedAt:null,lastActiveAt:nowISO(),messages:[]};
+  }else{
+    session.openedAt=session.openedAt||nowISO();
+    session.lastActiveAt=nowISO();
+    session.closedAt=null;
+  }
+  saveStore(session);
+
+  window.addEventListener("beforeunload",function(){
+    session.closedAt=nowISO();
+    session.lastActiveAt=nowISO();
+    saveStore(session);
+  });
+  document.addEventListener("visibilitychange",function(){
+    if(document.hidden){
+      session.closedAt=nowISO();
+      session.lastActiveAt=nowISO();
+      saveStore(session);
+    }else{
+      session.openedAt=session.openedAt||nowISO();
+      session.lastActiveAt=nowISO();
+      session.closedAt=null;
+      saveStore(session);
+      updateMeta();
+    }
+  });
 
   function punct(t){return String(t||"").trim().split(/(?:\n+|\s{3,})/).filter(Boolean).map(function(c){var v=c.trim();if(!v)return"";if(/[।?!,;:]$/.test(v))return v;return QE.some(function(w){return v.endsWith(w);})?v+"?":v+"।";}).filter(Boolean).join(" ");}
   function correct(t){var v=String(t||"").replace(/\s+/g," ").trim();var c=[];for(var f in CM){if(!Object.prototype.hasOwnProperty.call(CM,f))continue;var to=CM[f];var r=new RegExp("(^|\\s)"+f+"(?=\\s|$)","g");var n=v.replace(r,"$1"+to);if(n!==v)c.push({f:f,to:to});v=n;}v=v.replace(/(\S+)(\s+\1)+/gi,"$1");return{text:v,corrections:c};}
@@ -168,10 +189,22 @@ header.top button{pointer-events:auto}
   function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
 
-  function addMsg(role,text){
+  function addMsg(role,text,ts,skipSave){
+    var at=ts||nowISO();
     var n=document.createElement("div");n.className="message "+role;
     var l=document.createElement("span");l.className="label";l.textContent=role==="user"?"আপনি":"MOSHARROF AI · core";
-    n.appendChild(l);n.appendChild(document.createTextNode(text));msgEl.appendChild(n);bottom();return n;
+    n.appendChild(l);
+    n.appendChild(document.createTextNode(text));
+    var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);
+    n.appendChild(tm);
+    msgEl.appendChild(n);bottom();
+    if(!skipSave){
+      session.messages.push({role:role,text:text,at:at});
+      session.lastActiveAt=at;
+      saveStore(session);
+      updateMeta();
+    }
+    return n;
   }
   function typing(){var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label">MOSHARROF AI · core</span><span class="dots"><span></span><span></span><span></span></span>';msgEl.appendChild(n);bottom();}
   function untype(){var t=$("#typing");if(t)t.remove();}
@@ -181,8 +214,8 @@ header.top button{pointer-events:auto}
       setTimeout(function(){
         if(/কুরআন|কোরান|আয়াত|সূরা/.test(t)){resolve("কুরআন গবেষণা (quran_research) প্রস্তুত। নির্দিষ্ট আয়াত বললে প্রেক্ষাপট দিতে পারি।");return;}
         if(/ভয়েস|voice/.test(t)){resolve("Voice entity সক্রিয়। + বাটনে চাপ দিয়ে বাংলায় কথা বলুন।");return;}
-        if(/এন্টিটি|entity|রেজিস্ট্রি|সিস্টেম/.test(t)){resolve(Object.keys(REG).map(function(i){return "• "+i+" — "+REG[i];}).join("\n"));return;}
-        resolve("Foundation UI অনলাইন। Core সক্রিয়। মডেল অ্যাডাপ্টার কানেক্ট করলে পূর্ণ AI চালু হবে। আপনি কী জানতে চান?");
+        if(/এন্টিটি|entity|রেজিস্ট্রি|সিস্টেম|ইতিহাস|history/.test(t)){resolve(Object.keys(REG).map(function(i){return "• "+i+" — "+REG[i];}).join("\n"));return;}
+        resolve("Foundation UI অনলাইন। Core entity সক্রিয়। মডেল অ্যাডাপ্টার কানেক্ট করলে পূর্ণ AI জেনারেশন চালু হবে। আপনি কী জানতে চান?");
       },500+Math.random()*300);
     });
   }
@@ -201,8 +234,66 @@ header.top button{pointer-events:auto}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");(side==="left"?dL:dR).setAttribute("aria-hidden","false");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");dL.setAttribute("aria-hidden","true");dR.setAttribute("aria-hidden","true");}
 
-  dL.innerHTML='<div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF</strong><small>Entity System</small></div><button class="dclose" id="cL">✕</button></div><nav class="nav" id="navL"></nav>';
-  dR.innerHTML='<div class="dhead"><div class="dlogo">⋮</div><div><strong>Options</strong><small>chat</small></div><button class="dclose" id="cR">✕</button></div><nav class="nav"><button id="newChat">✦ New Chat</button><button id="clearMsg">⌫ Clear</button><button id="voiceBtn">🎙️ Voice</button></nav>';
+  function updateMeta(){
+    var el=$("#sessionMeta");
+    if(!el)return;
+    el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");
+  }
+
+  function restoreMessages(){
+    msgEl.innerHTML="";
+    if(session.messages&&session.messages.length){
+      for(var i=0;i<session.messages.length;i++){
+        var m=session.messages[i];
+        addMsg(m.role,m.text,m.at,true);
+      }
+    }else{
+      addMsg("ai","আমি কীভাবে আপনাকে সাহায্য করতে পারি?",nowISO(),true);
+    }
+  }
+
+  function showHistory(){
+    closeD();
+    var lines=[];
+    lines.push("📅 সেশন সময়");
+    lines.push("খোলা: "+fmtTime(session.openedAt));
+    lines.push("শেষ সক্রিয়: "+fmtTime(session.lastActiveAt));
+    if(session.closedAt)lines.push("বন্ধ: "+fmtTime(session.closedAt));
+    lines.push("");
+    lines.push("💬 মেসেজ: "+(session.messages?session.messages.length:0)+" টি");
+    if(session.messages&&session.messages.length){
+      var last=session.messages[session.messages.length-1];
+      lines.push("শেষ মেসেজ: "+shortTime(last.at)+" — "+(last.role==="user"?"আপনি":"AI"));
+    }
+    addMsg("ai",lines.join("\n"));
+    toast("ইতিহাস দেখানো হয়েছে");
+  }
+
+  function newChat(){
+    session.closedAt=nowISO();
+    saveStore(session);
+    session={openedAt:nowISO(),closedAt:null,lastActiveAt:nowISO(),messages:[]};
+    saveStore(session);
+    msgEl.innerHTML="";
+    addMsg("ai","নতুন কথোপকথন। আমি কীভাবে সাহায্য করতে পারি?");
+    updateMeta();
+    closeD();
+    toast("নতুন চ্যাট");
+  }
+
+  function clearMsg(){
+    session.messages=[];
+    session.lastActiveAt=nowISO();
+    saveStore(session);
+    msgEl.innerHTML="";
+    addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");
+    updateMeta();
+    closeD();
+    toast("মুছে ফেলা হয়েছে");
+  }
+
+  dL.innerHTML='<div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF</strong><small>Entity System</small></div><button class="dclose" id="cL">✕</button></div><div class="session-meta" id="sessionMeta"></div><nav class="nav" id="navL"></nav>';
+  dR.innerHTML='<div class="dhead"><div class="dlogo">⋮</div><div><strong>Options</strong><small>chat</small></div><button class="dclose" id="cR">✕</button></div><nav class="nav"><button id="historyBtn">🕐 ইতিহাস<small>খোলা/বন্ধ সময় দেখুন</small></button><button id="newChat">✦ New Chat</button><button id="clearMsg">⌫ Clear</button><button id="voiceBtn">🎙️ Voice</button></nav>';
   var navL=$("#navL");
   Object.keys(REG).forEach(function(id){
     var b=document.createElement("button");b.dataset.entity=id;if(id==="chat")b.className="active";
@@ -210,6 +301,7 @@ header.top button{pointer-events:auto}
     b.onclick=function(){Array.prototype.forEach.call(navL.children,function(x){x.classList.remove("active");});b.classList.add("active");toast(id+" — "+REG[id]);};
     navL.appendChild(b);
   });
+  updateMeta();
 
   var rec=null;
   function initV(){
@@ -226,19 +318,21 @@ header.top button{pointer-events:auto}
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
   input.addEventListener("input",resize);
   plusBtn.onclick=startV;
-  leftBtn.onclick=function(){openD("left");};
+  leftBtn.onclick=function(){updateMeta();openD("left");};
   rightBtn.onclick=function(){openD("right");};
   scrim.onclick=closeD;
   document.addEventListener("click",function(e){
     if(e.target.id==="cL"||e.target.id==="cR")closeD();
-    if(e.target.id==="newChat"){msgEl.innerHTML="";addMsg("ai","নতুন কথোপকথন। আমি কীভাবে সাহায্য করতে পারি?");closeD();toast("New chat");}
-    if(e.target.id==="clearMsg"){msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");closeD();toast("Cleared");}
+    if(e.target.id==="historyBtn"||(e.target.closest&&e.target.closest("#historyBtn")))showHistory();
+    if(e.target.id==="newChat")newChat();
+    if(e.target.id==="clearMsg")clearMsg();
     if(e.target.id==="voiceBtn"){closeD();startV();}
   });
 
+  restoreMessages();
   initV();resize();input.focus();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
-  console.log("[MOSHARROF] Mosharrof ready");
+  console.log("[MOSHARROF] history ready");
 })();
 </script>
 </body>
