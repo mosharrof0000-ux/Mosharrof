@@ -135,6 +135,40 @@ jobs:
           printf '%s' "$GEMINI" | npx --yes wrangler@3 secret put GEMINI_API_KEY --config wrangler.toml
 
 
+      - name: Set optional TTS provider secrets
+        working-directory: worker
+        env:
+          RAW_ELEVENLABS: ${{ secrets.ELEVENLABS_API_KEY }}
+          RAW_ELEVENLABS_VOICE: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          RAW_ELEVENLABS_ALLOW_PAID: ${{ secrets.ELEVENLABS_ALLOW_PAID }}
+          RAW_ELEVENLABS_EXPIRES_AT: ${{ secrets.ELEVENLABS_KEY_EXPIRES_AT }}
+          RAW_SARVAM: ${{ secrets.SARVAM_API_KEY }}
+        run: |
+          set -euo pipefail
+          clean() { printf '%s' "$1" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+
+          ELEVENLABS="$(clean "$RAW_ELEVENLABS")"
+          ELEVENLABS_VOICE="$(clean "$RAW_ELEVENLABS_VOICE")"
+          ELEVENLABS_ALLOW_PAID="$(clean "$RAW_ELEVENLABS_ALLOW_PAID")"
+          ELEVENLABS_EXPIRES_AT="$(clean "$RAW_ELEVENLABS_EXPIRES_AT")"
+          SARVAM="$(clean "$RAW_SARVAM")"
+
+          if [ -n "$ELEVENLABS" ]; then
+            printf '%s' "$ELEVENLABS" | npx --yes wrangler@3 secret put ELEVENLABS_API_KEY --config wrangler.toml
+          fi
+          if [ -n "$ELEVENLABS_VOICE" ]; then
+            printf '%s' "$ELEVENLABS_VOICE" | npx --yes wrangler@3 secret put ELEVENLABS_VOICE_ID --config wrangler.toml
+          fi
+          if [ -n "$ELEVENLABS_ALLOW_PAID" ]; then
+            printf '%s' "$ELEVENLABS_ALLOW_PAID" | npx --yes wrangler@3 secret put ELEVENLABS_ALLOW_PAID --config wrangler.toml
+          fi
+          if [ -n "$ELEVENLABS_EXPIRES_AT" ]; then
+            printf '%s' "$ELEVENLABS_EXPIRES_AT" | npx --yes wrangler@3 secret put ELEVENLABS_KEY_EXPIRES_AT --config wrangler.toml
+          fi
+          if [ -n "$SARVAM" ]; then
+            printf '%s' "$SARVAM" | npx --yes wrangler@3 secret put SARVAM_API_KEY --config wrangler.toml
+          fi
+
       - name: Verify live TTS end-to-end
         shell: bash
         run: |
