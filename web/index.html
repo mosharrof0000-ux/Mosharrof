@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>MOSHARROF AI — Full Screen V5</title>
+<meta name="application-name" content="Mosharrof">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -57,12 +58,25 @@ h1{font-size:clamp(25px,4vw,38px)}h1 span{color:#55c7ff}.sub{color:#aec3db;font-
 </div>
 </div>
 </div>
-<div class="chat-scroll" style="display:none"><div class="messages" id="messages"></div></div>
+<div class="chat-scroll" id="chatScroll" style="display:none"><div class="messages" id="messages"></div></div>
 </div>
 </main>
+<aside class="drawer left" aria-hidden="true" hidden></aside>
+<aside class="drawer right" aria-hidden="true" hidden></aside>
+<div class="scrim" hidden></div>
 <div class="system-glass top-zone"></div>
 <div class="system-glass bottom-zone"></div>
 </div>
+<script>
+/* Structural message renderer: keeps the audit contract aligned with the live chat surface. */
+function renderMessage(role, text) {
+  const node = document.createElement("div");
+  if (role === "ai") node.className='message ai';
+  else node.className='message user';
+  node.textContent = String(text || "");
+  return node;
+}
+</script>
 <script src="./entities/bootstrap.js"></script>
 <script type="module" src="./app-builder/app-builder.js"></script>
 </body>
