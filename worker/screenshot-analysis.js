@@ -7,6 +7,61 @@ const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gem
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
+const TTS_PROVIDERS=["sarvam","elevenlabs"];
+
+function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
+
+async function generateWithSarvam(text,body,env){
+  if(!env.SARVAM_API_KEY)return {ok:false,provider:"sarvam",reason:"not_configured"};
+  try{
+    const r=await fetch("https://api.sarvam.ai/text-to-speech",{method:"POST",headers:{"content-type":"application/json","api-subscription-key":env.SARVAM_API_KEY},body:JSON.stringify({text,model:"bulbul:v4-flash",language_code:String(body.language_code||"bn-IN"),speaker:String(body.speaker||"shubh"),pace:Number(body.pace||1),speech_sample_rate:24000,output_audio_codec:"mp3"})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)return {ok:false,provider:"sarvam",reason:data?.error?.message||data?.message||("HTTP "+r.status),status:r.status};
+    const audio=Array.isArray(data.audios)?data.audios[0]:null;
+    if(!audio)return {ok:false,provider:"sarvam",reason:"empty_audio",status:r.status};
+    return {ok:true,provider:"sarvam",model:"bulbul:v4-flash",mime_type:"audio/mpeg",audio_data:audio};
+  }catch(e){return {ok:false,provider:"sarvam",reason:String(e&&e.message||e)};}
+}
+
+async function generateWithElevenLabs(text,body,env){
+  if(!env.ELEVENLABS_API_KEY)return {ok:false,provider:"elevenlabs",reason:"not_configured"};
+  const allowPaid=String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true";
+  if(!allowPaid){
+    try{
+      const q=await fetch("https://api.elevenlabs.io/v1/user/subscription",{headers:{"xi-api-key":env.ELEVENLABS_API_KEY}});
+      const s=await q.json().catch(()=>({}));
+      const remaining=Math.max(0,Number(s.character_limit||0)-Number(s.character_count||0));
+      if(q.ok && remaining<text.length)return {ok:false,provider:"elevenlabs",reason:"free_quota_insufficient",remaining,character_limit:Number(s.character_limit||0),character_count:Number(s.character_count||0)};
+    }catch(e){}
+  }
+  const voice=String(body.voice_id||env.ELEVENLABS_VOICE_ID||"JBFqnCBsd6RMkjVDRZzb");
+  try{
+    const r=await fetch("https://api.elevenlabs.io/v1/text-to-speech/"+encodeURIComponent(voice),{method:"POST",headers:{"content-type":"application/json","xi-api-key":env.ELEVENLABS_API_KEY,"accept":"audio/mpeg"},body:JSON.stringify({text,model_id:String(env.ELEVENLABS_MODEL||"eleven_v3"),output_format:"mp3_44100_128"})});
+    if(!r.ok){const t=await r.text().catch(()=>"");return {ok:false,provider:"elevenlabs",reason:t||("HTTP "+r.status),status:r.status};}
+    const bytes=new Uint8Array(await r.arrayBuffer());
+    if(!bytes.length)return {ok:false,provider:"elevenlabs",reason:"empty_audio",status:r.status};
+    return {ok:true,provider:"elevenlabs",model:String(env.ELEVENLABS_MODEL||"eleven_v3"),mime_type:"audio/mpeg",audio_data:bytesToBase64(bytes)};
+  }catch(e){return {ok:false,provider:"elevenlabs",reason:String(e&&e.message||e)};}
+}
+
+async function tts(request,env){
+  const body=await request.json();
+  const text=String(body.text||"").trim();
+  if(!text)return reply({error:"text_required"},400);
+  if(text.length>3500)return reply({error:"text_too_large"},413);
+  const providers=env.TTS_PROVIDER_ORDER?String(env.TTS_PROVIDER_ORDER).split(",").map(x=>x.trim()).filter(Boolean):TTS_PROVIDERS;
+  const attempted=[];
+  for(const provider of providers){
+    let result;
+    if(provider==="sarvam")result=await generateWithSarvam(text,body,env);
+    else if(provider==="elevenlabs")result=await generateWithElevenLabs(text,body,env);
+    else continue;
+    attempted.push({provider:result.provider,ok:!!result.ok,model:result.model||null,reason:result.ok?null:result.reason||null});
+    if(result.ok)return reply({...result,attempted},200);
+  }
+  return reply({error:"tts_provider_failed",free_first:true,paid_fallback_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",attempted},502);
+}
+
 
 async function callGemini(env, model, body){
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
@@ -106,7 +161,7 @@ async function chat(request,env){
 export default {async fetch(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(origin){
@@ -118,6 +173,7 @@ export default {async fetch(request,env){
   try{
     const pathname=new URL(request.url).pathname;
     if(pathname==="/generate-image")return await generateImage(request,env);
+    if(pathname==="/tts")return await tts(request,env);
     if(pathname==="/chat")return await chat(request,env);
     const body=await request.json();
     if(!body.image_base64||!String(body.mime_type||"").startsWith("image/"))return reply({error:"image_base64 and image/* mime_type are required"},400);
