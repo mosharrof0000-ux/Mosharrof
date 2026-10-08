@@ -10,6 +10,7 @@ const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
 const TTS_PROVIDERS=["elevenlabs","sarvam"];
 
 function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
+function elevenLabsKeyExpired(env){const raw=String(env.ELEVENLABS_KEY_EXPIRES_AT||"").trim();if(!raw)return false;const t=Date.parse(raw);return Number.isFinite(t)&&Date.now()>=t;}
 
 async function generateWithSarvam(text,body,env){
   if(!env.SARVAM_API_KEY)return {ok:false,provider:"sarvam",reason:"not_configured"};
@@ -32,6 +33,7 @@ function elevenLabsKeyExpired(env){
 
 async function generateWithElevenLabs(text,body,env){
   if(!env.ELEVENLABS_API_KEY)return {ok:false,provider:"elevenlabs",reason:"not_configured"};
+  if(elevenLabsKeyExpired(env))return {ok:false,provider:"elevenlabs",reason:"credential_expired"};
   if(elevenLabsKeyExpired(env))return {ok:false,provider:"elevenlabs",reason:"credential_expired"};
   const allowPaid=String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true";
   if(!allowPaid){
@@ -207,7 +209,7 @@ async function chat(request,env){
 export default {async fetch(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(origin){
