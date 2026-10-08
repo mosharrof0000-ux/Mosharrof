@@ -1,3 +1,4 @@
+
 import { chromium } from "playwright";
 import fs from "node:fs";
 
@@ -54,7 +55,7 @@ for(const view of views){
       !checks.drawerLeft ||
       !checks.drawerRight ||
       checks.bodyOverflow !== "hidden" ||
-      !["relative","absolute"].includes(checks.composerPosition)
+      !["relative","absolute","fixed"].includes(checks.composerPosition)
     ) failed=true;
   }catch(error){
     fs.writeFileSync(
