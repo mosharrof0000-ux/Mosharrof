@@ -14,7 +14,7 @@ function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
 async function generateWithSarvam(text,body,env){
   if(!env.SARVAM_API_KEY)return {ok:false,provider:"sarvam",reason:"not_configured"};
   try{
-    const r=await fetch("https://api.sarvam.ai/text-to-speech",{method:"POST",headers:{"content-type":"application/json","api-subscription-key":env.SARVAM_API_KEY},body:JSON.stringify({text,model:"bulbul:v4-flash",language_code:String(body.language_code||"bn-IN"),speaker:String(body.speaker||"anushka"),pace:Number(body.pace||1),speech_sample_rate:24000,output_audio_codec:"mp3"})});
+    const r=await fetch("https://api.sarvam.ai/text-to-speech",{method:"POST",headers:{"content-type":"application/json","api-subscription-key":env.SARVAM_API_KEY},body:JSON.stringify({text,model:"bulbul:v4-flash",language_code:String(body.language_code||"bn-IN"),speaker:String(body.speaker||"shubh"),pace:Number(body.pace||1),speech_sample_rate:24000,output_audio_codec:"mp3"})});
     const data=await r.json().catch(()=>({}));
     if(!r.ok)return {ok:false,provider:"sarvam",reason:data?.error?.message||data?.message||("HTTP "+r.status),status:r.status};
     const audio=Array.isArray(data.audios)?data.audios[0]:null;
@@ -25,8 +25,14 @@ async function generateWithSarvam(text,body,env){
 
 async function generateWithElevenLabs(text,body,env){
   if(!env.ELEVENLABS_API_KEY)return {ok:false,provider:"elevenlabs",reason:"not_configured"};
-  if(String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()!=="true" && String(env.ELEVENLABS_FREE_ONLY||"false").toLowerCase()==="true"){
-    return {ok:false,provider:"elevenlabs",reason:"free_only_mode"};
+  const allowPaid=String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true";
+  if(!allowPaid){
+    try{
+      const q=await fetch("https://api.elevenlabs.io/v1/user/subscription",{headers:{"xi-api-key":env.ELEVENLABS_API_KEY}});
+      const s=await q.json().catch(()=>({}));
+      const remaining=Math.max(0,Number(s.character_limit||0)-Number(s.character_count||0));
+      if(q.ok && remaining<text.length)return {ok:false,provider:"elevenlabs",reason:"free_quota_insufficient",remaining,character_limit:Number(s.character_limit||0),character_count:Number(s.character_count||0)};
+    }catch(e){}
   }
   const voice=String(body.voice_id||env.ELEVENLABS_VOICE_ID||"JBFqnCBsd6RMkjVDRZzb");
   try{
