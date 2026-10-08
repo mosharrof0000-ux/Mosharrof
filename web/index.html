@@ -12,57 +12,85 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <style>
 :root{
-  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --composer-h:56px;
   --bg:#000;--surface:#171717;--surface2:#202123;--surface3:#2f2f2f;
-  --text:#f5f5f5;--muted:#a1a1aa;--border:rgba(255,255,255,.10);
+  --text:#f5f5f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;color:var(--text);
   font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Bengali",sans-serif}
 button,textarea,input{font:inherit;color:inherit}button{cursor:pointer;border:0;background:transparent}
-.app{position:fixed;inset:0;width:100vw;height:100dvh;min-height:100svh;background:#000;overflow:hidden}
+.app{position:fixed;inset:0;width:100%;height:100%;height:100dvh;background:#000;overflow:hidden}
 .main{position:absolute;inset:0;display:flex;flex-direction:column}
 header.top{
-  position:absolute;top:0;left:0;right:0;z-index:80;height:auto;min-height:58px;
-  padding:calc(7px + var(--safe-t)) 12px 7px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
-  background:rgba(255,255,255,.05);border:0
+  position:absolute;top:0;left:0;right:0;z-index:80;
+  padding:calc(8px + var(--safe-t)) 12px 8px;
+  display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:8px;
+  background:linear-gradient(180deg,rgba(0,0,0,.85),transparent);border:0;pointer-events:none
 }
-.round{width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:#111;color:#f5f5f5;display:grid;place-items:center;font-size:20px}
-.left-btn{justify-self:start}.right-btn{justify-self:end}
-.brand{text-align:center}.brand b{font-size:14px}.brand small{display:block;font-size:9px;color:var(--muted);margin-top:1px}
-.mlogo{display:inline-grid;width:32px;height:32px;border-radius:50%;place-items:center;background:#2a2a2a;font-weight:900;margin-right:4px;vertical-align:middle}
+header.top button{pointer-events:auto}
+.round{width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:#1a1a1a;color:#f5f5f5;display:grid;place-items:center;font-size:20px}
+.brand{text-align:center;pointer-events:none}.brand b{font-size:14px;color:#f5f5f5}.brand small{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.mlogo{display:inline-grid;width:28px;height:28px;border-radius:50%;place-items:center;background:#2a2a2a;font-weight:900;margin-right:4px;vertical-align:middle;font-size:12px}
 .content{position:absolute;inset:0;overflow:hidden}
 .hero{position:absolute;inset:0;display:flex;flex-direction:column}
 .chat-scroll{
-  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
-  overflow-y:auto;overflow-x:hidden;padding:calc(70px + var(--safe-t)) 12px calc(100px + var(--safe-b));
+  position:absolute;left:0;right:0;top:0;bottom:0;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  overflow-y:auto;overflow-x:hidden;
+  padding:calc(64px + var(--safe-t)) 14px calc(80px + var(--safe-b) + 8px);
   scrollbar-width:none;-webkit-overflow-scrolling:touch
 }
 .chat-scroll::-webkit-scrollbar{display:none}
-.messages{width:min(900px,100%);margin:0 auto;display:flex;flex-direction:column;gap:22px}
-.message{max-width:min(85%,760px);font-size:15px;line-height:1.7;word-break:break-word;color:#ececec}
+.messages{width:min(900px,100%);margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.message{max-width:min(88%,760px);font-size:15px;line-height:1.7;word-break:break-word;color:#ececec}
 .message .label{display:block;font-size:11px;color:#8e8e93;margin-bottom:6px}
-.message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(78%,680px)}
+.message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
 .message.typing .dots{display:inline-flex;gap:4px}
 .message.typing .dots span{width:6px;height:6px;border-radius:50%;background:#8e8e93;animation:blink 1.2s infinite}
 .message.typing .dots span:nth-child(2){animation-delay:.2s}
 .message.typing .dots span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+/* Composer — always visible above mobile chrome */
 .composer{
-  position:absolute;left:12px;right:12px;bottom:calc(10px + var(--safe-b));
-  max-width:820px;margin:0 auto;z-index:85;
-  background:var(--surface3);border:1px solid var(--border);border-radius:26px;padding:7px 8px
+  position:fixed;
+  left:10px;right:10px;
+  bottom:calc(12px + var(--safe-b));
+  max-width:820px;margin:0 auto;
+  z-index:120;
+  background:#2f2f2f;
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:6px 8px;
+  box-shadow:0 4px 24px rgba(0,0,0,.55)
 }
-.row{display:flex;align-items:flex-end;gap:6px}
-.plus{width:42px;height:42px;flex:none;border-radius:50%;color:#e5e5e5;font-size:24px;display:grid;place-items:center}
-.input{flex:1;min-width:0;min-height:42px;max-height:140px;border:0;outline:0;background:transparent;padding:9px 8px;font-size:15px;resize:none;overflow-y:auto;color:var(--text)}
+.row{display:flex;align-items:flex-end;gap:4px}
+.plus{width:40px;height:40px;flex:none;border-radius:50%;color:#e5e5e5;font-size:22px;display:grid;place-items:center}
+.input{
+  flex:1;min-width:0;min-height:40px;max-height:120px;
+  border:0;outline:0;background:transparent;
+  padding:10px 6px;font-size:16px;line-height:1.4;
+  resize:none;overflow-y:auto;color:var(--text)
+}
 .input::placeholder{color:#8e8e93}
-.send{width:40px;height:40px;flex:none;border-radius:50%;background:#f4f4f5;color:#111;font-size:18px;display:grid;place-items:center}
-.send:disabled{opacity:.4}
-.scrim{position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:90;opacity:0;visibility:hidden;transition:.2s}
+.send{
+  width:40px;height:40px;flex:none;border-radius:50%;
+  background:#f4f4f5;color:#111;font-size:18px;display:grid;place-items:center
+}
+.send:disabled{opacity:.35}
+
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:130;opacity:0;visibility:hidden;transition:.2s}
 .scrim.open{opacity:1;visibility:visible}
-.drawer{position:absolute;top:var(--safe-t);bottom:var(--safe-b);width:min(320px,86vw);z-index:95;background:var(--surface);padding:13px;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.drawer{
+  position:fixed;top:0;bottom:0;width:min(300px,85vw);z-index:140;
+  background:var(--surface);padding:14px;
+  padding-top:calc(14px + var(--safe-t));padding-bottom:calc(14px + var(--safe-b));
+  transition:transform .28s cubic-bezier(.2,.8,.2,1)
+}
 .drawer.left{left:0;transform:translateX(-105%);border-right:1px solid var(--border)}
 .drawer.right{right:0;transform:translateX(105%);border-left:1px solid var(--border)}
 .drawer.open{transform:translateX(0)}
@@ -72,9 +100,21 @@ header.top{
 .nav{display:flex;flex-direction:column;gap:4px}
 .nav button{padding:12px;border-radius:14px;color:#e5e5e5;text-align:left;display:flex;gap:12px;align-items:center}
 .nav button:hover,.nav button.active{background:var(--surface2)}
-.toast{position:absolute;z-index:100;bottom:calc(110px + var(--safe-b));left:50%;transform:translate(-50%,12px);opacity:0;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;font-size:12px;pointer-events:none;transition:.2s}
+.toast{
+  position:fixed;z-index:150;
+  bottom:calc(80px + var(--safe-b));left:50%;
+  transform:translate(-50%,12px);opacity:0;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:8px 14px;font-size:12px;
+  pointer-events:none;transition:.2s
+}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.voice-bar{position:absolute;left:50%;bottom:calc(70px + var(--safe-b));transform:translateX(-50%);z-index:86;font-size:11px;color:var(--muted);opacity:0;transition:.2s;pointer-events:none}
+.voice-bar{
+  position:fixed;left:50%;
+  bottom:calc(72px + var(--safe-b));
+  transform:translateX(-50%);z-index:121;
+  font-size:11px;color:var(--muted);opacity:0;transition:.2s;pointer-events:none
+}
 .voice-bar.show{opacity:1}
 </style>
 </head>
@@ -93,17 +133,20 @@ header.top{
             <div class="message ai"><span class="label">MOSHARROF AI · core</span>আমি কীভাবে আপনাকে সাহায্য করতে পারি?</div>
           </div>
         </div>
-        <div class="composer">
-          <div class="row">
-            <button class="plus" id="plusBtn" aria-label="Voice">+</button>
-            <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
-            <button class="send" id="sendBtn" aria-label="Send">➤</button>
-          </div>
-        </div>
-        <div class="voice-bar" id="voiceStatus">Voice ready</div>
       </div>
     </div>
   </main>
+
+  <!-- Composer outside scroll so it stays visible -->
+  <div class="composer" id="composer">
+    <div class="row">
+      <button class="plus" id="plusBtn" aria-label="Voice">+</button>
+      <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
+      <button class="send" id="sendBtn" aria-label="Send">➤</button>
+    </div>
+  </div>
+  <div class="voice-bar" id="voiceStatus">Voice ready</div>
+
   <aside class="drawer left" id="drawerLeft" aria-hidden="true"></aside>
   <aside class="drawer right" id="drawerRight" aria-hidden="true"></aside>
   <div class="scrim" id="scrim"></div>
@@ -124,7 +167,7 @@ header.top{
   function toast(m,ms){ms=ms||2000;toastEl.textContent=m;toastEl.classList.add("show");setTimeout(function(){toastEl.classList.remove("show");},ms);}
   function showV(t){vStatus.textContent=t;vStatus.classList.add("show");}
   function hideV(){vStatus.classList.remove("show");}
-  function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,140)+"px";}
+  function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
 
   function addMsg(role,text){
@@ -138,7 +181,7 @@ header.top{
   function coreReply(t){
     return new Promise(function(resolve){
       setTimeout(function(){
-        if(/কুরআন|কোরান|আয়াত|সূরা/.test(t)){resolve("কুরআন গবেষণা (quran_research) প্রস্তুত। নির্দিষ্ট আয়াত বললে প্রেক্ষাপট দিতে পারি। মডেল অ্যাডাপ্টার কানেক্ট হলে পূর্ণ উত্তর আসবে।");return;}
+        if(/কুরআন|কোরান|আয়াত|সূরা/.test(t)){resolve("কুরআন গবেষণা (quran_research) প্রস্তুত। নির্দিষ্ট আয়াত বললে প্রেক্ষাপট দিতে পারি।");return;}
         if(/ভয়েস|voice/.test(t)){resolve("Voice entity সক্রিয়। + বাটনে চাপ দিয়ে বাংলায় কথা বলুন।");return;}
         if(/এন্টিটি|entity|রেজিস্ট্রি|সিস্টেম/.test(t)){resolve(Object.keys(REG).map(function(i){return "• "+i+" — "+REG[i];}).join("\n"));return;}
         resolve("Foundation UI অনলাইন। Core সক্রিয়। মডেল অ্যাডাপ্টার কানেক্ট করলে পূর্ণ AI চালু হবে। আপনি কী জানতে চান?");
@@ -197,7 +240,7 @@ header.top{
 
   initV();resize();input.focus();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
-  console.log("[MOSHARROF] Mosharrof web/index.html ready");
+  console.log("[MOSHARROF] Mosharrof ready");
 })();
 </script>
 </body>
