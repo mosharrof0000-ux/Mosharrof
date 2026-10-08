@@ -14,12 +14,12 @@ function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
 async function generateWithSarvam(text,body,env){
   if(!env.SARVAM_API_KEY)return {ok:false,provider:"sarvam",reason:"not_configured"};
   try{
-    const r=await fetch("https://api.sarvam.ai/text-to-speech",{method:"POST",headers:{"content-type":"application/json","api-subscription-key":env.SARVAM_API_KEY},body:JSON.stringify({text,model:"bulbul:v4-flash",language_code:String(body.language_code||"bn-IN"),speaker:String(body.speaker||"shubh"),pace:Number(body.pace||1),speech_sample_rate:24000,output_audio_codec:"mp3"})});
+    const r=await fetch("https://api.sarvam.ai/text-to-speech",{method:"POST",headers:{"content-type":"application/json","api-subscription-key":env.SARVAM_API_KEY},body:JSON.stringify({text,model:"bulbul:v3",language_code:String(body.language_code||"bn-IN"),speaker:String(body.speaker||"rehan"),pace:Number(body.pace||1),speech_sample_rate:24000,output_audio_codec:"mp3"})});
     const data=await r.json().catch(()=>({}));
     if(!r.ok)return {ok:false,provider:"sarvam",reason:data?.error?.message||data?.message||("HTTP "+r.status),status:r.status};
     const audio=Array.isArray(data.audios)?data.audios[0]:null;
     if(!audio)return {ok:false,provider:"sarvam",reason:"empty_audio",status:r.status};
-    return {ok:true,provider:"sarvam",model:"bulbul:v4-flash",mime_type:"audio/mpeg",audio_data:audio};
+    return {ok:true,provider:"sarvam",model:"bulbul:v3",mime_type:"audio/mpeg",audio_data:audio};
   }catch(e){return {ok:false,provider:"sarvam",reason:String(e&&e.message||e)};}
 }
 
