@@ -120,6 +120,21 @@ jobs:
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$SCRIPT/subdomain" || true)"
           echo "$RESP"
 
+      - name: Set Gemini secret
+        working-directory: worker
+        env:
+          RAW_GEMINI: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          GEMINI="$(printf '%s' "$RAW_GEMINI" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [ -z "$GEMINI" ]; then
+            echo "ERROR: GEMINI_API_KEY secret is empty or missing."
+            exit 1
+          fi
+          echo "Gemini key length: ${#GEMINI}"
+          printf '%s' "$GEMINI" | npx --yes wrangler@3 secret put GEMINI_API_KEY --config wrangler.toml
+
+
       - name: Generate and verify a real image
         shell: bash
         run: |
@@ -141,20 +156,6 @@ jobs:
           print("REAL IMAGE GENERATION VERIFIED: PNG bytes returned:", len(raw))
           print("Model:", d.get("model"))
           PY
-
-      - name: Set Gemini secret
-        working-directory: worker
-        env:
-          RAW_GEMINI: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          set -euo pipefail
-          GEMINI="$(printf '%s' "$RAW_GEMINI" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-          if [ -z "$GEMINI" ]; then
-            echo "ERROR: GEMINI_API_KEY secret is empty or missing."
-            exit 1
-          fi
-          echo "Gemini key length: ${#GEMINI}"
-          printf '%s' "$GEMINI" | npx --yes wrangler@3 secret put GEMINI_API_KEY --config wrangler.toml
 
       - name: Verify Worker health
         run: |
