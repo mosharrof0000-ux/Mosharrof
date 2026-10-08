@@ -44,22 +44,60 @@ async function generateWithElevenLabs(text,body,env){
   }catch(e){return {ok:false,provider:"elevenlabs",reason:String(e&&e.message||e)};}
 }
 
+function splitTtsText(text,maxChars=2200){
+  const parts=[];
+  let rest=text.trim();
+  while(rest.length>maxChars){
+    const window=rest.slice(0,maxChars);
+    let cut=Math.max(window.lastIndexOf("।"),window.lastIndexOf("!"),window.lastIndexOf("?"),window.lastIndexOf("\n"));
+    if(cut<900)cut=Math.max(window.lastIndexOf(" "),window.lastIndexOf(","),window.lastIndexOf(" "));
+    if(cut<1)cut=maxChars;
+    parts.push(rest.slice(0,cut+1).trim());
+    rest=rest.slice(cut+1).trim();
+  }
+  if(rest)parts.push(rest);
+  return parts;
+}
+
+function concatBase64Audio(chunks){
+  const bytes=[];
+  for(const b64 of chunks){
+    const bin=atob(b64);
+    for(let i=0;i<bin.length;i++)bytes.push(bin.charCodeAt(i));
+  }
+  return bytesToBase64(new Uint8Array(bytes));
+}
+
+async function synthesizeWithProvider(provider,chunks,body,env){
+  const audios=[];
+  let model=null;
+  for(const chunk of chunks){
+    const result=provider==="sarvam"
+      ? await generateWithSarvam(chunk,body,env)
+      : provider==="elevenlabs"
+        ? await generateWithElevenLabs(chunk,body,env)
+        : {ok:false,provider,reason:"unsupported_provider"};
+    if(!result.ok)return {ok:false,provider,reason:result.reason||"provider_failed",status:result.status,model:result.model||model};
+    audios.push(result.audio_data);
+    model=result.model||model;
+  }
+  return {ok:true,provider,model,mime_type:"audio/mpeg",audio_data:concatBase64Audio(audios),chunks:chunks.length};
+}
+
 async function tts(request,env){
   const body=await request.json();
   const text=String(body.text||"").trim();
   if(!text)return reply({error:"text_required"},400);
-  if(text.length>3500)return reply({error:"text_too_large"},413);
+  if(text.length>12000)return reply({error:"text_too_large"},413);
+  const chunks=splitTtsText(text,2200);
   const providers=env.TTS_PROVIDER_ORDER?String(env.TTS_PROVIDER_ORDER).split(",").map(x=>x.trim()).filter(Boolean):TTS_PROVIDERS;
   const attempted=[];
   for(const provider of providers){
-    let result;
-    if(provider==="sarvam")result=await generateWithSarvam(text,body,env);
-    else if(provider==="elevenlabs")result=await generateWithElevenLabs(text,body,env);
-    else continue;
-    attempted.push({provider:result.provider,ok:!!result.ok,model:result.model||null,reason:result.ok?null:result.reason||null});
+    const result=await synthesizeWithProvider(provider,chunks,body,env);
+    attempted.push({provider,ok:!!result.ok,model:result.model||null,chunks:result.chunks||chunks.length,reason:result.ok?null:result.reason||null});
     if(result.ok)return reply({...result,attempted},200);
   }
-  return reply({error:"tts_provider_failed",free_first:true,paid_fallback_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",attempted},502);
+  return reply({error:"tts_provider_failed",free_first:true,paid_fallback_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chunks:chunks.length,attempted},502);
 }
 
 
@@ -161,7 +199,7 @@ async function chat(request,env){
 export default {async fetch(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(origin){

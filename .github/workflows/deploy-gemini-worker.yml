@@ -135,6 +135,51 @@ jobs:
           printf '%s' "$GEMINI" | npx --yes wrangler@3 secret put GEMINI_API_KEY --config wrangler.toml
 
 
+      - name: Verify live TTS end-to-end
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEALTH="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health"
+          TTS="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts"
+          echo "Checking live TTS configuration..."
+          curl -fsS --connect-timeout 10 --max-time 20 "$HEALTH" > /tmp/tts-health.json
+          cat /tmp/tts-health.json
+
+          if grep -q '"sarvam_configured":true' /tmp/tts-health.json; then
+            echo "Sarvam configured: running real Bengali TTS verification."
+            HTTP_CODE="$(curl -sS --connect-timeout 10 --max-time 120 -o /tmp/tts-response.json -w '%{http_code}' -X POST               -H "Origin: https://mosharrof0000-ux.github.io"               -H "Content-Type: application/json"               --data '{"text":"এটি মোশাররফ এআই-এর লাইভ বাংলা কণ্ঠ পরীক্ষা।","language_code":"bn-IN","speaker":"rehan","pace":1,"output_audio_codec":"mp3"}'               "$TTS" || true)"
+            echo "Live TTS HTTP status: $HTTP_CODE"
+            cat /tmp/tts-response.json
+            test "$HTTP_CODE" = "200"
+            python - <<'PY'
+          import base64,json
+          d=json.load(open("/tmp/tts-response.json",encoding="utf-8"))
+          assert d.get("ok") is True, d
+          assert d.get("provider") == "sarvam", d
+          raw=base64.b64decode(d["audio_data"])
+          assert len(raw)>1000, len(raw)
+          assert raw[:3] == b"ID3" or raw[:2] in (b"\xff\xfb",b"\xff\xf3",b"\xff\xf2"), raw[:8]
+          print("REAL BENGALI TTS VERIFIED:", len(raw), "bytes; provider=", d.get("provider"), "model=", d.get("model"), "chunks=", d.get("chunks"))
+          PY
+          elif grep -q '"elevenlabs_configured":true' /tmp/tts-health.json; then
+            echo "Sarvam unavailable; ElevenLabs configured. Running fallback TTS verification."
+            HTTP_CODE="$(curl -sS --connect-timeout 10 --max-time 120 -o /tmp/tts-response.json -w '%{http_code}' -X POST               -H "Origin: https://mosharrof0000-ux.github.io"               -H "Content-Type: application/json"               --data '{"text":"এটি মোশাররফ এআই-এর লাইভ বাংলা কণ্ঠ পরীক্ষা।","language_code":"bn-IN","pace":1}'               "$TTS" || true)"
+            echo "Live fallback TTS HTTP status: $HTTP_CODE"
+            cat /tmp/tts-response.json
+            test "$HTTP_CODE" = "200"
+            python - <<'PY'
+          import base64,json
+          d=json.load(open("/tmp/tts-response.json",encoding="utf-8"))
+          assert d.get("ok") is True, d
+          raw=base64.b64decode(d["audio_data"])
+          assert len(raw)>500, len(raw)
+          print("REAL TTS FALLBACK VERIFIED:", len(raw), "bytes; provider=", d.get("provider"), "model=", d.get("model"))
+          PY
+          else
+            echo "No advanced TTS provider key is configured on the Worker."
+            echo "This is not a deployment failure; browser speech synthesis remains the final fallback."
+          fi
+
       - name: Generate and verify a real image
         shell: bash
         run: |
