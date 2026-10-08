@@ -1,6 +1,9 @@
 name: Mosharrof Autonomous Health Cycle
 
 on:
+  push:
+    paths:
+      - ".github/workflows/autonomous-health.yml"
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
