@@ -194,3 +194,60 @@ body{
 @media(prefers-reduced-motion:reduce){
   .chat-mode .chat-scroll{scroll-behavior:auto !important}
 }
+
+
+/* Final clean-glass override: no visible edge, no blur, no cloudy layer.
+   Text/content must remain fully sharp while scrolling underneath. */
+.system-glass,
+.system-glass.top-zone,
+.system-glass.bottom-zone{
+  position:absolute !important;
+  left:0 !important;
+  right:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  background-image:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  filter:none !important;
+  opacity:1 !important;
+  pointer-events:none !important;
+}
+
+.top,
+.composer,
+.chat-mode .composer{
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  background:rgba(255,255,255,.045) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  filter:none !important;
+}
+
+.top::before,.top::after,
+.composer::before,.composer::after,
+.system-glass::before,.system-glass::after{
+  content:none !important;
+  display:none !important;
+}
+
+.chat-mode .chat-scroll,
+.chat-mode .messages,
+.chat-mode .messages *{
+  filter:none !important;
+  opacity:1;
+}
+
+.chat-mode .chat-scroll{
+  background:transparent !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+
+.chat-mode .messages{
+  text-shadow:0 1px 10px rgba(0,0,0,.28);
+}
