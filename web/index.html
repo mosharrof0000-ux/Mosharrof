@@ -33,7 +33,10 @@ header.top{
   background:#000;
   border-bottom:1px solid rgba(255,255,255,.08);
 }
-.round{width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:#1a1a1a;color:#f5f5f5;display:grid;place-items:center;font-size:20px}
+.round{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:#050505;color:#fff;display:grid;place-items:center;padding:0;box-shadow:0 4px 16px rgba(0,0,0,.45);transition:transform .16s ease,background .16s ease,border-color .16s ease}
+.round:active{transform:scale(.92)}
+.round:hover{background:#111;border-color:rgba(255,255,255,.3)}
+.menu-icon{width:21px;height:21px;display:block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .brand{text-align:center}.brand b{font-size:14px;color:#f5f5f5}.brand small{display:block;font-size:10px;color:var(--muted);margin-top:2px}
 .mlogo{display:inline-grid;width:28px;height:28px;border-radius:50%;place-items:center;background:#2a2a2a;font-weight:900;margin-right:4px;vertical-align:middle;font-size:12px}
 .content{position:absolute;inset:0;overflow:hidden}
@@ -94,9 +97,9 @@ header.top{
 <div class="app">
   <main class="main">
     <header class="top">
-      <button class="round left-btn" id="leftBtn" aria-label="Menu">☰</button>
+      <button class="round left-btn" id="leftBtn" aria-label="Open main menu" title="Menu"><svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
       <div class="brand"><span class="mlogo">M</span><b>MOSHARROF AI</b><small>Mosharrof · Intelligent Entity</small></div>
-      <button class="round right-btn" id="rightBtn" aria-label="Options">⋮</button>
+      <button class="round right-btn" id="rightBtn" aria-label="Open options menu" title="Options"><svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.35" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.35" fill="currentColor" stroke="none"/></svg></button>
     </header>
     <div class="content">
       <div class="hero">
