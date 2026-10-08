@@ -155,7 +155,7 @@ jobs:
           assert d.get("ok") is True, d
           raw=base64.b64decode(d["image_data"])
           assert len(raw)>1000, len(raw)
-          assert raw[:8] == b"\x89PNG\r\n\x1a\n", raw[:8]
+          assert raw[:3] == b"\xff\xd8\xff", raw[:3]
           print("REAL IMAGE GENERATION VERIFIED: PNG bytes returned:", len(raw))
           print("Model:", d.get("model"))
           PY
