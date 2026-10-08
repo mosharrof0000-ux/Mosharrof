@@ -109,82 +109,93 @@ header.top{
 </div>
 <script>
 (function(){
-  const REG={core:"coordination and governance",chat:"conversation interface",sidebar:"navigation and entity discovery",voice:"context-aware voice processing",storage:"file indexing and organization",tool_factory:"safe tool creation and execution",quran_research:"Quran language research"};
-  const $=s=>document.querySelector(s);
-  const msgEl=\( ("#messages"),scrollEl= \)("#chatScroll"),input=\( ("#input"),sendBtn= \)("#sendBtn"),plusBtn=$("#plusBtn");
-  const leftBtn=\( ("#leftBtn"),rightBtn= \)("#rightBtn"),scrim=\( ("#scrim"),dL= \)("#drawerLeft"),dR=$("#drawerRight");
-  const toastEl=\( ("#toast"),vStatus= \)("#voiceStatus");
-  const QE=["কি","কী","কেন","কোথায়","কোথায়","কখন","কীভাবে","কিভাবে","কত","কার","কে","কোন","কোনটি"];
-  const CM={"গবেষনা":"গবেষণা","প্রজেকট":"প্রজেক্ট","খুজে":"খুঁজে","কোরান":"কুরআন","কুরান":"কুরআন","মোশারফ":"মোশাররফ","করতেছ":"করছ"};
+  var REG={core:"coordination and governance",chat:"conversation interface",sidebar:"navigation and entity discovery",voice:"context-aware voice processing",storage:"file indexing and organization",tool_factory:"safe tool creation and execution",quran_research:"Quran language research"};
+  function $(s){return document.querySelector(s);}
+  var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
+  var leftBtn=$("#leftBtn"),rightBtn=$("#rightBtn"),scrim=$("#scrim"),dL=$("#drawerLeft"),dR=$("#drawerRight");
+  var toastEl=$("#toast"),vStatus=$("#voiceStatus");
+  var QE=["কি","কী","কেন","কোথায়","কোথায়","কখন","কীভাবে","কিভাবে","কত","কার","কে","কোন","কোনটি"];
+  var CM={"গবেষনা":"গবেষণা","প্রজেকট":"প্রজেক্ট","খুজে":"খুঁজে","কোরান":"কুরআন","কুরান":"কুরআন","মোশারফ":"মোশাররফ","করতেছ":"করছ"};
 
-  function punct(t){return String(t||"").trim().split(/(?:\n+|\s{3,})/).filter(Boolean).map(c=>{const v=c.trim();if(!v)return"";if(/[।?!,;:]$/.test(v))return v;return QE.some(w=>v.endsWith(w))?v+"?":v+"।";}).filter(Boolean).join(" ");}
-  function correct(t){let v=String(t||"").replace(/\s+/g," ").trim();const c=[];for(const[f,to]of Object.entries(CM)){const r=new RegExp("(^|\\s)"+f+"(?=\\s|$)","g");const n=v.replace(r,"$1"+to);if(n!==v)c.push({f,to});v=n;}v=v.replace(/(\S+)(\s+\1)+/gi,"$1");return{text:v,corrections:c};}
-  function toast(m,ms=2000){toastEl.textContent=m;toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),ms);}
+  function punct(t){return String(t||"").trim().split(/(?:\n+|\s{3,})/).filter(Boolean).map(function(c){var v=c.trim();if(!v)return"";if(/[।?!,;:]$/.test(v))return v;return QE.some(function(w){return v.endsWith(w);})?v+"?":v+"।";}).filter(Boolean).join(" ");}
+  function correct(t){var v=String(t||"").replace(/\s+/g," ").trim();var c=[];for(var f in CM){if(!Object.prototype.hasOwnProperty.call(CM,f))continue;var to=CM[f];var r=new RegExp("(^|\\s)"+f+"(?=\\s|$)","g");var n=v.replace(r,"$1"+to);if(n!==v)c.push({f:f,to:to});v=n;}v=v.replace(/(\S+)(\s+\1)+/gi,"$1");return{text:v,corrections:c};}
+  function toast(m,ms){ms=ms||2000;toastEl.textContent=m;toastEl.classList.add("show");setTimeout(function(){toastEl.classList.remove("show");},ms);}
   function showV(t){vStatus.textContent=t;vStatus.classList.add("show");}
   function hideV(){vStatus.classList.remove("show");}
   function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,140)+"px";}
-  function bottom(){requestAnimationFrame(()=>{scrollEl.scrollTop=scrollEl.scrollHeight;});}
+  function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
 
   function addMsg(role,text){
-    const n=document.createElement("div");n.className="message "+role;
-    const l=document.createElement("span");l.className="label";l.textContent=role==="user"?"আপনি":"MOSHARROF AI · core";
+    var n=document.createElement("div");n.className="message "+role;
+    var l=document.createElement("span");l.className="label";l.textContent=role==="user"?"আপনি":"MOSHARROF AI · core";
     n.appendChild(l);n.appendChild(document.createTextNode(text));msgEl.appendChild(n);bottom();return n;
   }
-  function typing(){const n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label">MOSHARROF AI · core</span><span class="dots"><span></span><span></span><span></span></span>';msgEl.appendChild(n);bottom();}
-  function untype(){const t=$("#typing");if(t)t.remove();}
+  function typing(){var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label">MOSHARROF AI · core</span><span class="dots"><span></span><span></span><span></span></span>';msgEl.appendChild(n);bottom();}
+  function untype(){var t=$("#typing");if(t)t.remove();}
 
-  async function coreReply(t){
-    await new Promise(r=>setTimeout(r,500+Math.random()*300));
-    if(/কুরআন|কোরান|আয়াত|সূরা/.test(t))return "কুরআন গবেষণা (quran_research) প্রস্তুত। নির্দিষ্ট আয়াত বললে প্রেক্ষাপট দিতে পারি। মডেল অ্যাডাপ্টার কানেক্ট হলে পূর্ণ উত্তর আসবে।";
-    if(/ভয়েস|voice/.test(t))return "Voice entity সক্রিয়। + বাটনে চাপ দিয়ে বাংলায় কথা বলুন।";
-    if(/এন্টিটি|entity|রেজিস্ট্রি|সিস্টেম/.test(t))return Object.entries(REG).map(([i,r])=>"• "+i+" — "+r).join("\n");
-    return "Foundation UI অনলাইন। Core সক্রিয়। মডেল অ্যাডাপ্টার কানেক্ট করলে পূর্ণ AI চালু হবে। আপনি কী জানতে চান?";
+  function coreReply(t){
+    return new Promise(function(resolve){
+      setTimeout(function(){
+        if(/কুরআন|কোরান|আয়াত|সূরা/.test(t)){resolve("কুরআন গবেষণা (quran_research) প্রস্তুত। নির্দিষ্ট আয়াত বললে প্রেক্ষাপট দিতে পারি। মডেল অ্যাডাপ্টার কানেক্ট হলে পূর্ণ উত্তর আসবে।");return;}
+        if(/ভয়েস|voice/.test(t)){resolve("Voice entity সক্রিয়। + বাটনে চাপ দিয়ে বাংলায় কথা বলুন।");return;}
+        if(/এন্টিটি|entity|রেজিস্ট্রি|সিস্টেম/.test(t)){resolve(Object.keys(REG).map(function(i){return "• "+i+" — "+REG[i];}).join("\n"));return;}
+        resolve("Foundation UI অনলাইন। Core সক্রিয়। মডেল অ্যাডাপ্টার কানেক্ট করলে পূর্ণ AI চালু হবে। আপনি কী জানতে চান?");
+      },500+Math.random()*300);
+    });
   }
 
-  let busy=false;
-  async function send(){
-    const raw=input.value.trim();if(!raw||busy)return;
+  var busy=false;
+  function send(){
+    var raw=input.value.trim();if(!raw||busy)return;
     busy=true;sendBtn.disabled=true;
-    const p=correct(raw);const text=punct(p.text);
+    var p=correct(raw);var text=punct(p.text);
     input.value="";resize();addMsg("user",text);
     if(p.corrections.length)toast("Context corrected");
     typing();
-    try{const r=await coreReply(text);untype();addMsg("ai",r);}catch(e){untype();addMsg("ai","Core-এ সমস্যা। আবার চেষ্টা করুন।");}
-    busy=false;sendBtn.disabled=false;input.focus();
+    coreReply(text).then(function(r){untype();addMsg("ai",r);busy=false;sendBtn.disabled=false;input.focus();}).catch(function(){untype();addMsg("ai","Core-এ সমস্যা। আবার চেষ্টা করুন।");busy=false;sendBtn.disabled=false;input.focus();});
   }
 
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");(side==="left"?dL:dR).setAttribute("aria-hidden","false");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");dL.setAttribute("aria-hidden","true");dR.setAttribute("aria-hidden","true");}
 
-  // Fill drawers
   dL.innerHTML='<div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF</strong><small>Entity System</small></div><button class="dclose" id="cL">✕</button></div><nav class="nav" id="navL"></nav>';
   dR.innerHTML='<div class="dhead"><div class="dlogo">⋮</div><div><strong>Options</strong><small>chat</small></div><button class="dclose" id="cR">✕</button></div><nav class="nav"><button id="newChat">✦ New Chat</button><button id="clearMsg">⌫ Clear</button><button id="voiceBtn">🎙️ Voice</button></nav>';
-  const navL=$("#navL");
-  Object.keys(REG).forEach(id=>{const b=document.createElement("button");b.dataset.entity=id;if(id==="chat")b.className="active";b.innerHTML="<span style='width:24px;text-align:center'>•</span> "+id;b.onclick=()=>{[...navL.children].forEach(x=>x.classList.remove("active"));b.classList.add("active");toast(id+" — "+REG[id]);};navL.appendChild(b);});
+  var navL=$("#navL");
+  Object.keys(REG).forEach(function(id){
+    var b=document.createElement("button");b.dataset.entity=id;if(id==="chat")b.className="active";
+    b.innerHTML="<span style='width:24px;text-align:center'>•</span> "+id;
+    b.onclick=function(){Array.prototype.forEach.call(navL.children,function(x){x.classList.remove("active");});b.classList.add("active");toast(id+" — "+REG[id]);};
+    navL.appendChild(b);
+  });
 
-  let rec=null;
+  var rec=null;
   function initV(){
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
     rec=new SR();rec.lang="bn-BD";rec.continuous=false;rec.interimResults=true;
-    rec.onstart=()=>showV("Listening…");
-    rec.onresult=e=>{let t="";for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;const p=correct(t);input.value=punct(p.text);resize();showV(p.corrections.length?"Context corrected":"Voice ready");};
-    rec.onerror=e=>{showV("Error: "+e.error);setTimeout(hideV,2000);};
-    rec.onend=()=>{if(vStatus.textContent==="Listening…")hideV();else setTimeout(hideV,1500);};
+    rec.onstart=function(){showV("Listening…");};
+    rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;var p=correct(t);input.value=punct(p.text);resize();showV(p.corrections.length?"Context corrected":"Voice ready");};
+    rec.onerror=function(e){showV("Error: "+e.error);setTimeout(hideV,2000);};
+    rec.onend=function(){if(vStatus.textContent==="Listening…")hideV();else setTimeout(hideV,1500);};
   }
-  function startV(){if(!rec){toast("Voice API নেই");return;}try{rec.start();}catch(_){}}
+  function startV(){if(!rec){toast("Voice API নেই");return;}try{rec.start();}catch(e){}}
 
   sendBtn.onclick=send;
-  input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
+  input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
   input.addEventListener("input",resize);
   plusBtn.onclick=startV;
-  leftBtn.onclick=()=>openD("left");
-  rightBtn.onclick=()=>openD("right");
+  leftBtn.onclick=function(){openD("left");};
+  rightBtn.onclick=function(){openD("right");};
   scrim.onclick=closeD;
-  document.addEventListener("click",e=>{if(e.target.id==="cL"||e.target.id==="cR")closeD();if(e.target.id==="newChat"){msgEl.innerHTML="";addMsg("ai","নতুন কথোপকথন। আমি কীভাবে সাহায্য করতে পারি?");closeD();toast("New chat");}if(e.target.id==="clearMsg"){msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");closeD();toast("Cleared");}if(e.target.id==="voiceBtn"){closeD();startV();}});
+  document.addEventListener("click",function(e){
+    if(e.target.id==="cL"||e.target.id==="cR")closeD();
+    if(e.target.id==="newChat"){msgEl.innerHTML="";addMsg("ai","নতুন কথোপকথন। আমি কীভাবে সাহায্য করতে পারি?");closeD();toast("New chat");}
+    if(e.target.id==="clearMsg"){msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");closeD();toast("Cleared");}
+    if(e.target.id==="voiceBtn"){closeD();startV();}
+  });
 
   initV();resize();input.focus();
-  if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  console.log("[MOSHARROF] web/index.html · Verify-ready · Chat online");
+  if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
+  console.log("[MOSHARROF] web/index.html ready");
 })();
 </script>
 </body>
