@@ -2,3 +2,6 @@ name = "mosharrof-screenshot-analysis"
 main = "screenshot-analysis.js"
 compatibility_date = "2026-09-27"
 workers_dev = true
+
+[ai]
+binding = "AI"
