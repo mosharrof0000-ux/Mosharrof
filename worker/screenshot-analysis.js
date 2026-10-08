@@ -29,13 +29,13 @@ async function generateImage(request,env){
     try{
       const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
         method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
-        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:"image/png",aspect_ratio:String(body.aspect_ratio||"1:1"),image_size:String(body.image_size||"1K")}})
+        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:"image/jpeg",aspect_ratio:String(body.aspect_ratio||"1:1"),image_size:String(body.image_size||"1K")}})
       });
       const data=await upstream.json().catch(()=>({}));
       last={upstream,data,model};
       if(!upstream.ok){if([404,429,500,503].includes(upstream.status))continue;return reply({error:"image_provider_failed",provider_status:upstream.status,provider_message:data?.error?.message||null,model},502);}
       const image=data?.output_image;
-      if(image?.data){return reply({ok:true,model,mime_type:image.mime_type||"image/png",image_data:image.data},200);}
+      if(image?.data){return reply({ok:true,model,mime_type:image.mime_type||"image/jpeg",image_data:image.data},200);}
     }catch(e){last={error:String(e&&e.message||e)};}
   }
   return reply({error:"image_provider_failed",provider_message:last?.data?.error?.message||last?.error||"no_image_returned",tried:preferred},502);
