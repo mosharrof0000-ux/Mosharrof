@@ -161,7 +161,16 @@ header.top{
   }
   function typing(){var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label">MOSHARROF AI · core</span><span class="dots"><span></span><span></span><span></span></span>';msgEl.appendChild(n);bottom();}
   function untype(){var t=$("#typing");if(t)t.remove();}
-  function coreReply(t){return new Promise(function(resolve){setTimeout(function(){if(/কুরআন|কোরান|আয়াত|সূরা/.test(t)){resolve("কুরআন গবেষণা (quran_research) প্রস্তুত।");return;}if(/ভয়েস|voice/.test(t)){resolve("Voice entity সক্রিয়। + বাটনে চাপ দিয়ে বাংলায় কথা বলুন।");return;}if(/এন্টিটি|entity|রেজিস্ট্রি|সিস্টেম|ইতিহাস|history/.test(t)){resolve(Object.keys(REG).map(function(i){return "• "+i+" — "+REG[i];}).join("\n"));return;}resolve("Foundation UI অনলাইন। Core entity সক্রিয়। মডেল অ্যাডাপ্টার কানেক্ট করলে পূর্ণ AI জেনারেশন চালু হবে। আপনি কী জানতে চান?");},500+Math.random()*300);});}
+  var CHAT_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat";
+  function coreReply(t){
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim()})})
+      .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
+        if(!res.ok)throw new Error(data.provider_message||data.error||("HTTP "+res.status));
+        var answer=String(data.text||"").trim();
+        if(!answer)throw new Error("empty_response");
+        return answer;
+      });});
+  }
   var busy=false;
   function send(){var raw=input.value.trim();if(!raw||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);input.value="";resize();addMsg("user",text);if(p.corrections.length)toast("Context corrected");typing();coreReply(text).then(function(r){untype();addMsg("ai",r);busy=false;sendBtn.disabled=false;input.focus();}).catch(function(){untype();addMsg("ai","Core-এ সমস্যা।");busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
