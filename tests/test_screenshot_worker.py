@@ -7,5 +7,8 @@ def test_screenshot_worker_contract():
     assert "generateContent" in s
     assert "/generate-image" in s
     assert "gemini-nano-banana-2.1" in s
-    assert "output_image" in s
+    assert "cloudflare-workers-ai" in s
+    assert "@cf/black-forest-labs/flux-1-schnell" in s
+    assert "IMAGE_PROVIDER_ORDER" in s
+    assert "free_image_providers" in s
     assert "<html" not in s.lower()
