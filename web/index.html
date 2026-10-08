@@ -69,6 +69,14 @@ header.top{
 }
 .row{display:flex;align-items:flex-end;gap:6px}
 .plus{width:40px;height:40px;flex:none;border-radius:50%;color:#e5e5e5;font-size:22px;display:grid;place-items:center}
+.attach{width:40px;height:40px;flex:none;border-radius:50%;color:#fff;display:grid;place-items:center;position:relative}
+.attach svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.attach input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.image-preview{display:none;align-items:center;gap:8px;margin:0 4px 7px;padding:6px 8px;border-radius:14px;background:#202020;border:1px solid rgba(255,255,255,.1)}
+.image-preview.show{display:flex}
+.image-preview img{width:42px;height:42px;object-fit:cover;border-radius:9px}
+.image-preview span{font-size:11px;color:#d4d4d8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.image-preview button{width:28px;height:28px;border-radius:50%;color:#fff;background:#333;font-size:15px}
 .input{flex:1;min-width:0;min-height:40px;max-height:120px;border:0;outline:0;background:transparent;padding:10px 6px;font-size:16px;line-height:1.4;resize:none;overflow-y:auto;color:var(--text)}
 .input::placeholder{color:#8e8e93}
 .send{width:40px;height:40px;flex:none;border-radius:50%;background:#f4f4f5;color:#111;font-size:18px;display:grid;place-items:center}
@@ -111,7 +119,9 @@ header.top{
     </div>
   </main>
   <div class="composer" id="composer">
+    <div class="image-preview" id="imagePreview"><img id="previewImage" alt="Screenshot preview"><span id="previewName">Screenshot attached</span><button id="removeImage" aria-label="Remove screenshot">×</button></div>
     <div class="row">
+      <label class="attach" aria-label="Attach screenshot" title="Screenshot / image"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.5h4.6L15.5 5h2A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12" r="3.2"/></svg><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"></label>
       <button class="plus" id="plusBtn" aria-label="Voice">+</button>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
       <button class="send" id="sendBtn" aria-label="Send">➤</button>
@@ -129,6 +139,8 @@ header.top{
   var STORE_KEY="mosharrof_chat_v1";
   function $(s){return document.querySelector(s);}
   var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
+  var imageInput=$("#imageInput"),imagePreview=$("#imagePreview"),previewImage=$("#previewImage"),previewName=$("#previewName"),removeImage=$("#removeImage");
+  var pendingImage=null;
   var leftBtn=$("#leftBtn"),rightBtn=$("#rightBtn"),scrim=$("#scrim"),dL=$("#drawerLeft"),dR=$("#drawerRight");
   var toastEl=$("#toast"),vStatus=$("#voiceStatus");
   var QE=["কি","কী","কেন","কোথায়","কোথায়","কখন","কীভাবে","কিভাবে","কত","কার","কে","কোন","কোনটি"];
@@ -165,8 +177,8 @@ header.top{
   function typing(){var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label">MOSHARROF AI · core</span><span class="dots"><span></span><span></span><span></span></span>';msgEl.appendChild(n);bottom();}
   function untype(){var t=$("#typing");if(t)t.remove();}
   var CHAT_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat";
-  function coreReply(t){
-    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim()})})
+  function coreReply(t,image){
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null})})
       .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
         if(!res.ok)throw new Error(data.provider_message||data.error||("HTTP "+res.status));
         var answer=String(data.text||"").trim();
@@ -175,7 +187,9 @@ header.top{
       });});
   }
   var busy=false;
-  function send(){var raw=input.value.trim();if(!raw||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);input.value="";resize();addMsg("user",text);if(p.corrections.length)toast("Context corrected");typing();coreReply(text).then(function(r){untype();addMsg("ai",r);busy=false;sendBtn.disabled=false;input.focus();}).catch(function(){untype();addMsg("ai","Core-এ সমস্যা।");busy=false;sendBtn.disabled=false;input.focus();});}
+  function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
+  function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");typing();coreReply(text,attached).then(function(r){untype();addMsg("ai",r);busy=false;sendBtn.disabled=false;input.focus();}).catch(function(){untype();addMsg("ai","স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।");busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
@@ -191,6 +205,8 @@ header.top{
   function initV(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;rec=new SR();rec.lang="bn-BD";rec.continuous=false;rec.interimResults=true;rec.onstart=function(){showV("Listening…");};rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;var p=correct(t);input.value=punct(p.text);resize();showV(p.corrections.length?"Context corrected":"Voice ready");};rec.onerror=function(e){showV("Error: "+e.error);setTimeout(hideV,2000);};rec.onend=function(){if(vStatus.textContent==="Listening…")hideV();else setTimeout(hideV,1500);};}
   function startV(){if(!rec){toast("Voice API নেই");return;}try{rec.start();}catch(e){}}
   sendBtn.onclick=send;
+  imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);});
+  removeImage.onclick=clearImage;
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
   input.addEventListener("input",resize);
   plusBtn.onclick=startV;
