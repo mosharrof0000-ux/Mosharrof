@@ -10,6 +10,7 @@
 <title>MOSHARROF AI — Full Screen V5</title>
 <!-- Mosharrof live pages contract -->
 <link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
 <style>
 :root{
   --safe-t:env(safe-area-inset-top,0px);
@@ -55,6 +56,28 @@ header.top{
 .message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active{background:#303030}.message-speak-shortcut.is-ready,.message-action.is-ready,.message-speak-shortcut.is-speaking,.message-action.is-speaking{background:#12351f;border-color:rgba(74,190,110,.8);color:#b9f5c9}.message-speak-shortcut.is-stop-requested,.message-action.is-stop-requested{background:#3a1014;border-color:rgba(239,68,68,.85);color:#ffb4b4}
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
+
+/* MOSHARROF rich-text response system */
+.message.ai .rich-content{font-size:15.5px;line-height:1.82;letter-spacing:.005em;color:#ededed;overflow-wrap:anywhere}
+.message.ai .rich-content>*+*{margin-top:1em}
+.message.ai .rich-content h1,.message.ai .rich-content h2,.message.ai .rich-content h3,.message.ai .rich-content h4{font-weight:750;line-height:1.35;letter-spacing:-.02em;color:#fff;margin-top:1.25em;margin-bottom:.5em}
+.message.ai .rich-content h1{font-size:1.55em}.message.ai .rich-content h2{font-size:1.32em}.message.ai .rich-content h3{font-size:1.14em}.message.ai .rich-content h4{font-size:1.03em}
+.message.ai .rich-content p{margin:.65em 0}.message.ai .rich-content strong{font-weight:750;color:#fff}.message.ai .rich-content em{font-style:italic;color:#e4e4e7}
+.message.ai .rich-content ul,.message.ai .rich-content ol{padding-left:1.55em;margin:.65em 0}.message.ai .rich-content li{padding-left:.25em;margin:.28em 0}.message.ai .rich-content li::marker{color:#a1a1aa}
+.message.ai .rich-content blockquote{margin:.9em 0;padding:.55em .9em;border-left:3px solid #777;border-radius:0 10px 10px 0;background:rgba(255,255,255,.045);color:#d4d4d8}
+.message.ai .rich-content a{color:#9ecbff;text-decoration:underline;text-decoration-color:rgba(158,203,255,.5);text-underline-offset:3px}.message.ai .rich-content hr{border:0;border-top:1px solid rgba(255,255,255,.16);margin:1.25em 0}
+.message.ai .rich-content :not(pre)>code{padding:.13em .4em;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:#202124;color:#f0c98b;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.88em}
+.message.ai .rich-content .table-wrap{max-width:100%;overflow-x:auto;border:1px solid rgba(255,255,255,.14);border-radius:12px;margin:1em 0}
+.message.ai .rich-content table{width:100%;border-collapse:separate;border-spacing:0;font-size:.9em;line-height:1.55;background:#0c0c0c}
+.message.ai .rich-content th,.message.ai .rich-content td{padding:10px 12px;text-align:left;vertical-align:top;border-right:1px solid rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.09)}
+.message.ai .rich-content th{background:#202124;color:#fff;font-weight:700;white-space:nowrap}.message.ai .rich-content tr:last-child td{border-bottom:0}.message.ai .rich-content th:last-child,.message.ai .rich-content td:last-child{border-right:0}
+.message.ai .rich-content .code-block{margin:1em 0;border:1px solid rgba(255,255,255,.13);border-radius:13px;overflow:hidden;background:#0d1117;box-shadow:0 5px 18px rgba(0,0,0,.18)}
+.message.ai .rich-content .code-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 11px;background:#171b22;border-bottom:1px solid rgba(255,255,255,.1);font-size:11px;color:#aeb6c2}
+.message.ai .rich-content .code-toolbar .code-language{text-transform:lowercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.message.ai .rich-content .copy-code{flex:none;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:#252a33;color:#f4f4f5;padding:5px 9px;font-size:11px}.message.ai .rich-content .copy-code:active{background:#3b414c}
+.message.ai .rich-content pre{margin:0;max-width:100%;overflow:auto;padding:14px;background:#0d1117;color:#e6edf3;font:12.5px/1.7 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:2;scrollbar-width:thin}
+.message.ai .rich-content pre code{font:inherit;white-space:pre}.message.ai .rich-content .code-block pre code{padding:0;border:0;border-radius:0;background:transparent;color:inherit}.message.ai .rich-content img{max-width:100%;height:auto;border-radius:10px}
+@media(max-width:480px){.message.ai .rich-content{font-size:15px;line-height:1.78}.message.ai .rich-content th,.message.ai .rich-content td{padding:8px 9px}.message.ai .rich-content pre{font-size:12px;padding:11px}}
+
 .message-actions-wrap{display:flex;flex-direction:column;align-items:flex-start;margin-top:7px;gap:6px}
 .message.user .message-actions-wrap{align-items:flex-end;margin-right:-5px;margin-bottom:-3px}
 .message-actions-toggle{width:28px;height:24px;display:inline-grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:#080808;color:#f2f2f2;font-size:16px;line-height:1}
@@ -202,6 +225,9 @@ header.top{
   <div class="scrim" id="scrim"></div>
   <div class="toast" id="toast"></div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script>
 (function(){
   var REG={core:"coordination and governance",chat:"conversation interface",sidebar:"navigation and entity discovery",voice:"context-aware voice processing",storage:"file indexing and organization",tool_factory:"safe tool creation and execution",quran_research:"Quran language research"};
@@ -266,12 +292,50 @@ header.top{
     wrap.appendChild(meta);wrap.appendChild(group);if(role==="ai")wrap.appendChild(panel);n.appendChild(wrap);
   }
   function elapsedLabel(ms){var seconds=Math.max(0,Number(ms)||0)/1000;var value=seconds<10?seconds.toFixed(1):String(Math.round(seconds));return "সময় নিয়েছে · "+value+" সেকেন্ড";}
+
+  function escapeHTML(value){
+    return String(value==null?"":value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  function renderRichText(value){
+    var source=String(value==null?"":value);
+    if(window.marked&&window.DOMPurify){try{window.marked.setOptions({gfm:true,breaks:false,headerIds:false,mangle:false});return window.DOMPurify.sanitize(window.marked.parse(source),{USE_PROFILES:{html:true},ADD_ATTR:["target","rel"]});}catch(e){}}
+    var text=escapeHTML(source).replace(/\r\n?/g,"\n"),lines=text.split("\n"),out=[],listType=null,code=false,codeLines=[],fence=String.fromCharCode(96,96,96);
+    function closeList(){if(listType){out.push("</"+listType+">");listType=null;}}
+    function inline(v){return v.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/__(.+?)__/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>").replace(/_(.+?)_/g,"<em>$1</em>");}
+    for(var i=0;i<lines.length;i++){var line=lines[i],isFence=line.trim().indexOf(fence)===0;
+      if(isFence){if(!code){closeList();code=true;codeLines=[];}else{out.push("<pre><code>"+codeLines.join("\n")+"</code></pre>");code=false;}continue;}
+      if(code){codeLines.push(line);continue;}
+      var heading=line.match(/^(#{1,4})\s+(.+)$/),ul=line.match(/^\s*[-*+]\s+(.+)$/),ol=line.match(/^\s*\d+[.)]\s+(.+)$/);
+      if(!line.trim()){closeList();continue;}
+      if(heading){closeList();var level=heading[1].length;out.push("<h"+level+">"+inline(heading[2])+"</h"+level+">");continue;}
+      if(ul||ol){var next=ul?"ul":"ol";if(listType!==next){closeList();listType=next;out.push("<"+listType+">");}out.push("<li>"+inline((ul||ol)[1])+"</li>");continue;}
+      closeList();out.push("<p>"+inline(line)+"</p>");
+    }if(code)out.push("<pre><code>"+codeLines.join("\n")+"</code></pre>");closeList();return out.join("");
+  }
+  function enhanceRichContent(root){
+    if(!root)return;
+    Array.prototype.forEach.call(root.querySelectorAll("table"),function(table){if(table.parentElement&&table.parentElement.classList.contains("table-wrap"))return;var wrap=document.createElement("div");wrap.className="table-wrap";table.parentNode.insertBefore(wrap,table);wrap.appendChild(table);});
+    Array.prototype.forEach.call(root.querySelectorAll("pre"),function(pre){
+      if(pre.parentElement&&pre.parentElement.classList.contains("code-block"))return;
+      var code=pre.querySelector("code"),lang="",match=code&&(code.className||"").match(/(?:language|lang)-([\w+-]+)/);if(match)lang=match[1];
+      if(code&&window.hljs){try{window.hljs.highlightElement(code);}catch(e){}}
+      var wrap=document.createElement("div");wrap.className="code-block";pre.parentNode.insertBefore(wrap,pre);wrap.appendChild(pre);
+      var toolbar=document.createElement("div");toolbar.className="code-toolbar";var language=document.createElement("span");language.className="code-language";language.textContent=lang||"code";
+      var copy=document.createElement("button");copy.type="button";copy.className="copy-code";copy.textContent="কোড কপি";copy.setAttribute("aria-label","কোড কপি করুন");
+      copy.addEventListener("click",function(){var value=code?code.textContent:pre.textContent;function done(){copy.textContent="কপি হয়েছে ✓";window.setTimeout(function(){copy.textContent="কোড কপি";},1600);}if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(value).then(done).catch(function(){fallbackCopy(value,copy,done);});}else fallbackCopy(value,copy,done);});
+      toolbar.appendChild(language);toolbar.appendChild(copy);wrap.insertBefore(toolbar,pre);
+    });
+  }
+  function fallbackCopy(value,button,done){var area=document.createElement("textarea");area.value=value;area.setAttribute("readonly","");area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();try{if(document.execCommand("copy"))done();else button.textContent="কপি করা যায়নি";}catch(e){button.textContent="কপি করা যায়নি";}area.remove();}
   function addMsg(role,text,ts,skipSave,feedback,messageIndexOverride,elapsedMs){
     var at=ts||nowISO();
     var n=document.createElement("div");
     /* message-renderer contract markers: */ n.className='message ai'; if(role==="user")n.className='message user'; else n.className="message ai";
     if(role!=="user"){var l=document.createElement("span");l.className="label";l.textContent=typeof elapsedMs==="number"?elapsedLabel(elapsedMs):"MOSHARROF AI · core";n.appendChild(l);}
-    n.appendChild(document.createTextNode(text));
+    if(role==="user"){n.appendChild(document.createTextNode(text));}
+    else{
+      var rich=document.createElement("div");rich.className="rich-content";rich.innerHTML=renderRichText(text);n.appendChild(rich);enhanceRichContent(rich);
+    }
     var messageIndex=typeof messageIndexOverride==="number"?messageIndexOverride:session.messages.length;
     if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text,at,messageIndex,feedback||null);
     msgEl.appendChild(n);bottom();
