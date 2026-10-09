@@ -266,7 +266,9 @@ header.top{
         try{
           var source=document.createElement("canvas"),ss=Math.min(1,8192/Math.max(img.naturalWidth,img.naturalHeight));
           source.width=Math.max(1,Math.round(img.naturalWidth*ss));source.height=Math.max(1,Math.round(img.naturalHeight*ss));
-          var sc=source.getContext("2d",{alpha:true,willReadFrequently:true});if(!sc)throw new Error("canvas_unavailable");sc.drawImage(img,0,0,source.width,source.height);
+          var sc=source.getContext("2d",{alpha:true,willReadFrequently:!!spec.transparent});
+          if(!sc)throw new Error("canvas_unavailable");
+          sc.drawImage(img,0,0,source.width,source.height);
           var transparencySupported=spec.transparent?hasTransparentPixels(source):false;
           var tw=Math.max(1,Math.min(8192,Number(spec.width)||source.width)),th=Math.max(1,Math.min(8192,Number(spec.height)||source.height));
           var originalTw=tw,originalTh=th,scaleFactor=1;
@@ -274,10 +276,41 @@ header.top{
           var quality=0.92,resizeAttempts=0;
           function render(){
             canvas.width=tw;canvas.height=th;
-            var ctx=canvas.getContext("2d",{alpha:true});if(!ctx)throw new Error("canvas_unavailable");
+            var ctx=canvas.getContext("2d",{alpha:true,willReadFrequently:!!spec.transparent});
+            if(!ctx)throw new Error("canvas_unavailable");
             if(mime==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,tw,th);}else{ctx.clearRect(0,0,tw,th);}
-            var scale=Math.max(tw/source.width,th/source.height),sw=tw/scale,sh=th/scale,sx=(source.width-sw)/2,sy=(source.height-sh)/2;
+            var scale=Math.max(tw/source.width,th/source.height),sw=tw/scale,sh=th/scale;
+            var sx=(source.width-sw)/2,sy=(source.height-sh)/2;
             ctx.drawImage(source,sx,sy,sw,sh,0,0,tw,th);
+            if(spec.transparent&&!hasTransparentPixels(canvas))applyTransparentBackground();
+            if(spec.transparent)transparencySupported=hasTransparentPixels(canvas);
+          }
+          function applyTransparentBackground(){
+            var ctx=canvas.getContext("2d",{willReadFrequently:true}),w=canvas.width,h=canvas.height;
+            if(!ctx)throw new Error("canvas_unavailable");
+            if(w*h>1200000){
+              var pts=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]],clear=0;
+              for(var ci=0;ci<pts.length;ci++){var sm=ctx.getImageData(pts[ci][0],pts[ci][1],1,1);if(sm.data[3]<250)clear++;}
+              if(clear!==4)throw new Error("transparent_background_not_supported_for_large_output");
+              return;
+            }
+            var image=ctx.getImageData(0,0,w,h),d=image.data,seen=new Uint8Array(w*h),stack=new Int32Array(w*h);
+            var top=0,removed=0;
+            function push(i){
+              if(i<0||i>=w*h||seen[i])return;
+              var q=i*4,r=d[q],g=d[q+1],b=d[q+2];
+              if(!(r>238&&g>238&&b>238&&Math.max(r,g,b)-Math.min(r,g,b)<22))return;
+              seen[i]=1;stack[top++]=i;
+            }
+            for(var x=0;x<w;x++){push(x);push((h-1)*w+x);}
+            for(var y=0;y<h;y++){push(y*w);push(y*w+w-1);}
+            while(top){
+              var i=stack[--top],q=i*4;d[q+3]=0;removed++;
+              var px=i%w,py=(i/w)|0;
+              if(px)push(i-1);if(px<w-1)push(i+1);if(py)push(i-w);if(py<h-1)push(i+w);
+            }
+            if(!removed)throw new Error("transparent_background_not_detected");
+            ctx.putImageData(image,0,0);
           }
           function shrinkForSize(){
             if(spec.explicit_dimensions||resizeAttempts>=14||Math.max(tw,th)<=64)return false;
@@ -294,11 +327,10 @@ header.top{
               if(!blob){reject(new Error("image_encode_failed"));return;}
               if(spec.max_bytes&&blob.size>spec.max_bytes&&(mime==="image/jpeg"||mime==="image/webp")&&quality>0.24){quality=Math.max(0.24,quality-0.1);encode();return;}
               if(spec.max_bytes&&blob.size>spec.max_bytes){
-                if(shrinkForSize()){render();encode();return;}
-                reject(new Error("image_size_limit_unmet:"+blob.size+":"+spec.max_bytes));
-                return;
+                if(shrinkForSize()){try{render();}catch(e){reject(e);return;}encode();return;}
+                reject(new Error("image_size_limit_unmet:"+blob.size+":"+spec.max_bytes));return;
               }
-              resolve({blob:blob,mime_type:blob.type||mime,image_spec:spec,final_width:tw,final_height:th,final_bytes:blob.size,size_limit_met:true,transparency_supported:transparencySupported,dimensions_adjusted:tw!==Number(spec.width)||th!==Number(spec.height)});
+              resolve({blob:blob,mime_type:blob.type||mime,image_spec:spec,final_width:tw,final_height:th,final_bytes:blob.size,size_limit_met:true,transparency_supported:transparencySupported,transparency_applied:!!spec.transparent&&transparencySupported,dimensions_adjusted:tw!==Number(spec.width)||th!==Number(spec.height)});
             },mime,quality);
           }
           encode();
@@ -315,7 +347,7 @@ header.top{
     var img=document.createElement("img");img.alt="Generated image";img.src=url;n.appendChild(img);
     var spec=data.image_spec||{},meta=document.createElement("div");meta.className="time";
     var kb=Math.max(1,Math.round(Number(data.final_bytes||0)/1024));
-    meta.textContent=(data.final_width&&data.final_height?data.final_width+"×"+data.final_height+" · ":"")+mime.replace("image/","").toUpperCase()+(data.final_bytes?" · "+kb+" KB":"")+(spec.max_bytes&&!data.size_limit_met?" · নির্ধারিত ফাইল-সাইজ সীমা পূরণ হয়নি":"")+(spec.transparent&&!data.transparency_supported?" · স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত নয়":"");
+    meta.textContent=(data.final_width&&data.final_height?data.final_width+"×"+data.final_height+" · ":"")+mime.replace("image/","").toUpperCase()+(data.final_bytes?" · "+kb+" KB":"")+(spec.max_bytes&&!data.size_limit_met?" · নির্ধারিত ফাইল-সাইজ সীমা পূরণ হয়নি":"")+(spec.transparent?(data.transparency_supported?" · স্বচ্ছ PNG":" · স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত নয়"):"");
     n.appendChild(meta);
     var actions=document.createElement("div");actions.className="image-actions";
     var a=document.createElement("a");a.href=url;a.download="mosharrof-generated-image."+ext;a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);n.appendChild(actions);
