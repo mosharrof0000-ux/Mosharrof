@@ -215,7 +215,7 @@ header.top{
     var fm=l.match(/\b(png|webp|jpe?g)\b/),format=fm?(fm[1]==="jpg"?"jpeg":fm[1]):"jpeg";
     var sm=l.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)?/i),max_bytes=null;
     if(sm)max_bytes=Math.round(Number(sm[1])*((/kb|কেবি/i.test(sm[2]||"")?1024:1024*1024)));
-    return {width:w,height:h,aspect_ratio:ratio.join(":"),image_size:resolution,format:format,transparent:/transparent|transparency|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড স্বচ্ছ/i.test(l),max_bytes:max_bytes};
+    return {width:w,height:h,aspect_ratio:ratio.join(":"),image_size:resolution,format:format,transparent:transparent,max_bytes:max_bytes};
   }
   function blobFromCanvas(canvas,type,quality){
     return new Promise(function(resolve,reject){canvas.toBlob(function(blob){if(blob)resolve(blob);else reject(new Error("image_encode_failed"));},type,quality);});
@@ -225,26 +225,59 @@ header.top{
     return new Promise(function(resolve,reject){
       var img=new Image();img.onload=function(){
         try{
-          var canvas=document.createElement("canvas"),ctx=canvas.getContext("2d",{alpha:true});
-          canvas.width=spec.width;canvas.height=spec.height;ctx=canvas.getContext("2d",{alpha:true});
-          if(spec.format==="jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);}
-          ctx.drawImage(img,0,0,canvas.width,canvas.height);
-          var type=spec.format==="png"?"image/png":spec.format==="webp"?"image/webp":"image/jpeg";
-          var q=0.9,limit=spec.max_bytes;
-          (async function(){
-            var blob=await blobFromCanvas(canvas,type,type==="image/png"?undefined:q);
-            if(limit&&type!=="image/png"){
-              while(blob.size>limit&&q>0.35){q=Math.max(0.35,q-0.1);blob=await blobFromCanvas(canvas,type,q);}
+          var canvas=document.createElement("canvas");
+          canvas.width=spec.width;canvas.height=spec.height;
+          var ctx=canvas.getContext("2d",{alpha:true,willReadFrequently:!!spec.transparent});
+          if(!ctx)throw new Error("canvas_unavailable");
+          var type=spec.transparent?"image/png":(spec.format==="png"?"image/png":spec.format==="webp"?"image/webp":"image/jpeg");
+          if(type==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);}
+          else ctx.clearRect(0,0,canvas.width,canvas.height);
+          // Cover-crop to the requested ratio without stretching/distorting the source.
+          var scale=Math.max(canvas.width/img.naturalWidth,canvas.height/img.naturalHeight);
+          var sw=canvas.width/scale,sh=canvas.height/scale;
+          var sx=(img.naturalWidth-sw)/2,sy=(img.naturalHeight-sh)/2;
+          ctx.drawImage(img,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+          var transparencyApplied=false;
+          if(spec.transparent){
+            var pixels=canvas.width*canvas.height;
+            if(pixels>1200000){
+              var corners=ctx.getImageData(0,0,canvas.width,canvas.height);
+              var d=corners.data,hasAlpha=false;
+              for(var y of [0,canvas.height-1])for(var x of [0,canvas.width-1])if(d[(y*canvas.width+x)*4+3]<250)hasAlpha=true;
+              if(!hasAlpha)throw new Error("transparent_background_not_supported_for_large_output");
+              transparencyApplied=true;
+            }else{
+              var image=ctx.getImageData(0,0,canvas.width,canvas.height),d=image.data,w=canvas.width,h=canvas.height;
+              var seen=new Uint8Array(w*h),stack=new Int32Array(w*h),top=0,removed=0,hasAlpha=false;
+              for(var k=3;k<d.length;k+=4){if(d[k]<250){hasAlpha=true;break;}}
+              if(hasAlpha){transparencyApplied=true;}
+              else{
+                function push(i){if(i<0||i>=w*h||seen[i])return;var q=i*4,r=d[q],g=d[q+1],b=d[q+2];if(!(r>238&&g>238&&b>238&&Math.max(r,g,b)-Math.min(r,g,b)<22))return;seen[i]=1;stack[top++]=i;}
+                for(var x=0;x<w;x++){push(x);push((h-1)*w+x);}
+                for(var y=0;y<h;y++){push(y*w);push(y*w+w-1);}
+                while(top){var i=stack[--top],q=i*4;d[q+3]=0;removed++;var px=i%w,py=(i/w)|0;if(px)push(i-1);if(px<w-1)push(i+1);if(py)push(i-w);if(py<h-1)push(i+w);}
+                if(!removed)throw new Error("transparent_background_not_detected");
+                ctx.putImageData(image,0,0);transparencyApplied=true;
+              }
             }
-            if(limit&&blob.size>limit)throw new Error("requested_file_size_unachievable_at_exact_dimensions");
-            var url=URL.createObjectURL(blob),finalImage=new Image();finalImage.onload=function(){URL.revokeObjectURL(url);resolve({data_url:null,blob:blob,final_width:canvas.width,final_height:canvas.height,final_mime_type:blob.type,final_bytes:blob.size,optimized:true,image_spec:spec});};
-            finalImage.onerror=function(){URL.revokeObjectURL(url);reject(new Error("optimized_image_decode_failed"));};finalImage.src=url;
-          })().catch(reject);
+          }
+          var q=0.9,limit=spec.max_bytes;
+          function encode(){
+            canvas.toBlob(function(blob){
+              if(!blob){reject(new Error("image_encode_failed"));return;}
+              if(limit&&blob.size>limit&&type!=="image/png"&&q>0.35){q=Math.max(0.35,q-0.1);encode();return;}
+              if(limit&&blob.size>limit){reject(new Error("requested_file_size_unachievable_at_exact_dimensions"));return;}
+              var reader=new FileReader();reader.onload=function(){
+                resolve(Object.assign({},data,{data_url:String(reader.result||""),final_width:canvas.width,final_height:canvas.height,final_mime_type:blob.type||type,final_bytes:blob.size,optimized:true,transparency_applied:transparencyApplied,image_spec:spec}));
+              };reader.onerror=function(){reject(new Error("image_read_failed"));};reader.readAsDataURL(blob);
+            },type,type==="image/png"?undefined:q);
+          }
+          encode();
         }catch(e){reject(e);}
-      };img.onerror=function(){reject(new Error("generated_image_decode_failed"));};img.src=src;
-    }).then(function(result){return new Promise(function(resolve,reject){
-      var reader=new FileReader();reader.onload=function(){result.data_url=String(reader.result||"");delete result.blob;resolve(Object.assign({},data,result));};reader.onerror=reject;reader.readAsDataURL(result.blob);
-    });});
+      };
+      img.onerror=function(){reject(new Error("generated_image_decode_failed"));};
+      img.src=src;
+    });
   }
   function imageReply(t){
     return fetch(IMAGE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:String(t||"").trim()})})
