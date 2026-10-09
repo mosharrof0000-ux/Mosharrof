@@ -338,8 +338,11 @@ header.top{
       if(/[<>{};"'\\\n\r]/.test(family))return false;
       var source=config.source==="self-hosted"?"self-hosted":"google";
       var src=String(config.src||"");
+      var format=String(config.format||"woff2").toLowerCase();
+      var fontStyle=String(config.style||"normal").toLowerCase();
       if(source==="self-hosted"&&!/^(https:\/\/[A-Za-z0-9.-]+(?::[0-9]+)?\/[A-Za-z0-9/_?&=.%+-]*|\/[A-Za-z0-9/_?&=.%+-]*|\.\.?\/[A-Za-z0-9/_?&=.%+-]*)$/.test(src))return false;
-      this.fonts[id]={family:family,fallback:String(config.fallback||"sans-serif"),weights:String(config.weights||"400;700"),source:source,src:source==="self-hosted"?src:"",format:String(config.format||"woff2"),style:String(config.style||"normal")};
+      if(["woff2","woff","truetype","opentype"].indexOf(format)<0||["normal","italic"].indexOf(fontStyle)<0)return false;
+      this.fonts[id]={family:family,fallback:String(config.fallback||"sans-serif"),weights:String(config.weights||(source==="self-hosted"?"400 700":"400;700")),source:source,src:source==="self-hosted"?src:"",format:format,style:fontStyle};
       loadTypographyFont(this.fonts[id]);rebuildTypographyStyles();return true;
     },
     setGenreFont:function(genre,fontId,headingFont){
