@@ -130,6 +130,13 @@ function bytesToBase64(bytes){
   return btoa(binary);
 }
 
+function nearestProviderRatio(ratio){
+  const parts=String(ratio||"1:1").split(":").map(Number),target=(parts[0]||1)/(parts[1]||1);
+  const supported=["1:1","3:2","2:3","4:3","3:4","16:9","9:16","4:5","5:4","21:9"];
+  let best="1:1",delta=Infinity;
+  for(const r of supported){const p=r.split(":").map(Number),d=Math.abs(Math.log(target/(p[0]/p[1])));if(d<delta){delta=d;best=r;}}
+  return best;
+}
 function parseImageSpec(prompt){
   const original=String(prompt||"");
   const p=original.toLowerCase();
@@ -188,8 +195,8 @@ function parseImageSpec(prompt){
     else {const base=1024;if(rw>=rh){width=base;height=Math.max(1,Math.round(base*rh/rw));}else{height=base;width=Math.max(1,Math.round(base*rw/rh));}}
   }
   const pixels=width*height;
-  const imageSize=quality==="4K"?"4K":quality==="2K"||pixels>1800000?"2K":"1K";
-  return {intent,aspect_ratio:ratio,width,height,format,transparent,max_bytes:maxBytes,quality,image_size:imageSize,explicit_dimensions:hasExplicitDimensions,explicit_ratio:hasExplicitRatio};
+  const imageSize=(Math.max(width,height)>=3500||quality==="4K")?"4K":(quality==="2K"||pixels>1800000||Math.max(width,height)>=2000)?"2K":"1K";
+  return {intent,aspect_ratio:ratio,provider_aspect_ratio:nearestProviderRatio(ratio),width,height,format,transparent,max_bytes:maxBytes,quality,image_size:imageSize,explicit_dimensions:hasExplicitDimensions,explicit_ratio:hasExplicitRatio};
 }
 
 async function generateWithGemini(prompt,body,env){
@@ -200,7 +207,7 @@ async function generateWithGemini(prompt,body,env){
     try{
       const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
         method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
-        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:body.image_spec?.format==="png"?"image/png":body.image_spec?.format==="webp"?"image/webp":"image/jpeg",aspect_ratio:String(body.image_spec?.aspect_ratio||body.aspect_ratio||"1:1"),image_size:String(body.image_spec?.image_size||body.image_size||"1K")}})
+        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:body.image_spec?.format==="png"?"image/png":body.image_spec?.format==="webp"?"image/webp":"image/jpeg",aspect_ratio:String(body.image_spec?.provider_aspect_ratio||body.aspect_ratio||"1:1"),image_size:String(body.image_spec?.image_size||body.image_size||"1K")}})
       });
       const data=await upstream.json().catch(()=>({}));
       last={upstream,data,model};
