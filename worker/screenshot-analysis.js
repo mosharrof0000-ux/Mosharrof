@@ -18,7 +18,9 @@ async function generateWithEdge(text,body,env){
   try{
     const parsed=new URL(endpoint);
     if(parsed.protocol!=="https:" && parsed.hostname!=="localhost" && parsed.hostname!=="127.0.0.1")return {ok:false,provider:"edge",reason:"https_required"};
-    const r=await fetch(endpoint,{method:"POST",headers:{"content-type":"application/json","accept":"audio/mpeg, audio/*, application/json"},body:JSON.stringify({
+    const edgeHeaders={"content-type":"application/json","accept":"audio/mpeg, audio/*, application/json"};
+    if(env.EDGE_TTS_API_TOKEN)edgeHeaders.authorization="Bearer "+env.EDGE_TTS_API_TOKEN;
+    const r=await fetch(endpoint,{method:"POST",headers:edgeHeaders,body:JSON.stringify({
       text,
       voice:String(body.voice||env.EDGE_TTS_VOICE||"bn-BD-PradeepNeural"),
       language_code:String(body.language_code||"bn-BD"),
