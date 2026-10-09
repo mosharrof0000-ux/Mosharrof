@@ -360,8 +360,11 @@ header.top{
     button.dataset.speakText=String(t||"");
     if(activeAudio&&button===activeSpeechButton){try{activeAudio.pause();}catch(e){}activeAudio=null;activeSpeechButton=null;setSpeakButton(button,"🔊 শুনুন");hideV();button.onclick=function(){speakText(t,button);};return;}
     if(activeUtterance&&button===activeSpeechButton&&"speechSynthesis" in window){window.speechSynthesis.cancel();activeUtterance=null;activeSpeechButton=null;setSpeakButton(button,"🔊 শুনুন");hideV();button.onclick=function(){speakText(t,button);};return;}
-    if(activeAudio){try{activeAudio.pause();}catch(e){}activeAudio=null;}
-    if(activeUtterance&&"speechSynthesis" in window){window.speechSynthesis.cancel();activeUtterance=null;}
+    if(activeSpeechButton&&activeSpeechButton!==button){
+      if(activeAudio){try{activeAudio.pause();}catch(e){}activeAudio=null;}
+      if(activeUtterance&&"speechSynthesis" in window){window.speechSynthesis.cancel();activeUtterance=null;}
+      activeSpeechButton.disabled=false;setSpeakButton(activeSpeechButton,"🔊 শুনুন");
+    }
     activeSpeechButton=button;
     button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");showV("পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে…");
     fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),language_code:"bn-BD",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
@@ -371,7 +374,7 @@ header.top{
       activeAudio.onended=function(){activeAudio=null;activeSpeechButton=null;setSpeakButton(button,"🔊 শুনুন");hideV();button.onclick=function(){speakText(t,button);};};
       setSpeakButton(button,"⏸ বন্ধ করুন");button.disabled=false;
       button.onclick=function(){if(activeAudio&&activeSpeechButton===button){activeAudio.pause();activeAudio=null;activeSpeechButton=null;setSpeakButton(button,"🔊 শুনুন");hideV();button.onclick=function(){speakText(t,button);};}};
-      showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){});
+      showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){if(activeAudio){activeAudio=null;activeSpeechButton=null;setSpeakButton(button,"🔊 শুনুন");hideV();button.onclick=function(){speakText(t,button);};}});
     }).catch(function(){
       if(activeSpeechButton!==button)return;
       button.disabled=false;
