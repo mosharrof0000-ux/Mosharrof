@@ -93,6 +93,11 @@ header.top{
 .message.ai .rich-content.font-story h3{font-size:1.16em}
 .message.ai .rich-content.font-song blockquote,.message.ai .rich-content.font-poem blockquote{border-left-color:#9b83c7;background:rgba(155,131,199,.08)}
 .message.ai .rich-content .font-song,.message.ai .rich-content .font-poem,.message.ai .rich-content .font-story{overflow-wrap:anywhere}
+.song-design-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 2px;padding:0 2px;color:#aeb6c2;font-size:11px}
+.song-design-next{border:1px solid rgba(145,165,210,.42);border-radius:999px;background:rgba(72,92,140,.16);color:inherit;padding:7px 11px;font:inherit;cursor:pointer}
+.song-design-next:active{background:rgba(95,125,190,.3)}
+.song-design-label{opacity:.8}
+.message.ai .rich-content.font-song[data-song-style]{transition:background .2s ease,border-color .2s ease}
 
 @media(max-width:480px){.message.ai .rich-content{font-size:15px;line-height:1.78}.message.ai .rich-content th,.message.ai .rich-content td{padding:8px 9px}.message.ai .rich-content pre{font-size:12px;padding:11px}}
 
@@ -324,7 +329,13 @@ header.top{
       "atma":{family:"Atma",fallback:"cursive",weights:"300;400;500;600;700"},
       "mina":{family:"Mina",fallback:"sans-serif",weights:"400;700"},
       "galada":{family:"Galada",fallback:"cursive",weights:"400"},
-      "noto-serif-bengali":{family:"Noto Serif Bengali",fallback:"serif",weights:"400;500;600;700"}
+      "noto-serif-bengali":{family:"Noto Serif Bengali",fallback:"serif",weights:"400;500;600;700"},
+      "anek-bangla":{family:"Anek Bangla",fallback:"sans-serif",weights:"300;400;500;600;700"},
+      "alkatra":{family:"Alkatra",fallback:"cursive",weights:"400;500;600;700"},
+      "baloo-da-2":{family:"Baloo Da 2",fallback:"sans-serif",weights:"400;500;600;700;800"},
+      "bokor":{family:"Bokor",fallback:"cursive",weights:"400"},
+      "noto-sans-bengali":{family:"Noto Sans Bengali",fallback:"sans-serif",weights:"400;500;600;700"},
+      "tiro-bangla":{family:"Tiro Bangla",fallback:"serif",weights:"400"}
     },
     genres:{
       song:{font:"galada",headingFont:"atma"},
@@ -357,6 +368,20 @@ header.top{
       if(!/^[a-z0-9-]{2,32}$/.test(id)||!config||!this.fonts[config.font]||(config.headingFont&&!this.fonts[config.headingFont]))return false;
       this.genres[id]={font:config.font,headingFont:config.headingFont||config.font};
       rebuildTypographyStyles();return true;
+    },
+    getSongStyles:function(){return SONG_DESIGN_PRESETS.map(function(s){return {id:s.id,name:s.name,font:s.font,headingFont:s.headingFont};});},
+    setSongStyle:function(root,styleId){
+      if(!root||!root.classList||!root.classList.contains("font-song"))return false;
+      var style=SONG_DESIGN_PRESETS.find(function(s){return s.id===Number(styleId);});
+      if(!style)return false;
+      root.setAttribute("data-song-style",String(style.id));
+      root.setAttribute("data-song-font",style.font);
+      loadTypographyFont(this.fonts[style.font]);loadTypographyFont(this.fonts[style.headingFont]);
+      rebuildTypographyStyles();return true;
+    },
+    nextSongStyle:function(root){
+      var current=Number(root&&root.getAttribute("data-song-style"))||1;
+      return this.setSongStyle(root,current%SONG_DESIGN_PRESETS.length+1);
     }
   };
   function loadTypographyFont(font){
@@ -385,8 +410,66 @@ header.top{
       css+=".message.ai .rich-content.font-"+genre+"{font-family:"+JSON.stringify(body.family)+","+body.fallback+"}";
       if(head)css+=".message.ai .rich-content.font-"+genre+" h1,.message.ai .rich-content.font-"+genre+" h2,.message.ai .rich-content.font-"+genre+" h3,.message.ai .rich-content.font-"+genre+" h4{font-family:"+JSON.stringify(head.family)+","+head.fallback+"}";
     });
-    Object.keys(MOSHARROF_TYPOGRAPHY.fonts).forEach(function(id){loadTypographyFont(MOSHARROF_TYPOGRAPHY.fonts[id]);});
+    Object.keys(MOSHARROF_TYPOGRAPHY.genres).forEach(function(genre){
+      var cfg=MOSHARROF_TYPOGRAPHY.genres[genre];
+      if(cfg){loadTypographyFont(MOSHARROF_TYPOGRAPHY.fonts[cfg.font]);loadTypographyFont(MOSHARROF_TYPOGRAPHY.fonts[cfg.headingFont||cfg.font]);}
+    });
+    SONG_DESIGN_PRESETS.forEach(function(preset){
+      var body=MOSHARROF_TYPOGRAPHY.fonts[preset.font],head=MOSHARROF_TYPOGRAPHY.fonts[preset.headingFont];
+      if(body)css+='.message.ai .rich-content.font-song[data-song-style="'+preset.id+'"]{font-family:'+JSON.stringify(body.family)+','+body.fallback+'}';
+      if(head)css+='.message.ai .rich-content.font-song[data-song-style="'+preset.id+'"] h1,.message.ai .rich-content.font-song[data-song-style="'+preset.id+'"] h2,.message.ai .rich-content.font-song[data-song-style="'+preset.id+'"] h3,.message.ai .rich-content.font-song[data-song-style="'+preset.id+'"] h4{font-family:'+JSON.stringify(head.family)+','+head.fallback+'}';
+    });
     style.textContent=css;
+  }
+  var SONG_DESIGN_PALETTES=[
+    {name:"নীল আকাশ",accent:"#78bfff",panel:"rgba(44,118,190,.13)",border:"rgba(120,191,255,.4)"},
+    {name:"বেগুনি সন্ধ্যা",accent:"#c5a2ff",panel:"rgba(126,75,180,.14)",border:"rgba(197,162,255,.4)"},
+    {name:"গোলাপি আবেশ",accent:"#ff9dc4",panel:"rgba(188,64,113,.13)",border:"rgba(255,157,196,.38)"},
+    {name:"সবুজ প্রকৃতি",accent:"#8fe0b2",panel:"rgba(48,139,93,.13)",border:"rgba(143,224,178,.38)"},
+    {name:"সোনালি আলো",accent:"#f4cc7b",panel:"rgba(174,122,40,.14)",border:"rgba(244,204,123,.4)"},
+    {name:"জোছনা",accent:"#d5e3ff",panel:"rgba(105,132,190,.13)",border:"rgba(213,227,255,.4)"},
+    {name:"তামাটে",accent:"#f2a37e",panel:"rgba(174,85,48,.13)",border:"rgba(242,163,126,.4)"},
+    {name:"পুদিনা",accent:"#83e6dc",panel:"rgba(35,140,130,.13)",border:"rgba(131,230,220,.4)"},
+    {name:"ল্যাভেন্ডার",accent:"#c8b4ff",panel:"rgba(109,83,177,.13)",border:"rgba(200,180,255,.4)"},
+    {name:"রুপালি",accent:"#c8d0da",panel:"rgba(116,130,148,.13)",border:"rgba(200,208,218,.4)"}
+  ];
+  var SONG_DESIGN_FONTS=[
+    {font:"hind-siliguri",headingFont:"atma"},{font:"anek-bangla",headingFont:"baloo-da-2"},
+    {font:"noto-sans-bengali",headingFont:"alkatra"},{font:"noto-serif-bengali",headingFont:"galada"},
+    {font:"baloo-da-2",headingFont:"atma"},{font:"mina",headingFont:"anek-bangla"},
+    {font:"tiro-bangla",headingFont:"baloo-da-2"},{font:"hind-siliguri",headingFont:"alkatra"},
+    {font:"noto-serif-bengali",headingFont:"anek-bangla"},{font:"bokor",headingFont:"hind-siliguri"}
+  ];
+  var SONG_DESIGN_LAYOUTS=[
+    {name:"ক্লাসিক",align:"center",radius:"14px",pad:"16px",titleBorder:"0",titleStyle:"normal",line:"2.08",letter:".012em"},
+    {name:"গীতিকবিতা",align:"left",radius:"10px",pad:"15px",titleBorder:"0",titleStyle:"italic",line:"2.16",letter:".018em"},
+    {name:"পোস্টার",align:"center",radius:"20px",pad:"18px",titleBorder:"1px solid var(--song-border)",titleStyle:"normal",line:"2.02",letter:".01em"},
+    {name:"মিনিমাল",align:"left",radius:"4px",pad:"12px",titleBorder:"0",titleStyle:"normal",line:"1.98",letter:".006em"},
+    {name:"সুরেলা",align:"center",radius:"24px",pad:"18px",titleBorder:"0",titleStyle:"italic",line:"2.2",letter:".02em"}
+  ];
+  var SONG_DESIGN_PRESETS=[];
+  SONG_DESIGN_PALETTES.forEach(function(palette,pi){SONG_DESIGN_LAYOUTS.forEach(function(layout,li){
+    var id=pi*SONG_DESIGN_LAYOUTS.length+li+1,fonts=SONG_DESIGN_FONTS[(id-1)%SONG_DESIGN_FONTS.length];
+    SONG_DESIGN_PRESETS.push({id:id,name:palette.name+" · "+layout.name,palette:palette,layout:layout,font:fonts.font,headingFont:fonts.headingFont});
+  });});
+  function songSourceHash(value){var h=2166136261,s=String(value||"");for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0);}
+  function applySongDesign(root,source){
+    if(!root)return 1;
+    var id=(songSourceHash(source)%SONG_DESIGN_PRESETS.length)+1,p=SONG_DESIGN_PRESETS[id-1];
+    root.setAttribute("data-song-style",String(id));root.setAttribute("data-song-font",p.font);
+    var style=document.getElementById("mosharrofSongDesignStyles");
+    if(!style){style=document.createElement("style");style.id="mosharrofSongDesignStyles";document.head.appendChild(style);}
+    var css="";
+    SONG_DESIGN_PRESETS.forEach(function(item){
+      var s=item.palette,l=item.layout,sel='.message.ai .rich-content.font-song[data-song-style="'+item.id+'"]';
+      css+=sel+'{--song-accent:'+s.accent+';--song-panel:'+s.panel+';--song-border:'+s.border+';--song-align:'+l.align+';--song-radius:'+l.radius+';--song-pad:'+l.pad+';--song-title-border:'+l.titleBorder+';--song-title-style:'+l.titleStyle+';--song-line:'+l.line+';--song-letter:'+l.letter+';border:1px solid var(--song-border);border-radius:var(--song-radius);padding:var(--song-pad);background:linear-gradient(145deg,var(--song-panel),transparent 74%);line-height:var(--song-line);letter-spacing:var(--song-letter)}';
+      css+=sel+' h1,'+sel+' h2,'+sel+' h3{color:var(--song-accent);text-align:var(--song-align);font-style:var(--song-title-style);border-bottom:var(--song-title-border);border-color:var(--song-border);padding-bottom:.45em;margin-bottom:.9em}';
+      css+=sel+' blockquote{border-left:3px solid var(--song-accent);background:var(--song-panel);border-radius:0 var(--song-radius) var(--song-radius) 0;padding:.4em .9em;margin:1em 0}';
+      css+=sel+' strong{color:var(--song-accent)}'+sel+' p{margin:.85em 0}';
+    });
+    style.textContent=css;
+    loadTypographyFont(MOSHARROF_TYPOGRAPHY.fonts[p.font]);loadTypographyFont(MOSHARROF_TYPOGRAPHY.fonts[p.headingFont]);
+    return id;
   }
   window.MOSHARROF_TYPOGRAPHY=MOSHARROF_TYPOGRAPHY;
   function detectTypographyGenre(source,root){
@@ -419,7 +502,9 @@ header.top{
     if(!root)return"story";
     var genre=detectTypographyGenre(source,root);
     Object.keys(MOSHARROF_TYPOGRAPHY.genres).forEach(function(name){root.classList.remove("font-"+name);});
-    root.classList.add("font-"+genre);root.setAttribute("data-typography-genre",genre);return genre;
+    root.classList.add("font-"+genre);root.setAttribute("data-typography-genre",genre);
+    if(genre==="song")applySongDesign(root,source);
+    return genre;
   }
 
   function renderRichText(value){
@@ -461,6 +546,13 @@ header.top{
     if(role==="user"){n.appendChild(document.createTextNode(text));}
     else{
       var rich=document.createElement("div");rich.className="rich-content";rich.innerHTML=renderRichText(text);applySmartTypography(rich,text);n.appendChild(rich);enhanceRichContent(rich);
+      if(rich.classList.contains("font-song")){
+        var designTools=document.createElement("div");designTools.className="song-design-tools";
+        var designLabel=document.createElement("span");designLabel.className="song-design-label";designLabel.textContent="গানের ডিজাইন "+rich.getAttribute("data-song-style")+"/50";
+        var designButton=document.createElement("button");designButton.type="button";designButton.className="song-design-next";designButton.textContent="🎨 ডিজাইন বদলান";designButton.setAttribute("aria-label","গানের পরের ডিজাইন বেছে নিন");
+        designButton.addEventListener("click",function(){MOSHARROF_TYPOGRAPHY.nextSongStyle(rich);designLabel.textContent="গানের ডিজাইন "+rich.getAttribute("data-song-style")+"/50";});
+        designTools.appendChild(designLabel);designTools.appendChild(designButton);n.appendChild(designTools);
+      }
     }
     var messageIndex=typeof messageIndexOverride==="number"?messageIndexOverride:session.messages.length;
     if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text,at,messageIndex,feedback||null);
