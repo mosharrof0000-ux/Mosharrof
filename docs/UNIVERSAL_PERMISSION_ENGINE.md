@@ -18,9 +18,9 @@ provider-readiness and user-approval checks. Unknown capabilities are denied.
 - Example: `UniversalPermissionEngine().authorize("video.create", entity_id="video-maker", granted_permissions=["video.create"], resource_scope="video/projects/demo", entity_scope="video/*", provider_ready=True, user_approved=True)`
 
 ## Security boundaries
-- Destructive/delete-like operations and selected high-impact actions remain
-  permanently blocked by the current global policy, even if a grant pattern
-  would otherwise match.
+- Delete/destructive-like operations remain permanently blocked, even if a
+  grant pattern would otherwise match. Other high-impact actions require
+  explicit user approval; they are not described as permanently blocked.
 - Module registration does not activate a module.
 - Missing provider configuration, missing user approval, unknown capability,
   failed policy or scope escape all deny the request.
