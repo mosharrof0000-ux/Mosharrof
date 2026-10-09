@@ -209,7 +209,7 @@ async function generateWithGemini(prompt,body,env){
     try{
       const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
         method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
-        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:body.image_spec?.format==="image/png"?"image/png":body.image_spec?.format==="image/webp"?"image/webp":"image/jpeg",aspect_ratio:String(body.image_spec?.provider_aspect_ratio||body.aspect_ratio||"1:1"),image_size:String(body.image_spec?.image_size||body.image_size||"1K")}})
+        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:body.image_spec?.format==="image/png"?"image/png":"image/jpeg",aspect_ratio:String(body.image_spec?.provider_aspect_ratio||body.aspect_ratio||"1:1"),image_size:String(body.image_spec?.image_size||body.image_size||"1K")}})
       });
       const data=await upstream.json().catch(()=>({}));
       last={upstream,data,model};
