@@ -216,8 +216,8 @@ async function generateWithCloudflare(prompt,env,spec){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   try{
     const model=env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell";
-    const spec=bodySpecForCloudflare;
-    const result=await env.AI.run(model,{prompt:prompt+"\\n\\nComposition requirement: "+spec.aspect_ratio+" aspect ratio. Keep the main subject safely within frame."});
+    const requirement="\\n\\nComposition requirement: use a "+spec.aspect_ratio+" aspect ratio; keep the main subject safely inside the frame.";
+    const result=await env.AI.run(model,{prompt:prompt+requirement});
     const imageData=String(result?.image||"");
     if(!imageData)return {ok:false,provider:"cloudflare-workers-ai",model,reason:"empty_image"};
     return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/jpeg",image_data:imageData};
@@ -225,32 +225,33 @@ async function generateWithCloudflare(prompt,env,spec){
     return {ok:false,provider:"cloudflare-workers-ai",reason:String(e&&e.message||e)};
   }
 }
-
 async function generateImage(request,env){
   const body=await request.json();
   const prompt=String(body.prompt||"").trim();
   if(!prompt)return reply({error:"prompt_required"},400);
   if(prompt.length>12000)return reply({error:"prompt_too_large"},413);
 
-  const image_spec=parseImageSpec(prompt);
-  body.image_spec=image_spec;body.aspect_ratio=image_spec.aspect_ratio;body.image_size=image_spec.image_size;
-  const composition="\n\nComposition requirements: "+image_spec.aspect_ratio+" aspect ratio, intended output "+image_spec.width+"x"+image_spec.height+" pixels. Frame the subject for this composition and keep important subjects away from crop edges."+(image_spec.transparent?" Use a clean pure-white background so it can be removed for transparent PNG.":"");
-  const providerPrompt=(prompt+composition).slice(0,2048);
+  let image_spec;
+  try{image_spec=parseImageSpec(prompt);}
+  catch(e){return reply({error:"invalid_image_spec",message:String(e&&e.message||e)},400);}
+  const generationPrompt=image_spec.transparent
+    ? prompt+"\\nOutput requirement: isolated subject on a genuinely transparent background with clean edges, if supported. Do not simulate transparency using a checkerboard."
+    : prompt;
+  const providerBody={...body,image_spec};
   const providers=env.IMAGE_PROVIDER_ORDER
     ? String(env.IMAGE_PROVIDER_ORDER).split(",").map(x=>x.trim()).filter(Boolean)
     : FREE_IMAGE_PROVIDERS;
   const attempted=[];
   for(const provider of providers){
     let result;
-    if(provider==="gemini")result=await generateWithGemini(providerPrompt,body,env);
-    else if(provider==="cloudflare-workers-ai")result=await generateWithCloudflare(providerPrompt,env);
+    if(provider==="gemini")result=await generateWithGemini(generationPrompt,providerBody,env);
+    else if(provider==="cloudflare-workers-ai")result=await generateWithCloudflare(generationPrompt,env,image_spec);
     else continue;
     attempted.push({provider:result.provider,ok:!!result.ok,model:result.model||null,reason:result.ok?null:result.reason||null});
     if(result.ok)return reply({...result,image_spec,attempted},200);
   }
   return reply({error:"image_provider_failed",free_first:true,image_spec,attempted},502);
 }
-
 async function chat(request,env){
   const body=await request.json();
   const text=String(body.text||"").trim();
