@@ -56,7 +56,7 @@ header.top{
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
 .message-actions-wrap{display:flex;flex-direction:column;align-items:flex-start;margin-top:7px;gap:6px}
-.message.user .message-actions-wrap{align-items:flex-end}
+.message.user .message-actions-wrap{align-items:flex-start;margin-left:-5px;margin-bottom:-3px}
 .message-actions-toggle{width:28px;height:24px;display:inline-grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:#080808;color:#f2f2f2;font-size:16px;line-height:1}
 .message-actions{display:none;align-items:center;flex-wrap:wrap;gap:5px;padding:4px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#050505}
 .message-actions-wrap.open .message-actions{display:flex}
@@ -243,7 +243,6 @@ header.top{
       action("like","লাইক",function(){openFeedback("like",quickLike);});
       action("online","অনলাইন",function(){openFeedback("online",quickOnline);});
     }
-    var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);meta.appendChild(tm);
     action("edit","এডিট",function(){editMessage(n,role,text);});
     action("copy","কপি",function(){copyMessage(text);});
     action("retry","আবার চেষ্টা",function(){retryMessage(n,role,text);});
@@ -256,11 +255,10 @@ header.top{
     var at=ts||nowISO();
     var n=document.createElement("div");
     /* message-renderer contract markers: */ n.className='message ai'; if(role==="user")n.className='message user'; else n.className="message ai";
-    var l=document.createElement("span");l.className="label";l.textContent=role==="user"?"আপনি":"MOSHARROF AI · core";
-    n.appendChild(l);n.appendChild(document.createTextNode(text));
+    if(role!=="user"){var l=document.createElement("span");l.className="label";l.textContent="MOSHARROF AI · core";n.appendChild(l);}
+    n.appendChild(document.createTextNode(text));
     var messageIndex=typeof messageIndexOverride==="number"?messageIndexOverride:session.messages.length;
     if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text,at,messageIndex,feedback||null);
-    else{var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);n.appendChild(tm);}
     msgEl.appendChild(n);bottom();
     if(!skipSave){var savedMessage={role:role,text:text,at:at};if(role==="ai"&&feedback)savedMessage.feedback=feedback;session.messages.push(savedMessage);session.lastActiveAt=at;saveStore(session);updateMeta();}
     return n;
@@ -574,7 +572,7 @@ header.top{
     n.appendChild(meta);
     var actions=document.createElement("div");actions.className="image-actions";
     var a=document.createElement("a");a.href=url;a.download="mosharrof-generated-image."+ext;a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);n.appendChild(actions);
-    var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);n.appendChild(tm);msgEl.appendChild(n);bottom();
+    msgEl.appendChild(n);bottom();
     session.messages.push({role:"ai",text:"🖼️ ইমেজ তৈরি হয়েছে।",at:at});session.lastActiveAt=at;saveStore(session);updateMeta();
   }
   var busy=false;
