@@ -248,6 +248,17 @@ header.top{
         return optimizeGeneratedImage(data,t);
       });});
   }
+  function removeWhiteEdge(canvas){
+    var ctx=canvas.getContext("2d",{willReadFrequently:true}),w=canvas.width,h=canvas.height;
+    if(!ctx||w*h>1200000)return false;
+    var image=ctx.getImageData(0,0,w,h),d=image.data,total=w*h,seen=new Uint8Array(total),stack=new Int32Array(total),top=0,removed=0;
+    function white(i){var q=i*4;return d[q]>238&&d[q+1]>238&&d[q+2]>238&&Math.max(d[q],d[q+1],d[q+2])-Math.min(d[q],d[q+1],d[q+2])<22&&d[q+3]>0;}
+    function push(i){if(i<0||i>=total||seen[i]||!white(i))return;seen[i]=1;stack[top++]=i;}
+    for(var x=0;x<w;x++){push(x);push((h-1)*w+x);}
+    for(var y=0;y<h;y++){push(y*w);push(y*w+w-1);}
+    while(top){var i=stack[--top],q=i*4;d[q+3]=0;removed++;var x=i%w,y=(i/w)|0;if(x)push(i-1);if(x<w-1)push(i+1);if(y)push(i-w);if(y<h-1)push(i+w);}
+    if(removed){ctx.putImageData(image,0,0);return true;}return false;
+  }
   function hasTransparentPixels(canvas){
     try{
       var ctx=canvas.getContext("2d",{willReadFrequently:true}),w=canvas.width,h=canvas.height;
@@ -294,6 +305,7 @@ header.top{
           var sc=source.getContext("2d",{alpha:true,willReadFrequently:true});if(!sc)throw new Error("canvas_unavailable");sc.drawImage(img,0,0,source.width,source.height);
           if(spec.transparent)removeEdgeWhiteBackground(source);
           var transparencySupported=spec.transparent?hasTransparentPixels(source):false;
+          if(spec.transparent&&!transparencySupported)transparencySupported=removeWhiteEdge(source);
           var tw=Math.max(1,Math.min(8192,Number(spec.width)||source.width)),th=Math.max(1,Math.min(8192,Number(spec.height)||source.height));
           var originalTw=tw,originalTh=th,scaleFactor=1;
           var canvas=document.createElement("canvas");canvas.width=tw;canvas.height=th;
