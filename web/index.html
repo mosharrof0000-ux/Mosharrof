@@ -52,7 +52,7 @@ header.top{
 .messages{width:min(900px,100%);margin:auto auto 0;display:flex;flex-direction:column;gap:20px;flex-shrink:0}
 .message{max-width:min(88%,760px);font-size:15px;line-height:1.7;word-break:break-word;color:#ececec}
 .message .label{display:block;font-size:11px;color:#8e8e93;margin-bottom:6px}
-.message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active{background:#303030}.message-speak-shortcut.is-ready,.message-action.is-ready{background:#12351f;border-color:rgba(74,190,110,.8);color:#b9f5c9}.message-speak-shortcut.is-speaking,.message-action.is-speaking{background:#3a1014;border-color:rgba(239,68,68,.85);color:#ffb4b4}
+.message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active{background:#303030}.message-speak-shortcut.is-ready,.message-action.is-ready,.message-speak-shortcut.is-speaking,.message-action.is-speaking{background:#12351f;border-color:rgba(74,190,110,.8);color:#b9f5c9}.message-speak-shortcut.is-stop-requested,.message-action.is-stop-requested{background:#3a1014;border-color:rgba(239,68,68,.85);color:#ffb4b4}
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
 .message-actions-wrap{display:flex;flex-direction:column;align-items:flex-start;margin-top:7px;gap:6px}
@@ -375,7 +375,7 @@ header.top{
       activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudioButton=button;
       activeAudio.onended=function(){if(activeAudioButton===button){activeAudio=null;activeAudioButton=null;}resetSpeakButton(button);hideV();};
       setSpeakButton(button,"⏸ বন্ধ করুন");button.disabled=false;
-      button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeAudio&&activeAudioButton===button){activeAudio.pause();activeAudio=null;activeAudioButton=null;resetSpeakButton(button);hideV();}};
+      button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeAudio&&activeAudioButton===button){button.classList.add("is-stop-requested");activeAudio.pause();activeAudio=null;activeAudioButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
       showV("পড়া হচ্ছে · "+(data.provider||"voice"));
       activeAudio.play().catch(function(){throw new Error("audio_play_failed");});
     }).catch(function(){
@@ -387,7 +387,7 @@ header.top{
         u.onend=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
         u.onerror=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
         setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");
-        button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===u&&"speechSynthesis" in window){window.speechSynthesis.cancel();activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
+        button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===u&&"speechSynthesis" in window){button.classList.add("is-stop-requested");window.speechSynthesis.cancel();activeSpeech=null;activeSpeechButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
         window.speechSynthesis.cancel();window.speechSynthesis.speak(u);toast("ব্রাউজার ভয়েস ব্যবহার হচ্ছে");
       }else{resetSpeakButton(button);toast("ভয়েস সেবা এখন পাওয়া যাচ্ছে না");}
     });
