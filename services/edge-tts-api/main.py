@@ -1,4 +1,3 @@
-import asyncio
 import hmac
 import os
 import re
@@ -43,7 +42,7 @@ async def synthesize(payload: TTSRequest, authorization: str | None = Header(def
         raise HTTPException(status_code=400, detail="text_required")
     voice = payload.voice if payload.voice in ALLOWED_VOICES else "bn-BD-PradeepNeural"
     rate = payload.rate.strip()
-    if not re.fullmatch(r"[+-]\\d{1,2}%", rate):
+    if not re.fullmatch(r"[+-]\d{1,2}%", rate):
         rate = "+0%"
     # pace is supported as a future-facing API parameter; Edge-TTS uses a rate string.
     if rate == "+0%" and abs(payload.pace - 1.0) >= 0.05:
