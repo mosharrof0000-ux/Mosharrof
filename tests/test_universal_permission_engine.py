@@ -15,6 +15,7 @@ class UniversalPermissionEngineTests(unittest.TestCase):
             "resource_scope": "video/projects/demo",
             "entity_scope": "video/*",
             "provider_ready": True,
+            "policy_ok": True,
             "user_approved": True,
         }
 
@@ -66,6 +67,13 @@ class UniversalPermissionEngineTests(unittest.TestCase):
             **{**self.kwargs, "granted_permissions": ["video.*"]}
         )
         self.assertEqual(result["reason"], "PERMANENT_SAFETY_BLOCK")
+
+    def test_policy_defaults_to_denied(self):
+        kwargs = dict(self.kwargs)
+        kwargs.pop("policy_ok")
+        result = self.engine.authorize("video.create", **kwargs)
+        self.assertEqual(result["status"], "DENIED")
+        self.assertEqual(result["reason"], "POLICY_DENIED")
 
     def test_policy_denial_precedes_grant(self):
         result = self.engine.authorize(
