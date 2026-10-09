@@ -1,4 +1,4 @@
-"""Universal, registry-backed capability authorization for Mosharrof.
+""""Universal, registry-backed capability authorization for Mosharrof.
 
 Catalogue entries describe what the ecosystem may eventually support; they do
 not grant authority. Every action needs an explicit grant, a matching scope,
@@ -43,7 +43,6 @@ class UniversalPermissionEngine:
         allowed = (entity_scope or "").strip().strip("/")
         if not resource or not allowed:
             return False
-        # Entity scopes can use a terminal wildcard, e.g. "video/*".
         if allowed.endswith("/*"):
             prefix = allowed[:-2].rstrip("/")
             return resource == prefix or resource.startswith(prefix + "/")
@@ -72,6 +71,7 @@ class UniversalPermissionEngine:
         requested = (capability or "").strip().lower()
         base = {"capability": requested, "entity_id": entity_id or "",
                 "scope": resource_scope or ""}
+
         def deny(reason: str) -> dict[str, Any]:
             return self._record({**base, "status": "DENIED", "reason": reason})
 
@@ -86,10 +86,9 @@ class UniversalPermissionEngine:
         grants = {str(item).strip().lower() for item in granted_permissions}
         if not any(fnmatch.fnmatchcase(requested, grant) for grant in grants):
             return deny("PERMISSION_NOT_GRANTED")
-        if self._matches(self.provider_prefixes, requested) and not provider_ready:
+        if any(requested.startswith(prefix) for prefix in self.provider_prefixes) and not provider_ready:
             return deny("PROVIDER_NOT_READY")
-        if (requested in self.approval_required or
-                any(fnmatch.fnmatchcase(requested, p) for p in self.approval_required)) and not user_approved:
+        if requested in self.approval_required and not user_approved:
             return deny("USER_APPROVAL_REQUIRED")
         return self._record({**base, "status": "ALLOWED", "reason": "ALL_GATES_PASSED"})
 
