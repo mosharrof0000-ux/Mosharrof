@@ -346,9 +346,12 @@ header.top{
       });});
   }
   function setSpeakButton(button,label){
-    if(button.classList.contains("message-speak-shortcut")){
+    var isShortcut=button.classList.contains("message-speak-shortcut");
+    var isAction=button.classList.contains("message-action");
+    if(isShortcut||isAction){
       var playing=label.indexOf("বন্ধ")!==-1,preparing=label.indexOf("প্রস্তুত")!==-1;
-      button.innerHTML=iconSvg("speak");
+      if(isShortcut)button.innerHTML=iconSvg("speak");
+      else button.textContent=playing?"⏸ বন্ধ করুন":preparing?"⏳ প্রস্তুত হচ্ছে…":"🔊 শুনুন";
       button.setAttribute("aria-label",playing?"পড়া বন্ধ করুন":preparing?"পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে":"পড়ে শোনান");
       button.title=playing?"পড়া বন্ধ করুন":preparing?"পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে":"পড়ে শোনান";
       button.classList.toggle("is-speaking",playing);
