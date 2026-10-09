@@ -29,7 +29,7 @@ class UniversalPermissionEngineTests(unittest.TestCase):
         result = self.engine.authorize(
             "video.create", entity_id="video-maker",
             resource_scope="video/projects/demo", entity_scope="video/*",
-            provider_ready=True, user_approved=True,
+            provider_ready=True, policy_ok=True, user_approved=True,
         )
         self.assertEqual(result["status"], "DENIED")
         self.assertEqual(result["reason"], "PERMISSION_NOT_GRANTED")
