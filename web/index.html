@@ -346,7 +346,7 @@ header.top{
     var img=document.createElement("img");img.alt="Generated image";img.src=url;n.appendChild(img);
     var spec=data.image_spec||{},meta=document.createElement("div");meta.className="time";
     var kb=Math.max(1,Math.round(Number(data.final_bytes||0)/1024));
-    meta.textContent=(data.final_width&&data.final_height?data.final_width+"×"+data.final_height+" · ":"")+mime.replace("image/","").toUpperCase()+(data.final_bytes?" · "+kb+" KB":"")+(spec.max_bytes&&!data.size_limit_met?" · নির্ধারিত ফাইল-সাইজ সীমা পূরণ হয়নি":"")+(spec.transparent&&!data.transparency_supported?" · স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত নয়":"");
+    meta.textContent=(data.final_width&&data.final_height?data.final_width+"×"+data.final_height+" · ":"")+mime.replace("image/","").toUpperCase()+(data.final_bytes?" · "+kb+" KB":"")+(spec.max_bytes&&!data.size_limit_met?" · নির্ধারিত ফাইল-সাইজ সীমা পূরণ হয়নি":"")+(spec.transparent?(data.transparency_supported?" · স্বচ্ছ PNG":" · স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত নয়"):"");
     n.appendChild(meta);
     var actions=document.createElement("div");actions.className="image-actions";
     var a=document.createElement("a");a.href=url;a.download="mosharrof-generated-image."+ext;a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);n.appendChild(actions);
