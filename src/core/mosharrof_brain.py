@@ -15,6 +15,7 @@ from src.core.event_bus import EcosystemEventBus
 from src.core.memory_ledger import MemoryLedger
 from src.core.consciousness_system import EntityConsciousnessSystem
 from src.core.permission_guard import PermissionGuard
+from src.core.trusted_permission_service import TrustedPermissionService
 from src.core.brain_adapter import BrainAdapter
 from src.core.audit_ledger import AuditLedger
 from src.core.entity_registry import EntityRegistry
@@ -35,6 +36,7 @@ class MosharrofCoreBrain:
         permission_guard: Optional[PermissionGuard] = None,
         brain_adapter: Optional[BrainAdapter] = None,
         audit_ledger: Optional[AuditLedger] = None,
+        trusted_permission_service: Optional[TrustedPermissionService] = None,
     ):
         self.system_name = "Mosharrof Core"
         self.role = "SOLE_SOVEREIGN_DIRECTOR"
@@ -42,7 +44,9 @@ class MosharrofCoreBrain:
         self.security_protocol = "NO_DELETE"
         self.event_bus = event_bus or EcosystemEventBus()
         self.memory_ledger = memory_ledger or MemoryLedger()
-        self.permission_guard = permission_guard or PermissionGuard()
+        self.permission_guard = permission_guard or PermissionGuard(
+            trusted_permission_service=trusted_permission_service
+        )
         self.brain_adapter = brain_adapter or BrainAdapter(entity_id="core")
         self.audit_ledger = audit_ledger or AuditLedger()
         self.entity_registry = EntityRegistry()
@@ -93,6 +97,45 @@ class MosharrofCoreBrain:
             )
 
     # ── Standard coordination APIs ──────────────────────────────────────
+
+    def authorize_capability_action(
+        self,
+        *,
+        entity_id: str,
+        capability: str,
+        resource_scope: str,
+        approval_token: Any = None,
+        destructive: bool = False,
+    ) -> Dict[str, Any]:
+        """Authorize a registry capability through trusted context and audit it.
+
+        Unlike the legacy operation-level authorize_action(), this entry point
+        requires TrustedPermissionService to be configured. No approval token
+        or other secret is written to the audit record.
+        """
+        decision = self.permission_guard.authorize_capability(
+            capability,
+            entity_id=entity_id,
+            resource_scope=resource_scope,
+            approval_token=approval_token,
+            destructive=destructive,
+        )
+        status = decision.get("status", "DENIED")
+        action = (
+            "CAPABILITY_ACTION_ALLOWED"
+            if status == "ALLOWED"
+            else "CAPABILITY_ACTION_DENIED"
+        )
+        self.memory_ledger.record_event(action, decision)
+        self.audit_ledger.record(
+            entity_id,
+            action,
+            status,
+            capability=decision.get("capability", capability),
+            scope=decision.get("scope", resource_scope),
+            reason=decision.get("reason", "MISSING_DECISION_REASON"),
+        )
+        return decision
 
     def authorize_action(self, *, entity_id: str, operation: str, scope: str = "") -> Dict[str, Any]:
         permission = self.permission_guard.check(

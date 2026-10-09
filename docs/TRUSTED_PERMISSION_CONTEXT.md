@@ -38,3 +38,18 @@ authorization across the application. The next integration must be a separate
 change with route-by-route inventory, trusted server-side stores, compatibility
 tests, route coverage and a rollback path. Never pass resolver callbacks from
 untrusted clients.
+
+
+## Core runtime entry point
+
+`MosharrofCoreBrain.authorize_capability_action(...)` is an explicit runtime
+entry point for trusted capability authorization. It delegates to
+`PermissionGuard.authorize_capability()` and records both allowed and denied
+decisions in the runtime memory ledger and audit ledger. Approval tokens are
+not included in audit details. If the core is created without a configured
+trusted service, capability authorization is denied.
+
+This entry point does not automatically replace the older operation-level
+`authorize_action()` flow or secure every tool/API route. Existing callers must
+be migrated deliberately after call-site inventory and compatibility testing.
+The in-memory audit ledger is not durable across process restarts.
