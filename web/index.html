@@ -227,13 +227,13 @@ header.top{
     resize();input.focus();input.setSelectionRange(input.value.length,input.value.length);toast(role==="user"?"মেসেজ এডিট করুন, তারপর সেন্ড চাপুন":"উত্তরটি বাড়াতে চাইলে সম্পাদনা করে সেন্ড করুন",2600);
   }
   function retryMessage(node,role,text){
-    var prompt=text;
+    var prompt=text,sourceIndex=Array.prototype.indexOf.call(msgEl.children,node);
     if(role==="ai"){
-      var idx=Array.prototype.indexOf.call(msgEl.children,node);
-      for(var i=idx-1;i>=0;i--){var m=session.messages[i];if(m&&m.role==="user"){prompt=m.text;break;}}
+      sourceIndex=-1;
+      for(var i=Array.prototype.indexOf.call(msgEl.children,node)-1;i>=0;i--){var m=session.messages[i];if(m&&m.role==="user"){prompt=m.text;sourceIndex=i;break;}}
     }
-    if(!prompt){toast("আবার পাঠানোর মতো মেসেজ পাওয়া যায়নি");return;}
-    input.value=prompt;resize();editTargetIndex=null;send();
+    if(!prompt||sourceIndex<0){toast("আবার পাঠানোর মতো মেসেজ পাওয়া যায়নি");return;}
+    input.value=prompt;resize();editTargetIndex=sourceIndex;send();
   }
   function shareMessage(text){
     var payload={title:"MOSHARROF AI",text:String(text||"")};
