@@ -72,7 +72,7 @@ async function generateWithGeminiTTS(text,body,env){
     const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
       method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
       body:JSON.stringify({contents:[{role:"user",parts:[{text:"Read the following text aloud naturally in Bengali. Preserve its meaning and pronunciation. Do not add commentary.\n\n"+text}]}],
-        generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}})
+        generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})
     });
     const data=await r.json().catch(()=>({}));
     if(!r.ok)return {ok:false,provider:"gemini",reason:data?.error?.message||("HTTP "+r.status),status:r.status};
