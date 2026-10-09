@@ -262,7 +262,7 @@ header.top{
       img.onerror=function(){reject(new Error("generated_image_decode_failed"));};
       img.onload=function(){
         try{
-          var source=document.createElement("canvas"),ss=Math.min(1,1024/Math.max(img.naturalWidth,img.naturalHeight));
+          var source=document.createElement("canvas"),ss=Math.min(1,8192/Math.max(img.naturalWidth,img.naturalHeight));
           source.width=Math.max(1,Math.round(img.naturalWidth*ss));source.height=Math.max(1,Math.round(img.naturalHeight*ss));
           var sc=source.getContext("2d",{alpha:true,willReadFrequently:true});if(!sc)throw new Error("canvas_unavailable");sc.drawImage(img,0,0,source.width,source.height);
           var transparencySupported=false;if(spec.transparent)transparencySupported=removeWhiteEdge(source);
