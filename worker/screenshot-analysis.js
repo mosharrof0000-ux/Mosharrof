@@ -105,7 +105,7 @@ async function tts(request,env){
   for(const provider of providers){
     const result=await synthesizeWithProvider(provider,chunks,body,env);
     attempted.push({provider,ok:!!result.ok,model:result.model||null,chunks:result.chunks||chunks.length,reason:result.ok?null:result.reason||null});
-    if(result.ok)return reply({...result,attempted},200);
+    if(result.ok)return reply({...result,image_spec,attempted},200);
   }
   return reply({error:"tts_provider_failed",free_first:true,paid_fallback_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chunks:chunks.length,attempted},502);
 }
@@ -138,7 +138,7 @@ async function generateWithGemini(prompt,body,env){
     try{
       const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
         method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
-        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:"image/jpeg",aspect_ratio:String(body.aspect_ratio||"1:1"),image_size:String(body.image_size||"1K")}})
+        body:JSON.stringify({model,input:prompt+"\n\nImage specification: "+JSON.stringify(body.image_spec||{}),response_format:{type:"image",mime_type:"image/jpeg",aspect_ratio:String(body.image_spec?.aspect_ratio||body.aspect_ratio||"1:1"),image_size:String(body.image_spec?.image_size||body.image_size||"1K")}})
       });
       const data=await upstream.json().catch(()=>({}));
       last={upstream,data,model};
@@ -150,11 +150,12 @@ async function generateWithGemini(prompt,body,env){
   return {ok:false,provider:"gemini",reason:last?.data?.error?.message||last?.error||"no_image_returned",status:last?.upstream?.status||null};
 }
 
-async function generateWithCloudflare(prompt,env){
+async function generateWithCloudflare(prompt,env,spec){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   try{
     const model=env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell";
-    const result=await env.AI.run(model,{prompt});
+    const specPrompt=spec?`${prompt}\n\nImage specification: ${spec.aspect_ratio} ratio, target ${spec.width}x${spec.height} pixels, output format ${spec.format}${spec.transparent?"; transparent background":""}.` : prompt;
+    const result=await env.AI.run(model,{prompt:specPrompt});
     const imageData=String(result?.image||"");
     if(!imageData)return {ok:false,provider:"cloudflare-workers-ai",model,reason:"empty_image"};
     return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/jpeg",image_data:imageData};
@@ -163,20 +164,55 @@ async function generateWithCloudflare(prompt,env){
   }
 }
 
+function parseImageSpec(prompt){
+  const p=String(prompt||"");
+  const lower=p.toLowerCase();
+  let width=null,height=null,ratio=null;
+  const dim=p.match(/(?:^|\\b)(\\d{2,5})\\s*[x×]\\s*(\\d{2,5})(?:\\s*(?:px|pixels?)\\b)?/i);
+  if(dim){width=Number(dim[1]);height=Number(dim[2]);if(width<1||height<1||width>8192||height>8192){width=null;height=null;}}
+  const r=p.match(/(?:\\b)(\\d{1,2})\\s*:\\s*(\\d{1,2})(?:\\b)/);
+  if(r&&Number(r[1])>0&&Number(r[2])>0)ratio=[Number(r[1]),Number(r[2])];
+  if(!ratio&&/youtube\\s*(?:shorts?)?|tiktok|reels|vertical|portrait|উল্লম্ব/i.test(lower))ratio=[9,16];
+  if(!ratio&&/instagram/.test(lower)&&/portrait|vertical|4\\s*:\\s*5|1080\\s*[x×]\\s*1350/i.test(lower))ratio=[4,5];
+  if(!ratio&&/youtube|thumbnail|landscape|facebook/.test(lower))ratio=[16,9];
+  if(!ratio&&/instagram|square|icon|logo|profile|প্রোফাইল|আইকন/i.test(lower))ratio=[1,1];
+  if(width&&height)ratio=[width,height];
+  if(!ratio)ratio=[1,1];
+  const resolution=/4\\s*k|4k|uhd/i.test(lower)?"4K":/2\\s*k|2k|qhd/i.test(lower)?"2K":/full\\s*hd|1080p/i.test(lower)?"1K":/hd|720p/i.test(lower)?"1K":"1K";
+  if(!width||!height){
+    const [rw,rh]=ratio;
+    let maxSide=1024;
+    if(resolution==="4K")maxSide=3840;
+    else if(resolution==="2K")maxSide=2560;
+    else if(/full\\s*hd|1080p/i.test(lower))maxSide=1920;
+    else if(/hd|720p/i.test(lower))maxSide=1280;
+    if(rw>=rh){width=maxSide;height=Math.max(1,Math.round(maxSide*rh/rw));}
+    else{height=maxSide;width=Math.max(1,Math.round(maxSide*rw/rh));}
+  }
+  const formatMatch=lower.match(/\\b(png|webp|jpe?g)\\b/);
+  const format=formatMatch?(formatMatch[1]==="jpg"?"jpeg":formatMatch[1]):"jpeg";
+  const maxSize=lower.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\\s*(\\d+(?:\\.\\d+)?)\\s*(kb|mb|কেবি|এমবি)?/i);
+  let max_bytes=null;
+  if(maxSize){const n=Number(maxSize[1]);const unit=(maxSize[2]||"mb").toLowerCase();max_bytes=Math.round(n*(unit==="kb"||unit==="কেবি"?1024:1024*1024));}
+  const transparent=/transparent|transparency|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড স্বচ্ছ/i.test(lower);
+  return {width,height,aspect_ratio:ratio.join(":"),image_size:resolution,format,transparent,max_bytes,explicit_dimensions:!!dim,source_prompt:p};
+}
+
 async function generateImage(request,env){
   const body=await request.json();
   const prompt=String(body.prompt||"").trim();
   if(!prompt)return reply({error:"prompt_required"},400);
   if(prompt.length>12000)return reply({error:"prompt_too_large"},413);
 
+  const image_spec=body.image_spec&&typeof body.image_spec==="object"?{...parseImageSpec(prompt),...body.image_spec}:parseImageSpec(prompt);
   const providers=env.IMAGE_PROVIDER_ORDER
     ? String(env.IMAGE_PROVIDER_ORDER).split(",").map(x=>x.trim()).filter(Boolean)
     : FREE_IMAGE_PROVIDERS;
   const attempted=[];
   for(const provider of providers){
     let result;
-    if(provider==="gemini")result=await generateWithGemini(prompt,body,env);
-    else if(provider==="cloudflare-workers-ai")result=await generateWithCloudflare(prompt,env);
+    if(provider==="gemini")result=await generateWithGemini(prompt,{...body,image_spec},env);
+    else if(provider==="cloudflare-workers-ai")result=await generateWithCloudflare(prompt,env,image_spec);
     else continue;
     attempted.push({provider:result.provider,ok:!!result.ok,model:result.model||null,reason:result.ok?null:result.reason||null});
     if(result.ok)return reply({...result,attempted},200);
