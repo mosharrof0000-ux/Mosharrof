@@ -210,7 +210,9 @@
       "ai.provider.configure",
       "publish.site.deploy",
       "storage.backup.restore",
-      "system.permission.catalog.manage"
+      "system.permission.catalog.manage",
+      "ai.tool.register",
+      "ai.tool.execute"
     ],
     "provider_required_prefixes": [
       "video.",

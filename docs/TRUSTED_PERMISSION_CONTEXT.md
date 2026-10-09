@@ -53,3 +53,15 @@ This entry point does not automatically replace the older operation-level
 `authorize_action()` flow or secure every tool/API route. Existing callers must
 be migrated deliberately after call-site inventory and compatibility testing.
 The in-memory audit ledger is not durable across process restarts.
+
+
+## Dynamic tool factory
+
+The dynamic `ToolFactory` now requires trusted authorization for both
+`ai.tool.register` and `ai.tool.execute`, with explicit approval-token
+verification. The default, unconfigured service denies both actions. Existing
+tool files are no longer imported during factory startup because importing a
+module can execute code before authorization; a tool is loaded only after its
+execution capability passes. The AST checks remain defense-in-depth, not a
+sandbox for arbitrary Python. Do not enable untrusted dynamic code in a
+production process without a stronger isolation boundary.
