@@ -62,7 +62,7 @@ class UniversalPermissionEngine:
         granted_permissions: Iterable[str] = (),
         resource_scope: str = "",
         entity_scope: str = "",
-        policy_ok: bool = True,
+        policy_ok: bool = False,
         provider_ready: bool = False,
         user_approved: bool = False,
         destructive: bool = False,
