@@ -228,7 +228,7 @@ header.top{
       w=Math.max(1,Math.round(parts[0]*scale));h=Math.max(1,Math.round(parts[1]*scale));
       if(/\b(100|150|300)\s*[x×]\s*(100|150|200|300)\b/i.test(p)){var dm=p.match(/(\d{2,5})\s*[x×]\s*(\d{2,5})/i);w=Number(dm[1]);h=Number(dm[2]);}
     }
-    var transparent=/transparent|স্বচ্ছ ব্যাকগ্রাউন্ড|ব্যাকগ্রাউন্ড ছাড়া|background\s*remove/i.test(v);
+    var transparent=/transparent|স্বচ্ছ ব্যাকগ্রাউন্ড|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড ছাড়া|ব্যাকগ্রাউন্ড ছাড়া|background\s*remove/i.test(v);
     var format=transparent?"image/png":(/\bwebp\b/.test(v)?"image/webp":(/\bjpg\b|\bjpeg\b|jpeg|জেপেগ/.test(v)?"image/jpeg":(/\bpng\b|png|পিএনজি/.test(v)?"image/png":"image/jpeg")));
     var maxBytes=/under\s*1\s*mb|less than\s*1\s*mb|1\s*mb|১\s*এমবি|১এমবি/i.test(v)?1024*1024:null;
     var maxMatch=p.match(/(?:under|less than|below|এর কম|সর্বোচ্চ)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
@@ -292,9 +292,12 @@ header.top{
           function encode(){
             canvas.toBlob(function(blob){
               if(!blob){reject(new Error("image_encode_failed"));return;}
-              if(spec.max_bytes&&blob.size>spec.max_bytes&&(mime==="image/jpeg"||mime==="image/webp")&&quality>0.32){quality=Math.max(0.32,quality-0.1);encode();return;}
-              if(spec.max_bytes&&blob.size>spec.max_bytes&&shrinkForSize()){render();encode();return;}
-              resolve({blob:blob,mime_type:blob.type||mime,image_spec:spec,final_width:tw,final_height:th,final_bytes:blob.size,size_limit_met:!spec.max_bytes||blob.size<=spec.max_bytes,transparency_supported:transparencySupported,dimensions_adjusted:tw!==originalTw||th!==originalTh});
+              if(spec.max_bytes&&blob.size>spec.max_bytes&&(mime==="image/jpeg"||mime==="image/webp")&&quality>0.24){quality=Math.max(0.24,quality-0.1);encode();return;}
+              if(spec.max_bytes&&blob.size>spec.max_bytes){
+                reject(new Error("image_size_limit_unmet:"+blob.size+":"+spec.max_bytes));
+                return;
+              }
+              resolve({blob:blob,mime_type:blob.type||mime,image_spec:spec,final_width:tw,final_height:th,final_bytes:blob.size,size_limit_met:true,transparency_supported:transparencySupported,dimensions_adjusted:tw!==Number(spec.width)||th!==Number(spec.height)});
             },mime,quality);
           }
           encode();
@@ -324,7 +327,7 @@ header.top{
   function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");typing();
     var imageMode=!attached&&looksLikeImagePrompt(text);
     var request=imageMode?imageReply(text):coreReply(text,attached);
-    request.then(function(r){untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){untype();addMsg("ai",imageMode?"ইমেজ তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।":"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।");busy=false;sendBtn.disabled=false;input.focus();});}
+    request.then(function(r){untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।";addMsg("ai",message);busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
