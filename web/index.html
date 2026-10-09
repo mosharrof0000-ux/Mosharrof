@@ -234,7 +234,7 @@ header.top{
     var maxMatch=p.match(/(?:under|less than|below|এর কম|সর্বোচ্চ)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
     if(maxMatch)maxBytes=Math.round(Number(maxMatch[1])*(/mb|এমবি/i.test(maxMatch[2])?1024*1024:1024));
     var imageSize=(Math.max(w,h)>=3500||/4k|uhd|৪কে/.test(v))?"4K":((Math.max(w,h)>=2000||/2k|qhd|২কে/.test(v))?"2K":"1K");
-    return {width:w,height:h,aspect_ratio:ratio,image_size:imageSize,format:format,transparent:transparent,max_bytes:maxBytes,quality:quality||"standard"};
+    return {width:w,height:h,aspect_ratio:ratio,image_size:imageSize,format:format,transparent:transparent,max_bytes:maxBytes,quality:quality||"standard",explicit_dimensions:/(\d{2,5})\s*[x×]\s*(\d{2,5})/i.test(p),explicit_ratio:/(\d{1,2})\s*:\s*(\d{1,2})/.test(p)};
   }
   function simplifyRatio(w,h){var a=w,b=h;while(b){var t=b;b=a%b;a=t;}return (w/a)+":"+(h/a);}
   function imageReply(t){
@@ -279,6 +279,24 @@ header.top{
       for(var i=3;i<d.length;i+=4*step){if(d[i]<250)return true;}
       return false;
     }catch(e){return false;}
+  }
+  function removeEdgeWhiteBackground(canvas){
+    var ctx=canvas.getContext("2d",{willReadFrequently:true}),w=canvas.width,h=canvas.height;
+    if(!ctx||!w||!h||w*h>5000000)return false;
+    var image=ctx.getImageData(0,0,w,h),d=image.data,total=w*h,queue=new Int32Array(total),head=0,tail=0;
+    function enqueue(i){
+      var p=i*4,r=d[p],g=d[p+1],b=d[p+2],a=d[p+3];
+      if(a===0)return;
+      if(r>=232&&g>=232&&b>=232&&Math.max(r,g,b)-Math.min(r,g,b)<=28){d[p+3]=0;queue[tail++]=i;}
+    }
+    for(var x=0;x<w;x++){enqueue(x);if(h>1)enqueue((h-1)*w+x);}
+    for(var y=1;y<h-1;y++){enqueue(y*w);if(w>1)enqueue(y*w+w-1);}
+    while(head<tail){
+      var i=queue[head++],x=i%w,y=(i/w)|0;
+      if(x>0)enqueue(i-1);if(x+1<w)enqueue(i+1);if(y>0)enqueue(i-w);if(y+1<h)enqueue(i+w);
+    }
+    ctx.putImageData(image,0,0);
+    return tail>0;
   }
   function optimizeGeneratedImage(data,prompt){
     return new Promise(function(resolve,reject){
