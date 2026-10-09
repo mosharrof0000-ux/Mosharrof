@@ -7,7 +7,7 @@ const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gem
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
-const TTS_PROVIDERS=["edge","elevenlabs","sarvam"];
+const TTS_PROVIDERS=["edge","gemini","azure","elevenlabs","sarvam"];
 
 function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
 function elevenLabsKeyExpired(env){const raw=String(env.ELEVENLABS_KEY_EXPIRES_AT||"").trim();if(!raw)return false;const t=Date.parse(raw);return Number.isFinite(t)&&Date.now()>=t;}
@@ -40,6 +40,69 @@ async function generateWithEdge(text,body,env){
     if(!bytes.length)return {ok:false,provider:"edge",reason:"empty_audio"};
     return {ok:true,provider:"edge",model:"Edge-TTS",mime_type:type.split(";")[0]||"audio/mpeg",audio_data:bytesToBase64(bytes)};
   }catch(e){return {ok:false,provider:"edge",reason:String(e&&e.message||e)};}
+}
+
+
+function wavFromPcmBase64(pcmBase64,sampleRate=24000,channels=1,bitsPerSample=16){
+  const binary=atob(pcmBase64),data=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)data[i]=binary.charCodeAt(i);
+  const out=new Uint8Array(44+data.length),view=new DataView(out.buffer);
+  const write=(offset,value)=>{for(let i=0;i<value.length;i++)out[offset+i]=value.charCodeAt(i);};
+  write(0,"RIFF");view.setUint32(4,36+data.length,true);write(8,"WAVE");write(12,"fmt ");view.setUint32(16,16,true);
+  view.setUint16(20,1,true);view.setUint16(22,channels,true);view.setUint32(24,sampleRate,true);
+  view.setUint32(28,sampleRate*channels*bitsPerSample/8,true);view.setUint16(32,channels*bitsPerSample/8,true);
+  view.setUint16(34,bitsPerSample,true);write(36,"data");view.setUint32(40,data.length,true);out.set(data,44);
+  return bytesToBase64(out);
+}
+function concatWavBase64(chunks){
+  const pcm=[];
+  for(const b64 of chunks){
+    const bin=atob(b64);
+    if(bin.length<44||bin.slice(0,4)!=="RIFF"||bin.slice(8,12)!=="WAVE")throw new Error("invalid_wav_chunk");
+    for(let i=44;i<bin.length;i++)pcm.push(bin.charCodeAt(i));
+  }
+  const bytes=new Uint8Array(pcm.length);for(let i=0;i<pcm.length;i++)bytes[i]=pcm[i];
+  return wavFromPcmBase64(bytesToBase64(bytes));
+}
+async function generateWithGeminiTTS(text,body,env){
+  if(!env.GEMINI_API_KEY)return {ok:false,provider:"gemini",reason:"not_configured"};
+  const model=String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts");
+  const voice=String(body.gemini_voice||env.GEMINI_TTS_VOICE||"Kore");
+  try{
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
+      method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Read the following text aloud naturally in Bengali. Preserve its meaning and pronunciation. Do not add commentary.\n\n"+text}]}],
+        generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})
+    });
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)return {ok:false,provider:"gemini",reason:data?.error?.message||("HTTP "+r.status),status:r.status};
+    const parts=data?.candidates?.[0]?.content?.parts||[];
+    const audioPart=parts.find(p=>p?.inlineData?.data||p?.inline_data?.data);
+    const audio=audioPart?.inlineData||audioPart?.inline_data;
+    if(!audio?.data)return {ok:false,provider:"gemini",reason:"empty_audio",status:r.status};
+    const mime=String(audio.mimeType||audio.mime_type||"audio/pcm;rate=24000").toLowerCase();
+    if(mime.includes("wav"))return {ok:true,provider:"gemini",model,mime_type:"audio/wav",audio_data:audio.data};
+    if(mime.includes("pcm")||mime.includes("l16"))return {ok:true,provider:"gemini",model,mime_type:"audio/wav",audio_data:wavFromPcmBase64(audio.data)};
+    return {ok:false,provider:"gemini",reason:"unsupported_audio_format:"+mime};
+  }catch(e){return {ok:false,provider:"gemini",reason:String(e&&e.message||e)};}
+}
+async function generateWithAzure(text,body,env){
+  const key=String(env.AZURE_SPEECH_KEY||"").trim(),region=String(env.AZURE_SPEECH_REGION||"").trim();
+  if(!key||!region)return {ok:false,provider:"azure",reason:"not_configured"};
+  const requestedVoice=String(body.voice||"bn-BD-PradeepNeural");
+  const voice=requestedVoice==="bn-BD-NabanitaNeural"?"bn-BD-NabanitaNeural":"bn-BD-PradeepNeural";
+  const escapeXml=value=>String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
+  const ssml='<speak version="1.0" xml:lang="bn-BD"><voice name="'+voice+'">'+escapeXml(text)+'</voice></speak>';
+  try{
+    const r=await fetch("https://"+encodeURIComponent(region)+".tts.speech.microsoft.com/cognitiveservices/v1",{
+      method:"POST",headers:{"Ocp-Apim-Subscription-Key":key,"Content-Type":"application/ssml+xml","X-Microsoft-OutputFormat":"audio-24khz-48kbitrate-mono-mp3","User-Agent":"MOSHARROF-AI"},
+      body:ssml
+    });
+    if(!r.ok)return {ok:false,provider:"azure",reason:(await r.text().catch(()=> ""))||("HTTP "+r.status),status:r.status};
+    const bytes=new Uint8Array(await r.arrayBuffer());
+    if(!bytes.length)return {ok:false,provider:"azure",reason:"empty_audio"};
+    return {ok:true,provider:"azure",model:"Azure AI Speech · "+voice,mime_type:"audio/mpeg",audio_data:bytesToBase64(bytes)};
+  }catch(e){return {ok:false,provider:"azure",reason:String(e&&e.message||e)};}
 }
 
 async function generateWithSarvam(text,body,env){
@@ -106,16 +169,21 @@ async function synthesizeWithProvider(provider,chunks,body,env){
   for(const chunk of chunks){
     const result=provider==="edge"
       ? await generateWithEdge(chunk,body,env)
-      : provider==="sarvam"
-        ? await generateWithSarvam(chunk,body,env)
-        : provider==="elevenlabs"
-          ? await generateWithElevenLabs(chunk,body,env)
-          : {ok:false,provider,reason:"unsupported_provider"};
+      : provider==="gemini"
+        ? await generateWithGeminiTTS(chunk,body,env)
+        : provider==="azure"
+          ? await generateWithAzure(chunk,body,env)
+          : provider==="sarvam"
+            ? await generateWithSarvam(chunk,body,env)
+            : provider==="elevenlabs"
+              ? await generateWithElevenLabs(chunk,body,env)
+              : {ok:false,provider,reason:"unsupported_provider"};
     if(!result.ok)return {ok:false,provider,reason:result.reason||"provider_failed",status:result.status,model:result.model||model};
     audios.push(result.audio_data);
     model=result.model||model;
   }
-  return {ok:true,provider,model,mime_type:"audio/mpeg",audio_data:concatBase64Audio(audios),chunks:chunks.length};
+  const isGemini=provider==="gemini";
+  return {ok:true,provider,model,mime_type:isGemini?"audio/wav":"audio/mpeg",audio_data:isGemini?concatWavBase64(audios):concatBase64Audio(audios),chunks:chunks.length};
 }
 
 async function tts(request,env){
@@ -126,17 +194,21 @@ async function tts(request,env){
   const chunks=splitTtsText(text,2200);
   const requested=String(body.provider||"auto").toLowerCase();
   const genre=String(body.genre||"").toLowerCase();
-  const valid=["auto","edge","elevenlabs","sarvam"].includes(requested)?requested:"auto";
+  const valid=["auto","edge","gemini","azure","elevenlabs","sarvam"].includes(requested)?requested:"auto";
   let providers;
   if(valid==="auto"){
     const expressive=/^(song|poem|lyrics|emotional)$/.test(genre);
-    providers=expressive?["elevenlabs","edge","sarvam"]:["edge","sarvam"];
+    providers=expressive?["elevenlabs","edge","gemini","azure","sarvam"]:["edge","gemini","azure","sarvam"];
   }else if(valid==="elevenlabs"){
-    providers=["elevenlabs","edge","sarvam"];
+    providers=["elevenlabs","edge","gemini","azure","sarvam"];
   }else if(valid==="edge"){
-    providers=["edge","sarvam"];
+    providers=["edge","gemini","azure","sarvam"];
+  }else if(valid==="gemini"){
+    providers=["gemini","edge","azure","sarvam"];
+  }else if(valid==="azure"){
+    providers=["azure","edge","gemini","sarvam"];
   }else{
-    providers=["sarvam","edge"];
+    providers=["sarvam","edge","gemini","azure"];
   }
   const attempted=[];
   for(const provider of providers){
