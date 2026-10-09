@@ -281,9 +281,15 @@ header.top{
   function addGeneratedImage(data){
     var at=nowISO(),n=document.createElement("div");n.className="message ai generated-image";
     var l=document.createElement("span");l.className="label";l.textContent="MOSHARROF AI · image";n.appendChild(l);
-    var img=document.createElement("img");img.alt="Generated image";img.src="data:"+(data.mime_type||"image/png")+";base64,"+data.image_data;n.appendChild(img);
+    var mime=data.mime_type||"image/jpeg",ext=mime==="image/webp"?"webp":(mime==="image/png"?"png":"jpg");
+    var url=data.blob?URL.createObjectURL(data.blob):("data:"+mime+";base64,"+data.image_data);
+    var img=document.createElement("img");img.alt="Generated image";img.src=url;n.appendChild(img);
+    var spec=data.image_spec||{},meta=document.createElement("div");meta.className="time";
+    var kb=Math.max(1,Math.round(Number(data.final_bytes||0)/1024));
+    meta.textContent=(data.final_width&&data.final_height?data.final_width+"×"+data.final_height+" · ":"")+mime.replace("image/","").toUpperCase()+(data.final_bytes?" · "+kb+" KB":"")+(spec.max_bytes&&!data.size_limit_met?" · নির্ধারিত ফাইল-সাইজ সীমা পূরণ হয়নি":"")+(spec.transparent&&!data.transparency_supported?" · স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত নয়":"");
+    n.appendChild(meta);
     var actions=document.createElement("div");actions.className="image-actions";
-    var a=document.createElement("a");a.href=img.src;a.download="mosharrof-generated-image.png";a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);n.appendChild(actions);
+    var a=document.createElement("a");a.href=url;a.download="mosharrof-generated-image."+ext;a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);n.appendChild(actions);
     var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);n.appendChild(tm);msgEl.appendChild(n);bottom();
     session.messages.push({role:"ai",text:"🖼️ ইমেজ তৈরি হয়েছে।",at:at});session.lastActiveAt=at;saveStore(session);updateMeta();
   }
