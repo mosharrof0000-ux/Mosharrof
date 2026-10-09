@@ -12,7 +12,7 @@ The existing message speaker buttons use this provider router. The provider sele
 
 ## Edge-TTS service requirement
 
-Cloudflare Workers cannot directly run the Python `edge-tts` package. The Worker therefore proxies to a separately hosted Edge-TTS-compatible HTTP service. Configure the Worker variable `EDGE_TTS_API_URL` to that service's HTTPS endpoint and optionally `EDGE_TTS_VOICE`.
+Cloudflare Workers cannot directly run the Python `edge-tts` package, so this PR includes a small secured Python service in `services/edge-tts-api/`. Deploy that folder to a Python/Docker host (for example, create a Render Web Service with root directory `services/edge-tts-api` and Docker runtime). Some free hosting tiers sleep while idle, which adds startup delay. Set a strong random `EDGE_TTS_API_TOKEN` in the service's environment. Configure the Worker variable `EDGE_TTS_API_URL` to the deployed service's HTTPS `/tts` endpoint and the Worker secret `EDGE_TTS_API_TOKEN` to the exact same token. Optionally set `EDGE_TTS_VOICE`.
 
 The service must accept a JSON POST such as:
 
@@ -31,7 +31,7 @@ It may return either raw audio bytes with an audio content type (preferably `aud
 
 ## Cloudflare configuration
 
-Set `EDGE_TTS_API_URL` as a Worker variable (not a browser variable). Set `EDGE_TTS_VOICE` if a server-side default is desired. Existing optional settings remain:
+Set `EDGE_TTS_API_URL` as a Worker variable and `EDGE_TTS_API_TOKEN` as a Worker secret (never a browser variable). Set `EDGE_TTS_VOICE` if a server-side default is desired. Existing optional settings remain:
 
 - `ELEVENLABS_API_KEY` (secret)
 - `ELEVENLABS_VOICE_ID` (variable)
@@ -43,6 +43,6 @@ After deploying, check `https://mosharrof-screenshot-analysis.mosharrof0000.work
 
 ## Important limitations
 
-- This repository change adds the Edge-TTS proxy and UI routing, but does not provision or host the external Edge-TTS service and cannot create or discover API secrets.
+- The Edge-TTS service source is included, but this PR cannot deploy it to an external hosting provider or create Cloudflare secrets. A real service URL and matching token must be configured before Edge-TTS will work; until then the app falls back safely.
 - Premium ElevenLabs usage may consume quota or incur charges according to the account plan. Automatic premium selection is restricted to content detected as song/poem/lyrics; manual premium selection explicitly requests ElevenLabs first.
 - Browser speech quality and available Bengali voices depend on the device/browser.
