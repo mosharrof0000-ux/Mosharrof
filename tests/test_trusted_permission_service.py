@@ -25,11 +25,13 @@ class TrustedPermissionServiceTests(unittest.TestCase):
                 and scope == "video/*"
             ),
             provider_readiness=lambda capability: capability == "video.create",
+            approval_verifier=lambda capability, entity, token: token == "approved-token",
         )
         result = service.authorize(
             "video.create",
             entity_id="video-maker",
             resource_scope="video/projects/demo",
+            approval_token="approved-token",
         )
         self.assertEqual(result["status"], "ALLOWED")
         self.assertEqual(result["reason"], "ALL_GATES_PASSED")
