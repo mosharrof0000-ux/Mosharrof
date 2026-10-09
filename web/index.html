@@ -259,7 +259,6 @@ header.top{
     n.appendChild(document.createTextNode(text));
     var messageIndex=typeof messageIndexOverride==="number"?messageIndexOverride:session.messages.length;
     if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text,at,messageIndex,feedback||null);
-    else{}
     msgEl.appendChild(n);bottom();
     if(!skipSave){var savedMessage={role:role,text:text,at:at};if(role==="ai"&&feedback)savedMessage.feedback=feedback;session.messages.push(savedMessage);session.lastActiveAt=at;saveStore(session);updateMeta();}
     return n;
