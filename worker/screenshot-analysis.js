@@ -165,7 +165,7 @@ function parseImageSpec(prompt){
   }
   if(hasExplicitDimensions){
     width=Number(dimMatch[1]);height=Number(dimMatch[2]);
-    if(width<1||height<1||width>12000||height>12000)throw new Error("invalid_image_dimensions");
+    if(width<1||height<1||width>8192||height>8192)throw new Error("invalid_image_dimensions");
     ratio=simplifyImageRatio(width,height);
   }
   const transparent=/transparent|transparency|স্বচ্ছ ব্যাকগ্রাউন্ড|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড ছাড়া|background\s*remove/i.test(p);
@@ -257,7 +257,7 @@ async function generateImage(request,env){
     else if(provider==="cloudflare-workers-ai")result=await generateWithCloudflare(generationPrompt,env,image_spec);
     else continue;
     attempted.push({provider:result.provider,ok:!!result.ok,model:result.model||null,reason:result.ok?null:result.reason||null});
-    if(result.ok)return reply({...result,image_spec,attempted},200);
+    if(result.ok)return reply({...result,attempted},200);
   }
   return reply({error:"image_provider_failed",free_first:true,image_spec,attempted},502);
 }
