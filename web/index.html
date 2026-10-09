@@ -262,7 +262,7 @@ header.top{
       img.onerror=function(){reject(new Error("generated_image_decode_failed"));};
       img.onload=function(){
         try{
-          var source=document.createElement("canvas"),ss=Math.min(1,8192/Math.max(img.naturalWidth,img.naturalHeight));
+          var source=document.createElement("canvas"),ss=Math.min(1,1024/Math.max(img.naturalWidth,img.naturalHeight));
           source.width=Math.max(1,Math.round(img.naturalWidth*ss));source.height=Math.max(1,Math.round(img.naturalHeight*ss));
           var sc=source.getContext("2d",{alpha:true,willReadFrequently:true});if(!sc)throw new Error("canvas_unavailable");sc.drawImage(img,0,0,source.width,source.height);
           var transparencySupported=false;if(spec.transparent)transparencySupported=removeWhiteEdge(source);
@@ -292,4 +292,55 @@ header.top{
       img.src=src;
     });
   }
-  
+  function addGeneratedImage(data){
+    var at=nowISO(),n=document.createElement("div");n.className="message ai generated-image";
+    var l=document.createElement("span");l.className="label";l.textContent="MOSHARROF AI · image";n.appendChild(l);
+    var mime=data.mime_type||"image/jpeg",ext=mime==="image/webp"?"webp":(mime==="image/png"?"png":"jpg");
+    var url=data.blob?URL.createObjectURL(data.blob):("data:"+mime+";base64,"+data.image_data);
+    var img=document.createElement("img");img.alt="Generated image";img.src=url;n.appendChild(img);
+    var spec=data.image_spec||{},meta=document.createElement("div");meta.className="time";
+    var kb=Math.max(1,Math.round(Number(data.final_bytes||0)/1024));
+    meta.textContent=(data.final_width&&data.final_height?data.final_width+"×"+data.final_height+" · ":"")+mime.replace("image/","").toUpperCase()+(data.final_bytes?" · "+kb+" KB":"")+(spec.max_bytes&&!data.size_limit_met?" · নির্ধারিত ফাইল-সাইজ সীমা পূরণ হয়নি":"")+(spec.transparent&&!data.transparency_supported?" · স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত নয়":"");
+    n.appendChild(meta);
+    var actions=document.createElement("div");actions.className="image-actions";
+    var a=document.createElement("a");a.href=url;a.download="mosharrof-generated-image."+ext;a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);n.appendChild(actions);
+    var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);n.appendChild(tm);msgEl.appendChild(n);bottom();
+    session.messages.push({role:"ai",text:"🖼️ ইমেজ তৈরি হয়েছে।",at:at});session.lastActiveAt=at;saveStore(session);updateMeta();
+  }
+  var busy=false;
+  function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
+  function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");typing();
+    var imageMode=!attached&&looksLikeImagePrompt(text);
+    var request=imageMode?imageReply(text):coreReply(text,attached);
+    request.then(function(r){untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){untype();addMsg("ai",imageMode?"ইমেজ তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।":"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।");busy=false;sendBtn.disabled=false;input.focus();});}
+  function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
+  function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
+  function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
+  function restoreMessages(){msgEl.innerHTML="";if(session.messages&&session.messages.length){for(var i=0;i<session.messages.length;i++){var m=session.messages[i];addMsg(m.role,m.text,m.at,true);}}else{addMsg("ai","আমি কীভাবে আপনাকে সাহায্য করতে পারি?",nowISO(),true);}}
+  function showHistory(){closeD();var lines=[];lines.push("📅 সেশন সময়");lines.push("খোলা: "+fmtTime(session.openedAt));lines.push("শেষ সক্রিয়: "+fmtTime(session.lastActiveAt));if(session.closedAt)lines.push("বন্ধ: "+fmtTime(session.closedAt));lines.push("");lines.push("💬 মেসেজ: "+(session.messages?session.messages.length:0)+" টি");addMsg("ai",lines.join("\n"));toast("ইতিহাস");}
+  function newChat(){session.closedAt=nowISO();saveStore(session);session={openedAt:nowISO(),closedAt:null,lastActiveAt:nowISO(),messages:[]};saveStore(session);msgEl.innerHTML="";addMsg("ai","নতুন কথোপকথন।");updateMeta();closeD();toast("নতুন চ্যাট");}
+  function clearMsg(){session.messages=[];session.lastActiveAt=nowISO();saveStore(session);msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");updateMeta();closeD();toast("Cleared");}
+  dL.innerHTML='<div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF</strong><small>Entity System</small></div><button class="dclose" id="cL">✕</button></div><div class="session-meta" id="sessionMeta"></div><nav class="nav" id="navL"></nav>';
+  dR.innerHTML='<div class="dhead"><div class="dlogo">⋮</div><div><strong>Options</strong></div><button class="dclose" id="cR">✕</button></div><nav class="nav"><button id="historyBtn">🕐 ইতিহাস<small>খোলা/বন্ধ সময়</small></button><button id="newChat">✦ New Chat</button><button id="clearMsg">⌫ Clear</button><button id="voiceBtn">🎙️ Voice</button></nav>';
+  var navL=$("#navL");Object.keys(REG).forEach(function(id){var b=document.createElement("button");if(id==="chat")b.className="active";b.innerHTML="<span>• "+id+"</span>";b.onclick=function(){Array.prototype.forEach.call(navL.children,function(x){x.classList.remove("active");});b.classList.add("active");toast(id+" — "+REG[id]);};navL.appendChild(b);});
+  updateMeta();
+  var rec=null;
+  function initV(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;rec=new SR();rec.lang="bn-BD";rec.continuous=false;rec.interimResults=true;rec.onstart=function(){showV("Listening…");};rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;var p=correct(t);input.value=punct(p.text);resize();showV(p.corrections.length?"Context corrected":"Voice ready");};rec.onerror=function(e){showV("Error: "+e.error);setTimeout(hideV,2000);};rec.onend=function(){if(vStatus.textContent==="Listening…")hideV();else setTimeout(hideV,1500);};}
+  function startV(){if(!rec){toast("Voice API নেই");return;}try{rec.start();}catch(e){}}
+  sendBtn.onclick=send;
+  imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);});
+  removeImage.onclick=clearImage;
+  input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
+  input.addEventListener("input",resize);
+  plusBtn.onclick=startV;
+  leftBtn.onclick=function(){updateMeta();openD("left");};
+  rightBtn.onclick=function(){openD("right");};
+  scrim.onclick=closeD;
+  document.addEventListener("click",function(e){if(e.target.id==="cL"||e.target.id==="cR")closeD();if(e.target.id==="historyBtn"||(e.target.closest&&e.target.closest("#historyBtn")))showHistory();if(e.target.id==="newChat")newChat();if(e.target.id==="clearMsg")clearMsg();if(e.target.id==="voiceBtn"){closeD();startV();}});
+  restoreMessages();initV();resize();input.focus();
+  if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
+})();
+</script>
+</body>
+</html>
