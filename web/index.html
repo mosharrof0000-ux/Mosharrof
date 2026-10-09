@@ -388,8 +388,12 @@ header.top{
     var fence=String.fromCharCode(96).repeat(3);
     var value=String(source||"").replace(new RegExp(fence+"[\\s\\S]*?"+fence,"g")," ").replace(/<[^>]*>/g," ").trim();
     var first=value.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||"";
-    if(/^(?:গান|গানের কথা|গীত|lyrics|song)\s*[:：—-]/i.test(first)||/\b(?:chorus|verse|lyrics)\b/i.test(value)||/(?:গানের কথা|একটি গান লিখ|গান রচনা|কোরাস|ধ্রুবক)/i.test(value))return"song";
-    if(/^(?:কবিতা|কবিতার নাম|poem|poetry)\s*[:：—-]/i.test(first)||/(?:কবিতা লিখ|একটি কবিতা|কাব্যিকভাবে|ছন্দে লিখ)/i.test(value))return"poem";
+    /* Detect song headings anywhere in the response, not only on the first line.
+       This covers AI replies that start with an introduction before the lyrics. */
+    if(/^#{1,6}\s*(?:গান|গানের কথা|গীত|lyrics|song)\s*[:：—-]/im.test(value)||
+       /(?:গানের কথা|একটি গান(?: লিখ| নিচে| তৈরি| রচনা| তুলে)|গান রচনা|গানটি নিচে|কোরাস|ধ্রুবক|স্থায়ী|অন্তরা|সঞ্চারী|আভোগ|মুখড়া)/i.test(value)||
+       /\b(?:chorus|verse|lyrics)\b/i.test(value))return"song";
+    if(/^#{1,6}\s*(?:কবিতা|কবিতার নাম|poem|poetry)\s*[:：—-]/im.test(value)||/^(?:কবিতা|কবিতার নাম|poem|poetry)\s*[:：—-]/i.test(first)||/(?:কবিতা লিখ|একটি কবিতা|কাব্যিকভাবে|ছন্দে লিখ)/i.test(value))return"poem";
     var lines=value.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
     var contentLines=lines.filter(function(x){return !/^#{1,6}\s/.test(x)&&!/^[-*+]\s/.test(x)&&!/^\d+[.)]\s/.test(x)&&!/^\|/.test(x)&&!/^>\s?/.test(x);});
     if(contentLines.length>=4){
