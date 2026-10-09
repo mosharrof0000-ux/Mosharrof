@@ -454,12 +454,51 @@ header.top{
     setSpeakButton(button,"🔊 শুনুন");
     button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();speakText(button._speakText||"",button);};
   }
+  function speechTextFromMarkdown(value){
+    var source=String(value==null?"":value);
+    try{
+      var box=document.createElement("div");
+      box.innerHTML=renderRichText(source);
+      /* Read rendered HTML text, not Markdown source, so hidden syntax is never spoken. */
+      Array.prototype.forEach.call(box.querySelectorAll("p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,hr,tr"),function(el){
+        el.insertAdjacentText("beforebegin","\n");
+      });
+      Array.prototype.forEach.call(box.querySelectorAll("th,td"),function(cell){
+        cell.insertAdjacentText("afterend","، ");
+      });
+      var clean=String(box.textContent||"")
+        .replace(/\u00a0/g," ")
+        .replace(/[ \t]+\n/g,"\n")
+        .replace(/\n[ \t]+/g,"\n")
+        .replace(/[ \t]{2,}/g," ")
+        .replace(/\n{3,}/g,"\n\n")
+        .trim();
+      if(clean)return clean;
+    }catch(e){}
+    return source
+      .replace(/\r\n?/g,"\n")
+      .replace(/^\s*\x60{3}[^\n]*\n?/gm,"")
+      .replace(/\x60{3}\s*$/gm,"")
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g,"$1")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g,"$1")
+      .replace(/^\s{0,3}#{1,6}\s+/gm,"")
+      .replace(/^\s*>\s?/gm,"")
+      .replace(/^\s*(?:[-+*]|\d+[.)])\s+/gm,"")
+      .replace(/\*\*(.*?)\*\*|__(.*?)__/g,"$1$2")
+      .replace(/\*(.*?)\*|_(.*?)_/g,"$1$2")
+      .replace(/~~(.*?)~~/g,"$1")
+      .replace(/\x60([^\x60]+)\x60/g,"$1")
+      .replace(/\n{3,}/g,"\n\n")
+      .trim();
+  }
   function speakText(t,button){
     if(activeAudio){try{activeAudio.pause();}catch(e){}if(activeAudioButton&&activeAudioButton!==button)resetSpeakButton(activeAudioButton);activeAudio=null;activeAudioButton=null;}
     if(activeSpeech&&"speechSynthesis" in window){try{window.speechSynthesis.cancel();}catch(e){}if(activeSpeechButton&&activeSpeechButton!==button)resetSpeakButton(activeSpeechButton);activeSpeech=null;activeSpeechButton=null;}
     button._speakText=String(t||"");
+    var spokenText=speechTextFromMarkdown(t);
+    if(!spokenText){toast("পড়ে শোনানোর মতো লেখা পাওয়া যায়নি");resetSpeakButton(button);return;}
     button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");showV("পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে…");
-    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),language_code:"bn-BD",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
+    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:spokenText,language_code:"bn-BD",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
       if(!data.audio_data)throw new Error("no_audio");
       activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudioButton=button;
       activeAudio.onended=function(){if(activeAudioButton===button){activeAudio=null;activeAudioButton=null;}resetSpeakButton(button);hideV();};
@@ -471,7 +510,7 @@ header.top{
       if(activeAudio&&activeAudioButton===button){try{activeAudio.pause();}catch(e){}activeAudio=null;activeAudioButton=null;}
       button.disabled=false;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");hideV();
       if("speechSynthesis" in window){
-        var u=new SpeechSynthesisUtterance(String(t||""));u.lang="bn-BD";u.rate=0.95;activeSpeech=u;activeSpeechButton=button;
+        var u=new SpeechSynthesisUtterance(spokenText);u.lang="bn-BD";u.rate=0.95;activeSpeech=u;activeSpeechButton=button;
         u.onstart=function(){if(activeSpeech===u){setSpeakButton(button,"⏸ বন্ধ করুন");showV("পড়া হচ্ছে · browser voice");}};
         u.onend=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
         u.onerror=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
