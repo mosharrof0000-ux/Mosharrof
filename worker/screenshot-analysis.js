@@ -168,30 +168,30 @@ function parseImageSpec(prompt){
   const p=String(prompt||"");
   const lower=p.toLowerCase();
   let width=null,height=null,ratio=null;
-  const dim=p.match(/(?:^|\\b)(\\d{2,5})\\s*[x×]\\s*(\\d{2,5})(?:\\s*(?:px|pixels?)\\b)?/i);
+  const dim=p.match(/(?:^|\b)(\d{2,5})\s*[x×]\s*(\d{2,5})(?:\s*(?:px|pixels?)\b)?/i);
   if(dim){width=Number(dim[1]);height=Number(dim[2]);if(width<1||height<1||width>8192||height>8192){width=null;height=null;}}
-  const r=p.match(/(?:\\b)(\\d{1,2})\\s*:\\s*(\\d{1,2})(?:\\b)/);
+  const r=p.match(/(?:\b)(\d{1,2})\s*:\s*(\d{1,2})(?:\b)/);
   if(r&&Number(r[1])>0&&Number(r[2])>0)ratio=[Number(r[1]),Number(r[2])];
-  if(!ratio&&/youtube\\s*(?:shorts?)?|tiktok|reels|vertical|portrait|উল্লম্ব/i.test(lower))ratio=[9,16];
-  if(!ratio&&/instagram/.test(lower)&&/portrait|vertical|4\\s*:\\s*5|1080\\s*[x×]\\s*1350/i.test(lower))ratio=[4,5];
+  if(!ratio&&/youtube\s*(?:shorts?)?|tiktok|reels|vertical|portrait|উল্লম্ব/i.test(lower))ratio=[9,16];
+  if(!ratio&&/instagram/.test(lower)&&/portrait|vertical|4\s*:\s*5|1080\s*[x×]\s*1350/i.test(lower))ratio=[4,5];
   if(!ratio&&/youtube|thumbnail|landscape|facebook/.test(lower))ratio=[16,9];
   if(!ratio&&/instagram|square|icon|logo|profile|প্রোফাইল|আইকন/i.test(lower))ratio=[1,1];
   if(width&&height)ratio=[width,height];
   if(!ratio)ratio=[1,1];
-  const resolution=/4\\s*k|4k|uhd/i.test(lower)?"4K":/2\\s*k|2k|qhd/i.test(lower)?"2K":/full\\s*hd|1080p/i.test(lower)?"1K":/hd|720p/i.test(lower)?"1K":"1K";
+  const resolution=/4\s*k|4k|uhd/i.test(lower)?"4K":/2\s*k|2k|qhd/i.test(lower)?"2K":/full\s*hd|1080p/i.test(lower)?"1K":/hd|720p/i.test(lower)?"1K":"1K";
   if(!width||!height){
     const [rw,rh]=ratio;
     let maxSide=1024;
     if(resolution==="4K")maxSide=3840;
     else if(resolution==="2K")maxSide=2560;
-    else if(/full\\s*hd|1080p/i.test(lower))maxSide=1920;
+    else if(/full\s*hd|1080p/i.test(lower))maxSide=1920;
     else if(/hd|720p/i.test(lower))maxSide=1280;
     if(rw>=rh){width=maxSide;height=Math.max(1,Math.round(maxSide*rh/rw));}
     else{height=maxSide;width=Math.max(1,Math.round(maxSide*rw/rh));}
   }
-  const formatMatch=lower.match(/\\b(png|webp|jpe?g)\\b/);
+  const formatMatch=lower.match(/\b(png|webp|jpe?g)\b/);
   const format=formatMatch?(formatMatch[1]==="jpg"?"jpeg":formatMatch[1]):"jpeg";
-  const maxSize=lower.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\\s*(\\d+(?:\\.\\d+)?)\\s*(kb|mb|কেবি|এমবি)?/i);
+  const maxSize=lower.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)?/i);
   let max_bytes=null;
   if(maxSize){const n=Number(maxSize[1]);const unit=(maxSize[2]||"mb").toLowerCase();max_bytes=Math.round(n*(unit==="kb"||unit==="কেবি"?1024:1024*1024));}
   const transparent=/transparent|transparency|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড স্বচ্ছ/i.test(lower);
