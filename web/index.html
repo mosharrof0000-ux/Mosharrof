@@ -208,11 +208,13 @@ header.top{
       if(m&&Number(m[1])>0&&Number(m[2])>0)ratio=simplifyRatio(Number(m[1]),Number(m[2]));
     }
     if(!ratio){
-      if(/youtube\s*(?:shorts)?|shorts|tiktok|tik tok|reels|রিলস|টিকটক|শর্টস/.test(v))ratio="9:16";
+      if(/youtube\s*shorts|shorts|tiktok|tik tok|reels|reel|রিলস|টিকটক|শর্টস/.test(v))ratio="9:16";
       else if(/instagram|ইনস্টাগ্রাম/.test(v)&&/portrait|vertical|পোর্ট্রেট|লম্বা/.test(v))ratio="4:5";
       else if(/instagram|ইনস্টাগ্রাম/.test(v))ratio="1:1";
-      else if(/youtube|thumbnail|facebook|landscape|wide|প্যানোরামিক|থাম্বনেইল/.test(v))ratio="16:9";
+      else if(/facebook|ফেসবুক/.test(v)&&/portrait|vertical|পোর্ট্রেট|লম্বা/.test(v))ratio="4:5";
+      else if(/youtube|ইউটিউব|thumbnail|facebook|ফেসবুক|landscape|wide|প্যানোরামিক|থাম্বনেইল/.test(v))ratio="16:9";
       else if(/icon|আইকন|profile picture|প্রোফাইল ছবি/.test(v))ratio="1:1";
+      else if(/website|web image|ওয়েবসাইট|ওয়েবসাইট/.test(v))ratio="3:2";
       else ratio="1:1";
     }
     if(!w||!h){
@@ -262,7 +264,7 @@ header.top{
       img.onerror=function(){reject(new Error("generated_image_decode_failed"));};
       img.onload=function(){
         try{
-          var source=document.createElement("canvas"),ss=Math.min(1,1024/Math.max(img.naturalWidth,img.naturalHeight));
+          var source=document.createElement("canvas"),ss=Math.min(1,8192/Math.max(img.naturalWidth,img.naturalHeight));
           source.width=Math.max(1,Math.round(img.naturalWidth*ss));source.height=Math.max(1,Math.round(img.naturalHeight*ss));
           var sc=source.getContext("2d",{alpha:true,willReadFrequently:true});if(!sc)throw new Error("canvas_unavailable");sc.drawImage(img,0,0,source.width,source.height);
           var transparencySupported=false;if(spec.transparent)transparencySupported=removeWhiteEdge(source);
