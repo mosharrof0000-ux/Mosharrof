@@ -379,8 +379,11 @@ header.top{
   window.MOSHARROF_TYPOGRAPHY=MOSHARROF_TYPOGRAPHY;
   function detectTypographyGenre(source,root){
     if(root){
-      var explicit=root.querySelector(".font-song,.font-poem,.font-story");
-      if(explicit){if(explicit.classList.contains("font-song"))return"song";if(explicit.classList.contains("font-poem"))return"poem";if(explicit.classList.contains("font-story"))return"story";}
+      var registeredGenres=Object.keys(MOSHARROF_TYPOGRAPHY.genres);
+      for(var gi=0;gi<registeredGenres.length;gi++){
+        var registeredGenre=registeredGenres[gi];
+        if(root.querySelector(".font-"+registeredGenre))return registeredGenre;
+      }
     }
     var fence=String.fromCharCode(96).repeat(3);
     var value=String(source||"").replace(new RegExp(fence+"[\\s\\S]*?"+fence,"g")," ").replace(/<[^>]*>/g," ").trim();
@@ -399,7 +402,7 @@ header.top{
   function applySmartTypography(root,source){
     if(!root)return"story";
     var genre=detectTypographyGenre(source,root);
-    root.classList.remove("font-song","font-poem","font-story");
+    Object.keys(MOSHARROF_TYPOGRAPHY.genres).forEach(function(name){root.classList.remove("font-"+name);});
     root.classList.add("font-"+genre);root.setAttribute("data-typography-genre",genre);return genre;
   }
 
