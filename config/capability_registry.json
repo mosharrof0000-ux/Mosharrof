@@ -1,0 +1,225 @@
+{
+  "schema_version": "1.0.0",
+  "registry_id": "mosharrof.universal_capabilities",
+  "purpose": "Extensible catalogue of potential capabilities for current and future Mosharrof modules. Registration does not grant permission.",
+  "defaults": {
+    "grant_on_registration": false,
+    "unknown_capability": "DENY",
+    "provider_missing": "DENY",
+    "scope_mismatch": "DENY",
+    "audit_decisions": true,
+    "permanent_delete_block": true
+  },
+  "categories": {
+    "chat": [
+      "chat.read",
+      "chat.send",
+      "chat.attach_file",
+      "chat.export"
+    ],
+    "video": [
+      "video.create",
+      "video.text_to_video",
+      "video.image_to_video",
+      "video.extend",
+      "video.edit",
+      "video.trim",
+      "video.merge",
+      "video.upscale",
+      "video.generate_subtitles",
+      "video.add_voiceover",
+      "video.add_music",
+      "video.export",
+      "video.history.read",
+      "video.delete"
+    ],
+    "image": [
+      "image.generate",
+      "image.edit",
+      "image.upscale",
+      "image.resize",
+      "image.compress",
+      "image.background.remove",
+      "image.convert",
+      "image.ocr",
+      "image.export",
+      "image.delete"
+    ],
+    "audio": [
+      "audio.generate",
+      "audio.text_to_speech",
+      "audio.speech_to_text",
+      "audio.transcribe",
+      "audio.translate",
+      "audio.voiceover",
+      "audio.edit",
+      "audio.noise_reduce",
+      "audio.export",
+      "audio.delete"
+    ],
+    "files": [
+      "file.upload",
+      "file.read",
+      "file.download",
+      "file.convert",
+      "file.compress",
+      "file.extract",
+      "file.rename",
+      "file.organize",
+      "file.delete"
+    ],
+    "documents": [
+      "document.create",
+      "document.read",
+      "document.edit",
+      "document.summarize",
+      "document.translate",
+      "document.export",
+      "pdf.create",
+      "pdf.merge",
+      "pdf.split",
+      "pdf.ocr",
+      "spreadsheet.create",
+      "spreadsheet.edit",
+      "presentation.create",
+      "presentation.edit"
+    ],
+    "ai": [
+      "ai.chat",
+      "ai.model.select",
+      "ai.provider.configure",
+      "ai.agent.create",
+      "ai.agent.configure",
+      "ai.agent.execute",
+      "ai.workflow.create",
+      "ai.workflow.edit",
+      "ai.workflow.execute",
+      "ai.tool.register",
+      "ai.tool.execute"
+    ],
+    "research": [
+      "research.web_search",
+      "research.deep_research",
+      "research.source_verify",
+      "research.compare_sources",
+      "research.report.create",
+      "research.citation.export",
+      "research.dataset.read",
+      "research.dataset.create"
+    ],
+    "automation": [
+      "automation.create",
+      "automation.edit",
+      "automation.execute",
+      "automation.schedule",
+      "automation.pause",
+      "automation.view_runs"
+    ],
+    "storage": [
+      "storage.read",
+      "storage.write",
+      "storage.index",
+      "storage.search",
+      "storage.backup.create",
+      "storage.backup.restore",
+      "storage.export"
+    ],
+    "system": [
+      "system.module.register",
+      "system.module.configure",
+      "system.module.enable",
+      "system.module.disable",
+      "system.health.read",
+      "system.audit.read",
+      "system.permission.read",
+      "system.permission.request",
+      "system.permission.grant",
+      "system.permission.revoke",
+      "system.permission.catalog.manage",
+      "system.settings.read",
+      "system.settings.edit",
+      "system.backup.create",
+      "system.backup.restore"
+    ],
+    "network": [
+      "network.http.read",
+      "network.api.call",
+      "network.webhook.create",
+      "network.webhook.execute"
+    ],
+    "communication": [
+      "communication.email.draft",
+      "communication.email.send",
+      "communication.message.draft",
+      "communication.message.send",
+      "communication.notification.send"
+    ],
+    "data": [
+      "data.read",
+      "data.transform",
+      "data.analyze",
+      "data.visualize",
+      "data.export",
+      "data.import"
+    ],
+    "publishing": [
+      "publish.preview",
+      "publish.site.deploy",
+      "publish.release.approve"
+    ],
+    "learning": [
+      "learning.lesson.create",
+      "learning.quiz.create",
+      "learning.translate",
+      "learning.tutor"
+    ],
+    "quran_research": [
+      "quran.research.read",
+      "quran.research.search",
+      "quran.research.analyze",
+      "quran.research.export"
+    ]
+  },
+  "rules": {
+    "note": "Capabilities are candidates only. A capability must be registered, explicitly granted to the requesting entity, allowed by policy, within scope, and have required provider/approval available before it is authorized.",
+    "permanently_blocked": [
+      "*.delete",
+      "*.destroy",
+      "*.purge",
+      "*.drop",
+      "*.erase",
+      "*.remove"
+    ],
+    "explicit_user_approval": [
+      "video.create",
+      "video.text_to_video",
+      "video.image_to_video",
+      "image.generate",
+      "audio.generate",
+      "file.upload",
+      "file.download",
+      "file.rename",
+      "file.organize",
+      "document.export",
+      "communication.email.send",
+      "communication.message.send",
+      "system.permission.grant",
+      "system.permission.revoke",
+      "system.module.enable",
+      "system.module.disable",
+      "ai.provider.configure",
+      "publish.site.deploy",
+      "storage.backup.restore",
+      "system.permission.catalog.manage"
+    ],
+    "provider_required_prefixes": [
+      "video.",
+      "image.",
+      "audio.",
+      "ai.",
+      "network.",
+      "communication.",
+      "publish."
+    ]
+  }
+}

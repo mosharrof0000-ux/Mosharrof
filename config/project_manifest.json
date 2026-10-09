@@ -9,6 +9,7 @@
     "config/entity_registry.json",
     "config/model_registry.json",
     "config/policy.json",
+    "config/capability_registry.json",
     "config/permission_profiles.json",
     "policies/CORE_POLICY.md",
     "docs/ARCHITECTURE.md"
@@ -22,7 +23,8 @@
     "tools",
     "communication",
     "audit",
-    "versioning"
+    "versioning",
+    "universal_capability_registry"
   ],
   "entity_contract": [
     "identity",
@@ -35,7 +37,8 @@
     "tools",
     "communication",
     "audit",
-    "version"
+    "version",
+    "capability_grants"
   ],
   "immutable_safety_rules": {
     "delete": false,
@@ -56,5 +59,7 @@
     "approve",
     "activate"
   ],
-  "first_tool_project": "Al-Quran Research"
+  "first_tool_project": "Al-Quran Research",
+  "capability_registry": "config/capability_registry.json",
+  "permission_engine": "src/core/universal_permission_engine.py"
 }
