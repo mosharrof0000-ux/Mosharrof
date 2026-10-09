@@ -105,7 +105,7 @@ async function tts(request,env){
   for(const provider of providers){
     const result=await synthesizeWithProvider(provider,chunks,body,env);
     attempted.push({provider,ok:!!result.ok,model:result.model||null,chunks:result.chunks||chunks.length,reason:result.ok?null:result.reason||null});
-    if(result.ok)return reply({...result,attempted},200);
+    if(result.ok)return reply({...result,image_spec,attempted},200);
   }
   return reply({error:"tts_provider_failed",free_first:true,paid_fallback_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chunks:chunks.length,attempted},502);
 }
@@ -130,6 +130,68 @@ function bytesToBase64(bytes){
   return btoa(binary);
 }
 
+function parseImageSpec(prompt){
+  const original=String(prompt||"");
+  const p=original.toLowerCase();
+  const dimMatch=original.match(/(\\d{2,5})\\s*[x×]\\s*(\\d{2,5})/i);
+  const ratioMatch=original.match(/(\\d{1,2})\\s*:\\s*(\\d{1,2})/);
+  const hasExplicitDimensions=!!dimMatch;
+  const hasExplicitRatio=!!ratioMatch;
+  let width=0,height=0,ratio="1:1",intent="general";
+  const isShort=/youtube\\s*shorts|shorts|tiktok|tik tok|reels|reel|vertical video|টিকটক|রিলস|শর্টস/i.test(p);
+  const isYouTube=/youtube|ইউটিউব|thumbnail|থাম্বনেইল/i.test(p);
+  const isInstagram=/instagram|ইনস্টাগ্রাম/i.test(p);
+  const isFacebook=/facebook|ফেসবুক/i.test(p);
+  const isIcon=/icon|আইকন|favicon/i.test(p);
+  const isWebsite=/website|web image|web graphic|website image|ওয়েবসাইট|ওয়েবসাইট/i.test(p);
+  if(isShort){ratio="9:16";intent="short-video";}
+  else if(isYouTube){ratio="16:9";intent="youtube";}
+  else if(isInstagram){ratio=/portrait|vertical|4\\s*:\\s*5|পোর্ট্রেট|লম্বা/i.test(p)?"4:5":"1:1";intent="instagram";}
+  else if(isFacebook){ratio=/portrait|vertical|পোর্ট্রেট|লম্বা/i.test(p)?"4:5":"16:9";intent="facebook";}
+  else if(isIcon){ratio="1:1";intent="icon";}
+  else if(isWebsite){ratio="3:2";intent="web";}
+  if(hasExplicitRatio){
+    const rw=Number(ratioMatch[1]),rh=Number(ratioMatch[2]);
+    if(rw>0&&rh>0&&rw<=100&&rh<=100)ratio=rw+":"+rh;
+  }
+  if(hasExplicitDimensions){
+    width=Number(dimMatch[1]);height=Number(dimMatch[2]);
+    if(width<1||height<1||width>12000||height>12000)throw new Error("invalid_image_dimensions");
+    ratio=width+":"+height;
+  }
+  const transparent=/transparent|transparency|স্বচ্ছ ব্যাকগ্রাউন্ড|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড ছাড়া|background\\s*remove/i.test(p);
+  const formatMatch=p.match(/\\b(png|webp|jpe?g)\\b/i);
+  let format=formatMatch?(formatMatch[1].toLowerCase()==="jpg"?"jpeg":formatMatch[1].toLowerCase()):"webp";
+  if(transparent&&!formatMatch)format="png";
+  const maxMatch=p.match(/(?:under|below|less than|maximum|max|under\\s*|সর্বোচ্চ|এর কম)\\s*(\\d+(?:\\.\\d+)?)\\s*(kb|mb|কেবি|এমবি)/i);
+  let maxBytes=null;
+  if(maxMatch){const amount=Number(maxMatch[1]);const unit=maxMatch[2].toLowerCase();maxBytes=Math.floor(amount*(unit==="kb"||unit==="কেবি"?1000:1000000));}
+  else if(/under\\s*1\\s*mb|less than\\s*1\\s*mb|১\\s*এমবি.?র কম|১\\s*এমবি এর কম/i.test(p))maxBytes=1000000;
+  let quality="standard",longEdge=0;
+  if(/4k|uhd|ultra\\s*hd|৪কে/i.test(p)){quality="4K";longEdge=3840;}
+  else if(/2k|qhd|quad\\s*hd|২কে/i.test(p)){quality="2K";longEdge=2560;}
+  else if(/full\\s*hd|1080p|ফুল\\s*এইচডি/i.test(p)){quality="Full HD";longEdge=1920;}
+  else if(/\\bhd\\b|720p|এইচডি/i.test(p)){quality="HD";longEdge=1280;}
+  if(!width||!height){
+    const parts=ratio.split(":").map(Number),rw=parts[0]||1,rh=parts[1]||1;
+    if(longEdge){
+      if(rw>=rh){width=longEdge;height=Math.max(1,Math.round(longEdge*rh/rw));}
+      else{height=longEdge;width=Math.max(1,Math.round(longEdge*rw/rh));}
+    }else if(intent==="youtube"){width=1280;height=720;}
+    else if(intent==="short-video"){width=1080;height=1920;}
+    else if(intent==="instagram"&&ratio==="4:5"){width=1080;height=1350;}
+    else if(intent==="instagram"){width=1080;height=1080;}
+    else if(intent==="facebook"&&ratio==="4:5"){width=1080;height=1350;}
+    else if(intent==="facebook"){width=1200;height=675;}
+    else if(intent==="icon"){width=512;height=512;}
+    else if(intent==="web"){width=1200;height=800;}
+    else {const base=1024;if(rw>=rh){width=base;height=Math.max(1,Math.round(base*rh/rw));}else{height=base;width=Math.max(1,Math.round(base*rw/rh));}}
+  }
+  const pixels=width*height;
+  const imageSize=quality==="4K"?"4K":quality==="2K"||pixels>1800000?"2K":"1K";
+  return {intent,aspect_ratio:ratio,width,height,format,transparent,max_bytes:maxBytes,quality,image_size:imageSize,explicit_dimensions:hasExplicitDimensions,explicit_ratio:hasExplicitRatio};
+}
+
 async function generateWithGemini(prompt,body,env){
   if(!env.GEMINI_API_KEY)return {ok:false,provider:"gemini",reason:"not_configured"};
   const preferred=env.GEMINI_IMAGE_MODEL ? [env.GEMINI_IMAGE_MODEL,...IMAGE_MODELS.filter(m=>m!==env.GEMINI_IMAGE_MODEL)] : IMAGE_MODELS;
@@ -138,7 +200,7 @@ async function generateWithGemini(prompt,body,env){
     try{
       const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
         method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
-        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:"image/jpeg",aspect_ratio:String(body.aspect_ratio||"1:1"),image_size:String(body.image_size||"1K")}})
+        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:body.image_spec?.format==="png"?"image/png":body.image_spec?.format==="webp"?"image/webp":"image/jpeg",aspect_ratio:String(body.image_spec?.aspect_ratio||body.aspect_ratio||"1:1"),image_size:String(body.image_spec?.image_size||body.image_size||"1K")}})
       });
       const data=await upstream.json().catch(()=>({}));
       last={upstream,data,model};
@@ -150,11 +212,12 @@ async function generateWithGemini(prompt,body,env){
   return {ok:false,provider:"gemini",reason:last?.data?.error?.message||last?.error||"no_image_returned",status:last?.upstream?.status||null};
 }
 
-async function generateWithCloudflare(prompt,env){
+async function generateWithCloudflare(prompt,env,spec){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   try{
     const model=env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell";
-    const result=await env.AI.run(model,{prompt});
+    const spec=bodySpecForCloudflare;
+    const result=await env.AI.run(model,{prompt:prompt+"\\n\\nComposition requirement: "+spec.aspect_ratio+" aspect ratio. Keep the main subject safely within frame."});
     const imageData=String(result?.image||"");
     if(!imageData)return {ok:false,provider:"cloudflare-workers-ai",model,reason:"empty_image"};
     return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/jpeg",image_data:imageData};
@@ -169,6 +232,7 @@ async function generateImage(request,env){
   if(!prompt)return reply({error:"prompt_required"},400);
   if(prompt.length>12000)return reply({error:"prompt_too_large"},413);
 
+  const image_spec=parseImageSpec(prompt);
   const providers=env.IMAGE_PROVIDER_ORDER
     ? String(env.IMAGE_PROVIDER_ORDER).split(",").map(x=>x.trim()).filter(Boolean)
     : FREE_IMAGE_PROVIDERS;
