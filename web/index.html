@@ -350,14 +350,14 @@ header.top{
       });});
   }
   function setSpeakButton(button,label){
+    var playing=label.indexOf("বন্ধ")!==-1,preparing=label.indexOf("প্রস্তুত")!==-1||label.indexOf("⏳")!==-1;
     if(button.classList.contains("message-speak-shortcut")){
-      var playing=label.indexOf("বন্ধ")!==-1,preparing=label.indexOf("প্রস্তুত")!==-1||label.indexOf("⏳")!==-1;
       button.innerHTML=iconSvg("speak");
       button.setAttribute("aria-label",playing?"পড়া বন্ধ করুন":preparing?"পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে":"পড়ে শোনান");
       button.title=playing?"পড়া বন্ধ করুন":preparing?"পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে":"পড়ে শোনান";
-      button.classList.toggle("is-speaking",playing);
-      button.classList.toggle("is-ready",preparing&&!playing);
     }else button.textContent=label;
+    button.classList.toggle("is-speaking",playing);
+    button.classList.toggle("is-ready",preparing&&!playing);
   }
   function resetSpeakButton(button){
     if(!button)return;
