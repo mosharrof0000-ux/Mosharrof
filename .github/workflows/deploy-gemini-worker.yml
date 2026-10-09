@@ -225,7 +225,7 @@ jobs:
           HTTP_CODE="$(curl -sS --connect-timeout 10 --max-time 120 -o /tmp/image-response.json -w '%{http_code}' -X POST \
             -H "Origin: https://mosharrof0000-ux.github.io" \
             -H "Content-Type: application/json" \
-            --data '{"prompt":"A simple verification image: a blue circle on a white background, no text.","aspect_ratio":"1:1","image_size":"1K"}' \
+            --data '{"prompt":"A cheerful landscape illustration of green hills, a winding river, and a clear blue sky, natural daylight, no people, no text.","aspect_ratio":"1:1","image_size":"1K"}' \
             "$URL" || true)"
           echo "Image verification HTTP status: $HTTP_CODE"
           cat /tmp/image-response.json
