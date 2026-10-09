@@ -233,19 +233,22 @@ async function generateImage(request,env){
   if(prompt.length>12000)return reply({error:"prompt_too_large"},413);
 
   const image_spec=parseImageSpec(prompt);
+  body.image_spec=image_spec;body.aspect_ratio=image_spec.aspect_ratio;body.image_size=image_spec.image_size;
+  const composition="\n\nComposition requirements: "+image_spec.aspect_ratio+" aspect ratio, intended output "+image_spec.width+"x"+image_spec.height+" pixels. Frame the subject for this composition and keep important subjects away from crop edges."+(image_spec.transparent?" Use a clean pure-white background so it can be removed for transparent PNG.":"");
+  const providerPrompt=(prompt+composition).slice(0,2048);
   const providers=env.IMAGE_PROVIDER_ORDER
     ? String(env.IMAGE_PROVIDER_ORDER).split(",").map(x=>x.trim()).filter(Boolean)
     : FREE_IMAGE_PROVIDERS;
   const attempted=[];
   for(const provider of providers){
     let result;
-    if(provider==="gemini")result=await generateWithGemini(prompt,body,env);
-    else if(provider==="cloudflare-workers-ai")result=await generateWithCloudflare(prompt,env);
+    if(provider==="gemini")result=await generateWithGemini(providerPrompt,body,env);
+    else if(provider==="cloudflare-workers-ai")result=await generateWithCloudflare(providerPrompt,env);
     else continue;
     attempted.push({provider:result.provider,ok:!!result.ok,model:result.model||null,reason:result.ok?null:result.reason||null});
-    if(result.ok)return reply({...result,attempted},200);
+    if(result.ok)return reply({...result,image_spec,attempted},200);
   }
-  return reply({error:"image_provider_failed",free_first:true,attempted},502);
+  return reply({error:"image_provider_failed",free_first:true,image_spec,attempted},502);
 }
 
 async function chat(request,env){
