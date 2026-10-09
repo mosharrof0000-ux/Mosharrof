@@ -218,7 +218,7 @@ header.top{
     function action(kind,label,fn){var b=document.createElement("button");b.type="button";b.className="message-action";b.innerHTML=iconSvg(kind)+'<span>'+label+'</span>';b.onclick=function(e){e.stopPropagation();fn(b);};group.appendChild(b);return b;}
     meta.appendChild(toggle);
     var panel=document.createElement("div");panel.className="feedback-panel";panel.setAttribute("aria-live","polite");
-    function openFeedback(kind,trigger){if(role!=="ai")return;renderFeedbackPanel(panel,messageIndex,kind,feedback,trigger);}
+    function openFeedback(kind,trigger){if(role!=="ai")return;var current=session.messages[messageIndex];renderFeedbackPanel(panel,messageIndex,kind,(current&&current.feedback)||feedback,trigger);}
     if(role==="ai"){
       var quickLike=document.createElement("button");quickLike.type="button";quickLike.className="message-feedback-shortcut";quickLike.setAttribute("aria-label","লাইক বা আনলাইক");quickLike.setAttribute("title","লাইক / আনলাইক");quickLike.innerHTML=iconSvg("like");quickLike.onclick=function(e){e.stopPropagation();openFeedback("like",quickLike);};meta.appendChild(quickLike);
       var quickOnline=document.createElement("button");quickOnline.type="button";quickOnline.className="message-feedback-shortcut";quickOnline.setAttribute("aria-label","অনলাইন ব্যবহারের কারণ");quickOnline.setAttribute("title","অনলাইন ব্যবহারের কারণ");quickOnline.innerHTML=iconSvg("online");quickOnline.onclick=function(e){e.stopPropagation();openFeedback("online",quickOnline);};meta.appendChild(quickOnline);
