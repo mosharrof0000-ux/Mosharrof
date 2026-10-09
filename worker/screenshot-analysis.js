@@ -137,6 +137,8 @@ function nearestProviderRatio(ratio){
   for(const r of supported){const p=r.split(":").map(Number),d=Math.abs(Math.log(target/(p[0]/p[1])));if(d<delta){delta=d;best=r;}}
   return best;
 }
+function simplifyImageRatio(w,h){let a=w,b=h;while(b){const t=b;b=a%b;a=t;}return (w/a)+":"+(h/a);}
+
 function parseImageSpec(prompt){
   const original=String(prompt||"");
   const p=original.toLowerCase();
@@ -164,12 +166,12 @@ function parseImageSpec(prompt){
   if(hasExplicitDimensions){
     width=Number(dimMatch[1]);height=Number(dimMatch[2]);
     if(width<1||height<1||width>12000||height>12000)throw new Error("invalid_image_dimensions");
-    ratio=width+":"+height;
+    ratio=simplifyImageRatio(width,height);
   }
   const transparent=/transparent|transparency|স্বচ্ছ ব্যাকগ্রাউন্ড|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড ছাড়া|background\s*remove/i.test(p);
   const formatMatch=p.match(/\b(png|webp|jpe?g)\b/i);
-  let format=formatMatch?(formatMatch[1].toLowerCase()==="jpg"?"jpeg":formatMatch[1].toLowerCase()):"webp";
-  if(transparent&&!formatMatch)format="png";
+  let format=formatMatch?(formatMatch[1].toLowerCase()==="jpg"?"image/jpeg":"image/"+formatMatch[1].toLowerCase()):"image/webp";
+  if(transparent&&!formatMatch)format="image/png";
   const maxMatch=p.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
   let maxBytes=null;
   if(maxMatch){const amount=Number(maxMatch[1]);const unit=maxMatch[2].toLowerCase();maxBytes=Math.floor(amount*(unit==="kb"||unit==="কেবি"?1000:1000000));}
@@ -207,7 +209,7 @@ async function generateWithGemini(prompt,body,env){
     try{
       const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
         method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
-        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:body.image_spec?.format==="png"?"image/png":body.image_spec?.format==="webp"?"image/webp":"image/jpeg",aspect_ratio:String(body.image_spec?.provider_aspect_ratio||body.aspect_ratio||"1:1"),image_size:String(body.image_spec?.image_size||body.image_size||"1K")}})
+        body:JSON.stringify({model,input:prompt,response_format:{type:"image",mime_type:body.image_spec?.format==="image/png"?"image/png":body.image_spec?.format==="image/webp"?"image/webp":"image/jpeg",aspect_ratio:String(body.image_spec?.provider_aspect_ratio||body.aspect_ratio||"1:1"),image_size:String(body.image_spec?.image_size||body.image_size||"1K")}})
       });
       const data=await upstream.json().catch(()=>({}));
       last={upstream,data,model};
@@ -223,7 +225,7 @@ async function generateWithCloudflare(prompt,env,spec){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   try{
     const model=env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell";
-    const requirement="\\n\\nComposition requirement: use a "+spec.aspect_ratio+" aspect ratio; keep the main subject safely inside the frame.";
+    const requirement="\n\nComposition requirement: use a "+spec.aspect_ratio+" aspect ratio; keep the main subject safely inside the frame.";
     const result=await env.AI.run(model,{prompt:prompt+requirement});
     const imageData=String(result?.image||"");
     if(!imageData)return {ok:false,provider:"cloudflare-workers-ai",model,reason:"empty_image"};
@@ -242,7 +244,7 @@ async function generateImage(request,env){
   try{image_spec=parseImageSpec(prompt);}
   catch(e){return reply({error:"invalid_image_spec",message:String(e&&e.message||e)},400);}
   const generationPrompt=image_spec.transparent
-    ? prompt+"\\nOutput requirement: isolated subject on a genuinely transparent background with clean edges, if supported. Do not simulate transparency using a checkerboard."
+    ? prompt+"\nOutput requirement: isolated subject on a genuinely transparent background with clean edges, if supported. Do not simulate transparency using a checkerboard."
     : prompt;
   const providerBody={...body,image_spec};
   const providers=env.IMAGE_PROVIDER_ORDER
