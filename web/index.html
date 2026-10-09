@@ -282,6 +282,8 @@ header.top{
             var scale=Math.max(tw/source.width,th/source.height),sw=tw/scale,sh=th/scale;
             var sx=(source.width-sw)/2,sy=(source.height-sh)/2;
             ctx.drawImage(source,sx,sy,sw,sh,0,0,tw,th);
+            if(spec.transparent&&!hasTransparentPixels(canvas))applyTransparentBackground();
+            if(spec.transparent)transparencySupported=hasTransparentPixels(canvas);
           }
           function applyTransparentBackground(){
             var ctx=canvas.getContext("2d",{willReadFrequently:true}),w=canvas.width,h=canvas.height;
@@ -320,13 +322,12 @@ header.top{
             return true;
           }
           render();
-          if(spec.transparent&&!transparencySupported){applyTransparentBackground();transparencySupported=true;}
           function encode(){
             canvas.toBlob(function(blob){
               if(!blob){reject(new Error("image_encode_failed"));return;}
               if(spec.max_bytes&&blob.size>spec.max_bytes&&(mime==="image/jpeg"||mime==="image/webp")&&quality>0.24){quality=Math.max(0.24,quality-0.1);encode();return;}
               if(spec.max_bytes&&blob.size>spec.max_bytes){
-                if(shrinkForSize()){render();if(spec.transparent&&!transparencySupported){try{applyTransparentBackground();transparencySupported=true;}catch(e){reject(e);return;}}encode();return;}
+                if(shrinkForSize()){try{render();}catch(e){reject(e);return;}encode();return;}
                 reject(new Error("image_size_limit_unmet:"+blob.size+":"+spec.max_bytes));return;
               }
               resolve({blob:blob,mime_type:blob.type||mime,image_spec:spec,final_width:tw,final_height:th,final_bytes:blob.size,size_limit_met:true,transparency_supported:transparencySupported,transparency_applied:!!spec.transparent&&transparencySupported,dimensions_adjusted:tw!==Number(spec.width)||th!==Number(spec.height)});
