@@ -177,8 +177,14 @@ function parseImageSpec(prompt){
   if(!ratio&&/youtube\s+shorts?|tiktok|reels|vertical|উল্লম্ব/i.test(lower))ratio=[9,16];
   if(!ratio&&/youtube|thumbnail|landscape|facebook/.test(lower))ratio=[16,9];
   if(!ratio&&/instagram|square|icon|logo|profile|প্রোফাইল|আইকন/i.test(lower))ratio=[1,1];
-  if(width&&height)ratio=[width,height];
+  if(width&&height){
+    const gcd=(a,b)=>{while(b){const t=b;b=a%b;a=t;}return a||1;};
+    const g=gcd(width,height);ratio=[width/g,height/g];
+  }
   if(!ratio)ratio=[1,1];
+  const supported=[[1,1],[3,2],[2,3],[4,3],[3,4],[9,16],[16,9],[21,9],[4,5],[5,4]];
+  const targetRatio=ratio[0]/ratio[1];
+  ratio=supported.reduce((best,item)=>Math.abs(Math.log(item[0]/item[1]/targetRatio))<Math.abs(Math.log(best[0]/best[1]/targetRatio))?item:best,supported[0]);
   const resolution=/4\s*k|4k|uhd/i.test(lower)?"4K":/2\s*k|2k|qhd/i.test(lower)?"2K":/full\s*hd|1080p/i.test(lower)?"1K":/hd|720p/i.test(lower)?"1K":"1K";
   if(!width||!height){
     const [rw,rh]=ratio;
