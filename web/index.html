@@ -83,12 +83,12 @@ header.top{
 }
 .row{display:flex;align-items:flex-end;gap:6px}
 .composer-tools{position:relative;flex:none;display:flex;align-items:center}
-.composer-tool-toggle,.composer-action{width:36px;height:36px;flex:none;display:inline-grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#080808;color:#f2f2f2;transition:transform .16s ease,background .16s ease,border-color .16s ease}
+.composer-tool-toggle,.composer-action,.send{width:36px;height:36px;flex:none;display:inline-grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#080808;color:#f2f2f2;transition:transform .16s ease,background .16s ease,border-color .16s ease}
 .composer-tool-toggle{font-size:21px;line-height:1}
-.composer-tool-toggle:active,.composer-action:active{transform:scale(.94);background:#303030}
-.composer-tool-toggle:hover,.composer-action:hover{background:#111;border-color:rgba(255,255,255,.3)}
-.composer-tool-toggle:focus-visible,.composer-action:focus-visible{outline:2px solid #aaa;outline-offset:2px}
-.composer-action svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.composer-tool-toggle:active,.composer-action:active,.send:active{transform:scale(.94);background:#303030}
+.composer-tool-toggle:hover,.composer-action:hover,.send:hover:not(:disabled){background:#111;border-color:rgba(255,255,255,.3)}
+.composer-tool-toggle:focus-visible,.composer-action:focus-visible,.send:focus-visible{outline:2px solid #aaa;outline-offset:2px}
+.composer-action svg,.send svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .composer-tools-menu{position:absolute;left:0;bottom:44px;display:none;align-items:center;gap:5px;padding:5px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#050505;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:2}
 .composer-tools-menu.open{display:flex}
 .attach{position:relative}
@@ -100,7 +100,6 @@ header.top{
 .image-preview button{width:28px;height:28px;border-radius:50%;color:#fff;background:#333;font-size:15px}
 .input{flex:1;min-width:0;min-height:40px;max-height:120px;border:0;outline:0;background:transparent;padding:10px 6px;font-size:16px;line-height:1.4;resize:none;overflow-y:auto;color:var(--text)}
 .input::placeholder{color:#8e8e93}
-.send{width:40px;height:40px;flex:none;border-radius:50%;background:#f4f4f5;color:#111;font-size:18px;display:grid;place-items:center}
 .send:disabled{opacity:.35}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;opacity:0;visibility:hidden;transition:.2s}
 .scrim.open{opacity:1;visibility:visible}
@@ -150,7 +149,7 @@ header.top{
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
-      <button class="send" id="sendBtn" aria-label="Send">➤</button>
+      <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
   </div>
   <div class="voice-bar" id="voiceStatus">Voice ready</div>
