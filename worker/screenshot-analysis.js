@@ -171,7 +171,7 @@ function parseImageSpec(prompt){
   const transparent=/transparent|transparency|স্বচ্ছ ব্যাকগ্রাউন্ড|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড ছাড়া|background\s*remove/i.test(p);
   const formatMatch=p.match(/\b(png|webp|jpe?g)\b/i);
   let format=formatMatch?(formatMatch[1].toLowerCase()==="jpg"?"image/jpeg":"image/"+formatMatch[1].toLowerCase()):"image/webp";
-  if(transparent&&!formatMatch)format="image/png";
+  if(transparent)format="image/png";
   const maxMatch=p.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
   let maxBytes=null;
   if(maxMatch){const amount=Number(maxMatch[1]);const unit=maxMatch[2].toLowerCase();maxBytes=Math.floor(amount*(unit==="kb"||unit==="কেবি"?1000:1000000));}
