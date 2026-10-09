@@ -649,7 +649,7 @@ header.top{
   leftBtn.onclick=function(){updateMeta();openD("left");};
   rightBtn.onclick=function(){openD("right");};
   scrim.onclick=closeD;
-  document.addEventListener("click",function(e){if(e.target.id==="cL"||e.target.id==="cR")closeD();if(e.target.id==="historyBtn"||(e.target.closest&&e.target.closest("#historyBtn")))showHistory();if(e.target.id==="newChat")newChat();if(e.target.id==="clearMsg")clearMsg();if(e.target.id==="voiceBtn"){closeD();startV();}});
+  document.addEventListener("click",function(e){var target=e.target.closest&&e.target.closest("button");if(!target)return;if(target.id==="cL"||target.id==="cR")closeD();if(target.id==="historyBtn")showHistory();if(target.id==="newChat")newChat();if(target.id==="clearMsg")clearMsg();if(target.id==="voiceBtn"){closeD();startV();}});
   restoreMessages();initV();resize();input.focus();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
 })();
