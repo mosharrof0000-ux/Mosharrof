@@ -204,8 +204,9 @@ header.top{
     if(m){w=Number(m[1]);h=Number(m[2]);if(w<1||h<1||w>8192||h>8192){w=0;h=0;}}
     var r=p.match(/(?:\b)(\d{1,2})\s*:\s*(\d{1,2})(?:\b)/);
     if(r&&Number(r[1])&&Number(r[2]))ratio=[Number(r[1]),Number(r[2])];
-    if(!ratio&&/youtube\s*(?:shorts?)?|tiktok|reels|vertical|portrait|উল্লম্ব/i.test(l))ratio=[9,16];
     if(!ratio&&/instagram/.test(l)&&/portrait|vertical|4\s*:\s*5|1080\s*[x×]\s*1350/i.test(l))ratio=[4,5];
+    if(!ratio&&/facebook/.test(l)&&/portrait|vertical/i.test(l))ratio=[4,5];
+    if(!ratio&&/youtube\s+shorts?|tiktok|reels|vertical|উল্লম্ব/i.test(l))ratio=[9,16];
     if(!ratio&&/youtube|thumbnail|landscape|facebook/.test(l))ratio=[16,9];
     if(!ratio&&/instagram|square|icon|logo|profile|প্রোফাইল|আইকন/i.test(l))ratio=[1,1];
     if(w&&h)ratio=[w,h];if(!ratio)ratio=[1,1];
