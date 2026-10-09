@@ -230,13 +230,17 @@ header.top{
     }
     var transparent=/transparent|স্বচ্ছ ব্যাকগ্রাউন্ড|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড ছাড়া|ব্যাকগ্রাউন্ড ছাড়া|background\s*remove/i.test(v);
     var format=transparent?"image/png":(/\bwebp\b/.test(v)?"image/webp":(/\bjpg\b|\bjpeg\b|jpeg|জেপেগ/.test(v)?"image/jpeg":(/\bpng\b|png|পিএনজি/.test(v)?"image/png":"image/jpeg")));
-    var maxBytes=/under\s*1\s*mb|less than\s*1\s*mb|1\s*mb|১\s*এমবি|১এমবি/i.test(v)?1024*1024:null;
+    var maxBytes=/under\s*1\s*mb|less than\s*1\s*mb|1\s*mb|১\s*এমবি|১এমবি/i.test(v)?1000000:null;
     var maxMatch=p.match(/(?:under|less than|below|এর কম|সর্বোচ্চ)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
-    if(maxMatch)maxBytes=Math.round(Number(maxMatch[1])*(/mb|এমবি/i.test(maxMatch[2])?1024*1024:1024));
+    if(maxMatch)maxBytes=Math.round(Number(maxMatch[1])*(/mb|এমবি/i.test(maxMatch[2])?1000000:1000));
     var imageSize=(Math.max(w,h)>=3500||/4k|uhd|৪কে/.test(v))?"4K":((Math.max(w,h)>=2000||/2k|qhd|২কে/.test(v))?"2K":"1K");
     return {width:w,height:h,aspect_ratio:ratio,image_size:imageSize,format:format,transparent:transparent,max_bytes:maxBytes,quality:quality||"standard",explicit_dimensions:/(\d{2,5})\s*[x×]\s*(\d{2,5})/i.test(p),explicit_ratio:/(\d{1,2})\s*:\s*(\d{1,2})/.test(p)};
   }
   function simplifyRatio(w,h){var a=w,b=h;while(b){var t=b;b=a%b;a=t;}return (w/a)+":"+(h/a);}
+  function looksLikeImagePrompt(t){
+    var v=String(t||"").toLowerCase();
+    return /(ছবি|ইমেজ|চিত্র|ফটো|পিকচার|image|picture|photo|illustration|poster|wallpaper|thumbnail|থাম্বনেইল|লোগো|logo|ব্যানার|banner|generate|বানাও|তৈরি করো|তৈরি করুন|আঁকো|আঁকুন|দাও.*ছবি|tiktok|tik tok|youtube\s*shorts|reels|রিলস|টিকটক|শর্টস|\b\d{2,5}\s*[x×]\s*\d{2,5}\b|\b\d{1,2}\s*:\s*\d{1,2}\b|\b(?:png|webp|jpe?g|4k|2k|uhd|720p|1080p)\b|transparent|স্বচ্ছ ব্যাকগ্রাউন্ড)/i.test(v);
+  }
   function imageReply(t){
     var spec;
     try{spec=parseImageSpec(t);}catch(e){return Promise.reject(e);}
