@@ -213,7 +213,7 @@ header.top{
     var resolution=/4\s*k|4k|uhd/i.test(l)?"4K":/2\s*k|2k|qhd/i.test(l)?"2K":"1K";
     if(!w||!h){var rw=ratio[0],rh=ratio[1],max=resolution==="4K"?3840:resolution==="2K"?2560:/full\s*hd|1080p/i.test(l)?1920:/hd|720p/i.test(l)?1280:1024;if(rw>=rh){w=max;h=Math.max(1,Math.round(max*rh/rw));}else{h=max;w=Math.max(1,Math.round(max*rw/rh));}}
     var fm=l.match(/\b(png|webp|jpe?g)\b/),transparent=/transparent|transparency|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড স্বচ্ছ|স্বচ্ছ ব্যাকগ্রাউন্ড|ব্যাকগ্রাউন্ড ছাড়া/i.test(l),format=transparent?"png":(fm?(fm[1]==="jpg"?"jpeg":fm[1]):"jpeg");
-    var sm=l.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)?/i),max_bytes=null;
+    var sm=l.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)\b/i),max_bytes=null;
     if(sm)max_bytes=Math.round(Number(sm[1])*((/kb|কেবি/i.test(sm[2]||"")?1024:1024*1024)));
     return {width:w,height:h,aspect_ratio:ratio.join(":"),image_size:resolution,format:format,transparent:transparent,max_bytes:max_bytes};
   }
