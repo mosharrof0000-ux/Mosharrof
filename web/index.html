@@ -358,6 +358,7 @@ header.top{
     button.title=playing?"পড়া বন্ধ করুন":preparing?"পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে":"পড়ে শোনান";
     button.classList.toggle("is-ready",preparing&&!playing);
     button.classList.toggle("is-speaking",playing);
+    button.classList.remove("is-stop-requested");
   }
   function resetSpeakButton(button){
     if(!button)return;
