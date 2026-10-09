@@ -184,7 +184,11 @@ function parseImageSpec(prompt){
   if(!width||!height){
     const parts=ratio.split(":").map(Number),rw=parts[0]||1,rh=parts[1]||1;
     if(longEdge){
-      if(rw>=rh){width=longEdge;height=Math.max(1,Math.round(longEdge*rh/rw));}
+      const ratioValue=rw/rh;
+      if(ratioValue>16/9){
+        const targetHeight=quality==="4K"?2160:(quality==="2K"?1440:(quality==="Full HD"?1080:720));
+        height=targetHeight;width=Math.max(1,Math.round(targetHeight*ratioValue));
+      }else if(rw>=rh){width=longEdge;height=Math.max(1,Math.round(longEdge*rh/rw));}
       else{height=longEdge;width=Math.max(1,Math.round(longEdge*rw/rh));}
     }else if(intent==="youtube"){width=1280;height=720;}
     else if(intent==="short-video"){width=1080;height=1920;}
