@@ -76,6 +76,20 @@ header.top{
 .message.ai .rich-content .code-toolbar .code-language{text-transform:lowercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.message.ai .rich-content .copy-code{flex:none;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:#252a33;color:#f4f4f5;padding:5px 9px;font-size:11px}.message.ai .rich-content .copy-code:active{background:#3b414c}
 .message.ai .rich-content pre{margin:0;max-width:100%;overflow:auto;padding:14px;background:#0d1117;color:#e6edf3;font:12.5px/1.7 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:2;scrollbar-width:thin}
 .message.ai .rich-content pre code{font:inherit;white-space:pre}.message.ai .rich-content .code-block pre code{padding:0;border:0;border-radius:0;background:transparent;color:inherit}.message.ai .rich-content img{max-width:100%;height:auto;border-radius:10px}
+
+/* MOSHARROF dynamic Bengali typography — class-based and extensible */
+.message.ai .rich-content.typography-song{font-family:"Galada","Atma","Hind Siliguri",sans-serif;line-height:1.95;letter-spacing:.01em}
+.message.ai .rich-content.typography-song h1,.message.ai .rich-content.typography-song h2{font-family:"Galada","Atma","Hind Siliguri",sans-serif;font-weight:400;line-height:1.55;text-align:center;letter-spacing:0}
+.message.ai .rich-content.typography-song p{margin:1em 0;white-space:normal}
+.message.ai .rich-content.typography-poem{font-family:"Atma","Mina","Hind Siliguri",sans-serif;line-height:2.05;letter-spacing:.012em}
+.message.ai .rich-content.typography-poem h1,.message.ai .rich-content.typography-poem h2,.message.ai .rich-content.typography-poem h3{font-family:"Galada","Atma","Noto Serif Bengali",serif;font-weight:400;line-height:1.6}
+.message.ai .rich-content.typography-poem p{margin:.85em 0;max-width:42em}
+.message.ai .rich-content.typography-story{font-family:"Hind Siliguri","Noto Sans Bengali",sans-serif;line-height:1.9;letter-spacing:0}
+.message.ai .rich-content.typography-story h1,.message.ai .rich-content.typography-story h2,.message.ai .rich-content.typography-story h3{font-family:"Noto Serif Bengali","Hind Siliguri",serif;line-height:1.55}
+.message.ai .rich-content.typography-general{font-family:"Hind Siliguri","Noto Sans Bengali",sans-serif}
+.message.ai .rich-content.typography-song blockquote,.message.ai .rich-content.typography-poem blockquote{margin:1.1em auto;max-width:38em;text-align:center;border-left:0;border-top:1px solid rgba(255,255,255,.18);border-bottom:1px solid rgba(255,255,255,.18);border-radius:0;background:transparent;padding:.8em .5em}
+@media(max-width:480px){.message.ai .rich-content.typography-song{font-size:16px;line-height:1.95}.message.ai .rich-content.typography-poem{font-size:16px;line-height:2}.message.ai .rich-content.typography-story{line-height:1.88}}
+
 @media(max-width:480px){.message.ai .rich-content{font-size:15px;line-height:1.78}.message.ai .rich-content th,.message.ai .rich-content td{padding:8px 9px}.message.ai .rich-content pre{font-size:12px;padding:11px}}
 
 .message-actions-wrap{display:flex;flex-direction:column;align-items:flex-start;margin-top:7px;gap:6px}
@@ -225,6 +239,7 @@ header.top{
   <div class="scrim" id="scrim"></div>
   <div class="toast" id="toast"></div>
 </div>
+<script src="./typography/typography.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
@@ -334,7 +349,7 @@ header.top{
     if(role!=="user"){var l=document.createElement("span");l.className="label";l.textContent=typeof elapsedMs==="number"?elapsedLabel(elapsedMs):"MOSHARROF AI · core";n.appendChild(l);}
     if(role==="user"){n.appendChild(document.createTextNode(text));}
     else{
-      var rich=document.createElement("div");rich.className="rich-content";rich.innerHTML=renderRichText(text);n.appendChild(rich);enhanceRichContent(rich);
+      var rich=document.createElement("div");rich.className="rich-content";rich.innerHTML=renderRichText(text);if(window.MosharrofTypography)window.MosharrofTypography.decorate(rich,text);n.appendChild(rich);enhanceRichContent(rich);
     }
     var messageIndex=typeof messageIndexOverride==="number"?messageIndexOverride:session.messages.length;
     if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text,at,messageIndex,feedback||null);
