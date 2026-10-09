@@ -230,9 +230,11 @@ header.top{
     }
     var transparent=/transparent|স্বচ্ছ ব্যাকগ্রাউন্ড|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড ছাড়া|ব্যাকগ্রাউন্ড ছাড়া|background\s*remove/i.test(v);
     var format=transparent?"image/png":(/\bwebp\b/.test(v)?"image/webp":(/\bjpg\b|\bjpeg\b|jpeg|জেপেগ/.test(v)?"image/jpeg":(/\bpng\b|png|পিএনজি/.test(v)?"image/png":"image/jpeg")));
-    var maxBytes=/under\s*1\s*mb|less than\s*1\s*mb|1\s*mb|১\s*এমবি|১এমবি/i.test(v)?1024*1024:null;
-    var maxMatch=p.match(/(?:under|less than|below|এর কম|সর্বোচ্চ)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
-    if(maxMatch)maxBytes=Math.round(Number(maxMatch[1])*(/mb|এমবি/i.test(maxMatch[2])?1024*1024:1024));
+    var maxBytes=null;
+    var maxMatch=p.match(/(?:under|less than|below|maximum|max|up to|at most|এর কম|সর্বোচ্চ|অনূর্ধ্ব)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
+    var anySizeMatch=p.match(/(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
+    var sizeMatch=maxMatch||anySizeMatch;
+    if(sizeMatch)maxBytes=Math.round(Number(sizeMatch[1])*(/mb|এমবি/i.test(sizeMatch[2])?1024*1024:1024));
     var imageSize=(Math.max(w,h)>=3500||/4k|uhd|৪কে/.test(v))?"4K":((Math.max(w,h)>=2000||/2k|qhd|২কে/.test(v))?"2K":"1K");
     return {width:w,height:h,aspect_ratio:ratio,image_size:imageSize,format:format,transparent:transparent,max_bytes:maxBytes,quality:quality||"standard",explicit_dimensions:/(\d{2,5})\s*[x×]\s*(\d{2,5})/i.test(p),explicit_ratio:/(\d{1,2})\s*:\s*(\d{1,2})/.test(p)};
   }
@@ -360,8 +362,10 @@ header.top{
     var url=data.blob?URL.createObjectURL(data.blob):("data:"+mime+";base64,"+data.image_data);
     var img=document.createElement("img");img.alt="Generated image";img.src=url;n.appendChild(img);
     var spec=data.image_spec||{},meta=document.createElement("div");meta.className="time";
-    var kb=Math.max(1,Math.round(Number(data.final_bytes||0)/1024));
-    meta.textContent=(data.final_width&&data.final_height?data.final_width+"×"+data.final_height+" · ":"")+mime.replace("image/","").toUpperCase()+(data.final_bytes?" · "+kb+" KB":"")+(spec.max_bytes&&!data.size_limit_met?" · নির্ধারিত ফাইল-সাইজ সীমা পূরণ হয়নি":"")+(spec.transparent&&!data.transparency_supported?" · স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত নয়":"");
+    var bytes=Number(data.final_bytes||data.blob&&data.blob.size||0);
+    var sizeLabel=bytes>=1024*1024?(bytes/(1024*1024)).toFixed(bytes>=10*1024*1024?1:2).replace(/\.00$/,"")+" MB":(bytes>=1024?(bytes/1024).toFixed(bytes>=100*1024?0:1).replace(/\.0$/,"")+" KB":bytes+" B");
+    var resolution=spec.image_size||((data.final_width>=3500||data.final_height>=3500)?"4K":((data.final_width>=2000||data.final_height>=2000)?"2K":""));
+    meta.textContent=(data.final_width&&data.final_height?data.final_width+"×"+data.final_height+" px · ":"")+(resolution?resolution+" · ":"")+mime.replace("image/","").toUpperCase()+(bytes?" · "+sizeLabel:"")+(spec.max_bytes&&bytes>spec.max_bytes?" · নির্ধারিত ফাইল-সাইজ সীমা পূরণ হয়নি":"")+(spec.transparent&&!data.transparency_supported?" · স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত নয়":"");
     n.appendChild(meta);
     var actions=document.createElement("div");actions.className="image-actions";
     var a=document.createElement("a");a.href=url;a.download="mosharrof-generated-image."+ext;a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);n.appendChild(actions);
