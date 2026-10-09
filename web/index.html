@@ -248,6 +248,29 @@ header.top{
         return optimizeGeneratedImage(data,t);
       });});
   }
+  function removeEdgeWhiteBackground(canvas){
+    var ctx=canvas.getContext("2d",{willReadFrequently:true}),w=canvas.width,h=canvas.height;
+    if(!ctx||!w||!h||w*h>5000000)return false;
+    var image=ctx.getImageData(0,0,w,h),d=image.data,total=w*h,queue=new Int32Array(total),head=0,tail=0;
+    function enqueue(i){
+      var p=i*4,r=d[p],g=d[p+1],b=d[p+2],a=d[p+3];
+      if(a===0)return;
+      if(r>=232&&g>=232&&b>=232&&Math.max(r,g,b)-Math.min(r,g,b)<=28){
+        d[p+3]=0;queue[tail++]=i;
+      }
+    }
+    for(var x=0;x<w;x++){enqueue(x);if(h>1)enqueue((h-1)*w+x);}
+    for(var y=1;y<h-1;y++){enqueue(y*w);if(w>1)enqueue(y*w+w-1);}
+    while(head<tail){
+      var i=queue[head++],x=i%w,y=(i/w)|0;
+      if(x>0)enqueue(i-1);
+      if(x+1<w)enqueue(i+1);
+      if(y>0)enqueue(i-w);
+      if(y+1<h)enqueue(i+w);
+    }
+    if(tail)ctx.putImageData(image,0,0);
+    return tail>0;
+  }
   function hasTransparentPixels(canvas){
     try{
       var ctx=canvas.getContext("2d",{willReadFrequently:true}),w=canvas.width,h=canvas.height;
@@ -264,9 +287,10 @@ header.top{
       img.onerror=function(){reject(new Error("generated_image_decode_failed"));};
       img.onload=function(){
         try{
-          var source=document.createElement("canvas"),ss=Math.min(1,8192/Math.max(img.naturalWidth,img.naturalHeight));
+          var source=document.createElement("canvas"),maxSourceSide=spec.transparent?2048:8192,ss=Math.min(1,maxSourceSide/Math.max(img.naturalWidth,img.naturalHeight));
           source.width=Math.max(1,Math.round(img.naturalWidth*ss));source.height=Math.max(1,Math.round(img.naturalHeight*ss));
           var sc=source.getContext("2d",{alpha:true,willReadFrequently:true});if(!sc)throw new Error("canvas_unavailable");sc.drawImage(img,0,0,source.width,source.height);
+          if(spec.transparent)removeEdgeWhiteBackground(source);
           var transparencySupported=spec.transparent?hasTransparentPixels(source):false;
           var tw=Math.max(1,Math.min(8192,Number(spec.width)||source.width)),th=Math.max(1,Math.min(8192,Number(spec.height)||source.height));
           var originalTw=tw,originalTh=th,scaleFactor=1;
