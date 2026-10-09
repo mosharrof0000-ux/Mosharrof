@@ -147,6 +147,17 @@ header.top{
 .nav-copy span{font-size:13px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
 .nav button small{font-size:10px;color:var(--muted);font-weight:400;line-height:1.35}
 .nav button:focus-visible{outline:2px solid var(--muted);outline-offset:2px}
+.history-tools{display:flex;flex-direction:column;gap:8px;padding:4px 0 12px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.history-search{width:100%;min-height:42px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:#101010;color:#f5f5f5;padding:10px 12px;font-size:13px;outline:none}
+.history-search:focus{border-color:rgba(255,255,255,.38)}.history-search::placeholder{color:#8e8e93}
+.history-new{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:42px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:#242424;color:#f5f5f5;font-size:13px;font-weight:650}
+.history-new:active{background:#333}
+.history-heading{padding:4px 4px 2px;color:var(--muted);font-size:11px;font-weight:700}
+.history-list{display:flex;flex-direction:column;gap:4px;max-height:min(42vh,420px);overflow-y:auto;overscroll-behavior:contain;padding:2px 0 8px;scrollbar-width:thin}
+.history-item{display:flex;align-items:center;gap:8px;width:100%;min-height:42px;padding:9px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:#e5e5e5;text-align:left;font-size:12px;line-height:1.4}
+.history-item span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+.history-item small{flex:none;color:#8e8e93;font-size:10px}.history-item:hover{background:#202020}.history-item.active{background:#252525;border-color:rgba(255,255,255,.12)}
+.history-empty{padding:10px 8px;color:#8e8e93;font-size:12px;line-height:1.5}
 .session-meta{font-size:11px;color:var(--muted);padding:8px 4px 12px;line-height:1.5;border-bottom:1px solid var(--border);margin-bottom:8px}
 .toast{position:fixed;z-index:10002;bottom:140px;left:50%;transform:translate(-50%,12px);opacity:0;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:8px 14px;font-size:12px;pointer-events:none;transition:.2s}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -195,6 +206,9 @@ header.top{
 (function(){
   var REG={core:"coordination and governance",chat:"conversation interface",sidebar:"navigation and entity discovery",voice:"context-aware voice processing",storage:"file indexing and organization",tool_factory:"safe tool creation and execution",quran_research:"Quran language research"};
   var STORE_KEY="mosharrof_chat_v1";
+  var SESSIONS_KEY="mosharrof_chat_sessions_v1";
+  var ACTIVE_SESSION_KEY="mosharrof_active_session_v1";
+  var chatSessions=[];
   function $(s){return document.querySelector(s);}
   var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
   var composerToolsMenu=$("#composerToolsMenu"),composerVoiceBtn=$("#composerVoiceBtn");
@@ -207,11 +221,11 @@ header.top{
   function nowISO(){return new Date().toISOString();}
   function fmtTime(iso){if(!iso)return "—";try{var d=new Date(iso);return d.toLocaleString("bn-BD",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true});}catch(e){return iso;}}
   function shortTime(iso){if(!iso)return "";try{return new Date(iso).toLocaleTimeString("bn-BD",{hour:"2-digit",minute:"2-digit",hour12:true});}catch(e){return "";}}
-  function loadStore(){try{var raw=localStorage.getItem(STORE_KEY);if(!raw)return null;return JSON.parse(raw);}catch(e){return null;}}
-  function saveStore(data){try{localStorage.setItem(STORE_KEY,JSON.stringify(data));}catch(e){}}
-  var session=loadStore();
-  if(!session||!session.messages){session={openedAt:nowISO(),closedAt:null,lastActiveAt:nowISO(),messages:[]};}
-  else{session.openedAt=session.openedAt||nowISO();session.lastActiveAt=nowISO();session.closedAt=null;}
+  function makeSession(){return{id:"chat-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8),openedAt:nowISO(),closedAt:null,lastActiveAt:nowISO(),messages:[]};}
+  function sessionTitle(item){var messages=item&&Array.isArray(item.messages)?item.messages:[];for(var i=0;i<messages.length;i++){if(messages[i]&&messages[i].role==="user"&&String(messages[i].text||"").trim()){var title=String(messages[i].text).replace(/\\s+/g," ").trim();return title.length>42?title.slice(0,41)+"…":title;}}return "নতুন চ্যাট";}
+  function loadSessionData(){try{var raw=localStorage.getItem(SESSIONS_KEY);if(raw){var parsed=JSON.parse(raw);if(Array.isArray(parsed))chatSessions=parsed.filter(function(x){return x&&Array.isArray(x.messages);});}}catch(e){chatSessions=[];}var legacy=null;try{legacy=JSON.parse(localStorage.getItem(STORE_KEY)||"null");}catch(e){}if(!chatSessions.length&&legacy&&Array.isArray(legacy.messages)){legacy.id=legacy.id||("chat-migrated-"+Date.now().toString(36));chatSessions=[legacy];}var activeId=null;try{activeId=localStorage.getItem(ACTIVE_SESSION_KEY);}catch(e){}var active=null;for(var i=0;i<chatSessions.length;i++){if(!chatSessions[i].id)chatSessions[i].id="chat-"+Date.now().toString(36)+"-"+i;if(chatSessions[i].id===activeId)active=chatSessions[i];}if(!active&&chatSessions.length)active=chatSessions[0];if(!active){active=makeSession();chatSessions.push(active);}active.openedAt=active.openedAt||nowISO();active.lastActiveAt=active.lastActiveAt||nowISO();active.closedAt=null;return active;}
+  function saveStore(data){try{if(!data.id)data.id="chat-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);var index=-1;for(var i=0;i<chatSessions.length;i++){if(chatSessions[i].id===data.id){index=i;break;}}if(index<0)chatSessions.push(data);else chatSessions[index]=data;chatSessions.sort(function(a,b){return String(b.lastActiveAt||b.openedAt||"").localeCompare(String(a.lastActiveAt||a.openedAt||""));});localStorage.setItem(SESSIONS_KEY,JSON.stringify(chatSessions));localStorage.setItem(ACTIVE_SESSION_KEY,data.id);localStorage.setItem(STORE_KEY,JSON.stringify(data));}catch(e){toast("চ্যাট সংরক্ষণে স্টোরেজ সমস্যা হয়েছে");}updateHistoryList();}
+  var session=loadSessionData();
   saveStore(session);
   window.addEventListener("beforeunload",function(){session.closedAt=nowISO();session.lastActiveAt=nowISO();saveStore(session);});
   document.addEventListener("visibilitychange",function(){if(document.hidden){session.closedAt=nowISO();session.lastActiveAt=nowISO();saveStore(session);}else{session.openedAt=session.openedAt||nowISO();session.lastActiveAt=nowISO();session.closedAt=null;saveStore(session);updateMeta();}});
@@ -594,10 +608,12 @@ header.top{
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
   function restoreMessages(){msgEl.innerHTML="";if(session.messages&&session.messages.length){for(var i=0;i<session.messages.length;i++){var m=session.messages[i];addMsg(m.role,m.text,m.at,true,m.feedback,i,m.elapsedMs);}}else{addMsg("ai","আমি কীভাবে আপনাকে সাহায্য করতে পারি?",nowISO(),true);}}
-  function showHistory(){closeD();var lines=[];lines.push("📅 সেশন সময়");lines.push("খোলা: "+fmtTime(session.openedAt));lines.push("শেষ সক্রিয়: "+fmtTime(session.lastActiveAt));if(session.closedAt)lines.push("বন্ধ: "+fmtTime(session.closedAt));lines.push("");lines.push("💬 মেসেজ: "+(session.messages?session.messages.length:0)+" টি");addMsg("ai",lines.join("\n"));toast("ইতিহাস");}
-  function newChat(){session.closedAt=nowISO();saveStore(session);session={openedAt:nowISO(),closedAt:null,lastActiveAt:nowISO(),messages:[]};saveStore(session);msgEl.innerHTML="";addMsg("ai","নতুন কথোপকথন।");updateMeta();closeD();toast("নতুন চ্যাট");}
-  function clearMsg(){session.messages=[];session.lastActiveAt=nowISO();saveStore(session);msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");updateMeta();closeD();toast("Cleared");}
-  dL.innerHTML='<div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF</strong><small>Entity System</small></div><button class="dclose" id="cL">✕</button></div><div class="session-meta" id="sessionMeta"></div><nav class="nav" id="navL"></nav>';
+  function updateHistoryList(){var list=$("#historyList"),search=$("#historySearch");if(!list)return;var query=search?search.value.trim().toLocaleLowerCase():"";var filtered=chatSessions.slice().sort(function(a,b){return String(b.lastActiveAt||b.openedAt||"").localeCompare(String(a.lastActiveAt||a.openedAt||""));}).filter(function(item){return sessionTitle(item).toLocaleLowerCase().indexOf(query)!==-1;});list.innerHTML="";if(!filtered.length){var empty=document.createElement("div");empty.className="history-empty";empty.textContent=query?"এই শিরোনামে কোনো চ্যাট পাওয়া যায়নি।":"এখনো কোনো চ্যাট হিস্ট্রি নেই।";list.appendChild(empty);return;}filtered.forEach(function(item){var b=document.createElement("button");b.type="button";b.className="history-item"+(item.id===session.id?" active":"");b.setAttribute("aria-current",item.id===session.id?"page":"false");var title=document.createElement("span");title.textContent=sessionTitle(item);var time=document.createElement("small");time.textContent=shortTime(item.lastActiveAt||item.openedAt);b.appendChild(title);b.appendChild(time);b.title=sessionTitle(item);b.onclick=function(){switchSession(item.id);};list.appendChild(b);});}
+  function switchSession(id){if(busy){toast("উত্তর আসা পর্যন্ত অপেক্ষা করুন");return;}var chosen=null;for(var i=0;i<chatSessions.length;i++){if(chatSessions[i].id===id){chosen=chatSessions[i];break;}}if(!chosen)return;session=chosen;session.openedAt=session.openedAt||nowISO();session.closedAt=null;session.lastActiveAt=nowISO();saveStore(session);restoreMessages();updateMeta();updateHistoryList();closeD();toast("আগের চ্যাট খোলা হয়েছে");}
+  function showHistory(){openD("left");updateHistoryList();}
+  function newChat(){if(busy){toast("উত্তর আসা পর্যন্ত অপেক্ষা করুন");return;}session.closedAt=nowISO();session.lastActiveAt=nowISO();saveStore(session);session=makeSession();chatSessions.unshift(session);saveStore(session);msgEl.innerHTML="";addMsg("ai","নতুন কথোপকথন।");updateMeta();updateHistoryList();closeD();toast("নতুন চ্যাট");}
+  function clearMsg(){session.messages=[];session.lastActiveAt=nowISO();saveStore(session);msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");updateMeta();updateHistoryList();closeD();toast("Cleared");}
+  dL.innerHTML='<div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF</strong><small>Entity System</small></div><button class="dclose" id="cL">✕</button></div><div class="history-tools"><input class="history-search" id="historySearch" type="search" placeholder="চ্যাটের শিরোনাম খুঁজুন..." aria-label="চ্যাট হিস্ট্রি খুঁজুন"><button class="history-new" id="historyNewChat" type="button">＋ নতুন চ্যাট</button><div class="history-heading">আগের চ্যাট</div><div class="history-list" id="historyList" aria-live="polite"></div></div><div class="session-meta" id="sessionMeta"></div><nav class="nav" id="navL"></nav>';
   dR.innerHTML='<div class="dhead"><div class="dlogo">⋮</div><div><strong>Options</strong></div><button class="dclose" id="cR" aria-label="ডান মেনু বন্ধ করুন"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="nav" id="navR">'+
     '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2v-5.5A7.5 7.5 0 0 1 10.5 8H13a8 8 0 0 1 8 3.5Z"/><path d="M8 3h5a6 6 0 0 1 6 5"/></svg><span>Chat & history</span></div><div class="nav-family-items">'+
     '<button id="historyBtn" type="button" aria-label="ইতিহাস"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2M3 12H1m2-6L1 4"/></svg></span><span class="nav-copy"><span>ইতিহাস</span><small>খোলা/বন্ধ সময়</small></span></button>'+
@@ -630,7 +646,8 @@ header.top{
     });
     section.appendChild(items);navL.appendChild(section);
   });
-  updateMeta();
+  var historySearch=$("#historySearch"),historyNewChat=$("#historyNewChat");if(historySearch)historySearch.addEventListener("input",updateHistoryList);if(historyNewChat)historyNewChat.onclick=newChat;
+  updateMeta();updateHistoryList();
   var rec=null;
   function initV(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;rec=new SR();rec.lang="bn-BD";rec.continuous=false;rec.interimResults=true;rec.onstart=function(){showV("Listening…");};rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;var p=correct(t);input.value=punct(p.text);resize();showV(p.corrections.length?"Context corrected":"Voice ready");};rec.onerror=function(e){showV("Error: "+e.error);setTimeout(hideV,2000);};rec.onend=function(){if(vStatus.textContent==="Listening…")hideV();else setTimeout(hideV,1500);};}
   function startV(){if(!rec){toast("Voice API নেই");return;}try{rec.start();}catch(e){}}
