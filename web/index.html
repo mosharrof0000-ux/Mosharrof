@@ -379,11 +379,12 @@ header.top{
       if("speechSynthesis" in window){
         var u=new SpeechSynthesisUtterance(String(t||""));u.lang="bn-BD";u.rate=0.95;
         activeSpeech=u;activeSpeechButton=button;
+        u.onstart=function(){if(activeSpeech===u){setSpeakButton(button,"⏸ বন্ধ করুন");showV("পড়া হচ্ছে · browser voice");}};
         u.onend=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
         u.onerror=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
-        setSpeakButton(button,"⏸ বন্ধ করুন");
+        setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");
         button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===u&&"speechSynthesis" in window){window.speechSynthesis.cancel();activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
-        window.speechSynthesis.cancel();window.speechSynthesis.speak(u);showV("পড়া হচ্ছে · browser voice");toast("ব্রাউজার ভয়েস ব্যবহার হচ্ছে");
+        window.speechSynthesis.cancel();window.speechSynthesis.speak(u);toast("ব্রাউজার ভয়েস ব্যবহার হচ্ছে");
       }else{resetSpeakButton(button);toast("ভয়েস সেবা এখন পাওয়া যাচ্ছে না");}
     });
   }
