@@ -91,10 +91,13 @@ def test_storage_organizer_never_overwrites(tmp_path):
     assert existing.read_text(encoding="utf-8") == "existing"
 
 
-def test_tool_factory_safe_function_body_and_execution(tmp_path):
+def test_tool_factory_denies_unconfigured_registration_and_execution(tmp_path):
     factory = ToolFactory(tools_dir=str(tmp_path / "tools"))
-    assert "created and registered" in factory.create_tool("safe_tool", "return 1")
-    assert factory.execute_tool("safe_tool") == 1
+    result = factory.create_tool("safe_tool", "return 1")
+    assert result.startswith("DENIED:")
+    assert not (tmp_path / "tools" / "safe_tool.py").exists()
+    denied = factory.execute_tool("safe_tool")
+    assert denied["status"] == "DENIED"
 
 
 def test_core_audit_and_brain_adapter():
