@@ -11,6 +11,9 @@
 <!-- Mosharrof live pages contract -->
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atma:wght@300;400;500;600;700&family=Galada&family=Hind+Siliguri:wght@300;400;500;600;700&family=Mina:wght@400;700&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --safe-t:env(safe-area-inset-top,0px);
@@ -76,6 +79,21 @@ header.top{
 .message.ai .rich-content .code-toolbar .code-language{text-transform:lowercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.message.ai .rich-content .copy-code{flex:none;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:#252a33;color:#f4f4f5;padding:5px 9px;font-size:11px}.message.ai .rich-content .copy-code:active{background:#3b414c}
 .message.ai .rich-content pre{margin:0;max-width:100%;overflow:auto;padding:14px;background:#0d1117;color:#e6edf3;font:12.5px/1.7 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:2;scrollbar-width:thin}
 .message.ai .rich-content pre code{font:inherit;white-space:pre}.message.ai .rich-content .code-block pre code{padding:0;border:0;border-radius:0;background:transparent;color:inherit}.message.ai .rich-content img{max-width:100%;height:auto;border-radius:10px}
+
+/* Dynamic Bengali typography: font families are mapped by the central registry. */
+.message.ai .rich-content.font-song{font-size:17px;line-height:2.02;letter-spacing:.012em}
+.message.ai .rich-content.font-song h1,.message.ai .rich-content.font-song h2,.message.ai .rich-content.font-song h3{line-height:1.5;letter-spacing:0}
+.message.ai .rich-content.font-song p{margin:1em 0}
+.message.ai .rich-content.font-poem{font-size:16.5px;line-height:2.02;letter-spacing:.008em}
+.message.ai .rich-content.font-poem h1,.message.ai .rich-content.font-poem h2,.message.ai .rich-content.font-poem h3{line-height:1.55;letter-spacing:0}
+.message.ai .rich-content.font-poem p{margin:.85em 0}
+.message.ai .rich-content.font-story{font-size:15.5px;line-height:1.88}
+.message.ai .rich-content.font-story h1{font-size:1.65em}
+.message.ai .rich-content.font-story h2{font-size:1.38em}
+.message.ai .rich-content.font-story h3{font-size:1.16em}
+.message.ai .rich-content.font-song blockquote,.message.ai .rich-content.font-poem blockquote{border-left-color:#9b83c7;background:rgba(155,131,199,.08)}
+.message.ai .rich-content .font-song,.message.ai .rich-content .font-poem,.message.ai .rich-content .font-story{overflow-wrap:anywhere}
+
 @media(max-width:480px){.message.ai .rich-content{font-size:15px;line-height:1.78}.message.ai .rich-content th,.message.ai .rich-content td{padding:8px 9px}.message.ai .rich-content pre{font-size:12px;padding:11px}}
 
 .message-actions-wrap{display:flex;flex-direction:column;align-items:flex-start;margin-top:7px;gap:6px}
@@ -296,6 +314,98 @@ header.top{
   function escapeHTML(value){
     return String(value==null?"":value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
+  /*
+   * Extensible font registry. Add a font here or call
+   * MOSHARROF_TYPOGRAPHY.registerFont("my-font",{family:"Font Family",weights:"400;500;700"}).
+   */
+  var MOSHARROF_TYPOGRAPHY={
+    fonts:{
+      "hind-siliguri":{family:"Hind Siliguri",fallback:"sans-serif",weights:"300;400;500;600;700"},
+      "atma":{family:"Atma",fallback:"cursive",weights:"300;400;500;600;700"},
+      "mina":{family:"Mina",fallback:"sans-serif",weights:"400;700"},
+      "galada":{family:"Galada",fallback:"cursive",weights:"400"},
+      "noto-serif-bengali":{family:"Noto Serif Bengali",fallback:"serif",weights:"400;500;600;700"}
+    },
+    genres:{
+      song:{font:"galada",headingFont:"atma"},
+      poem:{font:"noto-serif-bengali",headingFont:"atma"},
+      story:{font:"hind-siliguri",headingFont:"hind-siliguri"}
+    },
+    registerFont:function(id,config){
+      id=String(id||"").toLowerCase();
+      if(!/^[a-z0-9-]{2,48}$/.test(id)||!config||!String(config.family||"").trim())return false;
+      var family=String(config.family).trim();
+      if(/[<>;"{}]/.test(family))return false;
+      this.fonts[id]={family:family,fallback:String(config.fallback||"sans-serif"),weights:String(config.weights||"400;700")};
+      loadTypographyFont(this.fonts[id]);rebuildTypographyStyles();return true;
+    },
+    setGenreFont:function(genre,fontId,headingFont){
+      if(!Object.prototype.hasOwnProperty.call(this.genres,genre)||!this.fonts[fontId])return false;
+      if(headingFont&&!this.fonts[headingFont])return false;
+      this.genres[genre].font=fontId;
+      this.genres[genre].headingFont=headingFont||fontId;
+      rebuildTypographyStyles();return true;
+    },
+    registerGenre:function(id,config){
+      id=String(id||"").toLowerCase();
+      if(!/^[a-z0-9-]{2,32}$/.test(id)||!config||!this.fonts[config.font]||(config.headingFont&&!this.fonts[config.headingFont]))return false;
+      this.genres[id]={font:config.font,headingFont:config.headingFont||config.font};
+      rebuildTypographyStyles();return true;
+    }
+  };
+  function loadTypographyFont(font){
+    if(!font||!font.family)return;
+    var safeName=font.family.replace(/[^a-zA-Z0-9 -]/g,"");
+    var bundled=["Hind Siliguri","Atma","Mina","Galada","Noto Serif Bengali"];
+    if(bundled.indexOf(font.family)>=0&&document.querySelector('link[href*="family=Atma"][href*="Galada"][href*="Hind+Siliguri"]'))return;
+    if(document.querySelector('link[data-mosharrof-font="'+safeName+'"]'))return;
+    var link=document.createElement("link");link.rel="stylesheet";
+    link.href="https://fonts.googleapis.com/css2?family="+encodeURIComponent(font.family).replace(/%20/g,"+")+":wght@"+String(font.weights||"400;700")+"&display=swap";
+    link.setAttribute("data-mosharrof-font",safeName);document.head.appendChild(link);
+  }
+  function rebuildTypographyStyles(){
+    var style=document.getElementById("mosharrofTypographyStyles");
+    if(!style){style=document.createElement("style");style.id="mosharrofTypographyStyles";document.head.appendChild(style);}
+    var css="";
+    Object.keys(MOSHARROF_TYPOGRAPHY.genres).forEach(function(genre){
+      var cfg=MOSHARROF_TYPOGRAPHY.genres[genre],body=MOSHARROF_TYPOGRAPHY.fonts[cfg.font],head=MOSHARROF_TYPOGRAPHY.fonts[cfg.headingFont||cfg.font];
+      if(!body)return;
+      css+=".message.ai .rich-content.font-"+genre+"{font-family:"+JSON.stringify(body.family)+","+body.fallback+"}";
+      if(head)css+=".message.ai .rich-content.font-"+genre+" h1,.message.ai .rich-content.font-"+genre+" h2,.message.ai .rich-content.font-"+genre+" h3,.message.ai .rich-content.font-"+genre+" h4{font-family:"+JSON.stringify(head.family)+","+head.fallback+"}";
+    });
+    Object.keys(MOSHARROF_TYPOGRAPHY.fonts).forEach(function(id){loadTypographyFont(MOSHARROF_TYPOGRAPHY.fonts[id]);});
+    style.textContent=css;
+  }
+  window.MOSHARROF_TYPOGRAPHY=MOSHARROF_TYPOGRAPHY;
+  function detectTypographyGenre(source,root){
+    if(root){
+      var registeredGenres=Object.keys(MOSHARROF_TYPOGRAPHY.genres);
+      for(var gi=0;gi<registeredGenres.length;gi++){
+        var registeredGenre=registeredGenres[gi];
+        if(root.querySelector(".font-"+registeredGenre))return registeredGenre;
+      }
+    }
+    var fence=String.fromCharCode(96).repeat(3);
+    var value=String(source||"").replace(new RegExp(fence+"[\\s\\S]*?"+fence,"g")," ").replace(/<[^>]*>/g," ").trim();
+    var first=value.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||"";
+    if(/^(?:গান|গানের কথা|গীত|lyrics|song)\s*[:：—-]/i.test(first)||/\b(?:chorus|verse|lyrics)\b/i.test(value)||/(?:গানের কথা|একটি গান লিখ|গান রচনা|কোরাস|ধ্রুবক)/i.test(value))return"song";
+    if(/^(?:কবিতা|কবিতার নাম|poem|poetry)\s*[:：—-]/i.test(first)||/(?:কবিতা লিখ|একটি কবিতা|কাব্যিকভাবে|ছন্দে লিখ)/i.test(value))return"poem";
+    var lines=value.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
+    var contentLines=lines.filter(function(x){return !/^#{1,6}\s/.test(x)&&!/^[-*+]\s/.test(x)&&!/^\d+[.)]\s/.test(x)&&!/^\|/.test(x)&&!/^>\s?/.test(x);});
+    if(contentLines.length>=4){
+      var shortLines=contentLines.filter(function(x){return x.split(/\s+/).length<=8;}).length;
+      if(shortLines/contentLines.length>=.75)return"poem";
+    }
+    if(/^(?:গল্প|ছোটগল্প|story)\s*[:：—-]/i.test(first)||/(?:একদিন এক|এক ছিল|গল্পটি হলো|গল্পের নাম|এক দেশে ছিল)/i.test(value))return"story";
+    return"story";
+  }
+  function applySmartTypography(root,source){
+    if(!root)return"story";
+    var genre=detectTypographyGenre(source,root);
+    Object.keys(MOSHARROF_TYPOGRAPHY.genres).forEach(function(name){root.classList.remove("font-"+name);});
+    root.classList.add("font-"+genre);root.setAttribute("data-typography-genre",genre);return genre;
+  }
+
   function renderRichText(value){
     var source=String(value==null?"":value);
     if(window.marked&&window.DOMPurify){try{window.marked.setOptions({gfm:true,breaks:false,headerIds:false,mangle:false});return window.DOMPurify.sanitize(window.marked.parse(source),{USE_PROFILES:{html:true},ADD_ATTR:["target","rel"]});}catch(e){}}
@@ -334,7 +444,7 @@ header.top{
     if(role!=="user"){var l=document.createElement("span");l.className="label";l.textContent=typeof elapsedMs==="number"?elapsedLabel(elapsedMs):"MOSHARROF AI · core";n.appendChild(l);}
     if(role==="user"){n.appendChild(document.createTextNode(text));}
     else{
-      var rich=document.createElement("div");rich.className="rich-content";rich.innerHTML=renderRichText(text);n.appendChild(rich);enhanceRichContent(rich);
+      var rich=document.createElement("div");rich.className="rich-content";rich.innerHTML=renderRichText(text);applySmartTypography(rich,text);n.appendChild(rich);enhanceRichContent(rich);
     }
     var messageIndex=typeof messageIndexOverride==="number"?messageIndexOverride:session.messages.length;
     if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text,at,messageIndex,feedback||null);
