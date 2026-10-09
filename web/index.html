@@ -55,6 +55,16 @@ header.top{
 .message .speak{display:inline-flex;align-items:center;margin-top:7px;margin-right:6px;padding:5px 9px;border-radius:10px;background:#222;color:#ddd;font-size:11px}.message .time{display:block;font-size:10px;color:#6b6b70;margin-top:4px}
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
+.message-actions-wrap{display:flex;flex-direction:column;align-items:flex-start;margin-top:7px;gap:6px}
+.message.user .message-actions-wrap{align-items:flex-end}
+.message-actions-toggle{width:28px;height:24px;display:inline-grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:#080808;color:#f2f2f2;font-size:16px;line-height:1}
+.message-actions{display:none;align-items:center;flex-wrap:wrap;gap:5px;padding:4px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#050505}
+.message-actions-wrap.open .message-actions{display:flex}
+.message-action{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:30px;padding:5px 8px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:#111;color:#f5f5f5;font-size:11px;line-height:1.2;white-space:nowrap}
+.message-action:active,.message-actions-toggle:active{background:#303030}
+.message-action svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.message-action:focus-visible,.message-actions-toggle:focus-visible{outline:2px solid #aaa;outline-offset:2px}
+@media(hover:hover){.message-actions-wrap:hover .message-actions{display:flex}}
 .message.generated-image{max-width:min(94%,820px)}
 .generated-image img{display:block;width:100%;max-width:820px;border-radius:16px;border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 28px rgba(0,0,0,.45)}
 .generated-image .image-actions{display:flex;gap:8px;margin-top:8px}
@@ -167,6 +177,22 @@ header.top{
   function hideV(){vStatus.classList.remove("show");}
   function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
+  function iconSvg(kind){
+    var paths={edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',retry:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6"/><path d="M18.4 15A7 7 0 0 1 6 18l-2-6"/>',share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>'};
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[kind]||'')+'</svg>';
+  }
+  function addMessageToolbar(n,role,text){
+    var wrap=document.createElement("div");wrap.className="message-actions-wrap";
+    var toggle=document.createElement("button");toggle.type="button";toggle.className="message-actions-toggle";toggle.setAttribute("aria-label","মেসেজের কাজ দেখান");toggle.setAttribute("aria-expanded","false");toggle.textContent="⋯";
+    var group=document.createElement("div");group.className="message-actions";group.setAttribute("role","group");group.setAttribute("aria-label","মেসেজ অ্যাকশন");
+    function action(kind,label,fn){var b=document.createElement("button");b.type="button";b.className="message-action";b.innerHTML=iconSvg(kind)+'<span>'+label+'</span>';b.onclick=function(e){e.stopPropagation();fn();};group.appendChild(b);}
+    action("edit","এডিট",function(){editMessage(n,role,text);});
+    action("copy","কপি",function(){copyMessage(text);});
+    action("retry","আবার চেষ্টা",function(){retryMessage(n,role,text);});
+    action("share","শেয়ার",function(){shareMessage(text);});
+    toggle.onclick=function(e){e.stopPropagation();var open=wrap.classList.toggle("open");toggle.setAttribute("aria-expanded",open?"true":"false");};
+    wrap.appendChild(toggle);wrap.appendChild(group);n.appendChild(wrap);
+  }
   function addMsg(role,text,ts,skipSave){
     var at=ts||nowISO();
     var n=document.createElement("div");
@@ -175,9 +201,44 @@ header.top{
     n.appendChild(l);n.appendChild(document.createTextNode(text));
     if(role==="ai" && text && text.indexOf("🖼️")!==0){var sp=document.createElement("button");sp.className="speak";sp.type="button";sp.textContent="🔊 শুনুন";sp.onclick=function(){speakText(text,sp);};n.appendChild(sp);}
     var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);n.appendChild(tm);
+    if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text);
     msgEl.appendChild(n);bottom();
     if(!skipSave){session.messages.push({role:role,text:text,at:at});session.lastActiveAt=at;saveStore(session);updateMeta();}
     return n;
+  }
+  var editTargetIndex=null;
+  function copyMessage(text){
+    var value=String(text||"");
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(value).then(function(){toast("মেসেজ কপি হয়েছে");}).catch(function(){fallbackCopy(value);});}
+    else fallbackCopy(value);
+  }
+  function fallbackCopy(value){
+    var area=document.createElement("textarea");area.value=value;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();
+    try{var ok=document.execCommand("copy");toast(ok?"মেসেজ কপি হয়েছে":"কপি করা যায়নি");}catch(e){toast("কপি করা যায়নি");}area.remove();
+  }
+  function editMessage(node,role,text){
+    if(role==="user"){
+      editTargetIndex=Array.prototype.indexOf.call(msgEl.children,node);
+      input.value=text;
+    }else{
+      editTargetIndex=null;
+      input.value="এই উত্তরটি আরও বিস্তারিত করে লিখুন, প্রয়োজনীয় ব্যাখ্যা ও উদাহরণ যোগ করুন:\n\n"+text;
+    }
+    resize();input.focus();input.setSelectionRange(input.value.length,input.value.length);toast(role==="user"?"মেসেজ এডিট করুন, তারপর সেন্ড চাপুন":"উত্তরটি বাড়াতে চাইলে সম্পাদনা করে সেন্ড করুন",2600);
+  }
+  function retryMessage(node,role,text){
+    var prompt=text,sourceIndex=Array.prototype.indexOf.call(msgEl.children,node);
+    if(role==="ai"){
+      sourceIndex=-1;
+      for(var i=Array.prototype.indexOf.call(msgEl.children,node)-1;i>=0;i--){var m=session.messages[i];if(m&&m.role==="user"){prompt=m.text;sourceIndex=i;break;}}
+    }
+    if(!prompt||sourceIndex<0){toast("আবার পাঠানোর মতো মেসেজ পাওয়া যায়নি");return;}
+    input.value=prompt;resize();editTargetIndex=sourceIndex;send();
+  }
+  function shareMessage(text){
+    var payload={title:"MOSHARROF AI",text:String(text||"")};
+    if(navigator.share){navigator.share(payload).then(function(){toast("শেয়ার মেনু খোলা হয়েছে");}).catch(function(e){if(e&&e.name!=="AbortError")copyMessage(text);});}
+    else copyMessage(text);
   }
   function typing(){var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label">MOSHARROF AI · core</span><span class="dots"><span></span><span></span><span></span></span>';msgEl.appendChild(n);bottom();}
   function untype(){var t=$("#typing");if(t)t.remove();}
@@ -375,7 +436,14 @@ header.top{
   var busy=false;
   function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
   function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
-  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");typing();
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
+    if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
+      session.messages=session.messages.slice(0,editTargetIndex);
+      msgEl.innerHTML="";
+      for(var ri=0;ri<session.messages.length;ri++){var rm=session.messages[ri];addMsg(rm.role,rm.text,rm.at,true);}
+      editTargetIndex=null;
+    }
+    addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");typing();
     var imageMode=!attached&&looksLikeImagePrompt(text);
     var request=imageMode?imageReply(text):coreReply(text,attached);
     request.then(function(r){untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।";addMsg("ai",message);busy=false;sendBtn.disabled=false;input.focus();});}
