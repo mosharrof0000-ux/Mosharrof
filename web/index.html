@@ -251,16 +251,17 @@ header.top{
     toggle.onclick=function(e){e.stopPropagation();var open=wrap.classList.toggle("open");toggle.setAttribute("aria-expanded",open?"true":"false");};
     wrap.appendChild(meta);wrap.appendChild(group);if(role==="ai")wrap.appendChild(panel);n.appendChild(wrap);
   }
-  function addMsg(role,text,ts,skipSave,feedback,messageIndexOverride){
+  function elapsedLabel(ms){var seconds=Math.max(0,Number(ms)||0)/1000;var value=seconds<10?seconds.toFixed(1):String(Math.round(seconds));return "সময় নিয়েছে · "+value+" সেকেন্ড";}
+  function addMsg(role,text,ts,skipSave,feedback,messageIndexOverride,elapsedMs){
     var at=ts||nowISO();
     var n=document.createElement("div");
     /* message-renderer contract markers: */ n.className='message ai'; if(role==="user")n.className='message user'; else n.className="message ai";
-    if(role!=="user"){var l=document.createElement("span");l.className="label";l.textContent="MOSHARROF AI · core";n.appendChild(l);}
+    if(role!=="user"){var l=document.createElement("span");l.className="label";l.textContent=typeof elapsedMs==="number"?elapsedLabel(elapsedMs):"MOSHARROF AI · core";n.appendChild(l);}
     n.appendChild(document.createTextNode(text));
     var messageIndex=typeof messageIndexOverride==="number"?messageIndexOverride:session.messages.length;
     if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text,at,messageIndex,feedback||null);
     msgEl.appendChild(n);bottom();
-    if(!skipSave){var savedMessage={role:role,text:text,at:at};if(role==="ai"&&feedback)savedMessage.feedback=feedback;session.messages.push(savedMessage);session.lastActiveAt=at;saveStore(session);updateMeta();}
+    if(!skipSave){var savedMessage={role:role,text:text,at:at};if(role==="ai"&&typeof elapsedMs==="number")savedMessage.elapsedMs=elapsedMs;if(role==="ai"&&feedback)savedMessage.feedback=feedback;session.messages.push(savedMessage);session.lastActiveAt=at;saveStore(session);updateMeta();}
     return n;
   }
   function renderFeedbackPanel(panel,messageIndex,kind,feedback,trigger){
@@ -340,8 +341,8 @@ header.top{
     if(navigator.share){navigator.share(payload).then(function(){toast("শেয়ার মেনু খোলা হয়েছে");}).catch(function(e){if(e&&e.name!=="AbortError")copyMessage(text);});}
     else copyMessage(text);
   }
-  function typing(){var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label">MOSHARROF AI · core</span><span class="dots"><span></span><span></span><span></span></span>';msgEl.appendChild(n);bottom();}
-  function untype(){var t=$("#typing");if(t)t.remove();}
+  function typing(startedAt){var started=typeof startedAt==="number"?startedAt:performance.now();var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label"></span><span class="dots"><span></span><span></span><span></span></span>';var label=n.querySelector(".label");function refresh(){label.textContent="ভাবছে · "+elapsedLabel(performance.now()-started).replace("সময় নিয়েছে · ","");}refresh();n._elapsedTimer=window.setInterval(refresh,100);msgEl.appendChild(n);bottom();}
+  function untype(){var t=$("#typing");if(t){if(t._elapsedTimer)window.clearInterval(t._elapsedTimer);t.remove();}}
   var CHAT_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat";
   var IMAGE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/generate-image";
   var TTS_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts";
@@ -582,17 +583,17 @@ header.top{
     if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
       session.messages=session.messages.slice(0,editTargetIndex);
       msgEl.innerHTML="";
-      for(var ri=0;ri<session.messages.length;ri++){var rm=session.messages[ri];addMsg(rm.role,rm.text,rm.at,true,rm.feedback,ri);}
+      for(var ri=0;ri<session.messages.length;ri++){var rm=session.messages[ri];addMsg(rm.role,rm.text,rm.at,true,rm.feedback,ri,rm.elapsedMs);}
       editTargetIndex=null;
     }
-    addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");typing();
+    addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);
     var imageMode=!attached&&looksLikeImagePrompt(text);
     var request=imageMode?imageReply(text):coreReply(text,attached);
-    request.then(function(r){untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।";addMsg("ai",message);busy=false;sendBtn.disabled=false;input.focus();});}
+    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r,undefined,false,null,undefined,elapsedMs);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।";addMsg("ai",message,undefined,false,null,undefined,elapsedMs);busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
-  function restoreMessages(){msgEl.innerHTML="";if(session.messages&&session.messages.length){for(var i=0;i<session.messages.length;i++){var m=session.messages[i];addMsg(m.role,m.text,m.at,true,m.feedback,i);}}else{addMsg("ai","আমি কীভাবে আপনাকে সাহায্য করতে পারি?",nowISO(),true);}}
+  function restoreMessages(){msgEl.innerHTML="";if(session.messages&&session.messages.length){for(var i=0;i<session.messages.length;i++){var m=session.messages[i];addMsg(m.role,m.text,m.at,true,m.feedback,i,m.elapsedMs);}}else{addMsg("ai","আমি কীভাবে আপনাকে সাহায্য করতে পারি?",nowISO(),true);}}
   function showHistory(){closeD();var lines=[];lines.push("📅 সেশন সময়");lines.push("খোলা: "+fmtTime(session.openedAt));lines.push("শেষ সক্রিয়: "+fmtTime(session.lastActiveAt));if(session.closedAt)lines.push("বন্ধ: "+fmtTime(session.closedAt));lines.push("");lines.push("💬 মেসেজ: "+(session.messages?session.messages.length:0)+" টি");addMsg("ai",lines.join("\n"));toast("ইতিহাস");}
   function newChat(){session.closedAt=nowISO();saveStore(session);session={openedAt:nowISO(),closedAt:null,lastActiveAt:nowISO(),messages:[]};saveStore(session);msgEl.innerHTML="";addMsg("ai","নতুন কথোপকথন।");updateMeta();closeD();toast("নতুন চ্যাট");}
   function clearMsg(){session.messages=[];session.lastActiveAt=nowISO();saveStore(session);msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");updateMeta();closeD();toast("Cleared");}
