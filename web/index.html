@@ -335,8 +335,11 @@ header.top{
       id=String(id||"").toLowerCase();
       if(!/^[a-z0-9-]{2,48}$/.test(id)||!config||!String(config.family||"").trim())return false;
       var family=String(config.family).trim();
-      if(/[<>;"{}]/.test(family))return false;
-      this.fonts[id]={family:family,fallback:String(config.fallback||"sans-serif"),weights:String(config.weights||"400;700")};
+      if(/[<>{};"'\\\n\r]/.test(family))return false;
+      var source=config.source==="self-hosted"?"self-hosted":"google";
+      var src=String(config.src||"");
+      if(source==="self-hosted"&&!/^(https:\/\/[A-Za-z0-9.-]+(?::[0-9]+)?\/[A-Za-z0-9/_?&=.%+-]*|\/[A-Za-z0-9/_?&=.%+-]*|\.\.?\/[A-Za-z0-9/_?&=.%+-]*)$/.test(src))return false;
+      this.fonts[id]={family:family,fallback:String(config.fallback||"sans-serif"),weights:String(config.weights||"400;700"),source:source,src:source==="self-hosted"?src:"",format:String(config.format||"woff2"),style:String(config.style||"normal")};
       loadTypographyFont(this.fonts[id]);rebuildTypographyStyles();return true;
     },
     setGenreFont:function(genre,fontId,headingFont){
@@ -357,8 +360,14 @@ header.top{
     if(!font||!font.family)return;
     var safeName=font.family.replace(/[^a-zA-Z0-9 -]/g,"");
     var bundled=["Hind Siliguri","Atma","Mina","Galada","Noto Serif Bengali"];
-    if(bundled.indexOf(font.family)>=0&&document.querySelector('link[href*="family=Atma"][href*="Galada"][href*="Hind+Siliguri"]'))return;
-    if(document.querySelector('link[data-mosharrof-font="'+safeName+'"]'))return;
+    if(font.source!=="self-hosted"&&bundled.indexOf(font.family)>=0&&document.querySelector('link[href*="family=Atma"][href*="Galada"][href*="Hind+Siliguri"]'))return;
+    if(document.querySelector('[data-mosharrof-font="'+safeName+'"]'))return;
+    if(font.source==="self-hosted"){
+      var face=document.createElement("style");
+      face.setAttribute("data-mosharrof-font",safeName);
+      face.textContent="@font-face{font-family:"+JSON.stringify(font.family)+";src:url("+JSON.stringify(font.src)+") format("+JSON.stringify(font.format||"woff2")+");font-style:"+String(font.style||"normal")+";font-weight:"+String(font.weights||"400 700")+";font-display:swap}";
+      document.head.appendChild(face);return;
+    }
     var link=document.createElement("link");link.rel="stylesheet";
     link.href="https://fonts.googleapis.com/css2?family="+encodeURIComponent(font.family).replace(/%20/g,"+")+":wght@"+String(font.weights||"400;700")+"&display=swap";
     link.setAttribute("data-mosharrof-font",safeName);document.head.appendChild(link);
