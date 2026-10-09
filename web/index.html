@@ -572,7 +572,7 @@ header.top{
     n.appendChild(meta);
     var actions=document.createElement("div");actions.className="image-actions";
     var a=document.createElement("a");a.href=url;a.download="mosharrof-generated-image."+ext;a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);n.appendChild(actions);
-    var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);n.appendChild(tm);msgEl.appendChild(n);bottom();
+    msgEl.appendChild(n);bottom();
     session.messages.push({role:"ai",text:"🖼️ ইমেজ তৈরি হয়েছে।",at:at});session.lastActiveAt=at;saveStore(session);updateMeta();
   }
   var busy=false;
