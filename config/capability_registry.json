@@ -188,10 +188,7 @@
       "*.purge",
       "*.drop",
       "*.erase",
-      "*.remove",
-      "system.permission.grant",
-      "system.permission.catalog.manage",
-      "publish.site.deploy"
+      "*.remove"
     ],
     "explicit_user_approval": [
       "video.create",
@@ -212,7 +209,8 @@
       "system.module.disable",
       "ai.provider.configure",
       "publish.site.deploy",
-      "storage.backup.restore"
+      "storage.backup.restore",
+      "system.permission.catalog.manage"
     ],
     "provider_required_prefixes": [
       "video.",
