@@ -52,7 +52,7 @@ header.top{
 .messages{width:min(900px,100%);margin:auto auto 0;display:flex;flex-direction:column;gap:20px;flex-shrink:0}
 .message{max-width:min(88%,760px);font-size:15px;line-height:1.7;word-break:break-word;color:#ececec}
 .message .label{display:block;font-size:11px;color:#8e8e93;margin-bottom:6px}
-.message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active{background:#303030}
+.message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active,.message-speak-shortcut.is-speaking{background:#303030}
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
 .message-actions-wrap{display:flex;flex-direction:column;align-items:flex-start;margin-top:7px;gap:6px}
@@ -186,7 +186,7 @@ header.top{
     var meta=document.createElement("div");meta.className="message-meta-row";
     var toggle=document.createElement("button");toggle.type="button";toggle.className="message-actions-toggle";toggle.setAttribute("aria-label","মেসেজের কাজ দেখান");toggle.setAttribute("aria-expanded","false");toggle.textContent="⋯";
     var group=document.createElement("div");group.className="message-actions";group.setAttribute("role","group");group.setAttribute("aria-label","মেসেজ অ্যাকশন");
-    function action(kind,label,fn){var b=document.createElement("button");b.type="button";b.className="message-action";b.innerHTML=iconSvg(kind)+'<span>'+label+'</span>';b.onclick=function(e){e.stopPropagation();fn();};group.appendChild(b);return b;}
+    function action(kind,label,fn){var b=document.createElement("button");b.type="button";b.className="message-action";b.innerHTML=iconSvg(kind)+'<span>'+label+'</span>';b.onclick=function(e){e.stopPropagation();fn(b);};group.appendChild(b);return b;}
     meta.appendChild(toggle);
     if(role==="ai"){
       var quickSpeak=document.createElement("button");quickSpeak.type="button";quickSpeak.className="message-speak-shortcut";quickSpeak.setAttribute("aria-label","পড়ে শোনান");quickSpeak.setAttribute("title","পড়ে শোনান");quickSpeak.innerHTML=iconSvg("speak");quickSpeak.onclick=function(e){e.stopPropagation();speakText(text,quickSpeak);};meta.appendChild(quickSpeak);
@@ -196,7 +196,7 @@ header.top{
     action("copy","কপি",function(){copyMessage(text);});
     action("retry","আবার চেষ্টা",function(){retryMessage(n,role,text);});
     action("share","শেয়ার",function(){shareMessage(text);});
-    if(role==="ai")action("speak","পড়ে শোনান",function(){speakText(text,this);});
+    if(role==="ai")action("speak","পড়ে শোনান",function(button){speakText(text,button);});
     toggle.onclick=function(e){e.stopPropagation();var open=wrap.classList.toggle("open");toggle.setAttribute("aria-expanded",open?"true":"false");};
     wrap.appendChild(meta);wrap.appendChild(group);n.appendChild(wrap);
   }
@@ -261,10 +261,14 @@ header.top{
         return answer;
       });});
   }
+  function setSpeakButton(button,label){
+    if(button.classList.contains("message-speak-shortcut")){var playing=label.indexOf("বন্ধ")!==-1;button.innerHTML=iconSvg("speak");button.setAttribute("aria-label",playing?"পড়া বন্ধ করুন":"পড়ে শোনান");button.title=playing?"পড়া বন্ধ করুন":"পড়ে শোনান";button.classList.toggle("is-speaking",playing);}
+    else button.textContent=label;
+  }
   function speakText(t,button){
     if(activeAudio){try{activeAudio.pause();}catch(e){}activeAudio=null;}
-    button.disabled=true;button.textContent="⏳ প্রস্তুত হচ্ছে…";showV("পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে…");
-    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),language_code:"bn-BD",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){if(!data.audio_data)throw new Error("no_audio");activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudio.onended=function(){button.textContent="🔊 শুনুন";hideV();activeAudio=null;};button.textContent="⏸ বন্ধ করুন";button.disabled=false;button.onclick=function(){if(activeAudio){activeAudio.pause();activeAudio=null;button.textContent="🔊 শুনুন";hideV();button.onclick=function(){speakText(t,button);};}};showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){});}).catch(function(){button.disabled=false;button.textContent="🔊 শুনুন";hideV();if("speechSynthesis" in window){var u=new SpeechSynthesisUtterance(String(t||""));u.lang="bn-BD";u.rate=0.95;window.speechSynthesis.cancel();window.speechSynthesis.speak(u);toast("ব্রাউজার ভয়েস ব্যবহার হচ্ছে");}else{toast("ভয়েস সেবা এখন পাওয়া যাচ্ছে না");}});
+    button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");showV("পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে…");
+    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),language_code:"bn-BD",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){if(!data.audio_data)throw new Error("no_audio");activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudio.onended=function(){setSpeakButton(button,"🔊 শুনুন");hideV();activeAudio=null;button.onclick=function(){speakText(t,button);};};setSpeakButton(button,"⏸ বন্ধ করুন");button.disabled=false;button.onclick=function(){if(activeAudio){activeAudio.pause();activeAudio=null;setSpeakButton(button,"🔊 শুনুন");hideV();button.onclick=function(){speakText(t,button);};}};showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){});}).catch(function(){button.disabled=false;setSpeakButton(button,"🔊 শুনুন");hideV();button.onclick=function(){speakText(t,button);};if("speechSynthesis" in window){var u=new SpeechSynthesisUtterance(String(t||""));u.lang="bn-BD";u.rate=0.95;window.speechSynthesis.cancel();window.speechSynthesis.speak(u);toast("ব্রাউজার ভয়েস ব্যবহার হচ্ছে");}else{toast("ভয়েস সেবা এখন পাওয়া যাচ্ছে না");}});
   }
   function parseImageSpec(prompt){
     var p=String(prompt||""),v=p.toLowerCase(),m,ratio=null,w=null,h=null;
