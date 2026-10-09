@@ -221,8 +221,9 @@ async function generateWithCloudflare(prompt,env,spec){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   try{
     const model=env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell";
-    const requirement="\n\nComposition requirement: use a "+spec.aspect_ratio+" aspect ratio; keep the main subject safely inside the frame.";
-    const result=await env.AI.run(model,{prompt:prompt+requirement});
+    // Keep the user's prompt intact. Exact output ratio is enforced by the frontend
+    // post-processor; adding generic composition text caused false NSFW rejections.
+    const result=await env.AI.run(model,{prompt});
     const imageData=String(result?.image||"");
     if(!imageData)return {ok:false,provider:"cloudflare-workers-ai",model,reason:"empty_image"};
     return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/jpeg",image_data:imageData};
