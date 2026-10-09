@@ -234,7 +234,7 @@ header.top{
     var maxMatch=p.match(/(?:under|less than|below|এর কম|সর্বোচ্চ)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
     if(maxMatch)maxBytes=Math.round(Number(maxMatch[1])*(/mb|এমবি/i.test(maxMatch[2])?1024*1024:1024));
     var imageSize=(Math.max(w,h)>=3500||/4k|uhd|৪কে/.test(v))?"4K":((Math.max(w,h)>=2000||/2k|qhd|২কে/.test(v))?"2K":"1K");
-    return {width:w,height:h,aspect_ratio:ratio,image_size:imageSize,format:format,transparent:transparent,max_bytes:maxBytes,quality:quality||"standard"};
+    return {width:w,height:h,aspect_ratio:ratio,image_size:imageSize,format:format,transparent:transparent,max_bytes:maxBytes,quality:quality||"standard",explicit_dimensions:!!m,explicit_ratio:!!(p.match(/(\\d{1,2})\\s*:\\s*(\\d{1,2})/))};
   }
   function simplifyRatio(w,h){var a=w,b=h;while(b){var t=b;b=a%b;a=t;}return (w/a)+":"+(h/a);}
   function imageReply(t){
