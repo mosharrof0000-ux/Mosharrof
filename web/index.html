@@ -241,10 +241,9 @@ header.top{
           if(spec.transparent){
             var pixels=canvas.width*canvas.height;
             if(pixels>1200000){
-              var corners=ctx.getImageData(0,0,canvas.width,canvas.height);
-              var d=corners.data,hasAlpha=false;
-              for(var y of [0,canvas.height-1])for(var x of [0,canvas.width-1])if(d[(y*canvas.width+x)*4+3]<250)hasAlpha=true;
-              if(!hasAlpha)throw new Error("transparent_background_not_supported_for_large_output");
+              var cornerPoints=[[0,0],[canvas.width-1,0],[0,canvas.height-1],[canvas.width-1,canvas.height-1]],transparentCorners=0;
+              for(var ci=0;ci<cornerPoints.length;ci++){var cp=cornerPoints[ci],sample=ctx.getImageData(cp[0],cp[1],1,1);if(sample.data[3]<250)transparentCorners++;}
+              if(transparentCorners<4)throw new Error("transparent_background_not_supported_for_large_output");
               transparencyApplied=true;
             }else{
               var image=ctx.getImageData(0,0,canvas.width,canvas.height),d=image.data,w=canvas.width,h=canvas.height;
