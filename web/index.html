@@ -82,9 +82,16 @@ header.top{
   padding:8px 10px;box-shadow:0 8px 32px rgba(0,0,0,.7)
 }
 .row{display:flex;align-items:flex-end;gap:6px}
-.plus{width:40px;height:40px;flex:none;border-radius:50%;color:#e5e5e5;font-size:22px;display:grid;place-items:center}
-.attach{width:40px;height:40px;flex:none;border-radius:50%;color:#fff;display:grid;place-items:center;position:relative}
-.attach svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.composer-tools{position:relative;flex:none;display:flex;align-items:center}
+.composer-tool-toggle,.composer-action{width:36px;height:36px;flex:none;display:inline-grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#080808;color:#f2f2f2;transition:transform .16s ease,background .16s ease,border-color .16s ease}
+.composer-tool-toggle{font-size:21px;line-height:1}
+.composer-tool-toggle:active,.composer-action:active{transform:scale(.94);background:#303030}
+.composer-tool-toggle:hover,.composer-action:hover{background:#111;border-color:rgba(255,255,255,.3)}
+.composer-tool-toggle:focus-visible,.composer-action:focus-visible{outline:2px solid #aaa;outline-offset:2px}
+.composer-action svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.composer-tools-menu{position:absolute;left:0;bottom:44px;display:none;align-items:center;gap:5px;padding:5px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#050505;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:2}
+.composer-tools-menu.open{display:flex}
+.attach{position:relative}
 .attach input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 .image-preview{display:none;align-items:center;gap:8px;margin:0 4px 7px;padding:6px 8px;border-radius:14px;background:#202020;border:1px solid rgba(255,255,255,.1)}
 .image-preview.show{display:flex}
@@ -135,9 +142,14 @@ header.top{
   <div class="composer" id="composer">
     <div class="image-preview" id="imagePreview"><img id="previewImage" alt="Screenshot preview"><span id="previewName">Screenshot attached</span><button id="removeImage" aria-label="Remove screenshot">×</button></div>
     <div class="row">
-      <label class="attach" aria-label="Attach screenshot" title="Screenshot / image"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.5h4.6L15.5 5h2A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12" r="3.2"/></svg><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"></label>
-      <button class="plus" id="plusBtn" aria-label="Voice">+</button>
+      <div class="composer-tools" id="composerTools">
+        <button class="composer-tool-toggle" id="plusBtn" type="button" aria-label="আরও টুল দেখান" aria-expanded="false" aria-controls="composerToolsMenu">+</button>
+        <div class="composer-tools-menu" id="composerToolsMenu" role="group" aria-label="কম্পোজার টুল">
+          <label class="composer-action attach" aria-label="ক্যামেরা বা ছবি যোগ করুন" title="ক্যামেরা / ছবি"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.5h4.6L15.5 5h2A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12" r="3.2"/></svg><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"></label>
+        </div>
+      </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
+      <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
       <button class="send" id="sendBtn" aria-label="Send">➤</button>
     </div>
   </div>
@@ -153,6 +165,7 @@ header.top{
   var STORE_KEY="mosharrof_chat_v1";
   function $(s){return document.querySelector(s);}
   var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
+  var composerToolsMenu=$("#composerToolsMenu"),composerVoiceBtn=$("#composerVoiceBtn");
   var imageInput=$("#imageInput"),imagePreview=$("#imagePreview"),previewImage=$("#previewImage"),previewName=$("#previewName"),removeImage=$("#removeImage");
   var pendingImage=null;
   var leftBtn=$("#leftBtn"),rightBtn=$("#rightBtn"),scrim=$("#scrim"),dL=$("#drawerLeft"),dR=$("#drawerRight");
@@ -472,11 +485,16 @@ header.top{
   function initV(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;rec=new SR();rec.lang="bn-BD";rec.continuous=false;rec.interimResults=true;rec.onstart=function(){showV("Listening…");};rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;var p=correct(t);input.value=punct(p.text);resize();showV(p.corrections.length?"Context corrected":"Voice ready");};rec.onerror=function(e){showV("Error: "+e.error);setTimeout(hideV,2000);};rec.onend=function(){if(vStatus.textContent==="Listening…")hideV();else setTimeout(hideV,1500);};}
   function startV(){if(!rec){toast("Voice API নেই");return;}try{rec.start();}catch(e){}}
   sendBtn.onclick=send;
-  imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);});
+  imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);closeComposerTools();});
   removeImage.onclick=clearImage;
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
   input.addEventListener("input",resize);
-  plusBtn.onclick=startV;
+  function closeComposerTools(){composerToolsMenu.classList.remove("open");plusBtn.setAttribute("aria-expanded","false");}
+  plusBtn.onclick=function(e){e.stopPropagation();var open=composerToolsMenu.classList.toggle("open");plusBtn.setAttribute("aria-expanded",open?"true":"false");};
+  composerToolsMenu.addEventListener("click",function(e){e.stopPropagation();});
+  composerVoiceBtn.onclick=startV;
+  document.addEventListener("click",function(e){if(!e.target.closest||!e.target.closest("#composerTools"))closeComposerTools();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeComposerTools();});
   leftBtn.onclick=function(){updateMeta();openD("left");};
   rightBtn.onclick=function(){openD("right");};
   scrim.onclick=closeD;
