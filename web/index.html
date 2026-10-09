@@ -294,6 +294,7 @@ header.top{
               if(!blob){reject(new Error("image_encode_failed"));return;}
               if(spec.max_bytes&&blob.size>spec.max_bytes&&(mime==="image/jpeg"||mime==="image/webp")&&quality>0.24){quality=Math.max(0.24,quality-0.1);encode();return;}
               if(spec.max_bytes&&blob.size>spec.max_bytes){
+                if(shrinkForSize()){render();encode();return;}
                 reject(new Error("image_size_limit_unmet:"+blob.size+":"+spec.max_bytes));
                 return;
               }
