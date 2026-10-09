@@ -67,7 +67,9 @@ header.top{
 @media(hover:hover){.message-actions-wrap:hover .message-actions{display:flex}}
 .message-feedback-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2;flex:none}
 .message-feedback-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.message-feedback-shortcut:active,.message-feedback-shortcut.is-active{background:#102218;border-color:rgba(91,190,125,.7);color:#b9f5c9}
+.message-feedback-shortcut:active{background:#202020}
+.message-feedback-shortcut.is-like-active{background:#102218;border-color:rgba(91,190,125,.7);color:#b9f5c9}
+.message-feedback-shortcut.is-online-active{background:#321313;border-color:rgba(239,83,80,.8);color:#ff9a9a}
 .message-feedback-shortcut.online-feedback-shortcut:active,.message-feedback-shortcut.online-feedback-shortcut.is-active{background:#351313;border-color:rgba(239,83,80,.85);color:#ffb4b4}
 .feedback-panel{display:none;width:min(340px,calc(100vw - 54px));max-width:100%;padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#080808;box-shadow:0 8px 24px rgba(0,0,0,.35);gap:8px}
 .feedback-panel.open{display:flex;flex-direction:column}
@@ -228,7 +230,7 @@ header.top{
       var quickLike=document.createElement("button");quickLike.type="button";quickLike.className="message-feedback-shortcut";quickLike.setAttribute("aria-label","লাইক বা আনলাইক");quickLike.setAttribute("title","লাইক / আনলাইক");quickLike.innerHTML=iconSvg("like");quickLike.onclick=function(e){e.stopPropagation();openFeedback("like",quickLike);};meta.appendChild(quickLike);
       var quickOnline=document.createElement("button");quickOnline.type="button";quickOnline.className="message-feedback-shortcut online-feedback-shortcut";quickOnline.setAttribute("aria-label","অনলাইন ব্যবহারের কারণ");quickOnline.setAttribute("title","অনলাইন ব্যবহারের কারণ");quickOnline.innerHTML=iconSvg("online");quickOnline.onclick=function(e){e.stopPropagation();openFeedback("online",quickOnline);};meta.appendChild(quickOnline);
       var quickSpeak=document.createElement("button");quickSpeak.type="button";quickSpeak.className="message-speak-shortcut";quickSpeak.setAttribute("aria-label","পড়ে শোনান");quickSpeak.setAttribute("title","পড়ে শোনান");quickSpeak.innerHTML=iconSvg("speak");quickSpeak.onclick=function(e){e.stopPropagation();speakText(text,quickSpeak);};meta.appendChild(quickSpeak);
-      quickLike.classList.toggle("is-active",!!(feedback&&feedback.like));quickOnline.classList.toggle("is-active",!!(feedback&&feedback.online));
+      quickLike.classList.toggle("is-like-active",!!(feedback&&feedback.like));quickOnline.classList.toggle("is-online-active",!!(feedback&&feedback.online));
       action("like","লাইক",function(){openFeedback("like",quickLike);});
       action("online","অনলাইন",function(){openFeedback("online",quickOnline);});
     }
@@ -284,16 +286,16 @@ header.top{
       var item=session.messages[messageIndex];if(!item||item.role!=="ai"){toast("এই উত্তরের ফিডব্যাক সংরক্ষণ করা যায়নি");return;}
       item.feedback=item.feedback||{};item.feedback[kind]=value;item.feedback[kind].updatedAt=nowISO();
       feedback=item.feedback;session.lastActiveAt=nowISO();saveStore(session);close();
-      if(trigger&&trigger.classList)trigger.classList.toggle("is-active",true);
+      if(trigger&&trigger.classList)trigger.classList.toggle(kind==="like"?"is-like-active":"is-online-active",true);
       toast(kind==="like"?"লাইক ফিডব্যাক সংরক্ষিত হয়েছে":"অনলাইন ফিডব্যাক সংরক্ষিত হয়েছে");
     }
     if(kind==="like"){
       button("✓ লাইক নিশ্চিত করুন","primary",function(){saveFeedback({reason:selected,comment:comment.value.trim()});});
       button("শুধু লাইক","",function(){saveFeedback({reason:"simple",comment:""});});
-      if(existing)button("আনলাইক","negative",function(){var item=session.messages[messageIndex];if(item&&item.feedback){delete item.feedback.like;if(!item.feedback.online)delete item.feedback;}session.lastActiveAt=nowISO();saveStore(session);close();if(trigger&&trigger.classList)trigger.classList.remove("is-active");toast("আনলাইক করা হয়েছে");});
+      if(existing)button("আনলাইক","negative",function(){var item=session.messages[messageIndex];if(item&&item.feedback){delete item.feedback.like;if(!item.feedback.online)delete item.feedback;}session.lastActiveAt=nowISO();saveStore(session);close();if(trigger&&trigger.classList)trigger.classList.remove("is-like-active");toast("আনলাইক করা হয়েছে");});
     }else{
       button("✓ নিশ্চিত করুন","primary",function(){saveFeedback({reason:selected,comment:comment.value.trim()});});
-      if(existing)button("মতামত মুছুন","negative",function(){var item=session.messages[messageIndex];if(item&&item.feedback){delete item.feedback.online;if(!item.feedback.like)delete item.feedback;}session.lastActiveAt=nowISO();saveStore(session);close();if(trigger&&trigger.classList)trigger.classList.remove("is-active");toast("অনলাইন মতামত মুছে ফেলা হয়েছে");});
+      if(existing)button("মতামত মুছুন","negative",function(){var item=session.messages[messageIndex];if(item&&item.feedback){delete item.feedback.online;if(!item.feedback.like)delete item.feedback;}session.lastActiveAt=nowISO();saveStore(session);close();if(trigger&&trigger.classList)trigger.classList.remove("is-online-active");toast("অনলাইন মতামত মুছে ফেলা হয়েছে");});
     }
     button("বাতিল","",close);panel.appendChild(buttons);
   }
