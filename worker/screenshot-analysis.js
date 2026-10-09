@@ -7,7 +7,7 @@ const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gem
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
-const TTS_PROVIDERS=["elevenlabs","sarvam"];
+const TTS_PROVIDERS=["edge","elevenlabs","sarvam"];
 
 function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
 function elevenLabsKeyExpired(env){const raw=String(env.ELEVENLABS_KEY_EXPIRES_AT||"").trim();if(!raw)return false;const t=Date.parse(raw);return Number.isFinite(t)&&Date.now()>=t;}
@@ -136,7 +136,6 @@ async function tts(request,env){
   }else{
     providers=["sarvam","edge"];
   }
-  if(env.TTS_PROVIDER_ORDER && valid==="auto")providers=String(env.TTS_PROVIDER_ORDER).split(",").map(x=>x.trim()).filter(x=>["edge","elevenlabs","sarvam"].includes(x));
   const attempted=[];
   for(const provider of providers){
     const result=await synthesizeWithProvider(provider,chunks,body,env);
