@@ -55,7 +55,7 @@
         /(^|\n)\s*(অন্তরা|মুখড়া|মুখড়া)\s*[:：-]/i.test(text)) return "song";
     if (/(কবিতা|কাব্য|পংক্তি|ছন্দোবদ্ধ|ছড়া|ছড়া|poem|poetry)/i.test(text)) return "poem";
     if (/(ছোটগল্প|গল্প|উপন্যাস|গল্পের চরিত্র|story|short story|chapter)/i.test(text) ||
-        /(^|\n)\s*(একদিন|অনেক দিন আগে|এক দেশে|গল্পের নাম)\b/.test(text)) return "story";
+        /(^|\n)\s*(একদিন|অনেক দিন আগে|এক দেশে|গল্পের নাম)(?=\s|[:：,-]|$)/.test(text)) return "story";
     /* A title plus several short, line-separated lines is likely verse, not prose. */
     var lines = text.split("\n").map(function(line){ return line.trim(); }).filter(Boolean);
     if (lines.length >= 5) {
