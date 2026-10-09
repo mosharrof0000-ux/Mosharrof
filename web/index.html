@@ -209,6 +209,10 @@ header.top{
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .voice-bar{position:fixed;left:50%;bottom:130px;transform:translateX(-50%);z-index:9998;font-size:11px;color:var(--muted);opacity:0;transition:.2s;pointer-events:none}
 .voice-bar.show{opacity:1}
+.audio-setting-row{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--border);border-radius:12px;background:#111}
+.audio-setting-row label{font-size:12px;color:#e5e5e5;font-weight:650}
+.audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
+.audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
 </style>
 </head>
 <body>
@@ -642,6 +646,10 @@ header.top{
   var CHAT_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat";
   var IMAGE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/generate-image";
   var TTS_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts";
+  var TTS_PREF_KEY="mosharrof_tts_provider_v1",TTS_VOICE_KEY="mosharrof_tts_voice_v1";
+  var ttsProviderSelect=$("#ttsProviderSelect"),ttsVoiceSelect=$("#ttsVoiceSelect");
+  function getTtsPreference(){var value="auto";try{value=localStorage.getItem(TTS_PREF_KEY)||"auto";}catch(e){}return ["auto","edge","elevenlabs","browser","sarvam"].includes(value)?value:"auto";}
+  function getTtsVoice(){var value="bn-BD-PradeepNeural";try{value=localStorage.getItem(TTS_VOICE_KEY)||value;}catch(e){}return ["bn-BD-PradeepNeural","bn-BD-NabanitaNeural"].includes(value)?value:"bn-BD-PradeepNeural";}
   var activeAudio=null;
   var activeAudioButton=null;
   var activeSpeech=null;
@@ -709,33 +717,41 @@ header.top{
       .replace(/\n{3,}/g,"\n\n")
       .trim();
   }
+  function speakWithBrowser(spokenText,button){
+    if(!("speechSynthesis" in window)){resetSpeakButton(button);toast("এই ব্রাউজারে ভয়েস সুবিধা নেই");return;}
+    var u=new SpeechSynthesisUtterance(spokenText);u.lang="bn-BD";u.rate=0.95;activeSpeech=u;activeSpeechButton=button;
+    u.onstart=function(){if(activeSpeech===u){setSpeakButton(button,"⏸ বন্ধ করুন");showV("পড়া হচ্ছে · Browser Voice");}};
+    u.onend=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
+    u.onerror=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
+    setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");button.disabled=false;
+    button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===u){button.classList.add("is-stop-requested");window.speechSynthesis.cancel();activeSpeech=null;activeSpeechButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
+    window.speechSynthesis.cancel();window.speechSynthesis.speak(u);
+  }
+  function detectTtsGenre(text){
+    var s=String(text||"");
+    if(/(?:^|\\n|[#* >])\\s*(?:গান(?:ের কথা|টি|:)?|lyrics|song|কোরাস|স্থায়ী|স্থায়ী|অন্তরা|সঞ্চারী|আভোগ|মুখড়া|মুখড়া)\\b?/im.test(s))return "song";
+    if(/(?:কবিতা|poem|ছন্দোবদ্ধ|পঙ্?ক্তি|গীতিকবিতা)/i.test(s))return "poem";
+    return "chat";
+  }
   function speakText(t,button){
     if(activeAudio){try{activeAudio.pause();}catch(e){}if(activeAudioButton&&activeAudioButton!==button)resetSpeakButton(activeAudioButton);activeAudio=null;activeAudioButton=null;}
     if(activeSpeech&&"speechSynthesis" in window){try{window.speechSynthesis.cancel();}catch(e){}if(activeSpeechButton&&activeSpeechButton!==button)resetSpeakButton(activeSpeechButton);activeSpeech=null;activeSpeechButton=null;}
     button._speakText=String(t||"");
     var spokenText=speechTextFromMarkdown(t);
     if(!spokenText){toast("পড়ে শোনানোর মতো লেখা পাওয়া যায়নি");resetSpeakButton(button);return;}
-    button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");showV("পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে…");
-    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:spokenText,language_code:"bn-BD",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
+    var preference=getTtsPreference(),genre=detectTtsGenre(t);
+    if(preference==="browser"){speakWithBrowser(spokenText,button);return;}
+    button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");showV("ভয়েস ইঞ্জিন নির্বাচন হচ্ছে…");
+    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:spokenText,language_code:"bn-BD",pace:1,provider:preference,genre:genre,voice:getTtsVoice()})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
       if(!data.audio_data)throw new Error("no_audio");
       activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudioButton=button;
       activeAudio.onended=function(){if(activeAudioButton===button){activeAudio=null;activeAudioButton=null;}resetSpeakButton(button);hideV();};
       setSpeakButton(button,"⏸ বন্ধ করুন");button.disabled=false;
       button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeAudio&&activeAudioButton===button){button.classList.add("is-stop-requested");activeAudio.pause();activeAudio=null;activeAudioButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
-      showV("পড়া হচ্ছে · "+(data.provider||"voice"));
-      activeAudio.play().catch(function(){throw new Error("audio_play_failed");});
+      showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){throw new Error("audio_play_failed");});
     }).catch(function(){
       if(activeAudio&&activeAudioButton===button){try{activeAudio.pause();}catch(e){}activeAudio=null;activeAudioButton=null;}
-      button.disabled=false;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");hideV();
-      if("speechSynthesis" in window){
-        var u=new SpeechSynthesisUtterance(spokenText);u.lang="bn-BD";u.rate=0.95;activeSpeech=u;activeSpeechButton=button;
-        u.onstart=function(){if(activeSpeech===u){setSpeakButton(button,"⏸ বন্ধ করুন");showV("পড়া হচ্ছে · browser voice");}};
-        u.onend=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
-        u.onerror=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
-        setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");
-        button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===u&&"speechSynthesis" in window){button.classList.add("is-stop-requested");window.speechSynthesis.cancel();activeSpeech=null;activeSpeechButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
-        window.speechSynthesis.cancel();window.speechSynthesis.speak(u);toast("ব্রাউজার ভয়েস ব্যবহার হচ্ছে");
-      }else{resetSpeakButton(button);toast("ভয়েস সেবা এখন পাওয়া যাচ্ছে না");}
+      button.disabled=false;hideV();speakWithBrowser(spokenText,button);toast("সার্ভার ভয়েস পাওয়া যায়নি · Browser Voice ব্যবহার হচ্ছে");
     });
   }
   function parseImageSpec(prompt){
@@ -941,6 +957,7 @@ header.top{
     '<button id="newChat" type="button" aria-label="নতুন চ্যাট"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="nav-copy"><span>নতুন চ্যাট</span><small>নতুন কথোপকথন শুরু করুন</small></span></button>'+
     '<button id="clearMsg" type="button" aria-label="পরিষ্কার"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg></span><span class="nav-copy"><span>পরিষ্কার</span><small>বর্তমান কথোপকথনের মেসেজ মুছুন</small></span></button>'+
     '</div></section>'+
+    '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/></svg><span>Audio Settings</span></div><div class="audio-setting-row"><label for="ttsProviderSelect">ভয়েস ইঞ্জিন</label><select id="ttsProviderSelect"><option value="auto">স্বয়ংক্রিয় (গান/কবিতায় Premium)</option><option value="edge">Edge-TTS · Realistic</option><option value="elevenlabs">ElevenLabs Premium</option><option value="browser">Default Browser Voice</option><option value="sarvam">Sarvam Bengali Voice</option></select><label for="ttsVoiceSelect">Edge বাংলা কণ্ঠ</label><select id="ttsVoiceSelect"><option value="bn-BD-PradeepNeural">প্রদীপ · পুরুষ কণ্ঠ</option><option value="bn-BD-NabanitaNeural">নবনীতা · নারী কণ্ঠ</option></select><small>স্বয়ংক্রিয় মোডে সাধারণ উত্তরে Edge-TTS, গান/কবিতায় ElevenLabs চেষ্টা করবে। ব্যর্থ হলে অন্য ইঞ্জিন বা ব্রাউজার ভয়েসে ফিরবে।</small></div></section>'+
     '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/></svg><span>Voice & interaction</span></div><div class="nav-family-items">'+
     '<button id="voiceBtn" type="button" aria-label="কণ্ঠস্বর"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></span><span class="nav-copy"><span>কণ্ঠস্বর</span><small>কণ্ঠস্বর দিয়ে কথা বলুন</small></span></button>'+
     '</div></section></div>';
@@ -967,6 +984,8 @@ header.top{
     });
     section.appendChild(items);navL.appendChild(section);
   });
+  if(ttsProviderSelect){ttsProviderSelect.value=getTtsPreference();ttsProviderSelect.addEventListener("change",function(){try{localStorage.setItem(TTS_PREF_KEY,ttsProviderSelect.value);}catch(e){}toast("ভয়েস ইঞ্জিন: "+ttsProviderSelect.options[ttsProviderSelect.selectedIndex].text);});}
+  if(ttsVoiceSelect){ttsVoiceSelect.value=getTtsVoice();ttsVoiceSelect.addEventListener("change",function(){try{localStorage.setItem(TTS_VOICE_KEY,ttsVoiceSelect.value);}catch(e){}toast("Edge বাংলা কণ্ঠ পরিবর্তন হয়েছে");});}
   var historySearch=$("#historySearch"),historyNewChat=$("#historyNewChat");if(historySearch)historySearch.addEventListener("input",updateHistoryList);if(historyNewChat)historyNewChat.onclick=newChat;
   updateMeta();updateHistoryList();
   var rec=null;
