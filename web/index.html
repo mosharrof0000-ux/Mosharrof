@@ -200,19 +200,19 @@ header.top{
     fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),language_code:"bn-BD",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){if(!data.audio_data)throw new Error("no_audio");activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudio.onended=function(){button.textContent="🔊 শুনুন";hideV();activeAudio=null;};button.textContent="⏸ বন্ধ করুন";button.disabled=false;button.onclick=function(){if(activeAudio){activeAudio.pause();activeAudio=null;button.textContent="🔊 শুনুন";hideV();button.onclick=function(){speakText(t,button);};}};showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){});}).catch(function(){button.disabled=false;button.textContent="🔊 শুনুন";hideV();if("speechSynthesis" in window){var u=new SpeechSynthesisUtterance(String(t||""));u.lang="bn-BD";u.rate=0.95;window.speechSynthesis.cancel();window.speechSynthesis.speak(u);toast("ব্রাউজার ভয়েস ব্যবহার হচ্ছে");}else{toast("ভয়েস সেবা এখন পাওয়া যাচ্ছে না");}});
   }
   function parseImageSpecClient(prompt){
-    var p=String(prompt||""),l=p.toLowerCase(),w=0,h=0,ratio=null,m=p.match(/(?:^|\\b)(\\d{2,5})\\s*[x×]\\s*(\\d{2,5})(?:\\s*(?:px|pixels?)\\b)?/i);
+    var p=String(prompt||""),l=p.toLowerCase(),w=0,h=0,ratio=null,m=p.match(/(?:^|\b)(\d{2,5})\s*[x×]\s*(\d{2,5})(?:\s*(?:px|pixels?)\b)?/i);
     if(m){w=Number(m[1]);h=Number(m[2]);if(w<1||h<1||w>8192||h>8192){w=0;h=0;}}
-    var r=p.match(/(?:\\b)(\\d{1,2})\\s*:\\s*(\\d{1,2})(?:\\b)/);
+    var r=p.match(/(?:\b)(\d{1,2})\s*:\s*(\d{1,2})(?:\b)/);
     if(r&&Number(r[1])&&Number(r[2]))ratio=[Number(r[1]),Number(r[2])];
-    if(!ratio&&/youtube\\s*(?:shorts?)?|tiktok|reels|vertical|portrait|উল্লম্ব/i.test(l))ratio=[9,16];
-    if(!ratio&&/instagram/.test(l)&&/portrait|vertical|4\\s*:\\s*5|1080\\s*[x×]\\s*1350/i.test(l))ratio=[4,5];
+    if(!ratio&&/youtube\s*(?:shorts?)?|tiktok|reels|vertical|portrait|উল্লম্ব/i.test(l))ratio=[9,16];
+    if(!ratio&&/instagram/.test(l)&&/portrait|vertical|4\s*:\s*5|1080\s*[x×]\s*1350/i.test(l))ratio=[4,5];
     if(!ratio&&/youtube|thumbnail|landscape|facebook/.test(l))ratio=[16,9];
     if(!ratio&&/instagram|square|icon|logo|profile|প্রোফাইল|আইকন/i.test(l))ratio=[1,1];
     if(w&&h)ratio=[w,h];if(!ratio)ratio=[1,1];
-    var resolution=/4\\s*k|4k|uhd/i.test(l)?"4K":/2\\s*k|2k|qhd/i.test(l)?"2K":"1K";
-    if(!w||!h){var rw=ratio[0],rh=ratio[1],max=resolution==="4K"?3840:resolution==="2K"?2560:/full\\s*hd|1080p/i.test(l)?1920:/hd|720p/i.test(l)?1280:1024;if(rw>=rh){w=max;h=Math.max(1,Math.round(max*rh/rw));}else{h=max;w=Math.max(1,Math.round(max*rw/rh));}}
-    var fm=l.match(/\\b(png|webp|jpe?g)\\b/),format=fm?(fm[1]==="jpg"?"jpeg":fm[1]):"jpeg";
-    var sm=l.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\\s*(\\d+(?:\\.\\d+)?)\\s*(kb|mb|কেবি|এমবি)?/i),max_bytes=null;
+    var resolution=/4\s*k|4k|uhd/i.test(l)?"4K":/2\s*k|2k|qhd/i.test(l)?"2K":"1K";
+    if(!w||!h){var rw=ratio[0],rh=ratio[1],max=resolution==="4K"?3840:resolution==="2K"?2560:/full\s*hd|1080p/i.test(l)?1920:/hd|720p/i.test(l)?1280:1024;if(rw>=rh){w=max;h=Math.max(1,Math.round(max*rh/rw));}else{h=max;w=Math.max(1,Math.round(max*rw/rh));}}
+    var fm=l.match(/\b(png|webp|jpe?g)\b/),format=fm?(fm[1]==="jpg"?"jpeg":fm[1]):"jpeg";
+    var sm=l.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)?/i),max_bytes=null;
     if(sm)max_bytes=Math.round(Number(sm[1])*((/kb|কেবি/i.test(sm[2]||"")?1024:1024*1024)));
     return {width:w,height:h,aspect_ratio:ratio.join(":"),image_size:resolution,format:format,transparent:/transparent|transparency|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড স্বচ্ছ/i.test(l),max_bytes:max_bytes};
   }
