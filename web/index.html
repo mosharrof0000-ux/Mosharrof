@@ -68,6 +68,11 @@ header.top{
 .message-feedback-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2;flex:none}
 .message-feedback-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .message-feedback-shortcut:active,.message-feedback-shortcut.is-active{background:#102218;border-color:rgba(91,190,125,.7);color:#b9f5c9}
+/* Keep positive and online feedback visually distinct. */
+.message-feedback-shortcut.is-online-active{background:#351414;border-color:rgba(239,83,80,.8);color:#ff8a80}
+.feedback-panel[data-kind="online"] .feedback-option.selected{border-color:#d64a4a;background:#351414}
+.feedback-panel[data-kind="online"] .feedback-option.selected .feedback-check{border-color:#ff7777;background:#a92828;color:#fff}
+.feedback-panel[data-kind="online"] .feedback-button.primary{border-color:rgba(239,83,80,.7);background:#4a1717}
 .feedback-panel{display:none;width:min(340px,calc(100vw - 54px));max-width:100%;padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#080808;box-shadow:0 8px 24px rgba(0,0,0,.35);gap:8px}
 .feedback-panel.open{display:flex;flex-direction:column}
 .feedback-title{font-size:12px;font-weight:650;color:#f5f5f5;line-height:1.5}
@@ -223,7 +228,7 @@ header.top{
       var quickLike=document.createElement("button");quickLike.type="button";quickLike.className="message-feedback-shortcut";quickLike.setAttribute("aria-label","লাইক বা আনলাইক");quickLike.setAttribute("title","লাইক / আনলাইক");quickLike.innerHTML=iconSvg("like");quickLike.onclick=function(e){e.stopPropagation();openFeedback("like",quickLike);};meta.appendChild(quickLike);
       var quickOnline=document.createElement("button");quickOnline.type="button";quickOnline.className="message-feedback-shortcut";quickOnline.setAttribute("aria-label","অনলাইন ব্যবহারের কারণ");quickOnline.setAttribute("title","অনলাইন ব্যবহারের কারণ");quickOnline.innerHTML=iconSvg("online");quickOnline.onclick=function(e){e.stopPropagation();openFeedback("online",quickOnline);};meta.appendChild(quickOnline);
       var quickSpeak=document.createElement("button");quickSpeak.type="button";quickSpeak.className="message-speak-shortcut";quickSpeak.setAttribute("aria-label","পড়ে শোনান");quickSpeak.setAttribute("title","পড়ে শোনান");quickSpeak.innerHTML=iconSvg("speak");quickSpeak.onclick=function(e){e.stopPropagation();speakText(text,quickSpeak);};meta.appendChild(quickSpeak);
-      quickLike.classList.toggle("is-active",!!(feedback&&feedback.like));quickOnline.classList.toggle("is-active",!!(feedback&&feedback.online));
+      quickLike.classList.toggle("is-active",!!(feedback&&feedback.like));quickOnline.classList.toggle("is-active",false);quickOnline.classList.toggle("is-online-active",!!(feedback&&feedback.online));
       action("like","লাইক",function(){openFeedback("like",quickLike);});
       action("online","অনলাইন",function(){openFeedback("online",quickOnline);});
     }
@@ -251,7 +256,7 @@ header.top{
   }
   function renderFeedbackPanel(panel,messageIndex,kind,feedback,trigger){
     var existing=feedback&&feedback[kind]?feedback[kind]:null;
-    panel.innerHTML="";panel.classList.add("open");
+    panel.innerHTML="";panel.setAttribute("data-kind",kind);panel.classList.add("open");
     var title=document.createElement("div");title.className="feedback-title";title.textContent=kind==="like"?"এই উত্তরটি কেন পছন্দ হয়েছে?":"এই উত্তরে অনলাইন তথ্য কেন দরকার ছিল?";panel.appendChild(title);
     var choices=kind==="like"?[
       {value:"helpful",label:"উত্তরটি উপকারী ও কাজে লাগবে"},
@@ -279,16 +284,16 @@ header.top{
       var item=session.messages[messageIndex];if(!item||item.role!=="ai"){toast("এই উত্তরের ফিডব্যাক সংরক্ষণ করা যায়নি");return;}
       item.feedback=item.feedback||{};item.feedback[kind]=value;item.feedback[kind].updatedAt=nowISO();
       feedback=item.feedback;session.lastActiveAt=nowISO();saveStore(session);close();
-      if(trigger&&trigger.classList)trigger.classList.toggle("is-active",true);
+      if(trigger&&trigger.classList){trigger.classList.toggle("is-active",kind==="like");trigger.classList.toggle("is-online-active",kind==="online");}
       toast(kind==="like"?"লাইক ফিডব্যাক সংরক্ষিত হয়েছে":"অনলাইন ফিডব্যাক সংরক্ষিত হয়েছে");
     }
     if(kind==="like"){
       button("✓ লাইক নিশ্চিত করুন","primary",function(){saveFeedback({reason:selected,comment:comment.value.trim()});});
       button("শুধু লাইক","",function(){saveFeedback({reason:"simple",comment:""});});
-      if(existing)button("আনলাইক","",function(){var item=session.messages[messageIndex];if(item&&item.feedback){delete item.feedback.like;if(!item.feedback.online)delete item.feedback;}session.lastActiveAt=nowISO();saveStore(session);close();if(trigger&&trigger.classList)trigger.classList.remove("is-active");toast("আনলাইক করা হয়েছে");});
+      if(existing)button("আনলাইক","",function(){var item=session.messages[messageIndex];if(item&&item.feedback){delete item.feedback.like;if(!item.feedback.online)delete item.feedback;}session.lastActiveAt=nowISO();saveStore(session);close();if(trigger&&trigger.classList)trigger.classList.remove("is-active","is-online-active");toast("আনলাইক করা হয়েছে");});
     }else{
       button("✓ নিশ্চিত করুন","primary",function(){saveFeedback({reason:selected,comment:comment.value.trim()});});
-      if(existing)button("মতামত মুছুন","",function(){var item=session.messages[messageIndex];if(item&&item.feedback){delete item.feedback.online;if(!item.feedback.like)delete item.feedback;}session.lastActiveAt=nowISO();saveStore(session);close();if(trigger&&trigger.classList)trigger.classList.remove("is-active");toast("অনলাইন মতামত মুছে ফেলা হয়েছে");});
+      if(existing)button("মতামত মুছুন","",function(){var item=session.messages[messageIndex];if(item&&item.feedback){delete item.feedback.online;if(!item.feedback.like)delete item.feedback;}session.lastActiveAt=nowISO();saveStore(session);close();if(trigger&&trigger.classList)trigger.classList.remove("is-active","is-online-active");toast("অনলাইন মতামত মুছে ফেলা হয়েছে");});
     }
     button("বাতিল","",close);panel.appendChild(buttons);
   }
