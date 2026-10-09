@@ -21,11 +21,20 @@ If a resolver is missing, raises an exception, or returns a false decision, the
 request is denied. The service does not interpret a capability catalogue entry
 as a grant.
 
-## Current boundary
+## PermissionGuard adapter
 
-This service is an isolated authorization facade with unit tests. It is **not
-yet wired into existing API routes, PermissionGuard, or production grant
-storage**, and its presence alone does not enforce authorization across the
-application. Integration must be a separate change with compatibility tests,
-route-by-route coverage and a rollback path. Never pass resolver callbacks
-from untrusted clients.
+`PermissionGuard.authorize_capability(...)` now delegates to this trusted
+service when explicitly configured. If it is not configured, the capability
+authorization method returns `DENIED`. The existing legacy `check()` API
+remains unchanged for backward compatibility. Security-sensitive code must
+call `authorize_capability()` and must not treat the legacy method as a
+substitute for trusted grant/policy evaluation.
+
+## Remaining production boundary
+
+This adapter is **not yet wired into existing API routes or production grant,
+policy, provider, and approval stores**. Its presence alone does not enforce
+authorization across the application. The next integration must be a separate
+change with route-by-route inventory, trusted server-side stores, compatibility
+tests, route coverage and a rollback path. Never pass resolver callbacks from
+untrusted clients.
