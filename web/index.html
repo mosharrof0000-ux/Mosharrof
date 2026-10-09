@@ -338,11 +338,26 @@ header.top{
       if(/[<>;"{}]/.test(family))return false;
       this.fonts[id]={family:family,fallback:String(config.fallback||"sans-serif"),weights:String(config.weights||"400;700")};
       loadTypographyFont(this.fonts[id]);rebuildTypographyStyles();return true;
+    },
+    setGenreFont:function(genre,fontId,headingFont){
+      if(!Object.prototype.hasOwnProperty.call(this.genres,genre)||!this.fonts[fontId])return false;
+      if(headingFont&&!this.fonts[headingFont])return false;
+      this.genres[genre].font=fontId;
+      this.genres[genre].headingFont=headingFont||fontId;
+      rebuildTypographyStyles();return true;
+    },
+    registerGenre:function(id,config){
+      id=String(id||"").toLowerCase();
+      if(!/^[a-z0-9-]{2,32}$/.test(id)||!config||!this.fonts[config.font]||(config.headingFont&&!this.fonts[config.headingFont]))return false;
+      this.genres[id]={font:config.font,headingFont:config.headingFont||config.font};
+      rebuildTypographyStyles();return true;
     }
   };
   function loadTypographyFont(font){
     if(!font||!font.family)return;
     var safeName=font.family.replace(/[^a-zA-Z0-9 -]/g,"");
+    var bundled=["Hind Siliguri","Atma","Mina","Galada","Noto Serif Bengali"];
+    if(bundled.indexOf(font.family)>=0&&document.querySelector('link[href*="family=Atma"][href*="Galada"][href*="Hind+Siliguri"]'))return;
     if(document.querySelector('link[data-mosharrof-font="'+safeName+'"]'))return;
     var link=document.createElement("link");link.rel="stylesheet";
     link.href="https://fonts.googleapis.com/css2?family="+encodeURIComponent(font.family).replace(/%20/g,"+")+":wght@"+String(font.weights||"400;700")+"&display=swap";
