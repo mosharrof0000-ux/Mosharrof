@@ -212,7 +212,7 @@ header.top{
     if(w&&h)ratio=[w,h];if(!ratio)ratio=[1,1];
     var resolution=/4\s*k|4k|uhd/i.test(l)?"4K":/2\s*k|2k|qhd/i.test(l)?"2K":"1K";
     if(!w||!h){var rw=ratio[0],rh=ratio[1],max=resolution==="4K"?3840:resolution==="2K"?2560:/full\s*hd|1080p/i.test(l)?1920:/hd|720p/i.test(l)?1280:1024;if(rw>=rh){w=max;h=Math.max(1,Math.round(max*rh/rw));}else{h=max;w=Math.max(1,Math.round(max*rw/rh));}}
-    var fm=l.match(/\b(png|webp|jpe?g)\b/),format=fm?(fm[1]==="jpg"?"jpeg":fm[1]):"jpeg";
+    var fm=l.match(/\b(png|webp|jpe?g)\b/),transparent=/transparent|transparency|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড স্বচ্ছ|স্বচ্ছ ব্যাকগ্রাউন্ড|ব্যাকগ্রাউন্ড ছাড়া/i.test(l),format=transparent?"png":(fm?(fm[1]==="jpg"?"jpeg":fm[1]):"jpeg");
     var sm=l.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)?/i),max_bytes=null;
     if(sm)max_bytes=Math.round(Number(sm[1])*((/kb|কেবি/i.test(sm[2]||"")?1024:1024*1024)));
     return {width:w,height:h,aspect_ratio:ratio.join(":"),image_size:resolution,format:format,transparent:transparent,max_bytes:max_bytes};
@@ -297,7 +297,7 @@ header.top{
     var img=document.createElement("img");img.alt="Generated image";img.src=data.data_url||("data:"+(data.final_mime_type||data.mime_type||"image/jpeg")+";base64,"+data.image_data);n.appendChild(img);
     var actions=document.createElement("div");actions.className="image-actions";
     var a=document.createElement("a");a.href=img.src;var ext=(data.final_mime_type||data.mime_type||"image/jpeg").split("/")[1]||"jpg";if(ext==="jpeg")ext="jpg";a.download="mosharrof-generated-image."+ext;a.textContent="ছবি সংরক্ষণ";actions.appendChild(a);
-    if(data.final_width&&data.final_height){var meta=document.createElement("span");meta.className="time";meta.textContent=data.final_width+"×"+data.final_height+" · "+ext.toUpperCase()+" · "+Math.max(1,Math.round((data.final_bytes||0)/1024))+" KB";actions.appendChild(meta);}
+    if(data.final_width&&data.final_height){var meta=document.createElement("span");meta.className="time";meta.textContent=data.final_width+"×"+data.final_height+" · "+ext.toUpperCase()+" · "+Math.max(1,Math.round((data.final_bytes||0)/1024))+" KB"+(data.transparency_applied?" · স্বচ্ছ ব্যাকগ্রাউন্ড":"");actions.appendChild(meta);}
     n.appendChild(actions);
     var tm=document.createElement("span");tm.className="time";tm.textContent=shortTime(at);n.appendChild(tm);msgEl.appendChild(n);bottom();
     session.messages.push({role:"ai",text:"🖼️ ইমেজ তৈরি হয়েছে।",at:at});session.lastActiveAt=at;saveStore(session);updateMeta();
@@ -308,7 +308,7 @@ header.top{
   function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");typing();
     var imageMode=!attached&&looksLikeImagePrompt(text);
     var request=imageMode?imageReply(text):coreReply(text,attached);
-    request.then(function(r){untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){untype();addMsg("ai",imageMode?"ইমেজ তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।":"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।");busy=false;sendBtn.disabled=false;input.focus();});}
+    request.then(function(r){untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){untype();var why=String(e&&e.message||"");var imageError=why.indexOf("requested_file_size_unachievable")>=0?"নির্ধারিত পিক্সেল মাপ রেখে ছবিটিকে চাওয়া ফাইল-সাইজের মধ্যে আনা যায়নি। ছোট মাপ বা বেশি ফাইল-সাইজ সীমা দিন.":(why.indexOf("transparent_background")>=0?"এই ছবিতে স্বচ্ছ ব্যাকগ্রাউন্ড নিশ্চিত করা যায়নি। অন্য ব্যাকগ্রাউন্ড/প্রম্পট দিয়ে আবার চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");addMsg("ai",imageMode?imageError:"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।");busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
