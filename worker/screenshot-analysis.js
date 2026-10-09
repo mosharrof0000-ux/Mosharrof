@@ -172,8 +172,9 @@ function parseImageSpec(prompt){
   if(dim){width=Number(dim[1]);height=Number(dim[2]);if(width<1||height<1||width>8192||height>8192){width=null;height=null;}}
   const r=p.match(/(?:\b)(\d{1,2})\s*:\s*(\d{1,2})(?:\b)/);
   if(r&&Number(r[1])>0&&Number(r[2])>0)ratio=[Number(r[1]),Number(r[2])];
-  if(!ratio&&/youtube\s*(?:shorts?)?|tiktok|reels|vertical|portrait|উল্লম্ব/i.test(lower))ratio=[9,16];
   if(!ratio&&/instagram/.test(lower)&&/portrait|vertical|4\s*:\s*5|1080\s*[x×]\s*1350/i.test(lower))ratio=[4,5];
+  if(!ratio&&/facebook/.test(lower)&&/portrait|vertical/i.test(lower))ratio=[4,5];
+  if(!ratio&&/youtube\s+shorts?|tiktok|reels|vertical|উল্লম্ব/i.test(lower))ratio=[9,16];
   if(!ratio&&/youtube|thumbnail|landscape|facebook/.test(lower))ratio=[16,9];
   if(!ratio&&/instagram|square|icon|logo|profile|প্রোফাইল|আইকন/i.test(lower))ratio=[1,1];
   if(width&&height)ratio=[width,height];
