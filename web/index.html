@@ -43,13 +43,13 @@ header.top{
 .hero{position:absolute;inset:0;display:flex;flex-direction:column}
 .chat-scroll{
   position:absolute;left:0;right:0;top:0;bottom:0;
-  display:flex;flex-direction:column;justify-content:flex-end;
-  overflow-y:auto;overflow-x:hidden;
+  display:flex;flex-direction:column;justify-content:flex-start;min-height:0;
+  overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior-y:contain;
   padding:calc(var(--header-h) + var(--safe-t) + 16px) 14px 140px;
   scrollbar-width:none;-webkit-overflow-scrolling:touch
 }
 .chat-scroll::-webkit-scrollbar{display:none}
-.messages{width:min(900px,100%);margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.messages{width:min(900px,100%);margin:auto auto 0;display:flex;flex-direction:column;gap:20px;flex-shrink:0}
 .message{max-width:min(88%,760px);font-size:15px;line-height:1.7;word-break:break-word;color:#ececec}
 .message .label{display:block;font-size:11px;color:#8e8e93;margin-bottom:6px}
 .message .speak{display:inline-flex;align-items:center;margin-top:7px;margin-right:6px;padding:5px 9px;border-radius:10px;background:#222;color:#ddd;font-size:11px}.message .time{display:block;font-size:10px;color:#6b6b70;margin-top:4px}
