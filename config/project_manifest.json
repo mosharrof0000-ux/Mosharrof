@@ -24,7 +24,8 @@
     "communication",
     "audit",
     "versioning",
-    "universal_capability_registry"
+    "universal_capability_registry",
+    "trusted_permission_context"
   ],
   "entity_contract": [
     "identity",
@@ -61,5 +62,7 @@
   ],
   "first_tool_project": "Al-Quran Research",
   "capability_registry": "config/capability_registry.json",
-  "permission_engine": "src/core/universal_permission_engine.py"
+  "permission_engine": "src/core/universal_permission_engine.py",
+  "trusted_permission_service": "src/core/trusted_permission_service.py",
+  "trusted_permission_docs": "docs/TRUSTED_PERMISSION_CONTEXT.md"
 }
