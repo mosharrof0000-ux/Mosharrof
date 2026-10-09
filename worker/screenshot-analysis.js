@@ -7,10 +7,40 @@ const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gem
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
-const TTS_PROVIDERS=["elevenlabs","sarvam"];
+const TTS_PROVIDERS=["edge","elevenlabs","sarvam"];
 
 function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
 function elevenLabsKeyExpired(env){const raw=String(env.ELEVENLABS_KEY_EXPIRES_AT||"").trim();if(!raw)return false;const t=Date.parse(raw);return Number.isFinite(t)&&Date.now()>=t;}
+
+async function generateWithEdge(text,body,env){
+  const endpoint=String(env.EDGE_TTS_API_URL||"").trim();
+  if(!endpoint)return {ok:false,provider:"edge",reason:"not_configured"};
+  try{
+    const parsed=new URL(endpoint);
+    if(parsed.protocol!=="https:" && parsed.hostname!=="localhost" && parsed.hostname!=="127.0.0.1")return {ok:false,provider:"edge",reason:"https_required"};
+    const edgeHeaders={"content-type":"application/json","accept":"audio/mpeg, audio/*, application/json"};
+    if(env.EDGE_TTS_API_TOKEN)edgeHeaders.authorization="Bearer "+env.EDGE_TTS_API_TOKEN;
+    const r=await fetch(endpoint,{method:"POST",headers:edgeHeaders,body:JSON.stringify({
+      text,
+      voice:String(body.voice||env.EDGE_TTS_VOICE||"bn-BD-PradeepNeural"),
+      language_code:String(body.language_code||"bn-BD"),
+      pace:Number(body.pace||1),
+      rate:String(body.rate||"+0%"),
+      output_format:"audio/mpeg"
+    })});
+    const type=String(r.headers.get("content-type")||"").toLowerCase();
+    if(!r.ok){const detail=type.includes("json")?JSON.stringify(await r.json().catch(()=>({}))):await r.text().catch(()=>"");return {ok:false,provider:"edge",reason:detail||("HTTP "+r.status),status:r.status};}
+    if(type.includes("json")){
+      const data=await r.json().catch(()=>({}));
+      const audio=data.audio_data||data.audio_base64||data.audio;
+      if(typeof audio==="string"&&audio.length)return {ok:true,provider:"edge",model:String(data.model||"Edge-TTS"),mime_type:String(data.mime_type||"audio/mpeg"),audio_data:audio.replace(/^data:audio\/[^;]+;base64,/i,"")};
+      return {ok:false,provider:"edge",reason:"empty_audio"};
+    }
+    const bytes=new Uint8Array(await r.arrayBuffer());
+    if(!bytes.length)return {ok:false,provider:"edge",reason:"empty_audio"};
+    return {ok:true,provider:"edge",model:"Edge-TTS",mime_type:type.split(";")[0]||"audio/mpeg",audio_data:bytesToBase64(bytes)};
+  }catch(e){return {ok:false,provider:"edge",reason:String(e&&e.message||e)};}
+}
 
 async function generateWithSarvam(text,body,env){
   if(!env.SARVAM_API_KEY)return {ok:false,provider:"sarvam",reason:"not_configured"};
@@ -74,11 +104,13 @@ async function synthesizeWithProvider(provider,chunks,body,env){
   const audios=[];
   let model=null;
   for(const chunk of chunks){
-    const result=provider==="sarvam"
-      ? await generateWithSarvam(chunk,body,env)
-      : provider==="elevenlabs"
-        ? await generateWithElevenLabs(chunk,body,env)
-        : {ok:false,provider,reason:"unsupported_provider"};
+    const result=provider==="edge"
+      ? await generateWithEdge(chunk,body,env)
+      : provider==="sarvam"
+        ? await generateWithSarvam(chunk,body,env)
+        : provider==="elevenlabs"
+          ? await generateWithElevenLabs(chunk,body,env)
+          : {ok:false,provider,reason:"unsupported_provider"};
     if(!result.ok)return {ok:false,provider,reason:result.reason||"provider_failed",status:result.status,model:result.model||model};
     audios.push(result.audio_data);
     model=result.model||model;
@@ -92,7 +124,20 @@ async function tts(request,env){
   if(!text)return reply({error:"text_required"},400);
   if(text.length>12000)return reply({error:"text_too_large"},413);
   const chunks=splitTtsText(text,2200);
-  const providers=env.TTS_PROVIDER_ORDER?String(env.TTS_PROVIDER_ORDER).split(",").map(x=>x.trim()).filter(Boolean):TTS_PROVIDERS;
+  const requested=String(body.provider||"auto").toLowerCase();
+  const genre=String(body.genre||"").toLowerCase();
+  const valid=["auto","edge","elevenlabs","sarvam"].includes(requested)?requested:"auto";
+  let providers;
+  if(valid==="auto"){
+    const expressive=/^(song|poem|lyrics|emotional)$/.test(genre);
+    providers=expressive?["elevenlabs","edge","sarvam"]:["edge","sarvam"];
+  }else if(valid==="elevenlabs"){
+    providers=["elevenlabs","edge","sarvam"];
+  }else if(valid==="edge"){
+    providers=["edge","sarvam"];
+  }else{
+    providers=["sarvam","edge"];
+  }
   const attempted=[];
   for(const provider of providers){
     const result=await synthesizeWithProvider(provider,chunks,body,env);
@@ -283,7 +328,7 @@ async function chat(request,env){
 export default {async fetch(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:["edge","elevenlabs","sarvam","browser"],edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(origin){
