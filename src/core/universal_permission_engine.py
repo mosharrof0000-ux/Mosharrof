@@ -1,4 +1,4 @@
-""""Universal, registry-backed capability authorization for Mosharrof.
+"""Universal, registry-backed capability authorization for Mosharrof.
 
 Catalogue entries describe what the ecosystem may eventually support; they do
 not grant authority. Every action needs an explicit grant, a matching scope,
