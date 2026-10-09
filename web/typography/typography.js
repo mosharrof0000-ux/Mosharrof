@@ -67,8 +67,9 @@
   function decorate(element, markdown) {
     if (!element) return "general";
     var type = classify(markdown);
-    element.classList.remove("typography-song","typography-poem","typography-story","typography-general");
-    element.classList.add("typography-" + type);
+    element.classList.remove("typography-song","typography-poem","typography-story","typography-general","font-song","font-poem","font-story","font-general");
+    element.classList.add("typography-" + type, "font-" + type);
+    element.style.fontFamily = (FONT_BY_TYPE[type] || FONT_BY_TYPE.general).map(function(name){ return "\\\""+name+"\\\""; }).join(", ");
     element.dataset.contentType = type;
     loadFonts(FONT_BY_TYPE[type] || FONT_BY_TYPE.general);
     return type;
