@@ -105,7 +105,7 @@ async function tts(request,env){
   for(const provider of providers){
     const result=await synthesizeWithProvider(provider,chunks,body,env);
     attempted.push({provider,ok:!!result.ok,model:result.model||null,chunks:result.chunks||chunks.length,reason:result.ok?null:result.reason||null});
-    if(result.ok)return reply({...result,image_spec,attempted},200);
+    if(result.ok)return reply({...result,attempted},200);
   }
   return reply({error:"tts_provider_failed",free_first:true,paid_fallback_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chunks:chunks.length,attempted},502);
 }
@@ -216,7 +216,7 @@ async function generateImage(request,env){
     else if(provider==="cloudflare-workers-ai")result=await generateWithCloudflare(prompt,env,image_spec);
     else continue;
     attempted.push({provider:result.provider,ok:!!result.ok,model:result.model||null,reason:result.ok?null:result.reason||null});
-    if(result.ok)return reply({...result,attempted},200);
+    if(result.ok)return reply({...result,image_spec,attempted},200);
   }
   return reply({error:"image_provider_failed",free_first:true,attempted},502);
 }
