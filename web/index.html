@@ -199,13 +199,80 @@ header.top{
     button.disabled=true;button.textContent="⏳ প্রস্তুত হচ্ছে…";showV("পড়ে শোনানোর জন্য প্রস্তুত হচ্ছে…");
     fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),language_code:"bn-BD",pace:1})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){if(!data.audio_data)throw new Error("no_audio");activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudio.onended=function(){button.textContent="🔊 শুনুন";hideV();activeAudio=null;};button.textContent="⏸ বন্ধ করুন";button.disabled=false;button.onclick=function(){if(activeAudio){activeAudio.pause();activeAudio=null;button.textContent="🔊 শুনুন";hideV();button.onclick=function(){speakText(t,button);};}};showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){});}).catch(function(){button.disabled=false;button.textContent="🔊 শুনুন";hideV();if("speechSynthesis" in window){var u=new SpeechSynthesisUtterance(String(t||""));u.lang="bn-BD";u.rate=0.95;window.speechSynthesis.cancel();window.speechSynthesis.speak(u);toast("ব্রাউজার ভয়েস ব্যবহার হচ্ছে");}else{toast("ভয়েস সেবা এখন পাওয়া যাচ্ছে না");}});
   }
+  function parseImageSpec(prompt){
+    var p=String(prompt||""),v=p.toLowerCase(),m,ratio=null,w=null,h=null;
+    m=p.match(/(\d{2,5})\s*[x×]\s*(\d{2,5})\s*(?:px|pixels?|পিক্সেল)?/i);
+    if(m){w=Number(m[1]);h=Number(m[2]);if(w>0&&h>0&&w<=8192&&h<=8192)ratio=simplifyRatio(w,h);}
+    if(!ratio){
+      m=p.match(/(\d{1,2})\s*:\s*(\d{1,2})/);
+      if(m&&Number(m[1])>0&&Number(m[2])>0)ratio=simplifyRatio(Number(m[1]),Number(m[2]));
+    }
+    if(!ratio){
+      if(/youtube\s*(?:shorts)?|shorts|tiktok|tik tok|reels|রিলস|টিকটক|শর্টস/.test(v))ratio="9:16";
+      else if(/instagram|ইনস্টাগ্রাম/.test(v)&&/portrait|vertical|পোর্ট্রেট|লম্বা/.test(v))ratio="4:5";
+      else if(/instagram|ইনস্টাগ্রাম/.test(v))ratio="1:1";
+      else if(/youtube|thumbnail|facebook|landscape|wide|প্যানোরামিক|থাম্বনেইল/.test(v))ratio="16:9";
+      else if(/icon|আইকন|profile picture|প্রোফাইল ছবি/.test(v))ratio="1:1";
+      else ratio="1:1";
+    }
+    if(!w||!h){
+      var base=1024,quality="standard";
+      if(/4k|uhd|অতি উচ্চ রেজোলিউশন/.test(v)){base=3840;quality="4K";}
+      else if(/2k|qhd/.test(v)){base=2560;quality="2K";}
+      else if(/full\s*hd|1080p|fullhd/.test(v)){base=1920;quality="Full HD";}
+      else if(/hd|720p/.test(v)){base=1280;quality="HD";}
+      else if(/\b(100|150|300|500|800)\s*(?:px|pixel|pixels|পিক্সেল)?\b/.test(v)){base=Number(v.match(/\b(100|150|300|500|800)\s*(?:px|pixel|pixels|পিক্সেল)?\b/)[1]);quality="web";}
+      var parts=ratio.split(":").map(Number),scale=base/Math.max(parts[0],parts[1]);
+      w=Math.max(1,Math.round(parts[0]*scale));h=Math.max(1,Math.round(parts[1]*scale));
+      if(/\b(100|150|300)\s*[x×]\s*(100|150|200|300)\b/i.test(p)){var dm=p.match(/(\d{2,5})\s*[x×]\s*(\d{2,5})/i);w=Number(dm[1]);h=Number(dm[2]);}
+    }
+    var format=/\bwebp\b/.test(v)?"image/webp":(/\bjpg\b|\bjpeg\b|jpeg|জেপেগ/.test(v)?"image/jpeg":(/\bpng\b|png|পিএনজি/.test(v)?"image/png":"image/jpeg"));
+    var maxBytes=/under\s*1\s*mb|less than\s*1\s*mb|1\s*mb|১\s*এমবি|১এমবি/i.test(v)?1024*1024:null;
+    var maxMatch=p.match(/(?:under|less than|below|এর কম|সর্বোচ্চ)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
+    if(maxMatch)maxBytes=Math.round(Number(maxMatch[1])*(/mb|এমবি/i.test(maxMatch[2])?1024*1024:1024));
+    return {width:w,height:h,aspect_ratio:ratio,image_size:/4k|uhd/.test(v)?"4K":(/2k|qhd/.test(v)?"2K":(/1080p|full\s*hd/.test(v)?"2K":"1K")),format:format,transparent:/transparent|স্বচ্ছ ব্যাকগ্রাউন্ড|ব্যাকগ্রাউন্ড ছাড়া/.test(v),max_bytes:maxBytes,quality:quality||"standard"};
+  }
+  function simplifyRatio(w,h){var a=w,b=h;while(b){var t=b;b=a%b;a=t;}return (w/a)+":"+(h/a);}
   function imageReply(t){
-    return fetch(IMAGE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:String(t||"").trim(),aspect_ratio:"1:1",image_size:"1K"})})
+    var spec=parseImageSpec(t);
+    return fetch(IMAGE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:String(t||"").trim(),aspect_ratio:spec.aspect_ratio,image_size:spec.image_size,image_spec:spec})})
       .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
-        if(!res.ok)throw new Error(data.provider_message||data.error||("HTTP "+res.status));
+        if(!res.ok)throw new Error((data.attempted&&data.attempted.map(function(x){return x.provider+":"+x.reason;}).join(", "))||data.provider_message||data.error||("HTTP "+res.status));
         if(!data.image_data)throw new Error("no_image_returned");
-        return data;
+        data.image_spec=data.image_spec||spec;
+        return optimizeGeneratedImage(data,t);
       });});
+  }
+  function optimizeGeneratedImage(data,prompt){
+    return new Promise(function(resolve,reject){
+      var spec=data.image_spec||parseImageSpec(prompt),mime=spec.format||data.mime_type||"image/jpeg";
+      var src="data:"+(data.mime_type||"image/jpeg")+";base64,"+data.image_data,img=new Image();
+      img.onerror=function(){reject(new Error("generated_image_decode_failed"));};
+      img.onload=function(){
+        try{
+          var tw=Math.max(1,Math.min(8192,Number(spec.width)||img.naturalWidth)),th=Math.max(1,Math.min(8192,Number(spec.height)||img.naturalHeight));
+          var canvas=document.createElement("canvas");canvas.width=tw;canvas.height=th;
+          var ctx=canvas.getContext("2d",{alpha:true});if(!ctx)throw new Error("canvas_unavailable");
+          if(mime==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,tw,th);}
+          var scale=Math.max(tw/img.naturalWidth,th/img.naturalHeight),sw=tw/scale,sh=th/scale,sx=(img.naturalWidth-sw)/2,sy=(img.naturalHeight-sh)/2;
+          ctx.drawImage(img,sx,sy,sw,sh,0,0,tw,th);
+          var quality=0.92;
+          function encode(){
+            canvas.toBlob(function(blob){
+              if(!blob){reject(new Error("image_encode_failed"));return;}
+              if(spec.max_bytes&&blob.size>spec.max_bytes&&(mime==="image/jpeg"||mime==="image/webp")&&quality>0.42){quality=Math.max(0.42,quality-0.12);encode();return;}
+              if(spec.max_bytes&&blob.size>spec.max_bytes&&mime==="image/png"){
+                resolve({blob:blob,mime_type:mime,image_spec:spec,final_width:tw,final_height:th,final_bytes:blob.size,size_limit_met:false,transparency_supported:img.naturalWidth>0});
+                return;
+              }
+              resolve({blob:blob,mime_type:blob.type||mime,image_spec:spec,final_width:tw,final_height:th,final_bytes:blob.size,size_limit_met:!spec.max_bytes||blob.size<=spec.max_bytes,transparency_supported:mime==="image/png"});
+            },mime,quality);
+          }
+          encode();
+        }catch(e){reject(e);}
+      };
+      img.src=src;
+    });
   }
   function looksLikeImagePrompt(t){
     var v=String(t||"").toLowerCase();
