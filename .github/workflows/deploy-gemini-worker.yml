@@ -216,6 +216,30 @@ jobs:
             echo "This is not a deployment failure; browser speech synthesis remains the final fallback."
           fi
 
+      - name: Verify Gemini TTS specifically
+        shell: bash
+        run: |
+          set -euo pipefail
+          TTS="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts"
+          HTTP_CODE="$(curl -sS --connect-timeout 10 --max-time 120 -o /tmp/gemini-tts-response.json -w '%{http_code}' -X POST \
+            -H "Origin: https://mosharrof0000-ux.github.io" \
+            -H "Content-Type: application/json" \
+            --data '{"provider":"gemini","text":"এটি জেমিনি বাংলা কণ্ঠের নির্দিষ্ট সংযোগ পরীক্ষা।","language_code":"bn-BD"}' \
+            "$TTS" || true)"
+          echo "Gemini-specific TTS HTTP status: $HTTP_CODE"
+          cat /tmp/gemini-tts-response.json
+          test "$HTTP_CODE" = "200"
+          python - <<'PY'
+          import base64, json
+          d=json.load(open("/tmp/gemini-tts-response.json", encoding="utf-8"))
+          assert d.get("ok") is True, d
+          assert d.get("provider") == "gemini", d
+          raw=base64.b64decode(d["audio_data"])
+          assert len(raw)>500, len(raw)
+          assert raw[:4] == b"RIFF" and raw[8:12] == b"WAVE", raw[:12]
+          print("GEMINI TTS VERIFIED:", len(raw), "bytes; model=", d.get("model"), "chunks=", d.get("chunks"))
+          PY
+
       - name: Generate and verify a real image
         shell: bash
         run: |
