@@ -13,40 +13,46 @@ def test_speech_to_text_controls_remain_in_the_voice_family():
     assert 'value="en-US"' in voice_family
 
 
-def test_speech_to_text_runs_continuously_for_songs_and_restarts_after_gaps():
+def test_voice_input_records_full_audio_before_transcription():
     html = Path("web/index.html").read_text(encoding="utf-8")
 
-    assert "window.SpeechRecognition||window.webkitSpeechRecognition" in html
-    assert "function startV()" in html
-    assert "rec.continuous=true" in html
-    assert "voiceWanted&&!voiceFatalError" in html
-    assert "voiceRestartTimer=setTimeout" in html
-    assert "গান গাইতে থাকুন" in html
-    assert 'aria-live="polite"' in html
-    assert "setVoiceButtonState(true)" in html
-    assert "setVoiceButtonState(false)" in html
+    assert "window.MediaRecorder" in html
+    assert "navigator.mediaDevices.getUserMedia" in html
+    assert "voiceRecorder.start(1000)" in html
+    assert "new Blob(voiceChunks" in html
+    assert "AUDIO_TRANSCRIBE_WORKER_URL" in html
+    assert "/transcribe-audio" in html
+    assert "audio_base64:parts[1]" in html
+    assert "voiceRecorder.stop()" in html
 
 
-def test_speech_to_text_improves_phrase_joining_and_final_punctuation():
+def test_voice_input_preserves_manual_text_and_shows_processing_status():
     html = Path("web/index.html").read_text(encoding="utf-8")
 
-    assert "function voiceAddPhrase(value)" in html
-    assert "voiceFinalTranscript+=" in html
-    assert "function finishVoiceTranscript()" in html
-    assert 'value.replace(/[,，;；:]+$/,"")+"।"' in html
-
-
-def test_speech_to_text_handles_browser_errors_and_keeps_manual_chat():
-    html = Path("web/index.html").read_text(encoding="utf-8")
-
-    for code in (
-        "not-allowed",
-        "no-speech",
-        "audio-capture",
-        "network",
-        "language-not-supported",
-    ):
-        assert code in html
-    assert "টাইপ করে পাঠান" in html
-    assert 'function send()' in html
+    assert 'voiceBaseText=input.value.trim()' in html
+    assert 'filter(Boolean).join(voiceBaseText?"\\n":"")' in html
+    assert "পুরো অডিও শুনে গানের কথা ও বিরামচিহ্ন তৈরি হচ্ছে" in html
+    assert "পাঠানোর আগে দেখে নিতে পারেন" in html
+    assert "function send()" in html
     assert "function coreReply(" in html
+
+
+def test_worker_uses_gemini_audio_context_for_verbatim_song_transcription():
+    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+
+    assert 'async function transcribeAudio(request,env)' in worker
+    assert 'pathname==="/transcribe-audio"' in worker
+    assert 'inline_data:{mime_type:mime,data:audio}' in worker
+    assert "Transcribe the supplied audio verbatim" in worker
+    assert "surrounding lyrical context" in worker
+    assert "Add natural punctuation and line breaks" in worker
+    assert '["gemini-2.5-flash","gemini-2.0-flash"]' in worker
+
+
+def test_voice_input_handles_recording_and_provider_errors():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+
+    assert "NotAllowedError" in html
+    assert "NotFoundError" in html
+    assert "audio_transcription_failed" in Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+    assert "অডিও থেকে লেখা তৈরি হয়নি" in html

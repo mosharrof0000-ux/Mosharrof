@@ -991,24 +991,60 @@ header.top{
   if(ttsVoiceSelect){ttsVoiceSelect.value=getTtsVoice();ttsVoiceSelect.addEventListener("change",function(){try{localStorage.setItem(TTS_VOICE_KEY,ttsVoiceSelect.value);}catch(e){}toast("Edge বাংলা কণ্ঠ পরিবর্তন হয়েছে");});}
   var historySearch=$("#historySearch"),historyNewChat=$("#historyNewChat");if(historySearch)historySearch.addEventListener("input",updateHistoryList);if(historyNewChat)historyNewChat.onclick=newChat;
   updateMeta();updateHistoryList();
-  var rec=null,voiceListening=false,voiceWanted=false,voiceBaseText="",voiceLastTranscript="",voiceFinalTranscript="",voiceRestartTimer=null,voiceEndTimer=null,voiceFatalError=false;
+  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[],voiceEndTimer=null;
   var STT_LANGUAGE_KEY="mosharrof_stt_language_v1",sttLanguageSelect=null;
+  var AUDIO_TRANSCRIBE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/transcribe-audio";
   function getSttLanguage(){var value="bn-BD";try{value=localStorage.getItem(STT_LANGUAGE_KEY)||"bn-BD";}catch(e){}return ["bn-BD","en-US","hi-IN"].includes(value)?value:"bn-BD";}
-  function setVoiceButtonState(listening){voiceListening=!!listening;[composerVoiceBtn,$("#voiceBtn")].forEach(function(button){if(!button)return;button.classList.toggle("is-listening",voiceListening);button.setAttribute("aria-pressed",voiceWanted?"true":"false");button.title=voiceWanted?"গান/কথা রেকর্ড হচ্ছে · থামাতে চাপুন":"ভয়েস ইনপুট";});}
-  function voiceErrorMessage(code){var messages={"not-allowed":"মাইক্রোফোনের অনুমতি দিন, তারপর আবার চেষ্টা করুন।","service-not-allowed":"এই ব্রাউজারে Speech Recognition সার্ভিস অনুমোদিত নয়।","no-speech":"এখনও কোনো কথা শনাক্ত হয়নি—গান চালিয়ে যান।","audio-capture":"মাইক্রোফোন পাওয়া যায়নি। ডিভাইসের মাইক্রোফোন পরীক্ষা করুন।","network":"ভয়েস শনাক্তকরণে নেটওয়ার্ক সমস্যা হয়েছে।","language-not-supported":"নির্বাচিত ভাষা এই ব্রাউজারে সমর্থিত নয়।","aborted":"ভয়েস ইনপুট বন্ধ করা হয়েছে।"};return messages[code]||("ভয়েস ইনপুটে সমস্যা হয়েছে ("+code+")। টাইপ করেও পাঠাতে পারবেন।");}
-  function joinVoiceParts(base,finalText,interimText){var parts=[base,finalText,interimText].map(function(x){return String(x||"").trim();}).filter(Boolean);return parts.join(" ").replace(/\\s+/g," ").trim();}
-  function renderVoiceText(finalText,interimText){input.value=joinVoiceParts(voiceBaseText,finalText,interimText);resize();}
-  function voiceAddPhrase(value){var phrase=String(value||"").replace(/\\s+/g," ").trim();if(!phrase)return;phrase=phrase.replace(/[\\s,，]+$/,"");if(!phrase)return;if(voiceFinalTranscript&&!/[।.!?؟,，;；:]$/.test(voiceFinalTranscript))voiceFinalTranscript+=", ";else if(voiceFinalTranscript&&!/\\s$/.test(voiceFinalTranscript))voiceFinalTranscript+=" ";voiceFinalTranscript+=phrase;}
-  function finishVoiceTranscript(){var value=joinVoiceParts(voiceFinalTranscript,voiceLastTranscript,"");var p=correct(value);value=p.text.replace(/\\s+/g," ").trim();if(value&&!/[।.!?؟]$/.test(value))value=value.replace(/[,，;；:]+$/,"")+"।";return {text:value,corrections:p.corrections};}
-  function initV(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;sttLanguageSelect=$("#sttLanguageSelect");if(sttLanguageSelect){sttLanguageSelect.value=getSttLanguage();sttLanguageSelect.addEventListener("change",function(){try{localStorage.setItem(STT_LANGUAGE_KEY,sttLanguageSelect.value);}catch(e){}if(rec)rec.lang=sttLanguageSelect.value;toast("ভয়েস ভাষা: "+sttLanguageSelect.options[sttLanguageSelect.selectedIndex].text);});}
-    if(!SR){composerVoiceBtn.title="এই ব্রাউজারে ভয়েস টাইপিং সমর্থিত নয়";composerVoiceBtn.setAttribute("aria-label","এই ব্রাউজারে ভয়েস টাইপিং সমর্থিত নয়");return;}
-    try{rec=new SR();rec.lang=getSttLanguage();rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=3;}catch(e){rec=null;return;}
-    rec.onstart=function(){if(voiceRestartTimer){clearTimeout(voiceRestartTimer);voiceRestartTimer=null;}if(voiceEndTimer){clearTimeout(voiceEndTimer);voiceEndTimer=null;}setVoiceButtonState(true);showV("শুনছি… গান গাইতে থাকুন; শেষ হলে মাইক্রোফোনে চাপুন");};
-    rec.onresult=function(event){var finalText="",interimText="";for(var i=0;i<event.results.length;i++){var result=event.results[i];if(!result||!result[0])continue;if(result.isFinal)finalText+=result[0].transcript+" ";else interimText+=result[0].transcript+" ";}voiceLastTranscript=finalText.trim();renderVoiceText(joinVoiceParts(voiceFinalTranscript,voiceLastTranscript),interimText.trim());showV(interimText.trim()?"গানের কথা শনাক্ত হচ্ছে…":"কথা যোগ হচ্ছে · গান চালিয়ে যান");};
-    rec.onerror=function(event){var code=event&&event.error||"unknown";var message=voiceErrorMessage(code);if(["not-allowed","service-not-allowed","audio-capture","language-not-supported"].includes(code)){voiceWanted=false;voiceFatalError=true;}setVoiceButtonState(false);showV(message);toast(message,3500);};
-    rec.onend=function(){setVoiceButtonState(false);if(voiceLastTranscript){voiceAddPhrase(voiceLastTranscript);voiceLastTranscript="";}if(voiceWanted&&!voiceFatalError){renderVoiceText(voiceFinalTranscript,"");showV("গানের কথা লেখা হচ্ছে… গাইতে থাকুন");if(voiceRestartTimer)clearTimeout(voiceRestartTimer);voiceRestartTimer=setTimeout(function(){if(!voiceWanted||!rec)return;try{rec.lang=getSttLanguage();rec.start();}catch(e){voiceRestartTimer=null;voiceWanted=false;setVoiceButtonState(false);var done=finishVoiceTranscript();renderVoiceText(done.text,"");showV("ভয়েস আবার চালু করা যায়নি। লেখা সংরক্ষিত আছে।");}},300);return;}var done=finishVoiceTranscript();renderVoiceText(done.text,"");showV(done.corrections.length?"কথা সংশোধন হয়েছে · লেখা প্রস্তুত":"গানের কথা প্রস্তুত · প্রয়োজনে Send চাপুন");if(voiceEndTimer)clearTimeout(voiceEndTimer);voiceEndTimer=setTimeout(hideV,5000);};
+  function setVoiceButtonState(listening){voiceListening=!!listening;[composerVoiceBtn,$("#voiceBtn")].forEach(function(button){if(!button)return;button.classList.toggle("is-listening",voiceListening);button.setAttribute("aria-pressed",voiceWanted?"true":"false");button.title=voiceWanted?"অডিও রেকর্ড হচ্ছে · শেষ করতে চাপুন":"গান/কথা রেকর্ড করুন";});}
+  function showVoiceMessage(message){showV(message);if(voiceEndTimer)clearTimeout(voiceEndTimer);voiceEndTimer=setTimeout(hideV,5000);}
+  function audioErrorMessage(error){var name=String(error&&error.name||"");if(name==="NotAllowedError"||name==="PermissionDeniedError")return "মাইক্রোফোনের অনুমতি দিন, তারপর আবার চেষ্টা করুন।";if(name==="NotFoundError"||name==="DevicesNotFoundError")return "মাইক্রোফোন পাওয়া যায়নি।";if(name==="NotReadableError"||name==="TrackStartError")return "অন্য অ্যাপ মাইক্রোফোন ব্যবহার করছে।";return "অডিও রেকর্ড করা যায়নি। আবার চেষ্টা করুন।";}
+  function releaseVoiceStream(){if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
+  function transcribeAudioBlob(blob){
+    if(!blob||!blob.size){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("কোনো অডিও রেকর্ড হয়নি। আবার চেষ্টা করুন।");return;}
+    if(blob.size>12*1024*1024){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিওটি অনেক বড় হয়েছে। ছোট ছোট অংশে রেকর্ড করুন।");return;}
+    voiceProcessing=true;showV("পুরো অডিও শুনে গানের কথা ও বিরামচিহ্ন তৈরি হচ্ছে…");
+    var reader=new FileReader();
+    reader.onerror=function(){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিও পড়া যায়নি। আবার চেষ্টা করুন।");};
+    reader.onload=function(){
+      var dataUrl=String(reader.result||""),parts=dataUrl.split(",");
+      if(parts.length<2){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিও প্রস্তুত করা যায়নি।");return;}
+      fetch(AUDIO_TRANSCRIBE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage()})})
+        .then(function(response){return response.json().catch(function(){return {};}).then(function(data){if(!response.ok)throw new Error(data.error||("HTTP "+response.status));return data;});})
+        .then(function(data){
+          var transcript=String(data.text||"").trim();if(!transcript)throw new Error("empty_transcription");
+          input.value=[voiceBaseText,transcript].filter(Boolean).join(voiceBaseText?"\n":"");resize();
+          showVoiceMessage("অডিও শুনে লেখা তৈরি হয়েছে · পাঠানোর আগে দেখে নিতে পারেন");
+        })
+        .catch(function(error){var message=String(error&&error.message||"");showVoiceMessage(message==="transcription_provider_not_configured"?"Gemini অডিও সংযোগ প্রস্তুত নয়।":message==="audio_too_large"?"অডিওটি ছোট করে আবার চেষ্টা করুন।":"অডিও থেকে লেখা তৈরি হয়নি। সংযোগ বা অডিও ফরম্যাট পরীক্ষা করে আবার চেষ্টা করুন।");})
+        .finally(function(){voiceProcessing=false;releaseVoiceStream();setVoiceButtonState(false);});
+    };
+    reader.readAsDataURL(blob);
   }
-  function startV(){if(voiceWanted){voiceWanted=false;if(voiceRestartTimer){clearTimeout(voiceRestartTimer);voiceRestartTimer=null;}try{rec&&rec.stop();}catch(e){}setVoiceButtonState(false);var done=finishVoiceTranscript();renderVoiceText(done.text,"");showV("গানের কথা প্রস্তুত · প্রয়োজনে Send চাপুন");return;}if(!rec){var message="এই ব্রাউজারে Speech Recognition নেই। Chrome/Edge-এর আপডেটেড ব্রাউজার চেষ্টা করুন, অথবা টাইপ করে পাঠান।";toast(message,4000);showV(message);setTimeout(hideV,4200);return;}voiceBaseText=input.value.trim();voiceFinalTranscript="";voiceLastTranscript="";voiceWanted=true;voiceFatalError=false;try{rec.lang=getSttLanguage();rec.continuous=true;rec.start();}catch(e){voiceWanted=false;setVoiceButtonState(false);var message="ভয়েস ইনপুট চালু করা যায়নি। আবার চেষ্টা করুন।";toast(message,3000);showV(message);setTimeout(hideV,3200);}}
+  function initV(){
+    sttLanguageSelect=$("#sttLanguageSelect");
+    if(sttLanguageSelect){sttLanguageSelect.value=getSttLanguage();sttLanguageSelect.addEventListener("change",function(){try{localStorage.setItem(STT_LANGUAGE_KEY,sttLanguageSelect.value);}catch(e){}toast("অডিও ভাষা: "+sttLanguageSelect.options[sttLanguageSelect.selectedIndex].text);});}
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){composerVoiceBtn.title="এই ব্রাউজারে অডিও রেকর্ডিং সমর্থিত নয়";composerVoiceBtn.setAttribute("aria-label","এই ব্রাউজারে অডিও রেকর্ডিং সমর্থিত নয়");}
+  }
+  async function startV(){
+    if(voiceProcessing)return;
+    if(voiceWanted){
+      voiceWanted=false;setVoiceButtonState(false);
+      if(voiceRecorder&&voiceRecorder.state!=="inactive"){try{voiceRecorder.stop();}catch(e){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("রেকর্ডিং বন্ধ করা যায়নি।");}}
+      return;
+    }
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){var unsupported="এই ব্রাউজারে অডিও রেকর্ডিং সমর্থিত নয়। আপডেটেড Chrome ব্যবহার করুন।";toast(unsupported,4000);showVoiceMessage(unsupported);return;}
+    voiceBaseText=input.value.trim();voiceChunks=[];voiceWanted=true;setVoiceButtonState(true);showV("শুনছি… পুরো গান/কথা বলুন; শেষ হলে মাইক্রোফোনে চাপুন");
+    try{
+      voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
+      var types=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"];
+      var mime=types.find(function(type){return MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(type);});
+      voiceRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
+      voiceRecorder.ondataavailable=function(event){if(event.data&&event.data.size)voiceChunks.push(event.data);};
+      voiceRecorder.onerror=function(){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();voiceProcessing=false;showVoiceMessage("অডিও রেকর্ডিংয়ে সমস্যা হয়েছে। আবার চেষ্টা করুন।");};
+      voiceRecorder.onstop=function(){voiceWanted=false;setVoiceButtonState(false);var blob=new Blob(voiceChunks,{type:voiceRecorder.mimeType||"audio/webm"});transcribeAudioBlob(blob);};
+      voiceRecorder.start(1000);
+    }catch(error){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();showVoiceMessage(audioErrorMessage(error));}
+  }
   sendBtn.onclick=send;
   imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);closeComposerTools();});
   removeImage.onclick=clearImage;
