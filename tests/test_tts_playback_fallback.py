@@ -1,42 +1,25 @@
 from pathlib import Path
 
 
-def test_tts_playback_failure_falls_back_even_when_audio_bytes_exist():
+def test_tts_frontend_restores_pre_download_single_request_playback():
     html = Path("web/index.html").read_text(encoding="utf-8")
     start = html.index("function speakText(")
     end = html.index("function parseImageSpec(", start)
     speak = html[start:end]
 
-    # Audio data is pushed into parts before audio.play() resolves. Its presence
-    # therefore must not suppress fallback when the browser rejects playback.
-    assert "parts.length===0&&myIdx===0" not in speak
-    assert 'var fallbackText=chunks.slice(myIdx).join(" ").trim();' in speak
-    assert 'speakWithBrowser(fallbackText,button);' in speak
-    assert 'audio.play().catch(function(){throw new Error("audio_play_failed");});' in speak
+    # The pre-download implementation sends one complete request and plays the
+    # returned audio directly; it does not progressively fetch chunks.
+    assert 'fetch(TTS_WORKER_URL,{method:"POST"' in speak
+    assert 'new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data)' in speak
+    assert "splitSpeechChunks(" not in speak
+    assert "showDownloadButton(" not in speak
+    assert "combineAudioParts(" not in html
 
 
-def test_tts_download_button_is_only_added_after_completed_server_playback():
+def test_tts_frontend_restores_valid_markdown_cleanup():
     html = Path("web/index.html").read_text(encoding="utf-8")
-    start = html.index("function speakText(")
-    end = html.index("function parseImageSpec(", start)
-    speak = html[start:end]
-
-    assert "function finishComplete()" in speak
-    assert "showDownloadButton(button,combineAudioParts(parts,mime),mime)" in speak
-    assert 'showDownloadButton(button,combineAudioParts(parts,mime),mime);' in speak
-    assert 'speakWithBrowser(fallbackText,button);' in speak
-
-
-def test_download_combines_wav_pcm_chunks_into_one_valid_wave_file():
-    html = Path("web/index.html").read_text(encoding="utf-8")
-    start = html.index("function combineAudioParts(")
-    end = html.index("function splitSpeechChunks(", start)
-    combine = html[start:end]
-
-    assert 'mimeType.indexOf("wav")!==-1' in combine
-    assert 'String.fromCharCode(part[0],part[1],part[2],part[3])!=="RIFF"' in combine
-    assert 'wavView.setUint32(4,36+total,true)' in combine
-    assert 'wavView.setUint32(40,total,true)' in combine
+    assert "if(clean)return clean;" in html
+    assert "if(cleanareturn clean;" not in html
 
 
 def test_tts_health_reports_server_providers_and_configuration():
@@ -63,27 +46,6 @@ def test_gemini_38_tts_uses_interactions_api_not_generate_content():
     assert 'if(/^gemini-3[.]8-flash(?:-lite)?-tts$/.test(model))' in tts
 
 
-def test_tts_audio_uses_blob_url_for_mobile_playback_and_cleans_it_up():
-    html = Path("web/index.html").read_text(encoding="utf-8")
-    start = html.index("function speakText(")
-    end = html.index("function parseImageSpec(", start)
-    speak = html[start:end]
-
-    assert 'var audioBlob=new Blob([audioBytes],{type:mime});' in speak
-    assert 'var audioUrl=URL.createObjectURL(audioBlob);' in speak
-    assert 'var audio=new Audio(audioUrl);' in speak
-    assert 'URL.revokeObjectURL(audioUrl)' in speak
-    assert 'URL.revokeObjectURL(activeAudioUrl)' in speak
-
-
-def test_gemini_is_default_tts_and_legacy_auto_preference_migrates_to_gemini():
-    html = Path("web/index.html").read_text(encoding="utf-8")
-    assert 'function getTtsPreference(){var value="gemini";' in html
-    assert 'localStorage.getItem(TTS_PREF_KEY)||"gemini"' in html
-    assert 'if(value==="auto"){value="gemini";localStorage.setItem(TTS_PREF_KEY,value);}' in html
-    assert 'includes(value)?value:"gemini";' in html
-
-
 def test_tts_worker_cors_reflects_only_trusted_android_and_pages_origins():
     worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
 
@@ -91,5 +53,5 @@ def test_tts_worker_cors_reflects_only_trusted_android_and_pages_origins():
     assert "function isAllowedOrigin(origin)" in worker
     assert "function withRequestCors(response,request)" in worker
     assert 'responseHeaders.set("Access-Control-Allow-Origin",origin)' in worker
-    assert "if(!isAllowedOrigin(origin))return reply({error:\"origin_not_allowed\",origin},403);" in worker
+    assert 'if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);' in worker
     assert "return withRequestCors(response,request);" in worker
