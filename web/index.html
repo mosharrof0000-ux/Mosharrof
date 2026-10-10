@@ -155,7 +155,13 @@ header.top{
 .composer-tool-toggle{font-size:21px;line-height:1}
 .composer-tool-toggle:active,.composer-action:active,.send:active{transform:scale(.94);background:#303030}
 .composer-tool-toggle:hover,.composer-action:hover,.send:hover:not(:disabled){background:#111;border-color:rgba(255,255,255,.3)}
-.composer-action.is-listening{background:#3a1014;border-color:rgba(239,68,68,.9);color:#ffb4b4;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+.composer-action.is-listening{background:#123d2a;border-color:rgba(74,222,128,.95);color:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.14)}
+.composer-action.is-listening svg{transform-origin:50% 50%;animation:voice-mic-bob .68s ease-in-out infinite alternate}
+@keyframes voice-mic-bob{from{transform:translateY(-2px) scale(1.02)}to{transform:translateY(2px) scale(.96)}}
+.composer-action.is-processing{width:76px;min-width:76px;border-radius:18px;background:#111;border-color:rgba(255,255,255,.22);color:#f5f5f5;font-variant-numeric:tabular-nums;font-size:12px;font-weight:700;letter-spacing:.01em;cursor:wait}
+.composer-action.is-processing .voice-timer{white-space:nowrap}
+.composer-action.is-transcription-success{width:76px;min-width:76px;background:#123d2a;border-color:#4ade80;color:#4ade80;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
+.composer-action.is-transcription-error{width:76px;min-width:76px;background:#451a1a;border-color:#f87171;color:#f87171;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
 .composer-action:disabled{opacity:.55;cursor:not-allowed}
 .composer-tool-toggle:focus-visible,.composer-action:focus-visible,.send:focus-visible{outline:2px solid #aaa;outline-offset:2px}
 .composer-action svg,.send svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -991,31 +997,34 @@ header.top{
   if(ttsVoiceSelect){ttsVoiceSelect.value=getTtsVoice();ttsVoiceSelect.addEventListener("change",function(){try{localStorage.setItem(TTS_VOICE_KEY,ttsVoiceSelect.value);}catch(e){}toast("Edge বাংলা কণ্ঠ পরিবর্তন হয়েছে");});}
   var historySearch=$("#historySearch"),historyNewChat=$("#historyNewChat");if(historySearch)historySearch.addEventListener("input",updateHistoryList);if(historyNewChat)historyNewChat.onclick=newChat;
   updateMeta();updateHistoryList();
-  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[],voiceEndTimer=null;
+  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[],voiceEndTimer=null,voiceTimerInterval=null,voiceTimerRestoreTimeout=null,voiceProcessingStartedAt=0,voiceMicMarkup=null;
   var STT_LANGUAGE_KEY="mosharrof_stt_language_v1",sttLanguageSelect=null;
   var AUDIO_TRANSCRIBE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/transcribe-audio";
   function getSttLanguage(){var value="bn-BD";try{value=localStorage.getItem(STT_LANGUAGE_KEY)||"bn-BD";}catch(e){}return ["bn-BD","en-US","hi-IN"].includes(value)?value:"bn-BD";}
-  function setVoiceButtonState(listening){voiceListening=!!listening;[composerVoiceBtn,$("#voiceBtn")].forEach(function(button){if(!button)return;button.classList.toggle("is-listening",voiceListening);button.setAttribute("aria-pressed",voiceWanted?"true":"false");button.title=voiceWanted?"অডিও রেকর্ড হচ্ছে · শেষ করতে চাপুন":"গান/কথা রেকর্ড করুন";});}
+  function setVoiceButtonState(listening){voiceListening=!!listening;[composerVoiceBtn,$("#voiceBtn")].forEach(function(button){if(!button)return;button.classList.toggle("is-listening",voiceListening);button.setAttribute("aria-pressed",voiceWanted?"true":"false");button.title=voiceWanted?"অডিও রেকর্ড হচ্ছে · শেষ করতে চাপুন":voiceProcessing?"অডিও থেকে লেখা তৈরি হচ্ছে":"গান/কথা রেকর্ড করুন";});}
+  function formatVoiceElapsed(){var seconds=Math.max(0,Math.floor((Date.now()-voiceProcessingStartedAt)/1000));return String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");}
+  function startVoiceProcessingTimer(){if(voiceTimerInterval)clearInterval(voiceTimerInterval);if(voiceTimerRestoreTimeout)clearTimeout(voiceTimerRestoreTimeout);voiceMicMarkup=voiceMicMarkup||composerVoiceBtn.innerHTML;voiceProcessingStartedAt=Date.now();hideV();composerVoiceBtn.classList.remove("is-listening","is-transcription-success","is-transcription-error");composerVoiceBtn.classList.add("is-processing");composerVoiceBtn.innerHTML='<span class="voice-timer" aria-hidden="true">00:00</span>';composerVoiceBtn.setAttribute("aria-label","অডিও থেকে লেখা তৈরি হচ্ছে, সময় "+formatVoiceElapsed());composerVoiceBtn.title="টেক্সটে রূপান্তরের সময়";var tick=function(){var value=formatVoiceElapsed();var timer=composerVoiceBtn.querySelector(".voice-timer");if(timer)timer.textContent=value;composerVoiceBtn.setAttribute("aria-label","অডিও থেকে লেখা তৈরি হচ্ছে, সময় "+value);};tick();voiceTimerInterval=setInterval(tick,200);}
+  function finishVoiceProcessingTimer(success){if(!voiceProcessingStartedAt)return;var elapsed=((Date.now()-voiceProcessingStartedAt)/1000).toFixed(1);if(voiceTimerInterval){clearInterval(voiceTimerInterval);voiceTimerInterval=null;}composerVoiceBtn.classList.remove("is-processing","is-listening");composerVoiceBtn.classList.add(success?"is-transcription-success":"is-transcription-error");composerVoiceBtn.innerHTML=success?("✓ "+elapsed+"s"):("! "+elapsed+"s");composerVoiceBtn.setAttribute("aria-label",success?"অডিও থেকে লেখা তৈরি হয়েছে, "+elapsed+" সেকেন্ডে":"অডিও থেকে লেখা তৈরি ব্যর্থ, "+elapsed+" সেকেন্ডে");composerVoiceBtn.title=success?"লেখা তৈরি সম্পন্ন":"লেখা তৈরি ব্যর্থ";voiceTimerRestoreTimeout=setTimeout(function(){if(voiceWanted||voiceProcessing)return;composerVoiceBtn.innerHTML=voiceMicMarkup||composerVoiceBtn.innerHTML;composerVoiceBtn.classList.remove("is-processing","is-transcription-success","is-transcription-error","is-listening");composerVoiceBtn.setAttribute("aria-label","ভয়েস ইনপুট");composerVoiceBtn.title="ভয়েস ইনপুট";voiceProcessingStartedAt=0;},2200);}
   function showVoiceMessage(message){showV(message);if(voiceEndTimer)clearTimeout(voiceEndTimer);voiceEndTimer=setTimeout(hideV,5000);}
   function audioErrorMessage(error){var name=String(error&&error.name||"");if(name==="NotAllowedError"||name==="PermissionDeniedError")return "মাইক্রোফোনের অনুমতি দিন, তারপর আবার চেষ্টা করুন।";if(name==="NotFoundError"||name==="DevicesNotFoundError")return "মাইক্রোফোন পাওয়া যায়নি।";if(name==="NotReadableError"||name==="TrackStartError")return "অন্য অ্যাপ মাইক্রোফোন ব্যবহার করছে।";return "অডিও রেকর্ড করা যায়নি। আবার চেষ্টা করুন।";}
   function releaseVoiceStream(){if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
   function transcribeAudioBlob(blob){
     if(!blob||!blob.size){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("কোনো অডিও রেকর্ড হয়নি। আবার চেষ্টা করুন।");return;}
     if(blob.size>12*1024*1024){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিওটি অনেক বড় হয়েছে। ছোট ছোট অংশে রেকর্ড করুন।");return;}
-    voiceProcessing=true;showV("পুরো অডিও শুনে গানের কথা ও বিরামচিহ্ন তৈরি হচ্ছে…");
+    voiceProcessing=true;startVoiceProcessingTimer();
     var reader=new FileReader();
-    reader.onerror=function(){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিও পড়া যায়নি। আবার চেষ্টা করুন।");};
+    reader.onerror=function(){finishVoiceProcessingTimer(false);voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিও পড়া যায়নি। আবার চেষ্টা করুন।");};
     reader.onload=function(){
       var dataUrl=String(reader.result||""),parts=dataUrl.split(",");
-      if(parts.length<2){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিও প্রস্তুত করা যায়নি।");return;}
+      if(parts.length<2){finishVoiceProcessingTimer(false);voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিও প্রস্তুত করা যায়নি।");return;}
       fetch(AUDIO_TRANSCRIBE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage()})})
         .then(function(response){return response.json().catch(function(){return {};}).then(function(data){if(!response.ok)throw new Error(data.error||("HTTP "+response.status));return data;});})
         .then(function(data){
           var transcript=String(data.text||"").trim();if(!transcript)throw new Error("empty_transcription");
           input.value=[voiceBaseText,transcript].filter(Boolean).join(voiceBaseText?"\n":"");resize();
-          showVoiceMessage("অডিও শুনে লেখা তৈরি হয়েছে · পাঠানোর আগে দেখে নিতে পারেন");
+          finishVoiceProcessingTimer(true);
         })
-        .catch(function(error){var message=String(error&&error.message||"");showVoiceMessage(message==="transcription_provider_not_configured"?"Gemini অডিও সংযোগ প্রস্তুত নয়।":message==="audio_too_large"?"অডিওটি ছোট করে আবার চেষ্টা করুন।":"অডিও থেকে লেখা তৈরি হয়নি। সংযোগ বা অডিও ফরম্যাট পরীক্ষা করে আবার চেষ্টা করুন।");})
+        .catch(function(error){var message=String(error&&error.message||"");finishVoiceProcessingTimer(false);showVoiceMessage(message==="transcription_provider_not_configured"?"Gemini অডিও সংযোগ প্রস্তুত নয়।":message==="audio_too_large"?"অডিওটি ছোট করে আবার চেষ্টা করুন।":"অডিও থেকে লেখা তৈরি হয়নি। সংযোগ বা অডিও ফরম্যাট পরীক্ষা করে আবার চেষ্টা করুন।");})
         .finally(function(){voiceProcessing=false;releaseVoiceStream();setVoiceButtonState(false);});
     };
     reader.readAsDataURL(blob);
