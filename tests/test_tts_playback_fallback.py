@@ -74,3 +74,11 @@ def test_tts_audio_uses_blob_url_for_mobile_playback_and_cleans_it_up():
     assert 'var audio=new Audio(audioUrl);' in speak
     assert 'URL.revokeObjectURL(audioUrl)' in speak
     assert 'URL.revokeObjectURL(activeAudioUrl)' in speak
+
+
+def test_gemini_is_default_tts_and_legacy_auto_preference_migrates_to_gemini():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+    assert 'function getTtsPreference(){var value="gemini";' in html
+    assert 'localStorage.getItem(TTS_PREF_KEY)||"gemini"' in html
+    assert 'if(value==="auto"){value="gemini";localStorage.setItem(TTS_PREF_KEY,value);}' in html
+    assert 'includes(value)?value:"gemini";' in html
