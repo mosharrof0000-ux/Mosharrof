@@ -991,7 +991,7 @@ header.top{
   if(ttsVoiceSelect){ttsVoiceSelect.value=getTtsVoice();ttsVoiceSelect.addEventListener("change",function(){try{localStorage.setItem(TTS_VOICE_KEY,ttsVoiceSelect.value);}catch(e){}toast("Edge বাংলা কণ্ঠ পরিবর্তন হয়েছে");});}
   var historySearch=$("#historySearch"),historyNewChat=$("#historyNewChat");if(historySearch)historySearch.addEventListener("input",updateHistoryList);if(historyNewChat)historyNewChat.onclick=newChat;
   updateMeta();updateHistoryList();
-  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[];
+  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[],voiceEndTimer=null;
   var STT_LANGUAGE_KEY="mosharrof_stt_language_v1",sttLanguageSelect=null;
   var AUDIO_TRANSCRIBE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/transcribe-audio";
   function getSttLanguage(){var value="bn-BD";try{value=localStorage.getItem(STT_LANGUAGE_KEY)||"bn-BD";}catch(e){}return ["bn-BD","en-US","hi-IN"].includes(value)?value:"bn-BD";}
