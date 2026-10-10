@@ -36,7 +36,7 @@ def test_voice_input_preserves_manual_text_and_shows_processing_status():
     assert "is-transcription-success" in html
     assert "is-transcription-error" in html
     assert "পুরো অডিও শুনে গানের কথা ও বিরামচিহ্ন তৈরি হচ্ছে" not in html
-    assert "পাঠানোর আগে দেখে নিতে পারেন" in html
+    assert "অডিও থেকে লেখা তৈরি হয়েছে" in html
     assert "function send()" in html
     assert "function coreReply(" in html
 
