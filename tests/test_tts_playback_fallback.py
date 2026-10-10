@@ -60,4 +60,4 @@ def test_gemini_38_tts_uses_interactions_api_not_generate_content():
     assert 'generation_config:{speech_config:[{voice}]}' in tts
     assert 'part?.type==="audio"&&part?.data' in tts
     assert 'models/"+encodeURIComponent(model)+":generateContent' in tts
-    assert 'if(/^gemini-3\\\\.8-flash(?:-lite)?-tts$/.test(model))' in tts
+    assert 'if(/^gemini-3[.]8-flash(?:-lite)?-tts$/.test(model))' in tts
