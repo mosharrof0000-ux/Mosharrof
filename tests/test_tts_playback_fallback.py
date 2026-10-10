@@ -82,3 +82,14 @@ def test_gemini_is_default_tts_and_legacy_auto_preference_migrates_to_gemini():
     assert 'localStorage.getItem(TTS_PREF_KEY)||"gemini"' in html
     assert 'if(value==="auto"){value="gemini";localStorage.setItem(TTS_PREF_KEY,value);}' in html
     assert 'includes(value)?value:"gemini";' in html
+
+
+def test_tts_worker_cors_reflects_only_trusted_android_and_pages_origins():
+    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+
+    assert 'const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);' in worker
+    assert "function isAllowedOrigin(origin)" in worker
+    assert "function withRequestCors(response,request)" in worker
+    assert 'responseHeaders.set("Access-Control-Allow-Origin",origin)' in worker
+    assert "if(!isAllowedOrigin(origin))return reply({error:\"origin_not_allowed\",origin},403);" in worker
+    assert "return withRequestCors(response,request);" in worker
