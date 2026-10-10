@@ -1,7 +1,22 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
+const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
+function isAllowedOrigin(origin){
+  if(!origin)return true;
+  if(TRUSTED_APP_ORIGINS.has(origin))return true;
+  try{const u=new URL(origin);return u.protocol==="http:"&&(u.hostname==="localhost"||u.hostname==="127.0.0.1");}catch{return false;}
+}
 function reply(data,status){return new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8",...headers}})}
+function withRequestCors(response,request){
+  const origin=request.headers.get("Origin")||"";
+  const responseHeaders=new Headers(response.headers);
+  if(origin&&isAllowedOrigin(origin))responseHeaders.set("Access-Control-Allow-Origin",origin);
+  responseHeaders.set("Access-Control-Allow-Methods","POST, OPTIONS, GET");
+  responseHeaders.set("Access-Control-Allow-Headers","content-type");
+  responseHeaders.set("Vary","Origin");
+  return new Response(response.body,{status:response.status,statusText:response.statusText,headers:responseHeaders});
+}
 
 const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-2.5-flash"];
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
@@ -446,17 +461,13 @@ async function chat(request,env){
   return reply({error:"chat_provider_failed",provider_status:last?.upstream?.status||null,provider_message:last?.data?.error?.message||last?.error||"all_models_failed",tried:preferred},502);
 }
 
-export default {async fetch(request,env){
+async function handleRequest(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
     return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!env.GEMINI_API_KEY,azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
-  if(origin){
-    let allowed=origin===ORIGIN;
-    try{const u=new URL(origin);allowed=allowed||(u.protocol==="http:"&&(u.hostname==="localhost"||u.hostname==="127.0.0.1"));}catch{}
-    if(!allowed)return reply({error:"origin_not_allowed",origin},403);
-  }
+  if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);
   if(request.method!=="POST")return reply({error:"POST only"},405);
   try{
     const pathname=new URL(request.url).pathname;
@@ -479,4 +490,9 @@ export default {async fetch(request,env){
     }
     return reply({error:"analysis_provider_failed"},502);
   }catch{return reply({error:"invalid_request"},400)}
+}
+
+export default {async fetch(request,env){
+  const response=await handleRequest(request,env);
+  return withRequestCors(response,request);
 }};
