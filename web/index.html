@@ -656,7 +656,7 @@ header.top{
   var TTS_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts";
   var TTS_PREF_KEY="mosharrof_tts_provider_v1",TTS_VOICE_KEY="mosharrof_tts_voice_v1";
   var ttsProviderSelect=$("#ttsProviderSelect"),ttsVoiceSelect=$("#ttsVoiceSelect");
-  function getTtsPreference(){var value="auto";try{value=localStorage.getItem(TTS_PREF_KEY)||"auto";}catch(e){}return ["auto","edge","gemini","azure","elevenlabs","browser","sarvam"].includes(value)?value:"auto";}
+  function getTtsPreference(){var value="gemini";try{value=localStorage.getItem(TTS_PREF_KEY)||"gemini";if(value==="auto"){value="gemini";localStorage.setItem(TTS_PREF_KEY,value);}}catch(e){}return ["auto","edge","gemini","azure","elevenlabs","browser","sarvam"].includes(value)?value:"gemini";}
   function getTtsVoice(){var value="bn-BD-PradeepNeural";try{value=localStorage.getItem(TTS_VOICE_KEY)||value;}catch(e){}return ["bn-BD-PradeepNeural","bn-BD-NabanitaNeural"].includes(value)?value:"bn-BD-PradeepNeural";}
   var activeAudio=null;
   var activeAudioButton=null;
