@@ -7,3 +7,6 @@
 4. Download button uses the same visual family as speak/message-action shortcuts.
 5. Browser Voice fallback has no download (no audio file available).
 6. Stopping mid-play does not show download (only full completion does).
+
+## Fix note
+Syntax in `speechTextFromMarkdown` was corrected to `if(clean)return clean;`.
