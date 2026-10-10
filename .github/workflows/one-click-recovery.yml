@@ -26,12 +26,21 @@ concurrency:
 
 jobs:
   prepare-recovery:
-    if: ${{ github.ref == 'refs/heads/main' && inputs.confirm_restore == 'RESTORE' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     steps:
+      - name: Validate explicit confirmation
+        env:
+          CONFIRM_RESTORE: ${{ inputs.confirm_restore }}
+        run: |
+          if [ "$CONFIRM_RESTORE" != "RESTORE" ]; then
+            echo "::error::Type RESTORE exactly to confirm this full-tree recovery request."
+            exit 1
+          fi
+
       - name: Require recovery token so normal CI checks can run
         env:
           RECOVERY_TOKEN: ${{ secrets.RECOVERY_TOKEN }}
@@ -103,6 +112,3 @@ jobs:
             The recovery workflow itself is intentionally preserved so recovery remains available after a rollback.
 
             **Safety:** This PR does not force-push or modify `main` directly. Wait for required CI, review the full diff, then merge under the repository's normal protection rules. A full-tree restore can remove features added after the checkpoint.
-          labels: |
-            recovery
-            rollback
