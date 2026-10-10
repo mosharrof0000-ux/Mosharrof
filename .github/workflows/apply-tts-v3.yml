@@ -1,0 +1,39 @@
+name: Apply TTS download v3
+on:
+  push:
+    branches: [feat/tts-download-auto-v3]
+    paths:
+      - "scripts/apply_tts_download.py"
+      - "scripts/tts_nb/**"
+      - ".github/workflows/apply-tts-v3.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/tts-download-auto-v3
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: List payload chunks
+        run: ls -la scripts/tts_nb/ && wc -c scripts/tts_nb/*
+      - name: Apply TTS download changes
+        run: python3 scripts/apply_tts_download.py
+      - name: Verify download markers
+        run: |
+          grep -q showDownloadButton web/index.html
+          grep -q message-download-shortcut web/index.html
+          echo "verified OK"
+      - name: Commit result
+        run: |
+          git config user.name "mosharrof0000-ux"
+          git config user.email "mosharrof0000@gmail.com"
+          git add web/index.html
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Apply progressive TTS playback and auto download button"
+            git push
+          fi
