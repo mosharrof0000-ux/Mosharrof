@@ -46,3 +46,18 @@ def test_tts_health_reports_server_providers_and_configuration():
     assert "gemini_tts_configured:!!env.GEMINI_API_KEY" in worker
     assert "azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION" in worker
     assert 'const TTS_PROVIDERS=["edge","gemini","azure","elevenlabs","sarvam"]' in worker
+
+
+def test_gemini_38_tts_uses_interactions_api_not_generate_content():
+    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+    start = worker.index("async function generateWithGeminiTTS(")
+    end = worker.index("async function generateWithAzure(", start)
+    tts = worker[start:end]
+
+    assert '"/v1beta/interactions"' in tts or '"https://generativelanguage.googleapis.com/v1beta/interactions"' in tts
+    assert 'type:"user_input"' in tts
+    assert 'response_format:{type:"audio"}' in tts
+    assert 'generation_config:{speech_config:[{voice}]}' in tts
+    assert 'part?.type==="audio"&&part?.data' in tts
+    assert 'models/"+encodeURIComponent(model)+":generateContent' in tts
+    assert 'if(/^gemini-3\\\\.8-flash(?:-lite)?-tts$/.test(model))' in tts
