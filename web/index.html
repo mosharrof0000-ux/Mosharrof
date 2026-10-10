@@ -864,12 +864,22 @@ header.top{
         return audio.play().catch(function(){throw new Error("audio_play_failed");});
       }).catch(function(){
         if(stopped)return;
-        if(parts.length===0&&myIdx===0){
-          button.disabled=false;hideV();
-          speakWithBrowser(spokenText,button);
-          toast("সার্ভার ভয়েস পাওয়া যায়নি · Browser Voice ব্যবহার হচ্ছে");
+        // Audio bytes may exist even when HTMLMediaElement.play() is rejected.
+        // Do not use parts.length as a playback-success signal: that caused the
+        // first chunk to be silently skipped instead of using Browser Voice.
+        stopped=true;
+        if(activeAudio&&activeAudioButton===button){
+          try{activeAudio.pause();}catch(e){}
+          activeAudio=null;activeAudioButton=null;
+        }
+        button.disabled=false;
+        hideV();
+        var fallbackText=chunks.slice(myIdx).join(" ").trim();
+        if(fallbackText){
+          speakWithBrowser(fallbackText,button);
+          toast("সার্ভার অডিও চালানো যায়নি · Browser Voice ব্যবহার হচ্ছে");
         }else{
-          playChunk();
+          resetSpeakButton(button);
         }
       });
     }
