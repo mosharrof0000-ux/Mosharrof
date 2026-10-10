@@ -1,0 +1,108 @@
+name: One-Click Recovery Checkpoint
+
+on:
+  workflow_dispatch:
+    inputs:
+      checkpoint_ref:
+        description: "Known-good commit SHA, tag, or branch (default is the PR #420 merge checkpoint)"
+        required: true
+        default: "c896d37a619282306dabea4a9b5da6e6f1c12965"
+        type: string
+      reason:
+        description: "Why are you restoring this checkpoint?"
+        required: true
+        type: string
+      confirm_restore:
+        description: "Type RESTORE to generate a recovery PR"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: one-click-recovery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare-recovery:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.confirm_restore == 'RESTORE' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Require recovery token so normal CI checks can run
+        env:
+          RECOVERY_TOKEN: ${{ secrets.RECOVERY_TOKEN }}
+        run: |
+          if [ -z "$RECOVERY_TOKEN" ]; then
+            echo "::error::Add a fine-grained PAT as repository Actions secret RECOVERY_TOKEN (Contents: read/write, Pull requests: read/write). A PR created with GITHUB_TOKEN may not trigger the repository's normal CI workflows."
+            exit 1
+          fi
+
+      - name: Checkout current main with history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.RECOVERY_TOKEN }}
+
+      - name: Validate checkpoint and prepare full-tree restore
+        id: restore
+        env:
+          TARGET_REF: ${{ inputs.checkpoint_ref }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          set -euo pipefail
+          if [ -z "$TARGET_REF" ]; then
+            echo "::error::checkpoint_ref is required"
+            exit 1
+          fi
+          git fetch origin "$TARGET_REF" --depth=1 || true
+          if ! git cat-file -e "${TARGET_REF}^{commit}" 2>/dev/null; then
+            echo "::error::Checkpoint ref is not a commit available in this repository: $TARGET_REF"
+            exit 1
+          fi
+          TARGET_SHA="$(git rev-parse "${TARGET_REF}^{commit}")"
+          MAIN_SHA="$(git rev-parse origin/main)"
+          if [ "$TARGET_SHA" = "$MAIN_SHA" ]; then
+            echo "::error::The selected checkpoint is already the current main commit; nothing to restore."
+            exit 1
+          fi
+          printf '%s\n' "$TARGET_SHA" > /tmp/recovery-target-sha
+          printf '%s\n' "$REASON" > /tmp/recovery-reason
+          cp .github/workflows/one-click-recovery.yml /tmp/one-click-recovery.yml
+          git read-tree --reset -u "$TARGET_SHA"
+          mkdir -p .github/workflows
+          cp /tmp/one-click-recovery.yml .github/workflows/one-click-recovery.yml
+          git add -A
+          echo "target_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+          echo "main_sha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
+          echo "changed_files=$(git diff --cached --name-only | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
+          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+
+      - name: Open recovery pull request (do not write directly to main)
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.RECOVERY_TOKEN }}
+          branch: recovery/restore-${{ github.run_id }}
+          delete-branch: true
+          commit-message: "Restore known-good checkpoint ${{ steps.restore.outputs.target_sha }}"
+          title: "Recovery: restore checkpoint ${{ steps.restore.outputs.target_sha }}"
+          body: |
+            ## One-click recovery request
+
+            Restore repository files to the selected known-good commit.
+
+            - **Checkpoint:** ${{ steps.restore.outputs.target_sha }}
+            - **Previous main:** ${{ steps.restore.outputs.main_sha }}
+            - **Reason:** ${{ inputs.reason }}
+            - **Changed files:** ${{ steps.restore.outputs.changed_files }}
+
+            The recovery workflow itself is intentionally preserved so recovery remains available after a rollback.
+
+            **Safety:** This PR does not force-push or modify `main` directly. Wait for required CI, review the full diff, then merge under the repository's normal protection rules. A full-tree restore can remove features added after the checkpoint.
+          labels: |
+            recovery
+            rollback
