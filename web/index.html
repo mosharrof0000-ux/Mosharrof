@@ -660,6 +660,7 @@ header.top{
   function getTtsVoice(){var value="bn-BD-PradeepNeural";try{value=localStorage.getItem(TTS_VOICE_KEY)||value;}catch(e){}return ["bn-BD-PradeepNeural","bn-BD-NabanitaNeural"].includes(value)?value:"bn-BD-PradeepNeural";}
   var activeAudio=null;
   var activeAudioButton=null;
+  var activeAudioUrl=null;
   var activeSpeech=null;
   var activeSpeechButton=null;
   function coreReply(t,image){
@@ -831,7 +832,7 @@ header.top{
     return fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:text,language_code:"bn-BD",pace:1,provider:preference,genre:genre,voice:getTtsVoice()})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});});
   }
   function speakText(t,button){
-    if(activeAudio){try{activeAudio.pause();}catch(e){}if(activeAudioButton&&activeAudioButton!==button)resetSpeakButton(activeAudioButton);activeAudio=null;activeAudioButton=null;}
+    if(activeAudio){try{activeAudio.pause();}catch(e){}if(activeAudioButton&&activeAudioButton!==button)resetSpeakButton(activeAudioButton);activeAudio=null;activeAudioButton=null;}if(activeAudioUrl){try{URL.revokeObjectURL(activeAudioUrl);}catch(e){}activeAudioUrl=null;}
     if(activeSpeech&&"speechSynthesis" in window){try{window.speechSynthesis.cancel();}catch(e){}if(activeSpeechButton&&activeSpeechButton!==button)resetSpeakButton(activeSpeechButton);activeSpeech=null;activeSpeechButton=null;}
     removeDownloadButton(button);
     button._speakText=String(t||"");
@@ -851,6 +852,7 @@ header.top{
       stopped=true;
       button.classList.add("is-stop-requested");
       if(activeAudio){try{activeAudio.pause();}catch(e){}activeAudio=null;activeAudioButton=null;}
+      if(activeAudioUrl){try{URL.revokeObjectURL(activeAudioUrl);}catch(e){}activeAudioUrl=null;}
       hideV();
       window.setTimeout(function(){resetSpeakButton(button);},180);
     }
@@ -874,14 +876,18 @@ header.top{
         if(!data.audio_data)throw new Error("no_audio");
         mime=data.mime_type||mime;
         parts.push(base64ToUint8(data.audio_data));
-        var audio=new Audio("data:"+mime+";base64,"+data.audio_data);
-        activeAudio=audio;activeAudioButton=button;
+        var audioBytes=base64ToUint8(data.audio_data);
+        var audioBlob=new Blob([audioBytes],{type:mime});
+        var audioUrl=URL.createObjectURL(audioBlob);
+        var audio=new Audio(audioUrl);
+        activeAudio=audio;activeAudioButton=button;activeAudioUrl=audioUrl;
         setSpeakButton(button,"⏸ বন্ধ করুন");
         button.disabled=false;
         button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();stopNow();};
         showV("পড়া হচ্ছে · "+(data.provider||"voice")+(chunks.length>1?(" · "+(myIdx+1)+"/"+chunks.length):""));
         audio.onended=function(){
           if(activeAudio===audio){activeAudio=null;activeAudioButton=null;}
+          if(activeAudioUrl===audioUrl){try{URL.revokeObjectURL(audioUrl);}catch(e){}activeAudioUrl=null;}
           if(!stopped)playChunk();
         };
         return audio.play().catch(function(){throw new Error("audio_play_failed");});
@@ -895,6 +901,7 @@ header.top{
           try{activeAudio.pause();}catch(e){}
           activeAudio=null;activeAudioButton=null;
         }
+        if(activeAudioUrl){try{URL.revokeObjectURL(activeAudioUrl);}catch(e){}activeAudioUrl=null;}
         button.disabled=false;
         hideV();
         var fallbackText=chunks.slice(myIdx).join(" ").trim();
