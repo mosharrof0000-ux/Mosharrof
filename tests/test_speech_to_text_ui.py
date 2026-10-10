@@ -4,7 +4,7 @@ from pathlib import Path
 def test_speech_to_text_controls_remain_in_the_voice_family():
     html = Path("web/index.html").read_text(encoding="utf-8")
     voice_family_start = html.index('<span>Voice & interaction</span>')
-    voice_family_end = html.index("'</div></section></div>;", voice_family_start)
+    voice_family_end = html.index("'</div></section></div>';", voice_family_start)
     voice_family = html[voice_family_start:voice_family_end]
 
     assert 'id="voiceBtn"' in voice_family
