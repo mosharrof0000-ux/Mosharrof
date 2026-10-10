@@ -37,3 +37,12 @@ def test_download_combines_wav_pcm_chunks_into_one_valid_wave_file():
     assert 'String.fromCharCode(part[0],part[1],part[2],part[3])!=="RIFF"' in combine
     assert 'wavView.setUint32(4,36+total,true)' in combine
     assert 'wavView.setUint32(40,total,true)' in combine
+
+
+def test_tts_health_reports_server_providers_and_configuration():
+    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+
+    assert "tts_providers:TTS_PROVIDERS" in worker
+    assert "gemini_tts_configured:!!env.GEMINI_API_KEY" in worker
+    assert "azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION" in worker
+    assert 'const TTS_PROVIDERS=["edge","gemini","azure","elevenlabs","sarvam"]' in worker
