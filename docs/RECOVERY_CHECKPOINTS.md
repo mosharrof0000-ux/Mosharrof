@@ -11,7 +11,7 @@ Use **Actions → One-Click Recovery Checkpoint → Run workflow** on the `main`
 
 ## One-time setup
 
-Create a fine-grained GitHub token restricted to this repository with **Contents: Read and write** and **Pull requests: Read and write**, then add it under **Settings → Secrets and variables → Actions** as `RECOVERY_TOKEN`. This is needed so the recovery PR can trigger the normal CI workflows; PRs created using the built-in `GITHUB_TOKEN` do not reliably trigger those workflows.
+Create a fine-grained GitHub token restricted to this repository with **Contents: Read and write** and **Pull requests: Read and write**, then add it under **Settings → Secrets and variables → Actions** as `MOSHARROF_RECOVERY_TOKEN`. This is needed so the recovery PR can trigger the normal CI workflows; PRs created using the built-in `GITHUB_TOKEN` do not reliably trigger those workflows.
 
 ## Save a new checkpoint
 
