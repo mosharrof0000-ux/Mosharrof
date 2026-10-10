@@ -25,3 +25,15 @@ def test_tts_download_button_is_only_added_after_completed_server_playback():
     assert "showDownloadButton(button,combineAudioParts(parts,mime),mime)" in speak
     assert 'showDownloadButton(button,combineAudioParts(parts,mime),mime);' in speak
     assert 'speakWithBrowser(fallbackText,button);' in speak
+
+
+def test_download_combines_wav_pcm_chunks_into_one_valid_wave_file():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+    start = html.index("function combineAudioParts(")
+    end = html.index("function splitSpeechChunks(", start)
+    combine = html[start:end]
+
+    assert 'mimeType.indexOf("wav")!==-1' in combine
+    assert 'String.fromCharCode(part[0],part[1],part[2],part[3])!=="RIFF"' in combine
+    assert 'wavView.setUint32(4,36+total,true)' in combine
+    assert 'wavView.setUint32(40,total,true)' in combine
