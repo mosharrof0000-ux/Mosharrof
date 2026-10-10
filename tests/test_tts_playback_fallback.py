@@ -61,3 +61,16 @@ def test_gemini_38_tts_uses_interactions_api_not_generate_content():
     assert 'part?.type==="audio"&&part?.data' in tts
     assert 'models/"+encodeURIComponent(model)+":generateContent' in tts
     assert 'if(/^gemini-3[.]8-flash(?:-lite)?-tts$/.test(model))' in tts
+
+
+def test_tts_audio_uses_blob_url_for_mobile_playback_and_cleans_it_up():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+    start = html.index("function speakText(")
+    end = html.index("function parseImageSpec(", start)
+    speak = html[start:end]
+
+    assert 'var audioBlob=new Blob([audioBytes],{type:mime});' in speak
+    assert 'var audioUrl=URL.createObjectURL(audioBlob);' in speak
+    assert 'var audio=new Audio(audioUrl);' in speak
+    assert 'URL.revokeObjectURL(audioUrl)' in speak
+    assert 'URL.revokeObjectURL(activeAudioUrl)' in speak
