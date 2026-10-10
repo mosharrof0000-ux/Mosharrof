@@ -69,9 +69,34 @@ async function generateWithGeminiTTS(text,body,env){
   const model=String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts");
   const voice=String(body.gemini_voice||env.GEMINI_TTS_VOICE||"Kore");
   try{
+    // Gemini 3.8 TTS is served by the Interactions API, not the legacy
+    // models/:generateContent endpoint. Keep the legacy route for older TTS models.
+    if(/^gemini-3[.]8-flash(?:-lite)?-tts$/.test(model)){
+      const r=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
+        method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
+        body:JSON.stringify({
+          model,
+          input:[{type:"user_input",content:[{type:"text",text:String(text||""),annotations:[{type:"speech_metadata",style:"Speak naturally and clearly in Bengali, with accurate Bengali pronunciation and a warm conversational tone."}]}]}],
+          response_format:{type:"audio"},
+          generation_config:{speech_config:[{voice}]}
+        })
+      });
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok)return {ok:false,provider:"gemini",reason:data?.error?.message||("HTTP "+r.status),status:r.status};
+      const outputAudio=data?.output_audio;
+      const audioPart=Array.isArray(data?.steps)
+        ? data.steps.flatMap(step=>Array.isArray(step?.content)?step.content:[]).find(part=>part?.type==="audio"&&part?.data)
+        : null;
+      const audioData=outputAudio?.data||audioPart?.data;
+      if(!audioData)return {ok:false,provider:"gemini",reason:"empty_audio_response",status:r.status};
+      const mime=String(outputAudio?.mime_type||audioPart?.mime_type||audioPart?.mimeType||"audio/wav").toLowerCase();
+      if(mime.includes("wav"))return {ok:true,provider:"gemini",model,mime_type:"audio/wav",audio_data:audioData};
+      if(mime.includes("pcm")||mime.includes("l16"))return {ok:true,provider:"gemini",model,mime_type:"audio/wav",audio_data:wavFromPcmBase64(audioData)};
+      return {ok:false,provider:"gemini",reason:"unsupported_audio_format:"+mime};
+    }
     const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
       method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
-      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Read the following text aloud naturally in Bengali. Preserve its meaning and pronunciation. Do not add commentary.\n\n"+text}]}],
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Read the following text aloud naturally in Bengali. Preserve its meaning and pronunciation. Do not add commentary.\\n\\n"+text}]}],
         generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})
     });
     const data=await r.json().catch(()=>({}));
