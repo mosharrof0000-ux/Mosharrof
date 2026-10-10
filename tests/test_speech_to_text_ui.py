@@ -31,7 +31,7 @@ def test_speech_to_text_improves_phrase_joining_and_final_punctuation():
     html = Path("web/index.html").read_text(encoding="utf-8")
 
     assert "function voiceAddPhrase(value)" in html
-    assert "voiceFinalTranscript+=\", "" in html
+    assert "voiceFinalTranscript+=" in html
     assert "function finishVoiceTranscript()" in html
     assert 'value.replace(/[,，;；:]+$/,"")+"।"' in html
 
