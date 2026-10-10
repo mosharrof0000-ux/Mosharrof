@@ -1,0 +1,28 @@
+name: Fix TTS syntax
+on:
+  push:
+    branches: [feat/tts-download-auto-v3]
+    paths:
+      - "scripts/fix_tts_syntax.py"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/tts-download-auto-v3
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: python3 scripts/fix_tts_syntax.py
+      - run: |
+          git config user.name "mosharrof0000-ux"
+          git config user.email "mosharrof0000@gmail.com"
+          git add web/index.html
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Fix speechTextFromMarkdown syntax: if(clean)return clean"
+            git push
+          fi
