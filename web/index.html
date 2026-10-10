@@ -155,6 +155,8 @@ header.top{
 .composer-tool-toggle{font-size:21px;line-height:1}
 .composer-tool-toggle:active,.composer-action:active,.send:active{transform:scale(.94);background:#303030}
 .composer-tool-toggle:hover,.composer-action:hover,.send:hover:not(:disabled){background:#111;border-color:rgba(255,255,255,.3)}
+.composer-action.is-listening{background:#3a1014;border-color:rgba(239,68,68,.9);color:#ffb4b4;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+.composer-action:disabled{opacity:.55;cursor:not-allowed}
 .composer-tool-toggle:focus-visible,.composer-action:focus-visible,.send:focus-visible{outline:2px solid #aaa;outline-offset:2px}
 .composer-action svg,.send svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .composer-tools-menu{position:absolute;left:0;bottom:44px;display:none;align-items:center;gap:5px;padding:5px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#050505;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:2}
@@ -246,7 +248,7 @@ header.top{
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
   </div>
-  <div class="voice-bar" id="voiceStatus">Voice ready</div>
+  <div class="voice-bar" id="voiceStatus" role="status" aria-live="polite">Voice ready</div>
   <aside class="drawer left" id="drawerLeft" aria-hidden="true"></aside>
   <aside class="drawer right" id="drawerRight" aria-hidden="true"></aside>
   <div class="scrim" id="scrim"></div>
@@ -959,7 +961,8 @@ header.top{
     '</div></section>'+
     '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/></svg><span>Audio Settings</span></div><div class="audio-setting-row"><label for="ttsProviderSelect">ভয়েস ইঞ্জিন</label><select id="ttsProviderSelect"><option value="auto">স্বয়ংক্রিয় · ফ্রি-ফার্স্ট</option><option value="edge">Edge-TTS · Realistic</option><option value="gemini">Google Gemini AI Voice</option><option value="azure">Microsoft Azure AI Speech</option><option value="elevenlabs">ElevenLabs Premium</option><option value="browser">Default Browser Voice</option><option value="sarvam">Sarvam Bengali Voice</option></select><label for="ttsVoiceSelect">Edge বাংলা কণ্ঠ</label><select id="ttsVoiceSelect"><option value="bn-BD-PradeepNeural">প্রদীপ · পুরুষ কণ্ঠ</option><option value="bn-BD-NabanitaNeural">নবনীতা · নারী কণ্ঠ</option></select><small>স্বয়ংক্রিয় মোডে Edge-TTS → Google Gemini → Microsoft Azure → Sarvam; গান/কবিতায় ElevenLabs আগে চেষ্টা হবে। প্রয়োজনীয় API key/region না থাকলে ইঞ্জিনটি এড়িয়ে যাবে।</small></div></section>'+
     '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/></svg><span>Voice & interaction</span></div><div class="nav-family-items">'+
-    '<button id="voiceBtn" type="button" aria-label="কণ্ঠস্বর"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></span><span class="nav-copy"><span>কণ্ঠস্বর</span><small>কণ্ঠস্বর দিয়ে কথা বলুন</small></span></button>'+
+    '<button id="voiceBtn" type="button" aria-label="কণ্ঠস্বর"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></span><span class="nav-copy"><span>কণ্ঠস্বর</span><small>কথা বলে লিখুন · আবার চাপলে থামবে</small></span></button>'+
+    '<div class="audio-setting-row"><label for="sttLanguageSelect">কথা শনাক্ত করার ভাষা</label><select id="sttLanguageSelect"><option value="bn-BD">বাংলা (বাংলাদেশ)</option><option value="en-US">English (US)</option><option value="hi-IN">हिन्दी</option></select><small>ব্রাউজার সমর্থন করলে মাইক্রোফোনের কথা লেখায় রূপান্তর হবে। কিছু ব্রাউজারে অডিও অনলাইন সার্ভিসে প্রক্রিয়াকৃত হতে পারে।</small></div>'+
     '</div></section></div>';
   var navL=$("#navL");
   var NAV_FAMILIES=[
@@ -988,9 +991,21 @@ header.top{
   if(ttsVoiceSelect){ttsVoiceSelect.value=getTtsVoice();ttsVoiceSelect.addEventListener("change",function(){try{localStorage.setItem(TTS_VOICE_KEY,ttsVoiceSelect.value);}catch(e){}toast("Edge বাংলা কণ্ঠ পরিবর্তন হয়েছে");});}
   var historySearch=$("#historySearch"),historyNewChat=$("#historyNewChat");if(historySearch)historySearch.addEventListener("input",updateHistoryList);if(historyNewChat)historyNewChat.onclick=newChat;
   updateMeta();updateHistoryList();
-  var rec=null;
-  function initV(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;rec=new SR();rec.lang="bn-BD";rec.continuous=false;rec.interimResults=true;rec.onstart=function(){showV("Listening…");};rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;var p=correct(t);input.value=punct(p.text);resize();showV(p.corrections.length?"Context corrected":"Voice ready");};rec.onerror=function(e){showV("Error: "+e.error);setTimeout(hideV,2000);};rec.onend=function(){if(vStatus.textContent==="Listening…")hideV();else setTimeout(hideV,1500);};}
-  function startV(){if(!rec){toast("Voice API নেই");return;}try{rec.start();}catch(e){}}
+  var rec=null,voiceListening=false,voiceBaseText="",voiceLastTranscript="",voiceEndTimer=null;
+  var STT_LANGUAGE_KEY="mosharrof_stt_language_v1",sttLanguageSelect=null;
+  function getSttLanguage(){var value="bn-BD";try{value=localStorage.getItem(STT_LANGUAGE_KEY)||"bn-BD";}catch(e){}return ["bn-BD","en-US","hi-IN"].includes(value)?value:"bn-BD";}
+  function setVoiceButtonState(listening){voiceListening=!!listening;[composerVoiceBtn,$("#voiceBtn")].forEach(function(button){if(!button)return;button.classList.toggle("is-listening",voiceListening);button.setAttribute("aria-pressed",voiceListening?"true":"false");button.title=voiceListening?"কথা শোনা হচ্ছে · থামাতে চাপুন":"ভয়েস ইনপুট";});}
+  function voiceErrorMessage(code){var messages={"not-allowed":"মাইক্রোফোনের অনুমতি দিন, তারপর আবার চেষ্টা করুন।","service-not-allowed":"এই ব্রাউজারে Speech Recognition সার্ভিস অনুমোদিত নয়।","no-speech":"কোনো কথা শোনা যায়নি। আবার বলুন।","audio-capture":"মাইক্রোফোন পাওয়া যায়নি। ডিভাইসের মাইক্রোফোন পরীক্ষা করুন।","network":"ভয়েস শনাক্তকরণে নেটওয়ার্ক সমস্যা হয়েছে।","language-not-supported":"নির্বাচিত ভাষা এই ব্রাউজারে সমর্থিত নয়।","aborted":"ভয়েস ইনপুট বন্ধ করা হয়েছে।"};return messages[code]||("ভয়েস ইনপুটে সমস্যা হয়েছে ("+code+")। টাইপ করেও পাঠাতে পারবেন।");}
+  function renderVoiceText(finalText,interimText){var parts=[voiceBaseText,finalText,interimText].map(function(x){return String(x||"").trim();}).filter(Boolean);input.value=parts.join(" ");resize();}
+  function initV(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;sttLanguageSelect=$("#sttLanguageSelect");if(sttLanguageSelect){sttLanguageSelect.value=getSttLanguage();sttLanguageSelect.addEventListener("change",function(){try{localStorage.setItem(STT_LANGUAGE_KEY,sttLanguageSelect.value);}catch(e){}if(rec)rec.lang=sttLanguageSelect.value;toast("ভয়েস ভাষা: "+sttLanguageSelect.options[sttLanguageSelect.selectedIndex].text);});}
+    if(!SR){composerVoiceBtn.title="এই ব্রাউজারে ভয়েস টাইপিং সমর্থিত নয়";composerVoiceBtn.setAttribute("aria-label","এই ব্রাউজারে ভয়েস টাইপিং সমর্থিত নয়");return;}
+    try{rec=new SR();rec.lang=getSttLanguage();rec.continuous=false;rec.interimResults=true;rec.maxAlternatives=1;}catch(e){rec=null;return;}
+    rec.onstart=function(){if(voiceEndTimer)clearTimeout(voiceEndTimer);setVoiceButtonState(true);voiceBaseText=input.value.trim();voiceLastTranscript="";showV("শুনছি… কথা বলা শুরু করুন");};
+    rec.onresult=function(event){var finalText="",interimText="";for(var i=0;i<event.results.length;i++){var result=event.results[i];if(!result||!result[0])continue;if(result.isFinal)finalText+=result[0].transcript+" ";else interimText+=result[0].transcript+" ";}voiceLastTranscript=finalText.trim();renderVoiceText(voiceLastTranscript,interimText.trim());showV(interimText.trim()?"কথা শনাক্ত হচ্ছে…":"কথা লেখা হয়েছে · পাঠাতে Send চাপুন");};
+    rec.onerror=function(event){setVoiceButtonState(false);var message=voiceErrorMessage(event&&event.error||"unknown");showV(message);toast(message,3500);};
+    rec.onend=function(){setVoiceButtonState(false);if(voiceLastTranscript){var p=correct(voiceLastTranscript);var clean=punct(p.text);renderVoiceText(clean,"");showV(p.corrections.length?"কথা সংশোধন করা হয়েছে · পাঠাতে Send চাপুন":"ভয়েস টেক্সট প্রস্তুত · পাঠাতে Send চাপুন");}else if(vStatus.textContent.indexOf("শুনছি")===0){showV("শোনা শেষ · কোনো কথা শনাক্ত হয়নি");}if(voiceEndTimer)clearTimeout(voiceEndTimer);voiceEndTimer=setTimeout(hideV,4000);};
+  }
+  function startV(){if(voiceListening){try{rec&&rec.stop();}catch(e){}setVoiceButtonState(false);return;}if(!rec){var message="এই ব্রাউজারে Speech Recognition নেই। Chrome/Edge-এর আপডেটেড ব্রাউজার চেষ্টা করুন, অথবা টাইপ করে পাঠান।";toast(message,4000);showV(message);setTimeout(hideV,4200);return;}try{rec.lang=getSttLanguage();rec.start();}catch(e){var message="ভয়েস ইনপুট চালু করা যায়নি। আবার চেষ্টা করুন।";toast(message,3000);showV(message);setTimeout(hideV,3200);}}
   sendBtn.onclick=send;
   imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);closeComposerTools();});
   removeImage.onclick=clearImage;
