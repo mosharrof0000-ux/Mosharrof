@@ -375,6 +375,30 @@ async function generateImage(request,env){
   }
   return reply({error:"image_provider_failed",free_first:true,image_spec,attempted},502);
 }
+async function transcribeAudio(request,env){
+  const body=await request.json();
+  const audio=String(body.audio_base64||"").replace(/^data:audio\/[^;]+;base64,/i,"");
+  const mime=String(body.mime_type||"").split(";")[0].toLowerCase();
+  const allowed=["audio/webm","audio/mp4","audio/ogg","audio/wav","audio/mpeg","audio/aac","audio/flac"];
+  if(!audio||!allowed.includes(mime))return reply({error:"audio_and_supported_mime_type_required"},400);
+  if(audio.length>18*1024*1024)return reply({error:"audio_too_large",max_bytes:12*1024*1024},413);
+  if(!env.GEMINI_API_KEY)return reply({error:"transcription_provider_not_configured"},503);
+  const language=String(body.language||"bn-BD").slice(0,20);
+  const prompt="Transcribe the supplied audio verbatim. The audio may contain a person singing a song, not ordinary speech. Listen to the entire audio and use the surrounding lyrical context to resolve words where possible. Preserve the original language, Bengali regional pronunciation, wording, repetition, and line order; do not translate, summarize, rewrite, or invent missing lyrics. Add natural punctuation and line breaks based on meaning, phrasing, and pauses. For Bengali, use Bengali punctuation (।, , , ?). If a short part truly cannot be understood, mark only that part as [অস্পষ্ট]. Return only the transcription, with no preface or explanation. Audio language hint: "+language+".";
+  const preferred=env.GEMINI_AUDIO_MODEL?[env.GEMINI_AUDIO_MODEL,"gemini-2.5-flash","gemini-2.0-flash"]:["gemini-2.5-flash","gemini-2.0-flash"];
+  const attempted=[];
+  for(const model of [...new Set(preferred)]){
+    try{
+      const r=await callGemini(env,model,{contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:audio}}]}],generationConfig:{temperature:0.1}});
+      attempted.push({model,status:r.upstream.status});
+      if(!r.upstream.ok){if([400,404,429,500,502,503].includes(r.upstream.status))continue;return reply({error:"audio_transcription_failed",provider_status:r.upstream.status},502);}
+      const transcript=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
+      if(transcript)return reply({ok:true,model,text:transcript},200);
+    }catch(e){attempted.push({model,error:String(e&&e.message||e)});}
+  }
+  return reply({error:"audio_transcription_failed",attempted},502);
+}
+
 async function chat(request,env){
   const body=await request.json();
   const text=String(body.text||"").trim();
@@ -413,7 +437,7 @@ export default {async fetch(request,env){
     const pathname=new URL(request.url).pathname;
     if(pathname==="/generate-image")return await generateImage(request,env);
     if(pathname==="/tts")return await tts(request,env);
-    if(pathname==="/chat")return await chat(request,env);
+    if(pathname==="/chat")return await chat(request,env);\n    if(pathname==="/transcribe-audio")return await transcribeAudio(request,env);
     const body=await request.json();
     if(!body.image_base64||!String(body.mime_type||"").startsWith("image/"))return reply({error:"image_base64 and image/* mime_type are required"},400);
     if(String(body.image_base64).length>MAX_BYTES*1.4)return reply({error:"image_too_large"},413);
