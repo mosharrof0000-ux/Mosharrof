@@ -43,10 +43,10 @@ jobs:
 
       - name: Require recovery token so normal CI checks can run
         env:
-          RECOVERY_TOKEN: ${{ secrets.RECOVERY_TOKEN }}
+          RECOVERY_TOKEN: ${{ secrets.MOSHARROF_RECOVERY_TOKEN }}
         run: |
           if [ -z "$RECOVERY_TOKEN" ]; then
-            echo "::error::Add a fine-grained PAT as repository Actions secret RECOVERY_TOKEN (Contents: read/write, Pull requests: read/write). A PR created with GITHUB_TOKEN may not trigger the repository's normal CI workflows."
+            echo "::error::Add a fine-grained PAT as repository Actions secret MOSHARROF_RECOVERY_TOKEN (Contents: read/write, Pull requests: read/write). A PR created with GITHUB_TOKEN may not trigger the repository's normal CI workflows."
             exit 1
           fi
 
@@ -55,7 +55,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.RECOVERY_TOKEN }}
+          token: ${{ secrets.MOSHARROF_RECOVERY_TOKEN }}
 
       - name: Validate checkpoint and prepare full-tree restore
         id: restore
@@ -94,7 +94,7 @@ jobs:
       - name: Open recovery pull request (do not write directly to main)
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.RECOVERY_TOKEN }}
+          token: ${{ secrets.MOSHARROF_RECOVERY_TOKEN }}
           branch: recovery/restore-${{ github.run_id }}
           delete-branch: true
           commit-message: "Restore known-good checkpoint ${{ steps.restore.outputs.target_sha }}"
