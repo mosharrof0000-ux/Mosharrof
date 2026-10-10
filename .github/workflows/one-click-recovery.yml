@@ -43,9 +43,9 @@ jobs:
 
       - name: Require recovery token so normal CI checks can run
         env:
-          RECOVERY_TOKEN: ${{ secrets.MOSHARROF_RECOVERY_TOKEN }}
+          MOSHARROF_RECOVERY_TOKEN: ${{ secrets.MOSHARROF_RECOVERY_TOKEN }}
         run: |
-          if [ -z "$RECOVERY_TOKEN" ]; then
+          if [ -z "$MOSHARROF_RECOVERY_TOKEN" ]; then
             echo "::error::Add a fine-grained PAT as repository Actions secret MOSHARROF_RECOVERY_TOKEN (Contents: read/write, Pull requests: read/write). A PR created with GITHUB_TOKEN may not trigger the repository's normal CI workflows."
             exit 1
           fi
