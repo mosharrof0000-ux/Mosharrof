@@ -437,7 +437,8 @@ export default {async fetch(request,env){
     const pathname=new URL(request.url).pathname;
     if(pathname==="/generate-image")return await generateImage(request,env);
     if(pathname==="/tts")return await tts(request,env);
-    if(pathname==="/chat")return await chat(request,env);\n    if(pathname==="/transcribe-audio")return await transcribeAudio(request,env);
+    if(pathname==="/chat")return await chat(request,env);
+    if(pathname==="/transcribe-audio")return await transcribeAudio(request,env);
     const body=await request.json();
     if(!body.image_base64||!String(body.mime_type||"").startsWith("image/"))return reply({error:"image_base64 and image/* mime_type are required"},400);
     if(String(body.image_base64).length>MAX_BYTES*1.4)return reply({error:"image_too_large"},413);
