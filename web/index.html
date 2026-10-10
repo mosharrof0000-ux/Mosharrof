@@ -678,7 +678,30 @@ header.top{
     return arr;
   }
   function combineAudioParts(parts,mime){
-    var total=0,i=0;
+    var mimeType=String(mime||"audio/mpeg").toLowerCase(),total=0,i=0;
+    if(mimeType.indexOf("wav")!==-1&&parts&&parts.length){
+      var pcmParts=[],firstHeader=null,format=null,channels=null,sampleRate=null,bits=null;
+      for(i=0;i<parts.length;i++){
+        var part=parts[i];
+        if(!part||part.length<44||
+          String.fromCharCode(part[0],part[1],part[2],part[3])!=="RIFF"||
+          String.fromCharCode(part[8],part[9],part[10],part[11])!=="WAVE")throw new Error("invalid_wav_chunk");
+        var view=new DataView(part.buffer,part.byteOffset,part.byteLength);
+        var chunkFormat=view.getUint16(20,true),chunkChannels=view.getUint16(22,true);
+        var chunkRate=view.getUint32(24,true),chunkBits=view.getUint16(34,true);
+        var dataLength=view.getUint32(40,true);
+        if(view.getUint32(16,true)!==16||chunkFormat!==1||chunkBits!==16||
+          dataLength>part.length-44)throw new Error("unsupported_wav_chunk");
+        if(i===0){firstHeader=part.subarray(0,44);format=chunkFormat;channels=chunkChannels;sampleRate=chunkRate;bits=chunkBits;}
+        else if(chunkFormat!==format||chunkChannels!==channels||chunkRate!==sampleRate||chunkBits!==bits)throw new Error("incompatible_wav_chunks");
+        var pcm=part.subarray(44,44+dataLength);pcmParts.push(pcm);total+=pcm.length;
+      }
+      var wav=new Uint8Array(44+total);wav.set(firstHeader,0);
+      var wavView=new DataView(wav.buffer);wavView.setUint32(4,36+total,true);wavView.setUint32(40,total,true);
+      var offset=44;
+      for(i=0;i<pcmParts.length;i++){wav.set(pcmParts[i],offset);offset+=pcmParts[i].length;}
+      return new Blob([wav],{type:"audio/wav"});
+    }
     for(i=0;i<parts.length;i++)total+=parts[i].length;
     var out=new Uint8Array(total),off=0;
     for(i=0;i<parts.length;i++){out.set(parts[i],off);off+=parts[i].length;}
