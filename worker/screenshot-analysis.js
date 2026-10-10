@@ -71,7 +71,7 @@ async function generateWithGeminiTTS(text,body,env){
   try{
     // Gemini 3.8 TTS is served by the Interactions API, not the legacy
     // models/:generateContent endpoint. Keep the legacy route for older TTS models.
-    if(/^gemini-3\\.8-flash(?:-lite)?-tts$/.test(model)){
+    if(/^gemini-3[.]8-flash(?:-lite)?-tts$/.test(model)){
       const r=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
         method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
         body:JSON.stringify({
