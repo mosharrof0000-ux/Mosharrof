@@ -24,4 +24,4 @@ jobs:
         with:
           node-version: "24"
       - name: Run isolated router policy tests
-        run: node --experimental-default-type=module --test cloudflare-token-router-worker/index.test.js
+        run: npm --prefix cloudflare-token-router-worker test
