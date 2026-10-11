@@ -75,3 +75,40 @@ test("worker rejects unknown capabilities before contacting Cloudflare", async (
   assert.equal(response.status, 403);
   assert.deepEqual(await response.json(), { error: "OPERATION_NOT_ALLOWED" });
 });
+
+
+test("Cloudflare 403 is not retried with a broader token and response never leaks credentials", async () => {
+  const profiles = [
+    { token_id: "zone-read", secret_binding: "CF_ZONE_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
+    { token_id: "broad", secret_binding: "CF_BROAD_TOKEN", permissions: ["Zone Read", "Zone Edit"], resource_scopes: ["/zones/zone-1"], enabled: true },
+  ];
+  const env = {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify(profiles),
+    CF_ZONE_TOKEN: "least-privilege-secret",
+    CF_BROAD_TOKEN: "broader-secret",
+  };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (_url, options) => {
+    calls += 1;
+    assert.equal(options.headers.Authorization, "Bearer least-privilege-secret");
+    return new Response("provider private detail", { status: 403 });
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), env);
+    const result = await response.json();
+    assert.equal(response.status, 502);
+    assert.equal(calls, 1);
+    assert.equal(result.error, "CLOUDFLARE_AUTHORIZATION_DENIED");
+    assert.equal(JSON.stringify(result).includes("least-privilege-secret"), false);
+    assert.equal(JSON.stringify(result).includes("broader-secret"), false);
+    assert.equal(JSON.stringify(result).includes("provider private detail"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
