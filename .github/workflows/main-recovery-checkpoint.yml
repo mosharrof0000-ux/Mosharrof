@@ -1,0 +1,78 @@
+name: MOSHARROF Main Recovery Checkpoint
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mosharrof-main-recovery-checkpoint
+  cancel-in-progress: false
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout complete repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Create immutable recovery tag for the exact checkpoint
+        id: checkpoint
+        shell: bash
+        env:
+          PUSHED_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags
+          if [ "$EVENT_NAME" = "push" ]; then
+            target="$PUSHED_SHA"
+          else
+            target="$(git rev-parse origin/main)"
+          fi
+          git cat-file -e "${target}^{commit}"
+          tag="recovery-main-$(date -u +%Y%m%dT%H%M%SZ)-${target:0:12}-${RUN_ID}"
+          git tag -a "$tag" "$target" -m "MOSHARROF main recovery checkpoint for $target"
+          git push origin "refs/tags/$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+          echo "Created recovery checkpoint: $tag ($target)"
+
+      - name: Build portable full-history Git bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          git bundle create mosharrof-main-recovery.bundle --all
+          git bundle verify mosharrof-main-recovery.bundle
+
+      - name: Store recovery bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-main-recovery-${{ steps.checkpoint.outputs.target }}
+          path: mosharrof-main-recovery.bundle
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish checkpoint summary
+        shell: bash
+        env:
+          CHECKPOINT_TAG: ${{ steps.checkpoint.outputs.tag }}
+          CHECKPOINT_SHA: ${{ steps.checkpoint.outputs.target }}
+        run: |
+          {
+            echo "## MOSHARROF recovery checkpoint"
+            echo
+            echo "- Protected checkpoint tag: `$CHECKPOINT_TAG`"
+            echo "- Commit: `$CHECKPOINT_SHA`"
+            echo "- Full-history Git bundle artifact: `mosharrof-main-recovery-$CHECKPOINT_SHA` (90-day retention)"
+            echo "- This workflow does not reset, force-push, or deploy production."
+          } >> "$GITHUB_STEP_SUMMARY"
