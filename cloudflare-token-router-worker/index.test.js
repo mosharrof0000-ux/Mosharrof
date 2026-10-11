@@ -123,3 +123,44 @@ test("prefers narrower resource scope when permissions are equal", () => {
   assert.equal(selected.p.token_id, "z-narrow");
   assert.equal(selected.token, "narrow-secret");
 });
+
+
+test("health reports usable configuration without exposing secrets", async () => {
+  const request = () => new Request("https://router.example/health", { method: "GET" });
+  const missing = await worker.fetch(request(), {});
+  assert.deepEqual(await missing.json(), {
+    ok: true,
+    service: "mosharrof-cloudflare-token-router",
+    build: "2026-10-11-token-router-worker-v1",
+    mode: "read-only",
+    access_configured: false,
+    profiles_configured: false,
+  });
+
+  const emptyProfiles = await worker.fetch(request(), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "[]",
+  });
+  const emptyStatus = await emptyProfiles.json();
+  assert.equal(emptyStatus.access_configured, true);
+  assert.equal(emptyStatus.profiles_configured, false);
+  assert.equal(JSON.stringify(emptyStatus).includes("private-router-key"), false);
+
+  const validProfiles = await worker.fetch(request(), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "zone-read", secret_binding: "CF_ZONE_READ_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
+    ]),
+    CF_ZONE_READ_TOKEN: "cloudflare-secret-token",
+  });
+  const validStatus = await validProfiles.json();
+  assert.equal(validStatus.access_configured, true);
+  assert.equal(validStatus.profiles_configured, true);
+  assert.equal(JSON.stringify(validStatus).includes("cloudflare-secret-token"), false);
+
+  const invalidProfiles = await worker.fetch(request(), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "{invalid",
+  });
+  assert.equal((await invalidProfiles.json()).profiles_configured, false);
+});
