@@ -10,7 +10,10 @@ def test_tts_frontend_restores_pre_download_single_request_playback():
     # The pre-download implementation sends one complete request and plays the
     # returned audio directly; it does not progressively fetch chunks.
     assert 'fetch(TTS_WORKER_URL,{method:"POST"' in speak
-    assert 'new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data)' in speak
+    assert "URL.createObjectURL(audioBlob)" in speak
+    assert "activeAudio=new Audio(playbackUrl)" in speak
+    assert "URL.revokeObjectURL(activeAudioUrl)" in html
+    assert 'new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data)' not in speak
     assert "splitSpeechChunks(" not in speak
     assert "showDownloadButton(" not in speak
     assert "combineAudioParts(" not in html
