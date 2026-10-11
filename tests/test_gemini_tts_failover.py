@@ -6,7 +6,7 @@ def test_worker_has_configurable_gemini_tts_model_and_key_failover():
     assert 'GEMINI_TTS_FALLBACK_MODELS' in worker
     for slot in range(2, 6):
         assert f'GEMINI_API_KEY_{slot}' in worker
-    assert 'generateWithGeminiTTSOnce' in worker
+    assert 'generateWithGeminiTTSWithFailover' in worker
     assert 'all_gemini_tts_routes_failed' in worker
     assert 'failover_attempts' in worker
 
