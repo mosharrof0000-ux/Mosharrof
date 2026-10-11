@@ -123,3 +123,107 @@ test("prefers narrower resource scope when permissions are equal", () => {
   assert.equal(selected.p.token_id, "z-narrow");
   assert.equal(selected.token, "narrow-secret");
 });
+
+
+test("health endpoint reports only safe configuration flags and remains read-only", async () => {
+  const empty = await worker.fetch(new Request("https://router.example/health"), {});
+  assert.equal(empty.status, 200);
+  assert.deepEqual(await empty.json(), {
+    ok: true,
+    service: "mosharrof-cloudflare-token-router",
+    build: "2026-10-11-token-router-worker-v1",
+    mode: "read-only",
+    access_configured: false,
+    profiles_configured: false,
+  });
+
+  const configured = await worker.fetch(new Request("https://router.example/health"), {
+    ROUTER_ACCESS_TOKEN: "must-not-leak",
+    CLOUDFLARE_TOKEN_PROFILES: "[]",
+  });
+  const payload = await configured.json();
+  assert.equal(payload.access_configured, true);
+  assert.equal(payload.profiles_configured, true);
+  assert.equal(JSON.stringify(payload).includes("must-not-leak"), false);
+  assert.equal(configured.headers.get("cache-control"), "no-store");
+  assert.equal((await worker.fetch(new Request("https://router.example/health", { method: "POST" }), {})).status, 404);
+});
+
+test("successful zone.read sends only the allowlisted GET path and returns a redacted audit", async () => {
+  const env = {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([{
+      token_id: "zone-read-01",
+      secret_binding: "CF_ZONE_READ_TOKEN",
+      permissions: ["Zone Read"],
+      resource_scopes: ["/zones/zone-123"],
+      enabled: true,
+    }]),
+    CF_ZONE_READ_TOKEN: "cloudflare-zone-secret",
+  };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (url, options) => {
+    calls += 1;
+    assert.equal(String(url), "https://api.cloudflare.com/client/v4/zones/zone-123");
+    assert.equal(options.method, "GET");
+    assert.equal(options.headers.Authorization, "Bearer cloudflare-zone-secret");
+    return new Response(JSON.stringify({ success: true, result: { id: "zone-123", name: "example.test" } }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-123" }),
+    }), env);
+    const payload = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(calls, 1);
+    assert.deepEqual(payload.result, { id: "zone-123", name: "example.test" });
+    assert.deepEqual(payload.audit, {
+      operation: "zone.read",
+      token_id: "zone-read-01",
+      permissions: ["Zone Read"],
+      resource_scope: "/zones/zone-123",
+      outcome: "success",
+      http_status: 200,
+    });
+    assert.equal(JSON.stringify(payload).includes("cloudflare-zone-secret"), false);
+    assert.equal(JSON.stringify(payload).includes("private-router-key"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("invalid resource IDs and malformed requests never call Cloudflare", async () => {
+  const env = {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "[]",
+  };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls += 1; throw new Error("unexpected network call"); };
+  try {
+    const invalidId = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "../other-zone" }),
+    }), env);
+    assert.equal(invalidId.status, 400);
+    assert.deepEqual(await invalidId.json(), { error: "INVALID_RESOURCE_ID" });
+
+    const extraField = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-123", url: "https://evil.example" }),
+    }), env);
+    assert.equal(extraField.status, 400);
+    assert.deepEqual(await extraField.json(), { error: "INVALID_REQUEST_FIELDS" });
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
