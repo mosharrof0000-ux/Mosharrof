@@ -85,8 +85,9 @@ class CloudflareTokenRouter:
 
     @staticmethod
     def _scope_covers(allowed_scope: str, requested_scope: str) -> bool:
-        allowed = allowed_scope.strip().rstrip("/")
-        requested = requested_scope.strip().strip("/")
+        # Normalize both sides consistently; API paths commonly begin with "/".
+        allowed = allowed_scope.strip().strip("/").rstrip("/")
+        requested = requested_scope.strip().strip("/").rstrip("/")
         if not allowed or not requested:
             return False
         if allowed.endswith("/*"):
