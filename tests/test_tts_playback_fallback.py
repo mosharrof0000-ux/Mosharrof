@@ -32,7 +32,7 @@ def test_tts_health_reports_server_providers_and_configuration():
     assert 'worker_build:WORKER_BUILD_ID' in worker
     assert 'tts_endpoint:"/tts"' in worker
     assert 'transcribe_audio_endpoint:"/transcribe-audio"' in worker
-    assert "gemini_tts_configured:!!env.GEMINI_API_KEY" in worker
+    assert "gemini_tts_configured:!!(env.GEMINI_API_KEY||env.GEMINI_API_KEY_2" in worker
     assert "azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION" in worker
     assert 'const TTS_PROVIDERS=["edge","gemini","azure","elevenlabs","sarvam"]' in worker
 
