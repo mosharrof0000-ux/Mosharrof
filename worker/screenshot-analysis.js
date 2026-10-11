@@ -1,5 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-11-server-audio-diagnostics-v1";
+const WORKER_BUILD_ID="2026-10-11-gemini-tts-multi-route-failover-v1";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -80,16 +80,14 @@ function concatWavBase64(chunks){
   const bytes=new Uint8Array(pcm.length);for(let i=0;i<pcm.length;i++)bytes[i]=pcm[i];
   return wavFromPcmBase64(bytesToBase64(bytes));
 }
-async function generateWithGeminiTTS(text,body,env){
-  if(!env.GEMINI_API_KEY)return {ok:false,provider:"gemini",reason:"not_configured"};
-  const model=String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts");
+async function generateWithGeminiTTSOnce(text,body,env,apiKey,model){
   const voice=String(body.gemini_voice||env.GEMINI_TTS_VOICE||"Kore");
   try{
     // Gemini 3.8 TTS is served by the Interactions API, not the legacy
     // models/:generateContent endpoint. Keep the legacy route for older TTS models.
     if(/^gemini-3[.]8-flash(?:-lite)?-tts$/.test(model)){
       const r=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
-        method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
+        method:"POST",headers:{"content-type":"application/json","x-goog-api-key":apiKey},
         body:JSON.stringify({
           model,
           input:[{type:"user_input",content:[{type:"text",text:String(text||""),annotations:[{type:"speech_metadata",style:"Speak naturally and clearly in Bengali, with accurate Bengali pronunciation and a warm conversational tone."}]}]}],
@@ -111,7 +109,7 @@ async function generateWithGeminiTTS(text,body,env){
       return {ok:false,provider:"gemini",reason:"unsupported_audio_format:"+mime};
     }
     const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
-      method:"POST",headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
+      method:"POST",headers:{"content-type":"application/json","x-goog-api-key":apiKey},
       body:JSON.stringify({contents:[{role:"user",parts:[{text:"Read the following text aloud naturally in Bengali. Preserve its meaning and pronunciation. Do not add commentary.\\n\\n"+text}]}],
         generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})
     });
@@ -127,6 +125,32 @@ async function generateWithGeminiTTS(text,body,env){
     return {ok:false,provider:"gemini",reason:"unsupported_audio_format:"+mime};
   }catch(e){return {ok:false,provider:"gemini",reason:String(e&&e.message||e)};}
 }
+async function generateWithGeminiTTS(text,body,env){
+  const keys=[
+    ["primary",String(env.GEMINI_API_KEY||"").trim()],
+    ["project2",String(env.GEMINI_API_KEY_2||"").trim()],
+    ["project3",String(env.GEMINI_API_KEY_3||"").trim()],
+    ["project4",String(env.GEMINI_API_KEY_4||"").trim()],
+    ["project5",String(env.GEMINI_API_KEY_5||"").trim()]
+  ].filter(([,key])=>key);
+  if(!keys.length)return {ok:false,provider:"gemini",reason:"not_configured"};
+  const primary=String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts").trim();
+  const configured=String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean);
+  const models=[...new Set([primary,...configured])];
+  const attempted=[];
+  for(const model of models){
+    for(const [credential,key] of keys){
+      const result=await generateWithGeminiTTSOnce(text,body,env,key,model);
+      attempted.push({model,credential,ok:!!result.ok,status:result.status||null,reason:result.ok?null:String(result.reason||"failed").slice(0,240)});
+      if(result.ok)return {...result,credential,failover_attempts:attempted.length-1};
+      // Quota/auth/model errors should not block trying the next configured route.
+      // Do not log or return the credential value itself.
+    }
+  }
+  const last=attempted[attempted.length-1];
+  return {ok:false,provider:"gemini",reason:"all_gemini_tts_routes_failed",status:last?.status||null,attempted};
+}
+
 async function generateWithAzure(text,body,env){
   const key=String(env.AZURE_SPEECH_KEY||"").trim(),region=String(env.AZURE_SPEECH_REGION||"").trim();
   if(!key||!region)return {ok:false,provider:"azure",reason:"not_configured"};
@@ -465,7 +489,7 @@ async function chat(request,env){
 async function handleRequest(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!env.GEMINI_API_KEY,azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!(env.GEMINI_API_KEY||env.GEMINI_API_KEY_2||env.GEMINI_API_KEY_3||env.GEMINI_API_KEY_4||env.GEMINI_API_KEY_5),gemini_tts_models:[...new Set([String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts"),...String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean)])],gemini_tts_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);
