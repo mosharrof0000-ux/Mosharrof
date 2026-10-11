@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "status": "design_only_not_live",
   "provider_id": "personal_voice",
   "default_provider_unchanged": "gemini",
@@ -17,7 +17,7 @@
     {
       "method": "POST",
       "path": "/v1/voice-profiles/{profile_id}/synthesize",
-      "purpose": "Generate speech from text with the active user-approved voice version"
+      "purpose": "Generate speech with the active user-approved voice version and optional delivery settings"
     },
     {
       "method": "DELETE",
@@ -25,6 +25,35 @@
       "purpose": "Revoke use and permanently delete private audio and derived artifacts"
     }
   ],
+  "synthesis_request_style": {
+    "status": "design_only_not_live",
+    "voice_identity_separate_from_delivery_style": true,
+    "supported_settings_contract": {
+      "reading_style": {
+        "enum": ["conversational", "poetry", "article", "news", "storytelling", "educational", "quran_recitation", "formal"],
+        "default": "conversational"
+      },
+      "speed": {"type": "number", "min": 0.5, "max": 2.0, "default": 1.0},
+      "emotion": {
+        "enum": ["neutral", "warm", "joyful", "sad", "soothing", "dramatic", "confident"],
+        "default": "neutral"
+      },
+      "emotion_intensity": {"type": "number", "min": 0.0, "max": 1.0, "default": 0.35},
+      "pitch": {"type": "number", "min": -1.0, "max": 1.0, "default": 0.0, "note": "Only expose/apply when the selected provider supports it"},
+      "pause_scale": {"type": "number", "min": 0.5, "max": 2.0, "default": 1.0},
+      "emphasis": {"type": "number", "min": 0.0, "max": 1.0, "default": 0.25}
+    },
+    "presets": ["natural", "poetry", "article", "news", "story", "study", "quran"],
+    "requirements": [
+      "editable_presets_and_reset_to_natural",
+      "provider_capability_reporting",
+      "send_only_supported_controls",
+      "never_claim_unsupported_controls_were_applied",
+      "voice_identity_must_not_change_when_style_changes",
+      "preserve_existing_gemini_tts_defaults",
+      "quran_tajwid_claims_require_a_reviewed_recitation_path"
+    ]
+  },
   "required_security": [
     "verified_user_identity",
     "owner_isolation_on_every_operation",
@@ -37,85 +66,5 @@
   ],
   "automatic_sample_ingestion": false,
   "automatic_model_training": false,
-  "live_routes_added": false,
-  "voice_direction_controls": {
-    "status": "design_only_not_live",
-    "voice_identity_separate_from_delivery_style": true,
-    "provider_neutral_settings": {
-      "rate": {
-        "type": "number",
-        "min": 0.75,
-        "max": 1.5,
-        "default": 1
-      },
-      "expression": {
-        "type": "number",
-        "min": 0,
-        "max": 1,
-        "default": 0.5
-      },
-      "emotion": {
-        "enum": [
-          "neutral",
-          "warm",
-          "cheerful",
-          "calm",
-          "serious",
-          "empathetic",
-          "dramatic"
-        ],
-        "default": "neutral"
-      },
-      "reading_mode": {
-        "enum": [
-          "poetry",
-          "article",
-          "news",
-          "story",
-          "educational",
-          "conversation",
-          "audiobook",
-          "presentation"
-        ],
-        "default": "conversation"
-      },
-      "pause_strength": {
-        "type": "number",
-        "min": 0,
-        "max": 1,
-        "default": 0.5
-      },
-      "clarity": {
-        "enum": [
-          "normal",
-          "careful"
-        ],
-        "default": "normal"
-      },
-      "emphasis": {
-        "enum": [
-          "lighter",
-          "default",
-          "stronger"
-        ],
-        "default": "default"
-      },
-      "pitch": {
-        "type": [
-          "number",
-          "null"
-        ],
-        "note": "optional; expose only when provider supports it"
-      }
-    },
-    "requirements": [
-      "preview_before_apply",
-      "per_user_named_presets",
-      "reset_to_defaults",
-      "provider_capability_reporting",
-      "never_claim_unsupported_controls_were_applied",
-      "no_automatic_recording_or_training_from_style_changes",
-      "preserve_existing_gemini_tts_defaults"
-    ]
-  }
+  "live_routes_added": false
 }
