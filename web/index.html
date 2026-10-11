@@ -759,7 +759,6 @@ header.top{
     if(/(?:কবিতা|poem|ছন্দোবদ্ধ|পঙ্?ক্তি|গীতিকবিতা)/i.test(s))return "poem";
     return "chat";
   }
-  var VOICE_CONNECTION_WARNING_MS=15000;
   function ensureVoiceCompanion(button){
     var existing=button._voiceCompanion;
     if(existing&&existing.isConnected&&!existing.classList.contains("is-download"))return existing;
@@ -786,10 +785,6 @@ header.top{
       var seconds=Math.floor((Date.now()-started)/1000);
       companion.textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
       companion.setAttribute("aria-label","ভয়েস সংযোগের সময় "+seconds+" সেকেন্ড");
-      if(Date.now()-started>=VOICE_CONNECTION_WARNING_MS){
-        companion.classList.add("is-late");
-        companion.title="সার্ভার সংযোগে দেরি হচ্ছে; অনুরোধ এখনও চলছে";
-      }
     }
     refresh();
     companion._timer=window.setInterval(refresh,1000);
@@ -801,12 +796,8 @@ header.top{
     if(companion._timer){window.clearInterval(companion._timer);companion._timer=null;}
     if(!audioBlob){
       companion.className="voice-companion is-late";
-      companion.textContent="!";
-      companion.title="সার্ভার ভয়েস তৈরি হয়নি; ব্রাউজার ভয়েস ব্যবহার হচ্ছে";
+      companion.title="সার্ভার ভয়েস তৈরি ব্যর্থ হয়েছে; ব্রাউজার ভয়েস ব্যবহার হচ্ছে";
       companion.setAttribute("aria-label",companion.title);
-      window.setTimeout(function(){
-        if(button._voiceCompanion===companion&&companion.isConnected){companion.remove();button._voiceCompanion=null;}
-      },5000);
       return;
     }
     var downloadButton=document.createElement("button");
