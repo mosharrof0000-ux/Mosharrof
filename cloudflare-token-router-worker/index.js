@@ -90,7 +90,7 @@ function selectToken(profiles, env, permissions, scope) {
   }
   const specificity = (profile) => Math.max(0, ...profile.resource_scopes
     .filter((s) => covers(s, scope))
-    .map((s) => s.replace(/\\/+$/, "").length));
+    .map((s) => s.replace(/\/+$/, "").length));
   candidates.sort((a, b) =>
     a.extraPermissions - b.extraPermissions ||
     specificity(b.p) - specificity(a.p) ||
