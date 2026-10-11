@@ -1,0 +1,66 @@
+name: Audio Transcription Preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audio-transcription-preflight
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    name: Verify live microphone-to-Worker route without consuming AI quota
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check live Worker health and route contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev"
+          ORIGIN="https://mosharrof0000-ux.github.io"
+
+          curl -fsS --connect-timeout 10 --max-time 20 "$BASE/health" -o /tmp/health.json
+          python - <<'PY'
+          import json
+          d=json.load(open("/tmp/health.json", encoding="utf-8"))
+          assert d.get("ok") is True, d
+          assert d.get("transcribe_audio_endpoint") == "/transcribe-audio", d
+          assert d.get("gemini_configured") is True, d
+          print("HEALTH OK:", d.get("worker_build"), "transcription route registered")
+          print("Gemini configured:", d.get("gemini_configured"))
+          PY
+
+      - name: Check browser preflight CORS
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev"
+          ORIGIN="https://mosharrof0000-ux.github.io"
+          CODE="$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/options.txt -D /tmp/options.headers -w '%{http_code}' -X OPTIONS "$BASE/transcribe-audio" -H "Origin: $ORIGIN" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type")"
+          echo "OPTIONS HTTP status: $CODE"
+          test "$CODE" = "204"
+          grep -qi "^access-control-allow-origin: $ORIGIN" /tmp/options.headers
+          grep -qi "access-control-allow-methods:.*POST" /tmp/options.headers
+          echo "CORS preflight OK"
+
+      - name: Check transcription route validation without calling Gemini
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev"
+          ORIGIN="https://mosharrof0000-ux.github.io"
+          CODE="$(curl -sS --connect-timeout 10 --max-time 20 -o /tmp/route.json -D /tmp/route.headers -w '%{http_code}' -X POST "$BASE/transcribe-audio" -H "Origin: $ORIGIN" -H "Content-Type: application/json" --data '{"audio_base64":"AA==","mime_type":"application/x-invalid","language":"bn-BD"}')"
+          echo "Validation HTTP status: $CODE"
+          test "$CODE" = "400"
+          grep -qi "^access-control-allow-origin: $ORIGIN" /tmp/route.headers
+          python - <<'PY'
+          import json
+          d=json.load(open("/tmp/route.json", encoding="utf-8"))
+          assert d.get("error") == "audio_and_supported_mime_type_required", d
+          print("TRANSCRIPTION ROUTE REACHED:", d.get("error"))
+          print("No Gemini transcription request was made; this is a non-billable route/CORS preflight only.")
+          PY
