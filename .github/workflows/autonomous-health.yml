@@ -40,4 +40,5 @@ jobs:
           test -f web/index.html
           grep -q "MOSHARROF AI" web/index.html
       - name: Record autonomous result
-        run: echo "AUTONOMOUS HEALTH CHECK: PASS"
+        run: |
+          echo "AUTONOMOUS HEALTH CHECK: PASS"
