@@ -88,10 +88,12 @@ function selectToken(profiles, env, permissions, scope) {
     if (!token) continue;
     candidates.push({ p, token, extraPermissions: p.permissions.size - permissions.length });
   }
+  const specificity = (profile) => Math.max(0, ...profile.resource_scopes
+    .filter((s) => covers(s, scope))
+    .map((s) => s.replace(/\\/+$/, "").length));
   candidates.sort((a, b) =>
     a.extraPermissions - b.extraPermissions ||
-    b.p.resource_scopes.reduce((n, s) => n + (covers(s, scope) ? s.length : 0), 0) -
-      a.p.resource_scopes.reduce((n, s) => n + (covers(s, scope) ? s.length : 0), 0) ||
+    specificity(b.p) - specificity(a.p) ||
     a.p.token_id.localeCompare(b.p.token_id)
   );
   return candidates[0] || null;
