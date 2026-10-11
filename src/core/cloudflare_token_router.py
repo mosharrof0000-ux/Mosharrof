@@ -112,12 +112,17 @@ class CloudflareTokenRouter:
             secret = (self.environ.get(profile["secret_env"]) or "").strip()
             if not secret:
                 continue
-            candidates.append((len(profile["permissions"] - required), profile["token_id"], profile, secret))
+            specificity = max(
+                len(scope_value.strip().strip("/"))
+                for scope_value in profile["resource_scopes"]
+                if self._scope_covers(scope_value, scope)
+            )
+            candidates.append((len(profile["permissions"] - required), -specificity, profile["token_id"], profile, secret))
 
         if not candidates:
             raise TokenResolutionError("NO_ENABLED_TOKEN_COVERS_REQUEST_OR_SECRET_MISSING")
 
-        _, _, profile, secret = sorted(candidates, key=lambda item: (item[0], item[1]))[0]
+        _, _, _, profile, secret = sorted(candidates, key=lambda item: (item[0], item[1], item[2]))[0]
         return ResolvedCloudflareCredential(
             token_id=profile["token_id"],
             token=secret,
