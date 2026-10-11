@@ -30,6 +30,9 @@ Each profile requires a unique token_id, secret environment variable name, expli
 5. Audit only the token ID and requested operation/scope. Never log the token value.
 6. After selecting a token, the actual Cloudflare API remains the final authority; handle 401/403 by denying the operation and alerting the owner. Do not silently retry with a broader token.
 
+
+**Read-only safety gate:** the Python Cloudflare API client currently permits `GET` only. `POST`, `PUT`, `PATCH`, and `DELETE` are rejected before token resolution. Write operations must remain disabled until a reviewed operation-to-permission policy and non-production tests are added.
+
 ## Not yet production-wired
 
 This is a server-side routing primitive. It must be wired into the real Cloudflare API adapter/Worker, configured with actual verified tokens, and tested against the intended Cloudflare account before it can be called live. The static GitHub Pages frontend must not call Cloudflare APIs with secret tokens directly.
