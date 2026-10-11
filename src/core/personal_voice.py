@@ -167,3 +167,73 @@ class PersonalVoiceProfile:
         self.consent = VoiceConsent()
         self.deleted = True
         return refs
+
+
+ReadingStyle = Literal[
+    "conversational", "poetry", "article", "news", "storytelling",
+    "educational", "quran_recitation", "formal",
+]
+Emotion = Literal[
+    "neutral", "warm", "joyful", "sad", "soothing", "dramatic", "confident"
+]
+
+
+class VoiceStyleError(ValueError):
+    """Raised for invalid speech delivery settings."""
+
+
+@dataclass(frozen=True)
+class VoiceStyle:
+    """Reading delivery preferences, independent of speaker identity."""
+
+    reading_style: ReadingStyle = "conversational"
+    speed: float = 1.0
+    emotion: Emotion = "neutral"
+    emotion_intensity: float = 0.35
+    pitch: float = 0.0
+    pause_scale: float = 1.0
+    emphasis: float = 0.25
+
+    def validate(self) -> "VoiceStyle":
+        ranges = {
+            "speed": (self.speed, 0.5, 2.0),
+            "emotion_intensity": (self.emotion_intensity, 0.0, 1.0),
+            "pitch": (self.pitch, -1.0, 1.0),
+            "pause_scale": (self.pause_scale, 0.5, 2.0),
+            "emphasis": (self.emphasis, 0.0, 1.0),
+        }
+        for name, (value, minimum, maximum) in ranges.items():
+            if not minimum <= value <= maximum:
+                raise VoiceStyleError(f"{name.upper()}_OUT_OF_RANGE")
+        return self
+
+    def to_provider_options(self, supported_controls: set[str]) -> dict[str, object]:
+        """Send only controls explicitly supported by the chosen TTS provider."""
+        self.validate()
+        values: dict[str, object] = {
+            "reading_style": self.reading_style,
+            "speed": self.speed,
+            "emotion": self.emotion,
+            "emotion_intensity": self.emotion_intensity,
+            "pitch": self.pitch,
+            "pause_scale": self.pause_scale,
+            "emphasis": self.emphasis,
+        }
+        return {key: value for key, value in values.items() if key in supported_controls}
+
+
+STYLE_PRESETS: dict[str, VoiceStyle] = {
+    "natural": VoiceStyle(),
+    "poetry": VoiceStyle(reading_style="poetry", speed=0.88, emotion="warm",
+                         emotion_intensity=0.55, pause_scale=1.35, emphasis=0.45),
+    "article": VoiceStyle(reading_style="article", speed=1.0, emotion="neutral",
+                          emotion_intensity=0.2, pause_scale=1.0, emphasis=0.3),
+    "news": VoiceStyle(reading_style="news", speed=1.05, emotion="confident",
+                       emotion_intensity=0.3, pause_scale=0.9, emphasis=0.45),
+    "story": VoiceStyle(reading_style="storytelling", speed=0.92, emotion="warm",
+                        emotion_intensity=0.65, pause_scale=1.25, emphasis=0.5),
+    "study": VoiceStyle(reading_style="educational", speed=0.9, emotion="soothing",
+                        emotion_intensity=0.25, pause_scale=1.2, emphasis=0.4),
+    "quran": VoiceStyle(reading_style="quran_recitation", speed=0.85, emotion="soothing",
+                        emotion_intensity=0.2, pause_scale=1.3, emphasis=0.25),
+}
