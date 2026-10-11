@@ -15,7 +15,7 @@ from urllib.request import Request, urlopen
 from src.core.cloudflare_token_router import CloudflareTokenRouter, TokenResolutionError
 
 
-_ALLOWED_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE"})
+_ALLOWED_METHODS = frozenset({"GET"})
 _SAFE_PATH = re.compile(r"^/(?:accounts|zones|user|memberships|organizations)(?:/[A-Za-z0-9._~-]+)*(?:/[A-Za-z0-9._~-]+)?$")
 
 
