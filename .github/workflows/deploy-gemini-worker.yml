@@ -124,6 +124,11 @@ jobs:
         working-directory: worker
         env:
           RAW_GEMINI: ${{ secrets.GEMINI_API_KEY }}
+          RAW_GEMINI_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          RAW_GEMINI_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          RAW_GEMINI_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          RAW_GEMINI_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          RAW_TTS_MODELS: ${{ secrets.GEMINI_TTS_FALLBACK_MODELS }}
         run: |
           set -euo pipefail
           GEMINI="$(printf '%s' "$RAW_GEMINI" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
@@ -133,6 +138,24 @@ jobs:
           fi
           echo "Gemini key length: ${#GEMINI}"
           printf '%s' "$GEMINI" | npx --yes wrangler@3 secret put GEMINI_API_KEY --config wrangler.toml
+          for slot in 2 3 4 5; do
+            case "$slot" in
+              2) VALUE="$RAW_GEMINI_2" ;;
+              3) VALUE="$RAW_GEMINI_3" ;;
+              4) VALUE="$RAW_GEMINI_4" ;;
+              5) VALUE="$RAW_GEMINI_5" ;;
+            esac
+            VALUE="$(printf '%s' "$VALUE" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            if [ -n "$VALUE" ]; then
+              printf '%s' "$VALUE" | npx --yes wrangler@3 secret put "GEMINI_API_KEY_$slot" --config wrangler.toml
+              echo "Gemini credential slot $slot configured (value hidden)."
+            fi
+          done
+          MODELS="$(printf '%s' "$RAW_TTS_MODELS" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [ -n "$MODELS" ]; then
+            printf '%s' "$MODELS" | npx --yes wrangler@3 secret put GEMINI_TTS_FALLBACK_MODELS --config wrangler.toml
+            echo "Configured Gemini TTS fallback model list."
+          fi
 
 
       - name: Set optional TTS provider secrets
@@ -178,7 +201,7 @@ jobs:
           echo "Checking live TTS configuration..."
           curl -fsS --connect-timeout 10 --max-time 20 "$HEALTH" > /tmp/tts-health.json
           cat /tmp/tts-health.json
-          grep -q '"worker_build":"2026-10-11-server-audio-diagnostics-v1"' /tmp/tts-health.json
+          grep -q '"worker_build":"2026-10-11-gemini-tts-multi-route-failover-v1"' /tmp/tts-health.json
           grep -q '"tts_endpoint":"/tts"' /tmp/tts-health.json
           grep -q '"transcribe_audio_endpoint":"/transcribe-audio"' /tmp/tts-health.json
           echo "Worker build and both audio routes verified."
