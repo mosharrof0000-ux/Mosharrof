@@ -62,7 +62,11 @@ function parseProfiles(env) {
     if (!/^[a-zA-Z0-9_-]{1,80}$/.test(id) || seen.has(id)) throw new Error("TOKEN_PROFILE_CONFIG_INVALID");
     if (!/^[A-Z][A-Z0-9_]{2,127}$/.test(binding)) throw new Error("TOKEN_PROFILE_CONFIG_INVALID");
     if (!Array.isArray(p.permissions) || !p.permissions.length || !p.permissions.every((x) => typeof x === "string" && x.length > 0)) throw new Error("TOKEN_PROFILE_CONFIG_INVALID");
-    if (!Array.isArray(p.resource_scopes) || !p.resource_scopes.length || !p.resource_scopes.every((x) => typeof x === "string" && x.startsWith("/") && !x.includes(".."))) throw new Error("TOKEN_PROFILE_CONFIG_INVALID");
+    if (!Array.isArray(p.resource_scopes) || !p.resource_scopes.length || !p.resource_scopes.every((x) =>
+      typeof x === "string" &&
+      /^\/[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*$/.test(x) &&
+      !x.split("/").some((segment) => segment === "." || segment === "..")
+    )) throw new Error("TOKEN_PROFILE_CONFIG_INVALID");
     seen.add(id);
     return { token_id: id, secret_binding: binding, permissions: new Set(p.permissions), resource_scopes: p.resource_scopes, enabled: p.enabled === true };
   });
@@ -71,6 +75,7 @@ function parseProfiles(env) {
 function covers(allowed, requested) {
   const a = allowed.replace(/\/+$/, "");
   const r = requested.replace(/\/+$/, "");
+  if (!a || !r) return false;
   return r === a || r.startsWith(a + "/");
 }
 
