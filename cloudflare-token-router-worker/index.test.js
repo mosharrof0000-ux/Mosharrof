@@ -123,3 +123,92 @@ test("prefers narrower resource scope when permissions are equal", () => {
   assert.equal(selected.p.token_id, "z-narrow");
   assert.equal(selected.token, "narrow-secret");
 });
+
+test("health reports only usable enabled-profile readiness and never exposes secrets", async () => {
+  const cases = [
+    [{}, false, false],
+    [{ ROUTER_ACCESS_TOKEN: "secret", CLOUDFLARE_TOKEN_PROFILES: "[]" }, true, false],
+    [{ ROUTER_ACCESS_TOKEN: "secret", CLOUDFLARE_TOKEN_PROFILES: "not-json" }, true, false],
+    [{ ROUTER_ACCESS_TOKEN: "secret", CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "disabled", secret_binding: "CF_ZONE_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: false },
+    ]) }, true, false],
+    [{ ROUTER_ACCESS_TOKEN: "private-router-key", CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "zone-read", secret_binding: "CF_ZONE_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
+    ]), CF_ZONE_TOKEN: "provider-secret" }, true, true],
+  ];
+  for (const [env, accessConfigured, profilesConfigured] of cases) {
+    const response = await worker.fetch(new Request("https://router.example/health"), env);
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(body.mode, "read-only");
+    assert.equal(body.access_configured, accessConfigured);
+    assert.equal(body.profiles_configured, profilesConfigured);
+    assert.equal(JSON.stringify(body).includes("provider-secret"), false);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+  }
+});
+
+test("authenticated zone.read succeeds through the allowlisted GET-only path", async () => {
+  const env = {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "zone-read", secret_binding: "CF_ZONE_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
+    ]),
+    CF_ZONE_TOKEN: "provider-secret",
+  };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (url, options) => {
+    calls += 1;
+    assert.equal(String(url), "https://api.cloudflare.com/client/v4/zones/zone-1");
+    assert.equal(options.method, "GET");
+    assert.equal(options.headers.Authorization, "Bearer provider-secret");
+    return new Response(JSON.stringify({ success: true, result: { id: "zone-1", name: "example.test" } }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), env);
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.result, { id: "zone-1", name: "example.test" });
+    assert.deepEqual(body.audit, {
+      operation: "zone.read",
+      token_id: "zone-read",
+      permissions: ["Zone Read"],
+      resource_scope: "/zones/zone-1",
+      outcome: "success",
+      http_status: 200,
+    });
+    assert.equal(calls, 1);
+    assert.equal(JSON.stringify(body).includes("provider-secret"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("wrong router access token is rejected before Cloudflare is contacted", async () => {
+  const env = { ROUTER_ACCESS_TOKEN: "private-router-key" };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls += 1; throw new Error("must not be called"); };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer wrong-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), env);
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: "UNAUTHORIZED" });
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
