@@ -80,7 +80,7 @@ function concatWavBase64(chunks){
   const bytes=new Uint8Array(pcm.length);for(let i=0;i<pcm.length;i++)bytes[i]=pcm[i];
   return wavFromPcmBase64(bytesToBase64(bytes));
 }
-async function generateWithGeminiTTSOnce(text,body,env,apiKey,model){
+async function generateWithGeminiTTS(text,body,env,apiKey,model){
   const voice=String(body.gemini_voice||env.GEMINI_TTS_VOICE||"Kore");
   try{
     // Gemini 3.8 TTS is served by the Interactions API, not the legacy
@@ -125,7 +125,7 @@ async function generateWithGeminiTTSOnce(text,body,env,apiKey,model){
     return {ok:false,provider:"gemini",reason:"unsupported_audio_format:"+mime};
   }catch(e){return {ok:false,provider:"gemini",reason:String(e&&e.message||e)};}
 }
-async function generateWithGeminiTTS(text,body,env){
+async function generateWithGeminiTTSWithFailover(text,body,env){
   const keys=[
     ["primary",String(env.GEMINI_API_KEY||"").trim()],
     ["project2",String(env.GEMINI_API_KEY_2||"").trim()],
@@ -140,7 +140,7 @@ async function generateWithGeminiTTS(text,body,env){
   const attempted=[];
   for(const model of models){
     for(const [credential,key] of keys){
-      const result=await generateWithGeminiTTSOnce(text,body,env,key,model);
+      const result=await generateWithGeminiTTS(text,body,env,key,model);
       attempted.push({model,credential,ok:!!result.ok,status:result.status||null,reason:result.ok?null:String(result.reason||"failed").slice(0,240)});
       if(result.ok)return {...result,credential,failover_attempts:attempted.length-1};
       // Quota/auth/model errors should not block trying the next configured route.
