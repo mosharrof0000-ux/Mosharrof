@@ -136,7 +136,8 @@ async function generateWithGeminiTTSWithFailover(text,body,env){
   if(!keys.length)return {ok:false,provider:"gemini",reason:"not_configured"};
   const primary=String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts").trim();
   const configured=String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean);
-  const models=[...new Set([primary,...configured])];
+  // Keep a documented Gemini 2.5 TTS fallback available unless explicitly listed already.
+  const models=[...new Set([primary,...configured,"gemini-2.5-flash-preview-tts"])];
   const attempted=[];
   for(const model of models){
     for(const [credential,key] of keys){
@@ -489,7 +490,7 @@ async function chat(request,env){
 async function handleRequest(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!(env.GEMINI_API_KEY||env.GEMINI_API_KEY_2||env.GEMINI_API_KEY_3||env.GEMINI_API_KEY_4||env.GEMINI_API_KEY_5),gemini_tts_models:[...new Set([String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts"),...String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean)])],gemini_tts_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!(env.GEMINI_API_KEY||env.GEMINI_API_KEY_2||env.GEMINI_API_KEY_3||env.GEMINI_API_KEY_4||env.GEMINI_API_KEY_5),gemini_tts_models:[...new Set([String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts"),...String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean),"gemini-2.5-flash-preview-tts"])],gemini_tts_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);
