@@ -83,8 +83,38 @@ function selectToken(profiles, env, permissions, scope) {
     if (!token) continue;
     candidates.push({ p, token, extraPermissions: p.permissions.size - permissions.length });
   }
-  candidates.sort((a, b) => a.extraPermissions - b.extraPermissions || b.p.resource_scopes.reduce((n, s) => n + (covers(s, scope) ? s.length : 0), 0) - a.p.resource_scopes.reduce((n, s) => n + (covers(s, scope) ? s.length : 0), 0) || a.p.token_id.localeCompare(b.p.token_id));
+  candidates.sort((a, b) =>
+    a.extraPermissions - b.extraPermissions ||
+    b.p.resource_scopes.reduce((n, s) => n + (covers(s, scope) ? s.length : 0), 0) -
+      a.p.resource_scopes.reduce((n, s) => n + (covers(s, scope) ? s.length : 0), 0) ||
+    a.p.token_id.localeCompare(b.p.token_id)
+  );
   return candidates[0] || null;
+}
+
+async function readLimited(response, maxBytes) {
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel("response_limit_exceeded").catch(() => {});
+        throw new Error("CLOUDFLARE_RESPONSE_TOO_LARGE");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const merged = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { merged.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder().decode(merged);
 }
 
 async function cloudflareRequest(method, path, token) {
@@ -97,8 +127,11 @@ async function cloudflareRequest(method, path, token) {
     return { ok: false, status: response.status, error: "CLOUDFLARE_AUTHORIZATION_DENIED" };
   }
   if (!response.ok) return { ok: false, status: response.status, error: "CLOUDFLARE_API_ERROR" };
-  const raw = await response.text();
-  if (raw.length > MAX_RESPONSE_BYTES) return { ok: false, status: 502, error: "CLOUDFLARE_RESPONSE_TOO_LARGE" };
+  let raw;
+  try { raw = await readLimited(response, MAX_RESPONSE_BYTES); }
+  catch (error) {
+    return { ok: false, status: 502, error: error.message === "CLOUDFLARE_RESPONSE_TOO_LARGE" ? error.message : "CLOUDFLARE_RESPONSE_READ_FAILED" };
+  }
   let payload;
   try { payload = JSON.parse(raw); } catch { return { ok: false, status: 502, error: "CLOUDFLARE_INVALID_JSON" }; }
   if (!payload || typeof payload !== "object" || payload.success === false) return { ok: false, status: 502, error: "CLOUDFLARE_OPERATION_FAILED" };
@@ -137,7 +170,6 @@ export default {
 
     try {
       const result = await cloudflareRequest(operation.method, target.path, selected.token);
-      // Deliberately never return token, binding name, upstream headers, or raw error body.
       const audit = { operation: input.operation, token_id: selected.p.token_id, permissions: operation.permissions, resource_scope: target.scope, outcome: result.ok ? "success" : "failure", http_status: result.status };
       if (!result.ok) return json({ error: result.error, audit }, result.status === 401 || result.status === 403 ? 502 : result.status);
       return json({ ok: true, result: result.payload.result ?? null, audit }, 200);
