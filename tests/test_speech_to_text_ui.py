@@ -96,3 +96,14 @@ def test_server_read_aloud_shows_connection_timer_and_downloads_generated_audio(
     assert 'finishVoiceConnectionTimer(button,audioBlob,audioMime)' in html
     assert 'showV("ভয়েস ইঞ্জিন নির্বাচন হচ্ছে…")' not in html
     assert 'showV("পড়া হচ্ছে · "+(data.provider||"voice"))' not in html
+
+
+def test_server_tts_uses_blob_object_url_for_mobile_playback_and_cleans_up():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+
+    assert "var activeAudioUrl=null" in html
+    assert "URL.createObjectURL(audioBlob)" in html
+    assert "activeAudio=new Audio(playbackUrl)" in html
+    assert "URL.revokeObjectURL(activeAudioUrl)" in html
+    assert "releaseActiveAudioUrl(playbackUrl)" in html
+    assert 'activeAudio=new Audio("data:"+(' not in html
