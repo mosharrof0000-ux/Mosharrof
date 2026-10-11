@@ -1,5 +1,5 @@
 const API_BASE = "https://api.cloudflare.com/client/v4";
-const BUILD_ID = "2026-10-11-token-router-worker-v1";
+const BUILD_ID = "2026-10-12-token-router-worker-v2";
 const MAX_BODY_BYTES = 4096;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
 
@@ -149,7 +149,27 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/health") {
-      return json({ ok: true, service: "mosharrof-cloudflare-token-router", build: BUILD_ID, mode: "read-only", access_configured: !!env.ROUTER_ACCESS_TOKEN, profiles_configured: !!env.CLOUDFLARE_TOKEN_PROFILES });
+      let profiles = [];
+      let profileConfigValid = false;
+      try {
+        profiles = parseProfiles(env);
+        profileConfigValid = !!env.CLOUDFLARE_TOKEN_PROFILES;
+      } catch {
+        profileConfigValid = false;
+      }
+      const enabledProfiles = profiles.filter((profile) => profile.enabled);
+      const enabledProfilesWithSecret = enabledProfiles.filter((profile) => String(env[profile.secret_binding] || "").trim());
+      return json({
+        ok: true,
+        service: "mosharrof-cloudflare-token-router",
+        build: BUILD_ID,
+        mode: "read-only",
+        access_configured: !!env.ROUTER_ACCESS_TOKEN,
+        profiles_configured: !!env.CLOUDFLARE_TOKEN_PROFILES,
+        profile_config_valid: profileConfigValid,
+        enabled_profiles_count: enabledProfiles.length,
+        enabled_profiles_with_secret_count: enabledProfilesWithSecret.length,
+      });
     }
     if (request.method !== "POST" || url.pathname !== "/v1/operation") return json({ error: "NOT_FOUND" }, 404);
     if (!(await authorized(request, env))) return json({ error: "UNAUTHORIZED" }, 401);
