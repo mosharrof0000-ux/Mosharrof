@@ -660,6 +660,8 @@ header.top{
   function getTtsVoice(){var value="bn-BD-PradeepNeural";try{value=localStorage.getItem(TTS_VOICE_KEY)||value;}catch(e){}return ["bn-BD-PradeepNeural","bn-BD-NabanitaNeural"].includes(value)?value:"bn-BD-PradeepNeural";}
   var activeAudio=null;
   var activeAudioButton=null;
+  var activeAudioUrl=null;
+  function releaseActiveAudioUrl(expectedUrl){if(expectedUrl&&activeAudioUrl!==expectedUrl)return;if(activeAudioUrl){try{URL.revokeObjectURL(activeAudioUrl);}catch(e){}activeAudioUrl=null;}}
   var activeSpeech=null;
   var activeSpeechButton=null;
   function coreReply(t,image){
@@ -828,24 +830,24 @@ header.top{
     return new Blob(parts,{type:mimeType||"audio/mpeg"});
   }
   function speakText(t,button){
-    if(activeAudio){try{activeAudio.pause();}catch(e){}if(activeAudioButton&&activeAudioButton!==button)resetSpeakButton(activeAudioButton);activeAudio=null;activeAudioButton=null;}
+    if(activeAudio){try{activeAudio.pause();}catch(e){}if(activeAudioButton&&activeAudioButton!==button)resetSpeakButton(activeAudioButton);activeAudio=null;activeAudioButton=null;}releaseActiveAudioUrl();
     if(activeSpeech&&"speechSynthesis" in window){try{window.speechSynthesis.cancel();}catch(e){}if(activeSpeechButton&&activeSpeechButton!==button)resetSpeakButton(activeSpeechButton);activeSpeech=null;activeSpeechButton=null;}
     button._speakText=String(t||"");
     var spokenText=speechTextFromMarkdown(t);
     if(!spokenText){toast("পড়ে শোনানোর মতো লেখা পাওয়া যায়নি");resetSpeakButton(button);return;}
     var preference=getTtsPreference(),genre=detectTtsGenre(t);
     if(preference==="browser"){speakWithBrowser(spokenText,button);return;}
-    button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");hideV();startVoiceConnectionTimer(button);var serverAudioReady=false;
+    button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");hideV();startVoiceConnectionTimer(button);var serverAudioReady=false,playbackUrl=null;
     fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:spokenText,language_code:"bn-BD",pace:1,provider:preference,genre:genre,voice:getTtsVoice()})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
       if(!data.audio_data)throw new Error("no_audio");
-      var audioMime=data.mime_type||"audio/mpeg";var audioBlob=audioBlobFromBase64(data.audio_data,audioMime);serverAudioReady=true;finishVoiceConnectionTimer(button,audioBlob,audioMime);activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudioButton=button;
-      activeAudio.onended=function(){if(activeAudioButton===button){activeAudio=null;activeAudioButton=null;}resetSpeakButton(button);hideV();};
+      var audioMime=data.mime_type||"audio/mpeg";var audioBlob=audioBlobFromBase64(data.audio_data,audioMime);serverAudioReady=true;finishVoiceConnectionTimer(button,audioBlob,audioMime);playbackUrl=URL.createObjectURL(audioBlob);activeAudioUrl=playbackUrl;activeAudio=new Audio(playbackUrl);activeAudioButton=button;
+      activeAudio.onended=function(){if(activeAudioButton===button){activeAudio=null;activeAudioButton=null;}releaseActiveAudioUrl(playbackUrl);resetSpeakButton(button);hideV();};
       setSpeakButton(button,"⏸ বন্ধ করুন");button.disabled=false;
-      button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeAudio&&activeAudioButton===button){button.classList.add("is-stop-requested");activeAudio.pause();activeAudio=null;activeAudioButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
+      button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeAudio&&activeAudioButton===button){button.classList.add("is-stop-requested");activeAudio.pause();activeAudio=null;activeAudioButton=null;releaseActiveAudioUrl(playbackUrl);hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
       hideV();activeAudio.play().catch(function(){throw new Error("audio_play_failed");});
     }).catch(function(){
       if(!serverAudioReady)finishVoiceConnectionTimer(button,null,null);
-      if(activeAudio&&activeAudioButton===button){try{activeAudio.pause();}catch(e){}activeAudio=null;activeAudioButton=null;}
+      if(activeAudio&&activeAudioButton===button){try{activeAudio.pause();}catch(e){}activeAudio=null;activeAudioButton=null;}if(playbackUrl)releaseActiveAudioUrl(playbackUrl);
       button.disabled=false;hideV();speakWithBrowser(spokenText,button);toast("সার্ভার ভয়েস পাওয়া যায়নি · Browser Voice ব্যবহার হচ্ছে");
     });
   }
