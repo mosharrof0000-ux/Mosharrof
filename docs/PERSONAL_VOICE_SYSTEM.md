@@ -80,3 +80,57 @@ Cloudflare Workers should orchestrate requests, not host the large model itself.
 A separate Python inference host is required. A free CPU host can be used for a
 proof of concept but may sleep, run slowly, or enforce quotas. Do not upload
 voice samples to a public repository or public demo.
+
+
+## Voice direction and reading-style controls (requested feature)
+
+The personal voice UI should separate **voice identity** from **delivery style**.
+Selecting a personal voice must not hide or lock the reading controls. Add a
+"Voice Studio / কণ্ঠ নিয়ন্ত্রণ" panel with:
+
+- **Reading speed:** a simple slower / normal / faster control and a numeric
+  rate slider (initial target 0.75x–1.50x, subject to provider capability).
+- **Emotion / expression:** lower or raise expression, with presets such as
+  neutral, warm, cheerful, calm, serious, empathetic, and dramatic. Keep a
+  neutral option and avoid forcing emotion into every sentence.
+- **Reading mode presets:** poetry (rhythm and line-aware pauses), article
+  (clear, steady narration), news (formal and concise), story (expressive),
+  educational (measured with explanatory pauses), conversation (natural),
+  audiobook (sustained narration), and presentation (confident, structured).
+- **Pause controls:** shorter/longer pauses at sentence, paragraph, and line
+  boundaries; respect punctuation and line breaks.
+- **Pronunciation and clarity:** normal / careful articulation and a preference
+  for clearer pronunciation, where supported.
+- **Emphasis:** default / lighter / stronger emphasis on meaningful phrases,
+  where supported.
+- **Pitch and timbre:** expose only if the selected engine can safely support
+  them; do not imply these controls change the underlying person's identity.
+- **Preview and save:** preview a short text before applying; save named presets
+  per user and provide a one-tap reset to defaults.
+
+Style presets are starting points, not guarantees. The UI and provider adapter
+must declare supported controls per engine. Apply supported settings directly;
+for unsupported controls, use a tested text-markup / SSML / audio-processing
+fallback only when compatible. Do not silently claim an emotion was applied
+when the engine ignored it. Show a small "partially supported" note when needed.
+
+Keep the settings in a normalized provider-neutral schema (for example:
+`rate`, `expression`, `emotion`, `reading_mode`, `pause_strength`, `clarity`, `emphasis`, `pitch`).
+Provider adapters translate only the controls they actually support. Preserve
+the existing Gemini TTS behavior as the fallback and do not change its current
+default settings. Voice-style preferences must not trigger training or upload
+extra recordings. Any future voice improvement remains a separate, explicit
+opt-in.
+
+### Voice Studio acceptance checks
+
+- Changing reading speed changes playback pace without changing the selected
+  voice profile.
+- Switching poetry/article/news/story modes changes delivery settings where
+  supported, and accurately reports unsupported parts.
+- Personal voice and Gemini fallback both remain usable; fallback never blocks
+  text responses.
+- User presets are isolated per account and can be reset or deleted.
+- Controls work on mobile, with accessible labels and sensible defaults.
+- Test Bengali punctuation, numerals, English words in Bengali text, verse/poem
+  line breaks, and long articles before release.
