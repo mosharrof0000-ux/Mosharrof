@@ -151,6 +151,32 @@ export default {
     if (request.method === "GET" && url.pathname === "/health") {
       return json({ ok: true, service: "mosharrof-cloudflare-token-router", build: BUILD_ID, mode: "read-only", access_configured: !!env.ROUTER_ACCESS_TOKEN, profiles_configured: !!env.CLOUDFLARE_TOKEN_PROFILES });
     }
+    if (request.method === "GET" && url.pathname === "/ready") {
+      let profiles = [];
+      let profilesValid = false;
+      try {
+        profiles = parseProfiles(env);
+        profilesValid = true;
+      } catch {}
+      const enabledProfiles = profiles.filter((p) => p.enabled);
+      const usableProfiles = enabledProfiles.filter((p) =>
+        p.permissions.size > 0 &&
+        p.resource_scopes.length > 0 &&
+        !!String(env[p.secret_binding] || "").trim()
+      );
+      const accessConfigured = !!String(env.ROUTER_ACCESS_TOKEN || "").trim();
+      const ready = accessConfigured && profilesValid && usableProfiles.length > 0;
+      return json({
+        ok: ready,
+        service: "mosharrof-cloudflare-token-router",
+        build: BUILD_ID,
+        mode: "read-only",
+        access_configured: accessConfigured,
+        profiles_valid: profilesValid,
+        enabled_profiles: enabledProfiles.length,
+        usable_profiles: usableProfiles.length,
+      }, ready ? 200 : 503);
+    }
     if (request.method !== "POST" || url.pathname !== "/v1/operation") return json({ error: "NOT_FOUND" }, 404);
     if (!(await authorized(request, env))) return json({ error: "UNAUTHORIZED" }, 401);
 
