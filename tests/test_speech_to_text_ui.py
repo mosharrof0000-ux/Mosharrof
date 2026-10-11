@@ -65,3 +65,18 @@ def test_voice_input_handles_recording_and_provider_errors():
     assert "NotFoundError" in html
     assert "audio_transcription_failed" in Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
     assert "অডিও থেকে লেখা তৈরি হয়নি" in html
+
+
+def test_voice_transcript_normalization_preserves_lines_and_adds_only_final_punctuation():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+    start = html.index("function normalizeVoiceTranscript(")
+    end = html.index("function transcribeAudioBlob(", start)
+    normalizer = html[start:end]
+
+    assert "function normalizeVoiceTranscript(value,language)" in normalizer
+    assert 'text.split("\\n")' in normalizer
+    assert 'lines.join("\\n")' in normalizer
+    assert 'questionStart.test(finalLine)||questionEnd.test(finalLine)' in normalizer
+    assert 'lines[last]=finalLine+(isQuestion?"?":isBangla?"।":".")' in normalizer
+    assert r"\b(?:কি|কী" not in normalizer
+    assert 'var last=-1' in normalizer

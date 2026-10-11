@@ -726,14 +726,32 @@ header.top{
       .trim();
   }
   function speakWithBrowser(spokenText,button){
-    if(!("speechSynthesis" in window)){resetSpeakButton(button);toast("এই ব্রাউজারে ভয়েস সুবিধা নেই");return;}
-    var u=new SpeechSynthesisUtterance(spokenText);u.lang="bn-BD";u.rate=0.95;activeSpeech=u;activeSpeechButton=button;
-    u.onstart=function(){if(activeSpeech===u){setSpeakButton(button,"⏸ বন্ধ করুন");showV("পড়া হচ্ছে · Browser Voice");}};
-    u.onend=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
-    u.onerror=function(){if(activeSpeech===u){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}};
+    if(!("speechSynthesis" in window)||!("SpeechSynthesisUtterance" in window)){resetSpeakButton(button);toast("এই ব্রাউজারে ভয়েস সুবিধা নেই");return;}
+    var synth=window.speechSynthesis;
+    var chunks=String(spokenText||"").match(/[^।!?！？\n]+[।!?！？]?|\n+/g)||[String(spokenText||"")];
+    chunks=chunks.map(function(part){return part.trim();}).filter(Boolean);
+    if(!chunks.length){resetSpeakButton(button);return;}
+    var index=0,session={button:button};
+    activeSpeech=session;activeSpeechButton=button;
+    function finish(){if(activeSpeech===session||activeSpeechButton===button){activeSpeech=null;activeSpeechButton=null;resetSpeakButton(button);hideV();}}
+    function next(){
+      if(activeSpeech!==session||activeSpeechButton!==button)return;
+      if(index>=chunks.length){finish();return;}
+      var u=new SpeechSynthesisUtterance(chunks[index++]);u.lang="bn-BD";u.rate=0.92;
+      var voices=synth.getVoices?synth.getVoices():[];
+      var bnVoice=voices.find(function(v){return /^bn(-|_)/i.test(v.lang||"");})||voices.find(function(v){return /bengali|bangla/i.test(v.name||"");});
+      if(bnVoice)u.voice=bnVoice;
+      u.onstart=function(){if(activeSpeech===session){setSpeakButton(button,"⏸ বন্ধ করুন");showV("পড়া হচ্ছে · Browser Voice");}};
+      u.onend=function(){if(activeSpeech===session)next();};
+      u.onerror=function(){if(activeSpeech===session){finish();toast("ব্রাউজারের ভয়েস চালু হয়নি। ভয়েস সেটিংস পরীক্ষা করুন।");}};
+      synth.speak(u);
+    }
     setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");button.disabled=false;
-    button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===u){button.classList.add("is-stop-requested");window.speechSynthesis.cancel();activeSpeech=null;activeSpeechButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
-    window.speechSynthesis.cancel();window.speechSynthesis.speak(u);
+    button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===session&&activeSpeechButton===button){button.classList.add("is-stop-requested");synth.cancel();activeSpeech=null;activeSpeechButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
+    synth.cancel();
+    /* Android Chrome may populate its voice list asynchronously. */
+    var voices=synth.getVoices?synth.getVoices():[];
+    if(!voices.length){var started=false;var begin=function(){if(started)return;started=true;synth.removeEventListener&&synth.removeEventListener("voiceschanged",begin);next();};if(synth.addEventListener)synth.addEventListener("voiceschanged",begin);window.setTimeout(begin,700);}else next();
   }
   function detectTtsGenre(text){
     var s=String(text||"");
@@ -1008,6 +1026,26 @@ header.top{
   function showVoiceMessage(message){showV(message);if(voiceEndTimer)clearTimeout(voiceEndTimer);voiceEndTimer=setTimeout(hideV,5000);}
   function audioErrorMessage(error){var name=String(error&&error.name||"");if(name==="NotAllowedError"||name==="PermissionDeniedError")return "মাইক্রোফোনের অনুমতি দিন, তারপর আবার চেষ্টা করুন।";if(name==="NotFoundError"||name==="DevicesNotFoundError")return "মাইক্রোফোন পাওয়া যায়নি।";if(name==="NotReadableError"||name==="TrackStartError")return "অন্য অ্যাপ মাইক্রোফোন ব্যবহার করছে।";return "অডিও রেকর্ড করা যায়নি। আবার চেষ্টা করুন।";}
   function releaseVoiceStream(){if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
+  function normalizeVoiceTranscript(value,language){
+    var text=String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
+    if(!text)return "";
+    /* Fix punctuation spacing but preserve the recognizer's wording and line breaks. */
+    text=text.replace(/[ \t]+([,.;!?।॥])/g,"$1").replace(/([,;])(?=\S)/g,"$1 ");
+    var lines=text.split("\n");
+    var last=-1;
+    for(var i=lines.length-1;i>=0;i--){if(lines[i].trim()){last=i;break;}}
+    if(last<0)return "";
+    var finalLine=lines[last].trim();
+    /* Bengali regexes must not use \b: JavaScript word boundaries are ASCII-centric. */
+    var questionStart=/^(?:কি|কী|কেন|কিভাবে|কীভাবে|কেমন|কোথায়|কোথায়|কখন|কার|কাদের|কত|কোন|কোনটা|নাকি)(?:\s|$)/i;
+    var questionEnd=/(?:^|\s)(?:কি|কী)\s*$/i;
+    if(!/[.!?।॥…]$/.test(finalLine)){
+      var isQuestion=questionStart.test(finalLine)||questionEnd.test(finalLine);
+      var isBangla=String(language||"bn-BD").toLowerCase().startsWith("bn");
+      lines[last]=finalLine+(isQuestion?"?":isBangla?"।":".");
+    }
+    return lines.join("\n");
+  }
   function transcribeAudioBlob(blob){
     if(!blob||!blob.size){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("কোনো অডিও রেকর্ড হয়নি। আবার চেষ্টা করুন।");return;}
     if(blob.size>12*1024*1024){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিওটি অনেক বড় হয়েছে। ছোট ছোট অংশে রেকর্ড করুন।");return;}
@@ -1020,7 +1058,7 @@ header.top{
       fetch(AUDIO_TRANSCRIBE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage()})})
         .then(function(response){return response.json().catch(function(){return {};}).then(function(data){if(!response.ok)throw new Error(data.error||("HTTP "+response.status));return data;});})
         .then(function(data){
-          var transcript=String(data.text||"").trim();if(!transcript)throw new Error("empty_transcription");
+          var transcript=normalizeVoiceTranscript(data.text,getSttLanguage());if(!transcript)throw new Error("empty_transcription");
           input.value=[voiceBaseText,transcript].filter(Boolean).join(voiceBaseText?"\n":"");resize();
           finishVoiceProcessingTimer(true);
         })
