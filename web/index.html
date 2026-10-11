@@ -761,14 +761,16 @@ header.top{
   }
   var VOICE_CONNECTION_WARNING_MS=15000;
   function ensureVoiceCompanion(button){
-    if(button._voiceCompanion&&button._voiceCompanion.isConnected)return button._voiceCompanion;
+    var existing=button._voiceCompanion;
+    if(existing&&existing.isConnected&&!existing.classList.contains("is-download"))return existing;
     var companion=document.createElement("span");
     companion.className="voice-companion";
     companion.setAttribute("role","status");
     companion.setAttribute("aria-live","polite");
     companion.textContent="00:00";
     companion.title="সার্ভার থেকে ভয়েস তৈরির সময়";
-    button.parentNode.insertBefore(companion,button.nextSibling);
+    if(existing&&existing.isConnected)existing.replaceWith(companion);
+    else button.parentNode.insertBefore(companion,button.nextSibling);
     button._voiceCompanion=companion;
     return companion;
   }
@@ -780,7 +782,7 @@ header.top{
     companion.title="সার্ভার থেকে ভয়েস তৈরি হচ্ছে";
     companion.setAttribute("aria-label","ভয়েস সংযোগের সময় ০ সেকেন্ড");
     function refresh(){
-      if(!companion.isConnected)return;
+      if(!companion.isConnected){if(companion._timer){window.clearInterval(companion._timer);companion._timer=null;}return;}
       var seconds=Math.floor((Date.now()-started)/1000);
       companion.textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
       companion.setAttribute("aria-label","ভয়েস সংযোগের সময় "+seconds+" সেকেন্ড");
