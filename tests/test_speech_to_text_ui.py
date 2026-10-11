@@ -64,7 +64,7 @@ def test_voice_input_handles_recording_and_provider_errors():
     assert "NotAllowedError" in html
     assert "NotFoundError" in html
     assert "audio_transcription_failed" in Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
-    assert "অডিও থেকে লেখা তৈরি হয়নি" in html
+    assert "অডিও সার্ভার সমস্যা:" in html
 
 
 def test_voice_transcript_normalization_preserves_lines_and_adds_only_final_punctuation():
