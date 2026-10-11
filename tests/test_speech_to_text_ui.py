@@ -107,3 +107,18 @@ def test_server_tts_uses_blob_object_url_for_mobile_playback_and_cleans_up():
     assert "URL.revokeObjectURL(activeAudioUrl)" in html
     assert "releaseActiveAudioUrl(playbackUrl)" in html
     assert 'activeAudio=new Audio("data:"+(' not in html
+
+
+def test_server_voice_failures_surface_worker_connection_and_provider_diagnostics():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+
+    assert "function audioServerFailureDetail(error)" in html
+    assert "নেটওয়ার্ক/CORS/Worker deployment পরীক্ষা করুন" in html
+    assert "Mosharrof transcription request failed" in html
+    assert "Mosharrof server TTS request failed" in html
+    assert "error.serverData=data" in html
+    assert "provider_message:r.data?.error?.message||null" in worker
+    assert 'worker_build:WORKER_BUILD_ID' in worker
+    assert 'tts_endpoint:"/tts"' in worker
+    assert 'transcribe_audio_endpoint:"/transcribe-audio"' in worker
