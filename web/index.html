@@ -1029,16 +1029,22 @@ header.top{
   function normalizeVoiceTranscript(value,language){
     var text=String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
     if(!text)return "";
-    /* Normalize spacing without flattening song/poem line breaks. */
+    /* Fix punctuation spacing but preserve the recognizer's wording and line breaks. */
     text=text.replace(/[ \t]+([,.;!?।॥])/g,"$1").replace(/([,;])(?=\S)/g,"$1 ");
-    var isBangla=String(language||"bn-BD").toLowerCase().startsWith("bn");
-    var question=/\b(?:কি|কী|কেন|কিভাবে|কীভাবে|কেমন|কোথায়|কোথায়|কখন|কার|কাদের|কত|কোন|কোনটা|নাকি)\s*$/i;
-    return text.split("\n").map(function(line){
-      var part=line.trim();if(!part)return "";
-      if(/[.!?।॥…]$/.test(part))return part;
-      if(question.test(part))return part+"?";
-      return part+(isBangla?"।":".");
-    }).join("\n");
+    var lines=text.split("\n");
+    var last=-1;
+    for(var i=lines.length-1;i>=0;i--){if(lines[i].trim()){last=i;break;}}
+    if(last<0)return "";
+    var finalLine=lines[last].trim();
+    /* Bengali regexes must not use \b: JavaScript word boundaries are ASCII-centric. */
+    var questionStart=/^(?:কি|কী|কেন|কিভাবে|কীভাবে|কেমন|কোথায়|কোথায়|কখন|কার|কাদের|কত|কোন|কোনটা|নাকি)(?:\s|$)/i;
+    var questionEnd=/(?:^|\s)(?:কি|কী)\s*$/i;
+    if(!/[.!?।॥…]$/.test(finalLine)){
+      var isQuestion=questionStart.test(finalLine)||questionEnd.test(finalLine);
+      var isBangla=String(language||"bn-BD").toLowerCase().startsWith("bn");
+      lines[last]=finalLine+(isQuestion?"?":isBangla?"।":".");
+    }
+    return lines.join("\n");
   }
   function transcribeAudioBlob(blob){
     if(!blob||!blob.size){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("কোনো অডিও রেকর্ড হয়নি। আবার চেষ্টা করুন।");return;}
