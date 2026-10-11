@@ -1,0 +1,40 @@
+# MOSHARROF Cloudflare Token Router Worker (isolated, read-only)
+
+This Worker is deliberately separate from the existing chat/TTS Worker. It does not alter or replace the live chat API.
+
+## Current capabilities
+
+- `zone.read`: read one explicitly named Cloudflare zone.
+- `worker.scripts.list`: list Workers scripts for one account.
+- All operations are read-only. Arbitrary URLs, arbitrary API paths, caller-supplied permission names, request bodies to Cloudflare, and write operations are not supported.
+- Every request requires the separate `ROUTER_ACCESS_TOKEN`.
+- Existing Cloudflare tokens are selected from metadata in `CLOUDFLARE_TOKEN_PROFILES`; token values are Worker secrets, not profile JSON.
+- A 401/403 from Cloudflare is not retried using another credential.
+
+## Required server-side configuration
+
+Configure these only in the intended Cloudflare Worker secret/variable settings; never commit secret values.
+
+Secrets:
+- `ROUTER_ACCESS_TOKEN`: long random bearer secret used by the caller to authenticate to this router.
+- One secret per existing, verified Cloudflare token profile, e.g. `CF_ZONE_READ_TOKEN`.
+
+Non-secret variable:
+- `CLOUDFLARE_TOKEN_PROFILES`: JSON array, e.g.
+  ```json
+  [
+    {
+      "token_id": "zone-read-01",
+      "secret_binding": "CF_ZONE_READ_TOKEN",
+      "permissions": ["Zone Read"],
+      "resource_scopes": ["/zones/REPLACE_WITH_ZONE_ID"],
+      "enabled": true
+    }
+  ]
+  ```
+
+The profile metadata must match each token's real Cloudflare permissions and resources. The router's metadata is not a grant; Cloudflare remains authoritative. Do not enable any profile until it has been verified.
+
+## Deployment gate
+
+The Wrangler file is isolated and has no route or account ID. Do not deploy until an owner has configured secrets and verified token scopes, then use a private/non-production test. The current PR is code-only and does not configure account-level secrets or routes. No API token values are needed in chat.
