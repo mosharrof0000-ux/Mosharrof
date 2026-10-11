@@ -85,9 +85,9 @@ def test_voice_transcript_normalization_preserves_lines_and_adds_only_final_punc
 def test_server_read_aloud_shows_connection_timer_and_downloads_generated_audio():
     html = Path("web/index.html").read_text(encoding="utf-8")
 
-    assert "VOICE_CONNECTION_WARNING_MS=15000" in html
+    assert "VOICE_CONNECTION_WARNING_MS" not in html
     assert "function startVoiceConnectionTimer(button)" in html
-    assert 'companion.classList.add("is-late")' in html
+    assert 'companion.className="voice-companion is-late"' in html
     assert "function finishVoiceConnectionTimer(button,audioBlob,mimeType)" in html
     assert "function audioBlobFromBase64(base64,mimeType)" in html
     assert 'downloadButton.className="voice-companion is-download"' in html
