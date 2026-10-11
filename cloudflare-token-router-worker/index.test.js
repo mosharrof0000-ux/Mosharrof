@@ -123,3 +123,81 @@ test("prefers narrower resource scope when permissions are equal", () => {
   assert.equal(selected.p.token_id, "z-narrow");
   assert.equal(selected.token, "narrow-secret");
 });
+
+
+test("health endpoint is public, read-only, and reports configuration presence without secrets", async () => {
+  const unconfigured = await worker.fetch(new Request("https://router.example/health"), {});
+  assert.equal(unconfigured.status, 200);
+  assert.deepEqual(await unconfigured.json(), {
+    ok: true,
+    service: "mosharrof-cloudflare-token-router",
+    build: "2026-10-11-token-router-worker-v1",
+    mode: "read-only",
+    access_configured: false,
+    profiles_configured: false,
+  });
+
+  const configured = await worker.fetch(new Request("https://router.example/health"), {
+    ROUTER_ACCESS_TOKEN: "must-not-appear-in-health",
+    CLOUDFLARE_TOKEN_PROFILES: "[]",
+  });
+  const payload = await configured.json();
+  assert.equal(payload.access_configured, true);
+  assert.equal(payload.profiles_configured, true);
+  assert.equal(JSON.stringify(payload).includes("must-not-appear-in-health"), false);
+  assert.equal(configured.headers.get("cache-control"), "no-store");
+});
+
+test("wrong router credential is denied before parsing or contacting Cloudflare", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    throw new Error("unexpected upstream call");
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer wrong-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), {
+      ROUTER_ACCESS_TOKEN: "correct-key",
+      CLOUDFLARE_TOKEN_PROFILES: "[]",
+    });
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: "UNAUTHORIZED" });
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("missing or disabled matching token fails closed without upstream calls", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    throw new Error("unexpected upstream call");
+  };
+  try {
+    for (const profile of [
+      { token_id: "zone", secret_binding: "CF_ZONE_READ_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: false },
+      { token_id: "zone", secret_binding: "CF_ZONE_READ_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-2"], enabled: true },
+    ]) {
+      const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+        method: "POST",
+        headers: { authorization: "Bearer correct-key", "content-type": "application/json" },
+        body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+      }), {
+        ROUTER_ACCESS_TOKEN: "correct-key",
+        CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([profile]),
+        CF_ZONE_READ_TOKEN: "test-only-secret",
+      });
+      assert.equal(response.status, 403);
+      assert.deepEqual(await response.json(), { error: "NO_ENABLED_TOKEN_COVERS_REQUEST" });
+    }
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
