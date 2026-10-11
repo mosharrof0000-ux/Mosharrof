@@ -32,6 +32,15 @@ test("selects narrowest enabled matching token and never returns missing secrets
   assert.equal(selected.token, "narrow-secret");
 });
 
+test("profile parser rejects root-wide and malformed scopes", () => {
+  for (const scope of ["/", "/accounts//workers", "/accounts/../user", "/accounts/acct?x=1", "/accounts/%2e%2e"]) {
+    const env = { CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "unsafe", secret_binding: "CF_ZONE_TOKEN", permissions: ["Zone Read"], resource_scopes: [scope], enabled: true },
+    ]) };
+    assert.throws(() => parseProfiles(env), /TOKEN_PROFILE_CONFIG_INVALID/);
+  }
+});
+
 test("profile parser rejects duplicate IDs and unsafe secret binding names", () => {
   const env = { CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
     { token_id: "zone", secret_binding: "CF_ZONE_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
