@@ -149,7 +149,26 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/health") {
-      return json({ ok: true, service: "mosharrof-cloudflare-token-router", build: BUILD_ID, mode: "read-only", access_configured: !!env.ROUTER_ACCESS_TOKEN, profiles_configured: !!env.CLOUDFLARE_TOKEN_PROFILES });
+      let profilesValid = false;
+      let profilesReady = false;
+      try {
+        const profiles = parseProfiles(env);
+        profilesValid = true;
+        const enabled = profiles.filter((profile) => profile.enabled);
+        profilesReady = enabled.length > 0 && enabled.every((profile) => String(env[profile.secret_binding] || "").trim().length > 0);
+      } catch {
+        // Health reports only readiness booleans; never expose profile contents or secret values.
+      }
+      return json({
+        ok: true,
+        service: "mosharrof-cloudflare-token-router",
+        build: BUILD_ID,
+        mode: "read-only",
+        access_configured: !!env.ROUTER_ACCESS_TOKEN,
+        profiles_configured: !!env.CLOUDFLARE_TOKEN_PROFILES,
+        profiles_valid: profilesValid,
+        profiles_ready: profilesReady,
+      });
     }
     if (request.method !== "POST" || url.pathname !== "/v1/operation") return json({ error: "NOT_FOUND" }, 404);
     if (!(await authorized(request, env))) return json({ error: "UNAUTHORIZED" }, 401);
