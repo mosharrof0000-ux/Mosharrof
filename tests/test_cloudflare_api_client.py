@@ -37,8 +37,18 @@ def test_denies_missing_permission_before_network(tmp_path):
     client = make_client(tmp_path)
     with patch("src.core.cloudflare_api_client.urlopen") as urlopen:
         with pytest.raises(CloudflareAPIError) as error:
-            client.request("PATCH", "/zones/zone-123", required_permissions={"DNS Edit"}, resource_scope="/zones/zone-123", body={"paused": True})
+            client.request("GET", "/zones/zone-123", required_permissions={"DNS Edit"}, resource_scope="/zones/zone-123")
         assert error.value.code == "CREDENTIAL_NOT_AUTHORIZED"
+        urlopen.assert_not_called()
+
+
+def test_rejects_write_methods_before_token_resolution(tmp_path):
+    client = make_client(tmp_path)
+    with patch("src.core.cloudflare_api_client.urlopen") as urlopen:
+        for method in ("POST", "PUT", "PATCH", "DELETE"):
+            with pytest.raises(CloudflareAPIError) as error:
+                client.request(method, "/zones/zone-123", required_permissions={"Zone Read"}, resource_scope="/zones/zone-123")
+            assert error.value.code == "HTTP_METHOD_NOT_ALLOWED"
         urlopen.assert_not_called()
 
 
