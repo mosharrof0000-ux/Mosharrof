@@ -74,3 +74,17 @@ def test_invalid_registry_env_name_fails_closed(tmp_path):
     path = registry(tmp_path, [profile("bad", "token-value", ["Workers Scripts:Edit"], ["account/abc"])])
     with pytest.raises(ValueError, match="INVALID_SECRET_ENV_NAME"):
         CloudflareTokenRouter(path, {})
+
+
+def test_prefers_narrower_resource_scope_when_permissions_are_equal(tmp_path):
+    path = registry(tmp_path, [
+        profile("a-broad", "CLOUDFLARE_TOKEN_BROAD", ["Zone Read"], ["/zones"]),
+        profile("z-narrow", "CLOUDFLARE_TOKEN_NARROW", ["Zone Read"], ["/zones/zone-123"]),
+    ])
+    router = CloudflareTokenRouter(path, {
+        "CLOUDFLARE_TOKEN_BROAD": "broad-secret",
+        "CLOUDFLARE_TOKEN_NARROW": "narrow-secret",
+    })
+    credential = router.resolve({"Zone Read"}, "/zones/zone-123")
+    assert credential.token_id == "z-narrow"
+    assert credential.token == "narrow-secret"
