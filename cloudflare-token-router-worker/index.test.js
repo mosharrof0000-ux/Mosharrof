@@ -123,3 +123,97 @@ test("prefers narrower resource scope when permissions are equal", () => {
   assert.equal(selected.p.token_id, "z-narrow");
   assert.equal(selected.token, "narrow-secret");
 });
+
+
+test("health endpoint reports only safe configuration booleans and never exposes credentials", async () => {
+  const env = {
+    ROUTER_ACCESS_TOKEN: "do-not-leak-router-secret",
+    CLOUDFLARE_TOKEN_PROFILES: '[{"token_id":"zone-read","secret_binding":"CF_ZONE_TOKEN"}]',
+    CF_ZONE_TOKEN: "do-not-leak-cloudflare-secret",
+  };
+  const response = await worker.fetch(new Request("https://router.example/health"), env);
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.equal(body.mode, "read-only");
+  assert.equal(body.access_configured, true);
+  assert.equal(body.profiles_configured, true);
+  assert.equal(JSON.stringify(body).includes("do-not-leak"), false);
+  assert.equal(JSON.stringify(body).includes("CF_ZONE_TOKEN"), false);
+});
+
+test("health endpoint reports missing configuration without revealing values", async () => {
+  const response = await worker.fetch(new Request("https://router.example/health"), {});
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.access_configured, false);
+  assert.equal(body.profiles_configured, false);
+});
+
+test("invalid token profile configuration fails closed before any Cloudflare request", async () => {
+  const env = {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "{broken-json",
+  };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    throw new Error("unexpected upstream call");
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), env);
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: "TOKEN_PROFILE_CONFIG_INVALID" });
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("valid least-privilege read operation calls only the fixed Cloudflare endpoint", async () => {
+  const env = {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([{
+      token_id: "zone-read-01",
+      secret_binding: "CF_ZONE_READ_TOKEN",
+      permissions: ["Zone Read"],
+      resource_scopes: ["/zones/zone-1"],
+      enabled: true,
+    }]),
+    CF_ZONE_READ_TOKEN: "cloudflare-zone-read-secret",
+  };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (url, options) => {
+    calls += 1;
+    assert.equal(String(url), "https://api.cloudflare.com/client/v4/zones/zone-1");
+    assert.equal(options.method, "GET");
+    assert.equal(options.headers.Authorization, "Bearer cloudflare-zone-read-secret");
+    return new Response(JSON.stringify({ success: true, result: { id: "zone-1", name: "example.test" } }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), env);
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.ok, true);
+    assert.deepEqual(body.result, { id: "zone-1", name: "example.test" });
+    assert.equal(body.audit.token_id, "zone-read-01");
+    assert.equal(body.audit.outcome, "success");
+    assert.equal(calls, 1);
+    assert.equal(JSON.stringify(body).includes("cloudflare-zone-read-secret"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
