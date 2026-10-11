@@ -123,3 +123,99 @@ test("prefers narrower resource scope when permissions are equal", () => {
   assert.equal(selected.p.token_id, "z-narrow");
   assert.equal(selected.token, "narrow-secret");
 });
+
+test("health endpoint is public but reports only configuration presence", async () => {
+  const unconfigured = await worker.fetch(new Request("https://router.example/health"), {});
+  assert.equal(unconfigured.status, 200);
+  assert.deepEqual(await unconfigured.json(), {
+    ok: true,
+    service: "mosharrof-cloudflare-token-router",
+    build: "2026-10-11-token-router-worker-v1",
+    mode: "read-only",
+    access_configured: false,
+    profiles_configured: false,
+  });
+
+  const configured = await worker.fetch(new Request("https://router.example/health"), {
+    ROUTER_ACCESS_TOKEN: "must-not-be-returned",
+    CLOUDFLARE_TOKEN_PROFILES: "[]",
+  });
+  const body = await configured.json();
+  assert.equal(body.access_configured, true);
+  assert.equal(body.profiles_configured, true);
+  assert.equal(JSON.stringify(body).includes("must-not-be-returned"), false);
+});
+
+test("wrong bearer token is rejected before parsing request or calling Cloudflare", async () => {
+  const originalFetch = globalThis.fetch;
+  let cloudflareCalls = 0;
+  globalThis.fetch = async () => {
+    cloudflareCalls += 1;
+    throw new Error("Cloudflare must not be called for unauthorized requests");
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer wrong-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), { ROUTER_ACCESS_TOKEN: "correct-key" });
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: "UNAUTHORIZED" });
+    assert.equal(cloudflareCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("malformed profile configuration fails closed without calling Cloudflare", async () => {
+  const originalFetch = globalThis.fetch;
+  let cloudflareCalls = 0;
+  globalThis.fetch = async () => {
+    cloudflareCalls += 1;
+    throw new Error("Cloudflare must not be called for invalid configuration");
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), {
+      ROUTER_ACCESS_TOKEN: "private-router-key",
+      CLOUDFLARE_TOKEN_PROFILES: "{not-json",
+    });
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: "TOKEN_PROFILE_CONFIG_INVALID" });
+    assert.equal(cloudflareCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("missing or disabled matching token fails closed without contacting Cloudflare", async () => {
+  const profiles = [
+    { token_id: "zone-read", secret_binding: "CF_ZONE_READ_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: false },
+  ];
+  const originalFetch = globalThis.fetch;
+  let cloudflareCalls = 0;
+  globalThis.fetch = async () => {
+    cloudflareCalls += 1;
+    throw new Error("Cloudflare must not be called when no eligible token exists");
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), {
+      ROUTER_ACCESS_TOKEN: "private-router-key",
+      CLOUDFLARE_TOKEN_PROFILES: JSON.stringify(profiles),
+      CF_ZONE_READ_TOKEN: "present-but-disabled-secret",
+    });
+    assert.equal(response.status, 403);
+    assert.deepEqual(await response.json(), { error: "NO_ENABLED_TOKEN_COVERS_REQUEST" });
+    assert.equal(cloudflareCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
