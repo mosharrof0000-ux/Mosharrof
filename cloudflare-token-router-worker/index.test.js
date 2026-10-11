@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { covers, parseProfiles, safeId, selectToken, OPERATIONS } from "./index.js";
+import worker, { covers, parseProfiles, safeId, selectToken, OPERATIONS } from "./index.js";
 
 test("resource IDs reject traversal and path injection", () => {
   assert.equal(safeId("zone-123"), "zone-123");
@@ -48,4 +48,30 @@ test("profile parser rejects duplicate IDs and unsafe secret binding names", () 
   ]) };
   assert.throws(() => parseProfiles(env), /TOKEN_PROFILE_CONFIG_INVALID/);
   assert.equal(OPERATIONS["worker.scripts.list"].method, "GET");
+});
+
+
+test("worker denies unauthenticated requests and never exposes operations via GET", async () => {
+  const env = { ROUTER_ACCESS_TOKEN: "private-router-key" };
+  const unauth = await worker.fetch(new Request("https://router.example/v1/operation", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+  }), env);
+  assert.equal(unauth.status, 401);
+  assert.deepEqual(await unauth.json(), { error: "UNAUTHORIZED" });
+
+  const get = await worker.fetch(new Request("https://router.example/v1/operation", { method: "GET" }), env);
+  assert.equal(get.status, 404);
+});
+
+test("worker rejects unknown capabilities before contacting Cloudflare", async () => {
+  const env = { ROUTER_ACCESS_TOKEN: "private-router-key", CLOUDFLARE_TOKEN_PROFILES: "[]" };
+  const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+    method: "POST",
+    headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+    body: JSON.stringify({ operation: "arbitrary.api.call", zone_id: "zone-1" }),
+  }), env);
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), { error: "OPERATION_NOT_ALLOWED" });
 });
