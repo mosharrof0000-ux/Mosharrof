@@ -1,0 +1,7 @@
+name = "mosharrof-cloudflare-token-router"
+main = "index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+
+# Configure the production route only after owner review and secret setup.
+# Never place credential values in this file.
