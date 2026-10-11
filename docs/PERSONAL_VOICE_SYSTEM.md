@@ -17,6 +17,7 @@ provider intact as the default and fallback.
 - User-approved voice-version activation.
 - Revocation methods that return private audio references for the storage adapter
   to permanently delete.
+- Validated voice delivery settings that are independent of speaker identity.
 
 ## Deliberate boundaries
 
@@ -45,6 +46,32 @@ approval and a successful quality check.
 A reference audio used for inference does not itself train or permanently update
 a model. Actual model fine-tuning is a distinct, optional future capability.
 
+## Reading style and expression controls
+
+Speaker identity and delivery style must be separate settings. The user should
+be able to choose a voice, then independently adjust:
+
+- Speed from 0.5x to 2.0x.
+- Emotion (neutral, warm, joyful, sad, soothing, dramatic, confident) and
+  intensity from 0–100%.
+- Pitch from -100% to +100% where supported.
+- Pause length from 0.5x to 2.0x and emphasis from 0–100%.
+- Presets: natural conversation, poetry, article/essay, news, storytelling,
+  educational/study, formal, and Quran recitation.
+
+Presets are editable starting points, not locked modes. Include reset-to-natural.
+The provider adapter must declare supported controls, send only supported options,
+and never claim a provider applied a setting it ignored. Where possible use native
+provider prosody/SSML controls; otherwise use conservative punctuation-aware
+segmentation or supported style instructions. Keep Gemini TTS as the existing
+default/fallback and add controls behind an adapter and feature flag.
+
+For Quran mode, accurate tajwid requires a dedicated reviewed recitation source or
+provider. Generic emotional TTS must not be described as verified tajwid.
+
+These are domain settings only. They are not yet present in the live UI, and
+provider support for each setting has not yet been verified.
+
 ## Proposed implementation stages
 
 1. Identity and storage: establish verified user identity and private,
@@ -53,9 +80,10 @@ a model. Actual model fine-tuning is a distinct, optional future capability.
    requirements, inference dependencies, and CPU/RAM needs. Run a small prototype.
 3. Inference adapter: add an isolated Python service with authentication,
    per-user rate limits, request-size limits, timeouts, and no public audio URLs.
-4. UI and provider routing: add a user-controlled My Voice profile and consent
-   controls. Add a personal_voice provider without changing Gemini. If unavailable,
-   time out, or over quota, fall back to the existing provider.
+4. UI and provider routing: add a user-controlled My Voice profile, consent
+   controls, reading presets, and advanced delivery settings. Add a personal_voice
+   provider without changing Gemini. If unavailable, time out, or over quota,
+   fall back to the existing provider.
 5. Quality-gated improvement: add user-approved sample review and versioning.
    Do not claim continuous learning until actual model updates exist and are
    measurable.
@@ -70,6 +98,9 @@ a model. Actual model fine-tuning is a distinct, optional future capability.
 - Revocation deletes stored objects and derived artifacts, not just metadata.
 - Gemini TTS continues working when the personal voice service is offline.
 - Bengali pronunciation and similarity are tested with held-out sentences.
+- Reading-style settings do not silently switch the speaker identity.
+- Unsupported controls are disclosed; provider adapters never fake success.
+- Quran recitation claims require a reviewed recitation path and tajwid validation.
 - Free-host limits, cold starts, sleep behavior, and realistic request capacity
   are measured; unlimited free use is not promised.
 - Model license and use restrictions are approved before deployment.
@@ -80,87 +111,3 @@ Cloudflare Workers should orchestrate requests, not host the large model itself.
 A separate Python inference host is required. A free CPU host can be used for a
 proof of concept but may sleep, run slowly, or enforce quotas. Do not upload
 voice samples to a public repository or public demo.
-
-
-## Voice direction and reading-style controls (requested feature)
-
-The personal voice UI should separate **voice identity** from **delivery style**.
-Selecting a personal voice must not hide or lock the reading controls. Add a
-"Voice Studio / কণ্ঠ নিয়ন্ত্রণ" panel with:
-
-- **Reading speed:** a simple slower / normal / faster control and a numeric
-  rate slider (initial target 0.75x–1.50x, subject to provider capability).
-- **Emotion / expression:** lower or raise expression, with presets such as
-  neutral, warm, cheerful, calm, serious, empathetic, and dramatic. Keep a
-  neutral option and avoid forcing emotion into every sentence.
-- **Reading mode presets:** poetry (rhythm and line-aware pauses), article
-  (clear, steady narration), news (formal and concise), story (expressive),
-  educational (measured with explanatory pauses), conversation (natural),
-  audiobook (sustained narration), and presentation (confident, structured).
-- **Pause controls:** shorter/longer pauses at sentence, paragraph, and line
-  boundaries; respect punctuation and line breaks.
-- **Pronunciation and clarity:** normal / careful articulation and a preference
-  for clearer pronunciation, where supported.
-- **Emphasis:** default / lighter / stronger emphasis on meaningful phrases,
-  where supported.
-- **Pitch and timbre:** expose only if the selected engine can safely support
-  them; do not imply these controls change the underlying person's identity.
-- **Preview and save:** preview a short text before applying; save named presets
-  per user and provide a one-tap reset to defaults.
-
-Style presets are starting points, not guarantees. The UI and provider adapter
-must declare supported controls per engine. Apply supported settings directly;
-for unsupported controls, use a tested text-markup / SSML / audio-processing
-fallback only when compatible. Do not silently claim an emotion was applied
-when the engine ignored it. Show a small "partially supported" note when needed.
-
-Keep the settings in a normalized provider-neutral schema (for example:
-`rate`, `expression`, `emotion`, `reading_mode`, `pause_strength`, `clarity`, `emphasis`, `pitch`).
-Provider adapters translate only the controls they actually support. Preserve
-the existing Gemini TTS behavior as the fallback and do not change its current
-default settings. Voice-style preferences must not trigger training or upload
-extra recordings. Any future voice improvement remains a separate, explicit
-opt-in.
-
-### Voice Studio acceptance checks
-
-- Changing reading speed changes playback pace without changing the selected
-  voice profile.
-- Switching poetry/article/news/story modes changes delivery settings where
-  supported, and accurately reports unsupported parts.
-- Personal voice and Gemini fallback both remain usable; fallback never blocks
-  text responses.
-- User presets are isolated per account and can be reset or deleted.
-- Controls work on mobile, with accessible labels and sensible defaults.
-- Test Bengali punctuation, numerals, English words in Bengali text, verse/poem
-  line breaks, and long articles before release.
-
-## Voice delivery controls (separate from voice identity)
-
-The user must be able to choose the *voice identity* and *delivery style* independently.
-Changing delivery settings must not silently replace the selected voice or modify the
-saved voice profile. The first version defines the UI/API contract; actual controls
-must be wired to a provider adapter and tested against provider capabilities.
-
-- **Speed:** adjustable from 0.75× to 1.5×, with a reset-to-normal action.
-- **Emotion intensity:** 0–100%, plus a neutral/off setting. Do not promise emotional
-  control when the selected engine does not support it; degrade gracefully.
-- **Style presets:** natural conversation, article, news/report, storytelling, poetry,
-  lesson/explanation, presentation, and calm/soothing reading.
-- **Fine controls:** pause/paragraph spacing and emphasis where the engine supports them.
-- **Per-style behavior:** article/news should prioritize clarity and steady pacing;
-  poetry should use line-aware pauses and optional expressive emphasis; conversation
-  should sound natural; lesson mode should prioritize clear enunciation and pauses.
-- **User control:** presets are starting points, not locked behaviors. Speed, emotion,
-  and pauses can be adjusted separately, with a preview before saving.
-- **Provider compatibility:** map only supported settings to Gemini or personal voice.
-  Never send unsupported parameters blindly; preserve current Gemini TTS behavior as
-  fallback. If an engine cannot honor emotion/style controls, show that limitation.
-- **Accessibility:** provide a neutral preset, visible speed value, keyboard/screen-reader
-  labels, and a one-tap reset.
-
-Acceptance tests must verify settings validation, preset defaults, independent controls,
-provider capability mapping, graceful fallback, and that changing style does not change
-the selected speaker identity. This is a design contract only until UI and live provider
-integration are implemented.
-
