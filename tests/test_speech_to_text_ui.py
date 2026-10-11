@@ -80,3 +80,19 @@ def test_voice_transcript_normalization_preserves_lines_and_adds_only_final_punc
     assert 'lines[last]=finalLine+(isQuestion?"?":isBangla?"।":".")' in normalizer
     assert r"\b(?:কি|কী" not in normalizer
     assert 'var last=-1' in normalizer
+
+
+def test_server_read_aloud_shows_connection_timer_and_downloads_generated_audio():
+    html = Path("web/index.html").read_text(encoding="utf-8")
+
+    assert "VOICE_CONNECTION_WARNING_MS" not in html
+    assert "function startVoiceConnectionTimer(button)" in html
+    assert 'companion.className="voice-companion is-late"' in html
+    assert "function finishVoiceConnectionTimer(button,audioBlob,mimeType)" in html
+    assert "function audioBlobFromBase64(base64,mimeType)" in html
+    assert 'downloadButton.className="voice-companion is-download"' in html
+    assert 'link.download="mosharrof-voice-"' in html
+    assert 'startVoiceConnectionTimer(button)' in html
+    assert 'finishVoiceConnectionTimer(button,audioBlob,audioMime)' in html
+    assert 'showV("ভয়েস ইঞ্জিন নির্বাচন হচ্ছে…")' not in html
+    assert 'showV("পড়া হচ্ছে · "+(data.provider||"voice"))' not in html

@@ -56,7 +56,7 @@ header.top{
 .messages{width:min(900px,100%);margin:auto auto 0;display:flex;flex-direction:column;gap:20px;flex-shrink:0}
 .message{max-width:min(88%,760px);font-size:15px;line-height:1.7;word-break:break-word;color:#ececec}
 .message .label{display:block;font-size:11px;color:#8e8e93;margin-bottom:6px}
-.message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active{background:#303030}.message-speak-shortcut.is-ready,.message-action.is-ready,.message-speak-shortcut.is-speaking,.message-action.is-speaking{background:#12351f;border-color:rgba(74,190,110,.8);color:#b9f5c9}.message-speak-shortcut.is-stop-requested,.message-action.is-stop-requested{background:#3a1014;border-color:rgba(239,68,68,.85);color:#ffb4b4}
+.message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active{background:#303030}.voice-companion{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:28px;padding:0 7px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:#111;color:#d4d4d8;font:11px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}.voice-companion.is-late{border-color:#ef4444;background:#3b1010;color:#ff8b8b}.voice-companion.is-download{width:32px;min-width:32px;padding:0;color:#b9f5c9;border-color:rgba(74,190,110,.65);background:#12351f}.voice-companion svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.voice-companion:disabled{opacity:.65;cursor:wait}.message-speak-shortcut.is-ready,.message-action.is-ready,.message-speak-shortcut.is-speaking,.message-action.is-speaking{background:#12351f;border-color:rgba(74,190,110,.8);color:#b9f5c9}.message-speak-shortcut.is-stop-requested,.message-action.is-stop-requested{background:#3a1014;border-color:rgba(239,68,68,.85);color:#ffb4b4}
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
 
@@ -298,7 +298,7 @@ header.top{
   function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
   function iconSvg(kind){
-    var paths={like:'<path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"/><path d="M7 10 12 3a2 2 0 0 1 2 2l-1 5h5.5a2.5 2.5 0 0 1 2.4 3.2l-1.8 6A2.5 2.5 0 0 1 16.7 21H7"/>',online:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',speak:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',retry:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6"/><path d="M18.4 15A7 7 0 0 1 6 18l-2-6"/>',share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>'};
+    var paths={like:'<path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"/><path d="M7 10 12 3a2 2 0 0 1 2 2l-1 5h5.5a2.5 2.5 0 0 1 2.4 3.2l-1.8 6A2.5 2.5 0 0 1 16.7 21H7"/>',online:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',speak:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',retry:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6"/><path d="M18.4 15A7 7 0 0 1 6 18l-2-6"/>',share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>',download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'};
     return '<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[kind]||'')+'</svg>';
   }
   function addMessageToolbar(n,role,text,at,messageIndex,feedback){
@@ -741,7 +741,7 @@ header.top{
       var voices=synth.getVoices?synth.getVoices():[];
       var bnVoice=voices.find(function(v){return /^bn(-|_)/i.test(v.lang||"");})||voices.find(function(v){return /bengali|bangla/i.test(v.name||"");});
       if(bnVoice)u.voice=bnVoice;
-      u.onstart=function(){if(activeSpeech===session){setSpeakButton(button,"⏸ বন্ধ করুন");showV("পড়া হচ্ছে · Browser Voice");}};
+      u.onstart=function(){if(activeSpeech===session){setSpeakButton(button,"⏸ বন্ধ করুন");}};
       u.onend=function(){if(activeSpeech===session)next();};
       u.onerror=function(){if(activeSpeech===session){finish();toast("ব্রাউজারের ভয়েস চালু হয়নি। ভয়েস সেটিংস পরীক্ষা করুন।");}};
       synth.speak(u);
@@ -759,6 +759,74 @@ header.top{
     if(/(?:কবিতা|poem|ছন্দোবদ্ধ|পঙ্?ক্তি|গীতিকবিতা)/i.test(s))return "poem";
     return "chat";
   }
+  function ensureVoiceCompanion(button){
+    var existing=button._voiceCompanion;
+    if(existing&&existing.isConnected&&!existing.classList.contains("is-download"))return existing;
+    var companion=document.createElement("span");
+    companion.className="voice-companion";
+    companion.setAttribute("role","status");
+    companion.setAttribute("aria-live","polite");
+    companion.textContent="00:00";
+    companion.title="সার্ভার থেকে ভয়েস তৈরির সময়";
+    if(existing&&existing.isConnected)existing.replaceWith(companion);
+    else button.parentNode.insertBefore(companion,button.nextSibling);
+    button._voiceCompanion=companion;
+    return companion;
+  }
+  function startVoiceConnectionTimer(button){
+    var companion=ensureVoiceCompanion(button),started=Date.now();
+    if(companion._timer)window.clearInterval(companion._timer);
+    companion.className="voice-companion";
+    companion.textContent="00:00";
+    companion.title="সার্ভার থেকে ভয়েস তৈরি হচ্ছে";
+    companion.setAttribute("aria-label","ভয়েস সংযোগের সময় ০ সেকেন্ড");
+    function refresh(){
+      if(!companion.isConnected){if(companion._timer){window.clearInterval(companion._timer);companion._timer=null;}return;}
+      var seconds=Math.floor((Date.now()-started)/1000);
+      companion.textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
+      companion.setAttribute("aria-label","ভয়েস সংযোগের সময় "+seconds+" সেকেন্ড");
+    }
+    refresh();
+    companion._timer=window.setInterval(refresh,1000);
+    return companion;
+  }
+  function finishVoiceConnectionTimer(button,audioBlob,mimeType){
+    var companion=button&&button._voiceCompanion;
+    if(!companion)return;
+    if(companion._timer){window.clearInterval(companion._timer);companion._timer=null;}
+    if(!audioBlob){
+      companion.className="voice-companion is-late";
+      companion.title="সার্ভার ভয়েস তৈরি ব্যর্থ হয়েছে; ব্রাউজার ভয়েস ব্যবহার হচ্ছে";
+      companion.setAttribute("aria-label",companion.title);
+      return;
+    }
+    var downloadButton=document.createElement("button");
+    downloadButton.type="button";
+    downloadButton.className="voice-companion is-download";
+    downloadButton.innerHTML=iconSvg("download");
+    downloadButton.title="সার্ভার থেকে তৈরি ভয়েস ডাউনলোড করুন";
+    downloadButton.setAttribute("aria-label",downloadButton.title);
+    downloadButton.onclick=function(e){
+      if(e&&e.stopPropagation)e.stopPropagation();
+      var url=URL.createObjectURL(audioBlob),link=document.createElement("a");
+      link.href=url;
+      link.download="mosharrof-voice-"+new Date().toISOString().replace(/[:.]/g,"-")+(mimeType==="audio/wav"?".wav":mimeType==="audio/ogg"?".ogg":".mp3");
+      link.style.display="none";
+      document.body.appendChild(link);link.click();link.remove();
+      window.setTimeout(function(){URL.revokeObjectURL(url);},1500);
+    };
+    companion.replaceWith(downloadButton);
+    button._voiceCompanion=downloadButton;
+  }
+  function audioBlobFromBase64(base64,mimeType){
+    var binary=window.atob(String(base64||"")),parts=[];
+    for(var offset=0;offset<binary.length;offset+=32768){
+      var slice=binary.slice(offset,offset+32768),bytes=new Uint8Array(slice.length);
+      for(var i=0;i<slice.length;i++)bytes[i]=slice.charCodeAt(i);
+      parts.push(bytes);
+    }
+    return new Blob(parts,{type:mimeType||"audio/mpeg"});
+  }
   function speakText(t,button){
     if(activeAudio){try{activeAudio.pause();}catch(e){}if(activeAudioButton&&activeAudioButton!==button)resetSpeakButton(activeAudioButton);activeAudio=null;activeAudioButton=null;}
     if(activeSpeech&&"speechSynthesis" in window){try{window.speechSynthesis.cancel();}catch(e){}if(activeSpeechButton&&activeSpeechButton!==button)resetSpeakButton(activeSpeechButton);activeSpeech=null;activeSpeechButton=null;}
@@ -767,15 +835,16 @@ header.top{
     if(!spokenText){toast("পড়ে শোনানোর মতো লেখা পাওয়া যায়নি");resetSpeakButton(button);return;}
     var preference=getTtsPreference(),genre=detectTtsGenre(t);
     if(preference==="browser"){speakWithBrowser(spokenText,button);return;}
-    button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");showV("ভয়েস ইঞ্জিন নির্বাচন হচ্ছে…");
+    button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");hideV();startVoiceConnectionTimer(button);var serverAudioReady=false;
     fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:spokenText,language_code:"bn-BD",pace:1,provider:preference,genre:genre,voice:getTtsVoice()})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
       if(!data.audio_data)throw new Error("no_audio");
-      activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudioButton=button;
+      var audioMime=data.mime_type||"audio/mpeg";var audioBlob=audioBlobFromBase64(data.audio_data,audioMime);serverAudioReady=true;finishVoiceConnectionTimer(button,audioBlob,audioMime);activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudioButton=button;
       activeAudio.onended=function(){if(activeAudioButton===button){activeAudio=null;activeAudioButton=null;}resetSpeakButton(button);hideV();};
       setSpeakButton(button,"⏸ বন্ধ করুন");button.disabled=false;
       button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeAudio&&activeAudioButton===button){button.classList.add("is-stop-requested");activeAudio.pause();activeAudio=null;activeAudioButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
-      showV("পড়া হচ্ছে · "+(data.provider||"voice"));activeAudio.play().catch(function(){throw new Error("audio_play_failed");});
+      hideV();activeAudio.play().catch(function(){throw new Error("audio_play_failed");});
     }).catch(function(){
+      if(!serverAudioReady)finishVoiceConnectionTimer(button,null,null);
       if(activeAudio&&activeAudioButton===button){try{activeAudio.pause();}catch(e){}activeAudio=null;activeAudioButton=null;}
       button.disabled=false;hideV();speakWithBrowser(spokenText,button);toast("সার্ভার ভয়েস পাওয়া যায়নি · Browser Voice ব্যবহার হচ্ছে");
     });
