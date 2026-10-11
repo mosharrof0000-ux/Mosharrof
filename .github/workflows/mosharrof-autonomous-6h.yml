@@ -33,18 +33,25 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - run: python -m pip install -r requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
       - name: Baseline verification
         run: python -m pytest -q
-      - name: Autonomous work
-        if: ${{ secrets.GEMINI_API_KEY != '' && secrets.AGENT_ACCESS_TOKEN != '' }}
+      # GitHub Actions does not allow the secrets context in an if expression.
+      # Evaluate secret availability in the shell instead so the workflow parses
+      # and reports a safe pause when credentials are absent.
+      - name: Autonomous work or safe pause
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AGENT_ACCESS_TOKEN: ${{ secrets.AGENT_ACCESS_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           AUTONOMOUS_REQUEST: ${{ inputs.request }}
           GH_REPO: ${{ github.repository }}
-        run: python scripts/autonomous_agent.py
-      - name: Safe pause
-        if: ${{ secrets.GEMINI_API_KEY == '' || secrets.AGENT_ACCESS_TOKEN == '' }}
-        run: echo "No autonomous write performed; required secrets are not configured."
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${GEMINI_API_KEY:-}" && -n "${AGENT_ACCESS_TOKEN:-}" ]]; then
+            python scripts/autonomous_agent.py
+          else
+            echo "SAFE PAUSE: no autonomous write performed; GEMINI_API_KEY and/or AGENT_ACCESS_TOKEN is not configured."
+          fi
