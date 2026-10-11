@@ -845,7 +845,7 @@ header.top{
     button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");hideV();startVoiceConnectionTimer(button);var serverAudioReady=false;
     fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:spokenText,language_code:"bn-BD",pace:1,provider:preference,genre:genre,voice:getTtsVoice()})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
       if(!data.audio_data)throw new Error("no_audio");
-      var audioMime=data.mime_type||"audio/mpeg";var audioBlob=audioBlobFromBase64(data.audio_data,audioMime);serverAudioReady=true;finishVoiceConnectionTimer(button,audioBlob,audioMime);activeAudio=new Audio("data:"+audioMime+";base64,"+data.audio_data);activeAudioButton=button;
+      var audioMime=data.mime_type||"audio/mpeg";var audioBlob=audioBlobFromBase64(data.audio_data,audioMime);serverAudioReady=true;finishVoiceConnectionTimer(button,audioBlob,audioMime);activeAudio=new Audio("data:"+(data.mime_type||"audio/mpeg")+";base64,"+data.audio_data);activeAudioButton=button;
       activeAudio.onended=function(){if(activeAudioButton===button){activeAudio=null;activeAudioButton=null;}resetSpeakButton(button);hideV();};
       setSpeakButton(button,"⏸ বন্ধ করুন");button.disabled=false;
       button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeAudio&&activeAudioButton===button){button.classList.add("is-stop-requested");activeAudio.pause();activeAudio=null;activeAudioButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
