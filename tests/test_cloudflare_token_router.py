@@ -52,6 +52,15 @@ def test_denies_missing_secret_or_scope_mismatch(tmp_path):
         router.resolve({"Workers Scripts:Edit"}, "account/other/worker/demo")
 
 
+def test_scope_matching_normalizes_leading_and_trailing_slashes(tmp_path):
+    path = registry(tmp_path, [
+        profile("zone-read", "CLOUDFLARE_TOKEN_ZONE_READ", ["Zone Read"], ["/zones/zone-123/"]),
+    ])
+    router = CloudflareTokenRouter(path, {"CLOUDFLARE_TOKEN_ZONE_READ": "secret"})
+    assert router.resolve({"Zone Read"}, "/zones/zone-123").token == "secret"
+    assert router.resolve({"Zone Read"}, "zones/zone-123/dns_records").token == "secret"
+
+
 def test_disabled_profiles_are_never_selected(tmp_path):
     path = registry(tmp_path, [
         profile("disabled", "CLOUDFLARE_TOKEN_DISABLED", ["Workers Scripts:Edit"], ["account/abc"], enabled=False),
