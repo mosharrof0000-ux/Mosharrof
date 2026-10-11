@@ -73,8 +73,8 @@ jobs:
           {
             echo "## MOSHARROF recovery checkpoint"
             echo
-            echo "- Recovery checkpoint tag: `$CHECKPOINT_TAG`"
-            echo "- Commit: `$CHECKPOINT_SHA`"
-            echo "- Full-history Git bundle artifact: `mosharrof-main-recovery-$CHECKPOINT_SHA` (90-day retention)"
+            echo "- Recovery checkpoint tag: $CHECKPOINT_TAG"
+            echo "- Commit: $CHECKPOINT_SHA"
+            echo "- Full-history Git bundle artifact: mosharrof-main-recovery-$CHECKPOINT_SHA (90-day retention)
             echo "- This workflow does not reset, force-push, or deploy production."
           } >> "$GITHUB_STEP_SUMMARY"
