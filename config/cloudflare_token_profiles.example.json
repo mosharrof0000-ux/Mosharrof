@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "provider": "cloudflare",
+  "purpose": "Metadata-only registry of pre-provisioned Cloudflare tokens. Never put token values here.",
+  "profiles": [
+    {
+      "token_id": "workers-read",
+      "secret_env": "CLOUDFLARE_TOKEN_WORKERS_READ",
+      "permissions": ["Workers Scripts:Read"],
+      "resource_scopes": ["account/REPLACE_WITH_ACCOUNT_ID"],
+      "enabled": false
+    },
+    {
+      "token_id": "workers-deploy",
+      "secret_env": "CLOUDFLARE_TOKEN_WORKERS_DEPLOY",
+      "permissions": ["Workers Scripts:Edit"],
+      "resource_scopes": ["account/REPLACE_WITH_ACCOUNT_ID"],
+      "enabled": false
+    }
+  ]
+}
