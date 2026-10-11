@@ -112,3 +112,14 @@ test("Cloudflare 403 is not retried with a broader token and response never leak
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("prefers narrower resource scope when permissions are equal", () => {
+  const profiles = [
+    { token_id: "a-broad", secret_binding: "CF_BROAD_TOKEN", enabled: true, permissions: new Set(["Zone Read"]), resource_scopes: ["/zones"] },
+    { token_id: "z-narrow", secret_binding: "CF_NARROW_TOKEN", enabled: true, permissions: new Set(["Zone Read"]), resource_scopes: ["/zones/zone-1"] },
+  ];
+  const selected = selectToken(profiles, { CF_BROAD_TOKEN: "broad-secret", CF_NARROW_TOKEN: "narrow-secret" }, ["Zone Read"], "/zones/zone-1");
+  assert.equal(selected.p.token_id, "z-narrow");
+  assert.equal(selected.token, "narrow-secret");
+});
