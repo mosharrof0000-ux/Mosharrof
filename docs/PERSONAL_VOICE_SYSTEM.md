@@ -134,3 +134,33 @@ opt-in.
 - Controls work on mobile, with accessible labels and sensible defaults.
 - Test Bengali punctuation, numerals, English words in Bengali text, verse/poem
   line breaks, and long articles before release.
+
+## Voice delivery controls (separate from voice identity)
+
+The user must be able to choose the *voice identity* and *delivery style* independently.
+Changing delivery settings must not silently replace the selected voice or modify the
+saved voice profile. The first version defines the UI/API contract; actual controls
+must be wired to a provider adapter and tested against provider capabilities.
+
+- **Speed:** adjustable from 0.75× to 1.5×, with a reset-to-normal action.
+- **Emotion intensity:** 0–100%, plus a neutral/off setting. Do not promise emotional
+  control when the selected engine does not support it; degrade gracefully.
+- **Style presets:** natural conversation, article, news/report, storytelling, poetry,
+  lesson/explanation, presentation, and calm/soothing reading.
+- **Fine controls:** pause/paragraph spacing and emphasis where the engine supports them.
+- **Per-style behavior:** article/news should prioritize clarity and steady pacing;
+  poetry should use line-aware pauses and optional expressive emphasis; conversation
+  should sound natural; lesson mode should prioritize clear enunciation and pauses.
+- **User control:** presets are starting points, not locked behaviors. Speed, emotion,
+  and pauses can be adjusted separately, with a preview before saving.
+- **Provider compatibility:** map only supported settings to Gemini or personal voice.
+  Never send unsupported parameters blindly; preserve current Gemini TTS behavior as
+  fallback. If an engine cannot honor emotion/style controls, show that limitation.
+- **Accessibility:** provide a neutral preset, visible speed value, keyboard/screen-reader
+  labels, and a one-tap reset.
+
+Acceptance tests must verify settings validation, preset defaults, independent controls,
+provider capability mapping, graceful fallback, and that changing style does not change
+the selected speaker identity. This is a design contract only until UI and live provider
+integration are implemented.
+
