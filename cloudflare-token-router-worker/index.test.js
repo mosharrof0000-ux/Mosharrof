@@ -201,3 +201,54 @@ test("missing or disabled matching token fails closed without upstream calls", a
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("readiness endpoint rejects empty or invalid configuration without revealing secrets", async () => {
+  const empty = await worker.fetch(new Request("https://router.example/ready"), {});
+  assert.equal(empty.status, 503);
+  assert.deepEqual(await empty.json(), {
+    ok: false,
+    service: "mosharrof-cloudflare-token-router",
+    build: "2026-10-11-token-router-worker-v1",
+    mode: "read-only",
+    access_configured: false,
+    profiles_valid: true,
+    enabled_profiles: 0,
+    usable_profiles: 0,
+  });
+
+  const invalid = await worker.fetch(new Request("https://router.example/ready"), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "{bad json",
+  });
+  assert.equal(invalid.status, 503);
+  assert.equal((await invalid.json()).profiles_valid, false);
+});
+
+test("readiness succeeds only when an enabled profile has its bound secret", async () => {
+  const profile = {
+    token_id: "zone-read-01",
+    secret_binding: "CF_ZONE_READ_TOKEN",
+    permissions: ["Zone Read"],
+    resource_scopes: ["/zones/real-zone-id"],
+    enabled: true,
+  };
+  const missingSecret = await worker.fetch(new Request("https://router.example/ready"), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([profile]),
+  });
+  assert.equal(missingSecret.status, 503);
+  assert.equal((await missingSecret.json()).usable_profiles, 0);
+
+  const ready = await worker.fetch(new Request("https://router.example/ready"), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([profile]),
+    CF_ZONE_READ_TOKEN: "must-not-appear-in-response",
+  });
+  assert.equal(ready.status, 200);
+  const payload = await ready.json();
+  assert.equal(payload.ok, true);
+  assert.equal(payload.enabled_profiles, 1);
+  assert.equal(payload.usable_profiles, 1);
+  assert.equal(JSON.stringify(payload).includes("must-not-appear-in-response"), false);
+});
