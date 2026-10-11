@@ -139,13 +139,31 @@ test("health endpoint is public, read-only, and reports configuration presence w
 
   const configured = await worker.fetch(new Request("https://router.example/health"), {
     ROUTER_ACCESS_TOKEN: "must-not-appear-in-health",
-    CLOUDFLARE_TOKEN_PROFILES: "[]",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "zone-read", secret_binding: "CF_ZONE_READ_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
+    ]),
+    CF_ZONE_READ_TOKEN: "must-not-appear-in-health-either",
   });
   const payload = await configured.json();
   assert.equal(payload.access_configured, true);
   assert.equal(payload.profiles_configured, true);
   assert.equal(JSON.stringify(payload).includes("must-not-appear-in-health"), false);
+  assert.equal(JSON.stringify(payload).includes("must-not-appear-in-health-either"), false);
   assert.equal(configured.headers.get("cache-control"), "no-store");
+
+  for (const env of [
+    { CLOUDFLARE_TOKEN_PROFILES: "[]" },
+    { CLOUDFLARE_TOKEN_PROFILES: "{not-json" },
+    { CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "disabled", secret_binding: "CF_ZONE_READ_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: false },
+    ]), CF_ZONE_READ_TOKEN: "test-secret" },
+    { CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "missing-secret", secret_binding: "CF_ZONE_READ_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
+    ]) },
+  ]) {
+    const response = await worker.fetch(new Request("https://router.example/health"), env);
+    assert.equal((await response.json()).profiles_configured, false);
+  }
 });
 
 test("wrong router credential is denied before parsing or contacting Cloudflare", async () => {
