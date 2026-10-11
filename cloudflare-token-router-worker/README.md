@@ -37,4 +37,10 @@ The profile metadata must match each token's real Cloudflare permissions and res
 
 ## Deployment gate
 
-The Wrangler file is isolated and has no route or account ID. Do not deploy until an owner has configured secrets and verified token scopes, then use a private/non-production test. The current PR is code-only and does not configure account-level secrets or routes. No API token values are needed in chat.
+The Wrangler file is isolated and has no route or account ID. The manually triggered workflow `.github/workflows/cloudflare-token-router-isolated-deploy.yml` deploys only this Worker and does not configure a route, enable `workers.dev`, or change the existing chat/TTS Worker.
+
+Before running it, configure a GitHub Actions environment named `cloudflare-router-staging` with:
+- Environment secret `CLOUDFLARE_API_TOKEN`, scoped only to deploy Workers scripts for the intended account.
+- Environment variable `CLOUDFLARE_ACCOUNT_ID`, set to the intended Cloudflare account ID.
+
+The workflow requires an explicit `yes` input and runs the Worker tests first. It does not configure `ROUTER_ACCESS_TOKEN`, any Cloudflare token profile secrets, or `CLOUDFLARE_TOKEN_PROFILES`; those must be configured separately in the deployed Worker settings before any private test. Until that setup is completed, the router is not ready for callers. No API token values are needed in chat. Do not add a production route or enable `workers.dev` as a shortcut.
