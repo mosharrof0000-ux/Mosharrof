@@ -28,6 +28,9 @@ Do not pre-create every theoretical combination of permissions. Cloudflare token
 
 A token's permissions are fixed; asking the engine for a new permission cannot expand an existing token. If no token covers an operation, the engine should explain which capability is missing and request owner-managed provisioning. Never silently use an all-powerful token.
 
+
+**Read-only safety gate:** the Python Cloudflare API client currently permits `GET` only. `POST`, `PUT`, `PATCH`, and `DELETE` are rejected before token resolution. Write operations must remain disabled until a reviewed operation-to-permission policy and non-production tests are added.
+
 ## Production gate
 
 This code is a guarded API client primitive, not a complete deployment. Before wiring it to any UI route, the repository owner must provide the deployment environment with verified token secrets and an explicit operation-to-permission map. Then run unit/integration tests, review the diff, merge through the protected workflow, deploy, and verify health. No secret value is needed in chat.
