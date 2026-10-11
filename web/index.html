@@ -838,17 +838,18 @@ header.top{
     var preference=getTtsPreference(),genre=detectTtsGenre(t);
     if(preference==="browser"){speakWithBrowser(spokenText,button);return;}
     button.disabled=true;setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");hideV();startVoiceConnectionTimer(button);var serverAudioReady=false,playbackUrl=null;
-    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:spokenText,language_code:"bn-BD",pace:1,provider:preference,genre:genre,voice:getTtsVoice()})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok)throw new Error(data.reason||data.error||("HTTP "+res.status));return data;});}).then(function(data){
+    fetch(TTS_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:spokenText,language_code:"bn-BD",pace:1,provider:preference,genre:genre,voice:getTtsVoice()})}).then(function(res){return res.json().catch(function(){return {};}).then(function(data){if(!res.ok){var error=new Error(data.reason||data.error||("HTTP "+res.status));error.status=res.status;error.serverData=data;throw error;}return data;});}).then(function(data){
       if(!data.audio_data)throw new Error("no_audio");
       var audioMime=data.mime_type||"audio/mpeg";var audioBlob=audioBlobFromBase64(data.audio_data,audioMime);serverAudioReady=true;finishVoiceConnectionTimer(button,audioBlob,audioMime);playbackUrl=URL.createObjectURL(audioBlob);activeAudioUrl=playbackUrl;activeAudio=new Audio(playbackUrl);activeAudioButton=button;
       activeAudio.onended=function(){if(activeAudioButton===button){activeAudio=null;activeAudioButton=null;}releaseActiveAudioUrl(playbackUrl);resetSpeakButton(button);hideV();};
       setSpeakButton(button,"⏸ বন্ধ করুন");button.disabled=false;
       button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeAudio&&activeAudioButton===button){button.classList.add("is-stop-requested");activeAudio.pause();activeAudio=null;activeAudioButton=null;releaseActiveAudioUrl(playbackUrl);hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
       hideV();activeAudio.play().catch(function(){throw new Error("audio_play_failed");});
-    }).catch(function(){
+    }).catch(function(error){
+      var detail=audioServerFailureDetail(error);if(error&&error.serverData&&Array.isArray(error.serverData.attempted)&&error.serverData.attempted.length){detail=error.serverData.attempted.slice(0,3).map(function(item){return String(item.provider||item.model||"provider")+": "+String(item.reason||item.status||"failed");}).join(" | ").slice(0,240);}console.warn("Mosharrof server TTS request failed",{status:error&&error.status||null,detail:detail});
       if(!serverAudioReady)finishVoiceConnectionTimer(button,null,null);
       if(activeAudio&&activeAudioButton===button){try{activeAudio.pause();}catch(e){}activeAudio=null;activeAudioButton=null;}if(playbackUrl)releaseActiveAudioUrl(playbackUrl);
-      button.disabled=false;hideV();speakWithBrowser(spokenText,button);toast("সার্ভার ভয়েস পাওয়া যায়নি · Browser Voice ব্যবহার হচ্ছে");
+      button.disabled=false;hideV();speakWithBrowser(spokenText,button);toast("সার্ভার ভয়েস ব্যর্থ: "+detail+" · Browser Voice ব্যবহার হচ্ছে",6000);
     });
   }
   function parseImageSpec(prompt){
@@ -1117,6 +1118,16 @@ header.top{
     }
     return lines.join("\n");
   }
+  function audioServerFailureDetail(error){
+    var data=error&&error.serverData||{};
+    if(error&&error.name==="TypeError")return "সার্ভারে পৌঁছানো যায়নি (নেটওয়ার্ক/CORS/Worker deployment পরীক্ষা করুন)";
+    if(data.error==="origin_not_allowed")return "Worker এই অ্যাপের Origin অনুমোদন করছে না";
+    if(data.error==="transcription_provider_not_configured")return "Worker-এ Gemini transcription key/configuration নেই";
+    if(Array.isArray(data.attempted)&&data.attempted.length){
+      return data.attempted.slice(0,3).map(function(item){return String(item.model||"model")+": "+String(item.provider_message||item.status||item.error||"failed");}).join(" | ").slice(0,240);
+    }
+    return String(data.error||error&&error.message||"unknown_error").slice(0,160);
+  }
   function transcribeAudioBlob(blob){
     if(!blob||!blob.size){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("কোনো অডিও রেকর্ড হয়নি। আবার চেষ্টা করুন।");return;}
     if(blob.size>12*1024*1024){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিওটি অনেক বড় হয়েছে। ছোট ছোট অংশে রেকর্ড করুন।");return;}
@@ -1127,13 +1138,13 @@ header.top{
       var dataUrl=String(reader.result||""),parts=dataUrl.split(",");
       if(parts.length<2){finishVoiceProcessingTimer(false);voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিও প্রস্তুত করা যায়নি।");return;}
       fetch(AUDIO_TRANSCRIBE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage()})})
-        .then(function(response){return response.json().catch(function(){return {};}).then(function(data){if(!response.ok)throw new Error(data.error||("HTTP "+response.status));return data;});})
+        .then(function(response){return response.json().catch(function(){return {};}).then(function(data){if(!response.ok){var error=new Error(data.error||("HTTP "+response.status));error.status=response.status;error.serverData=data;throw error;}return data;});})
         .then(function(data){
           var transcript=normalizeVoiceTranscript(data.text,getSttLanguage());if(!transcript)throw new Error("empty_transcription");
           input.value=[voiceBaseText,transcript].filter(Boolean).join(voiceBaseText?"\n":"");resize();
           finishVoiceProcessingTimer(true);
         })
-        .catch(function(error){var message=String(error&&error.message||"");finishVoiceProcessingTimer(false);showVoiceMessage(message==="transcription_provider_not_configured"?"Gemini অডিও সংযোগ প্রস্তুত নয়।":message==="audio_too_large"?"অডিওটি ছোট করে আবার চেষ্টা করুন।":"অডিও থেকে লেখা তৈরি হয়নি। সংযোগ বা অডিও ফরম্যাট পরীক্ষা করে আবার চেষ্টা করুন।");})
+        .catch(function(error){var message=String(error&&error.message||"");var detail=audioServerFailureDetail(error);console.warn("Mosharrof transcription request failed",{status:error&&error.status||null,detail:detail});finishVoiceProcessingTimer(false);showVoiceMessage(message==="audio_too_large"?"অডিওটি ছোট করে আবার চেষ্টা করুন।":"অডিও সার্ভার সমস্যা: "+detail);})
         .finally(function(){voiceProcessing=false;releaseVoiceStream();setVoiceButtonState(false);});
     };
     reader.readAsDataURL(blob);

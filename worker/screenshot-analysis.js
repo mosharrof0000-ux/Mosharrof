@@ -1,4 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
+const WORKER_BUILD_ID="2026-10-11-server-audio-diagnostics-v1";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -430,7 +431,7 @@ async function transcribeAudio(request,env){
   for(const model of [...new Set(preferred)]){
     try{
       const r=await callGemini(env,model,{contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:audio}}]}],generationConfig:{temperature:0.1}});
-      attempted.push({model,status:r.upstream.status});
+      attempted.push({model,status:r.upstream.status,provider_message:r.data?.error?.message||null});
       if(!r.upstream.ok){if([400,404,429,500,502,503].includes(r.upstream.status))continue;return reply({error:"audio_transcription_failed",provider_status:r.upstream.status},502);}
       const transcript=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
       if(transcript)return reply({ok:true,model,text:transcript},200);
@@ -464,7 +465,7 @@ async function chat(request,env){
 async function handleRequest(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!env.GEMINI_API_KEY,azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!env.GEMINI_API_KEY,azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);
