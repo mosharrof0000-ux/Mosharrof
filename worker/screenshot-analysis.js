@@ -235,7 +235,7 @@ async function synthesizeWithProvider(provider,chunks,body,env){
     const result=provider==="edge"
       ? await generateWithEdge(chunk,body,env)
       : provider==="gemini"
-        ? await generateWithGeminiTTS(chunk,body,env)
+        ? await generateWithGeminiTTSWithFailover(chunk,body,env)
         : provider==="azure"
           ? await generateWithAzure(chunk,body,env)
           : provider==="sarvam"
