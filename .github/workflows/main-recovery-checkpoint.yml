@@ -40,6 +40,8 @@ jobs:
             target="$(git rev-parse origin/main)"
           fi
           git cat-file -e "${target}^{commit}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           tag="recovery-main-$(date -u +%Y%m%dT%H%M%SZ)-${target:0:12}-${RUN_ID}"
           git tag -a "$tag" "$target" -m "MOSHARROF main recovery checkpoint for $target"
           git push origin "refs/tags/$tag"
