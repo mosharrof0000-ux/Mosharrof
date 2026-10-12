@@ -131,19 +131,28 @@ test("health endpoint is public, read-only, and reports configuration presence w
   assert.deepEqual(await unconfigured.json(), {
     ok: true,
     service: "mosharrof-cloudflare-token-router",
-    build: "2026-10-11-token-router-worker-v1",
+    build: "2026-10-12-token-router-worker-v2",
     mode: "read-only",
     access_configured: false,
     profiles_configured: false,
+    profile_config_valid: false,
+    enabled_profiles_count: 0,
+    enabled_profiles_with_secret_count: 0,
   });
 
   const configured = await worker.fetch(new Request("https://router.example/health"), {
     ROUTER_ACCESS_TOKEN: "must-not-appear-in-health",
-    CLOUDFLARE_TOKEN_PROFILES: "[]",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "zone-read", secret_binding: "CF_ZONE_READ_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
+    ]),
+    CF_ZONE_READ_TOKEN: "must-not-appear-in-health-either",
   });
   const payload = await configured.json();
   assert.equal(payload.access_configured, true);
   assert.equal(payload.profiles_configured, true);
+  assert.equal(payload.profile_config_valid, true);
+  assert.equal(payload.enabled_profiles_count, 1);
+  assert.equal(payload.enabled_profiles_with_secret_count, 1);
   assert.equal(JSON.stringify(payload).includes("must-not-appear-in-health"), false);
   assert.equal(configured.headers.get("cache-control"), "no-store");
 });
@@ -200,4 +209,77 @@ test("missing or disabled matching token fails closed without upstream calls", a
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+
+test("health remains secret-free and reports malformed and empty profile configuration accurately", async () => {
+  const malformed = await worker.fetch(new Request("https://router.example/health"), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "{not-json",
+  });
+  assert.equal(malformed.status, 200);
+  const malformedPayload = await malformed.json();
+  assert.equal(malformedPayload.profile_config_valid, false);
+  assert.equal(malformedPayload.enabled_profiles_count, 0);
+  assert.equal(JSON.stringify(malformedPayload).includes("private-router-key"), false);
+
+  const empty = await worker.fetch(new Request("https://router.example/health"), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "[]",
+  });
+  const emptyPayload = await empty.json();
+  assert.equal(emptyPayload.profile_config_valid, true);
+  assert.equal(emptyPayload.enabled_profiles_count, 0);
+});
+
+test("readiness endpoint rejects empty or invalid configuration without revealing secrets", async () => {
+  const empty = await worker.fetch(new Request("https://router.example/ready"), {});
+  assert.equal(empty.status, 503);
+  assert.deepEqual(await empty.json(), {
+    ok: false,
+    service: "mosharrof-cloudflare-token-router",
+    build: "2026-10-12-token-router-worker-v2",
+    mode: "read-only",
+    access_configured: false,
+    profiles_valid: true,
+    enabled_profiles: 0,
+    usable_profiles: 0,
+  });
+
+  const invalid = await worker.fetch(new Request("https://router.example/ready"), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "{bad json",
+  });
+  assert.equal(invalid.status, 503);
+  const payload = await invalid.json();
+  assert.equal(payload.profiles_valid, false);
+  assert.equal(JSON.stringify(payload).includes("private-router-key"), false);
+});
+
+test("readiness succeeds only when an enabled profile has its bound secret", async () => {
+  const profile = {
+    token_id: "zone-read-01",
+    secret_binding: "CF_ZONE_READ_TOKEN",
+    permissions: ["Zone Read"],
+    resource_scopes: ["/zones/real-zone-id"],
+    enabled: true,
+  };
+  const missingSecret = await worker.fetch(new Request("https://router.example/ready"), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([profile]),
+  });
+  assert.equal(missingSecret.status, 503);
+  assert.equal((await missingSecret.json()).usable_profiles, 0);
+
+  const ready = await worker.fetch(new Request("https://router.example/ready"), {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([profile]),
+    CF_ZONE_READ_TOKEN: "private-cloudflare-token",
+  });
+  assert.equal(ready.status, 200);
+  const payload = await ready.json();
+  assert.equal(payload.ok, true);
+  assert.equal(payload.enabled_profiles, 1);
+  assert.equal(payload.usable_profiles, 1);
+  assert.equal(JSON.stringify(payload).includes("private-cloudflare-token"), false);
 });
