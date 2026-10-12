@@ -75,14 +75,39 @@ def request_model(model_name):
         data=payload,
         headers={"Content-Type": "application/json", "x-goog-api-key": key},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=180) as response:
-            return json.load(response)
-    except urllib.error.HTTPError as exc:
-        if exc.code != 404:
-            detail = exc.read().decode("utf-8", errors="replace")[:500]
-            raise SystemExit(f"Gemini request failed (HTTP {exc.code}): {detail}")
-        return None
+    # Retry temporary capacity/rate-limit failures, then allow supported-model fallback.
+    transient_statuses = {408, 429, 500, 502, 503, 504}
+    max_attempts = 5
+    for attempt in range(max_attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=180) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                return None
+            if exc.code not in transient_statuses:
+                detail = exc.read().decode("utf-8", errors="replace")[:500]
+                raise SystemExit(f"Gemini request failed (HTTP {exc.code}): {detail}")
+            if attempt == max_attempts - 1:
+                print(f"Gemini model {model_name} remained unavailable after {max_attempts} attempts (HTTP {exc.code}); trying a supported fallback model.")
+                return None
+            retry_after = exc.headers.get("Retry-After")
+            try:
+                wait_seconds = min(30, max(1, int(retry_after))) if retry_after else min(20, 2 ** attempt)
+            except (TypeError, ValueError):
+                wait_seconds = min(20, 2 ** attempt)
+            print(f"Temporary Gemini HTTP {exc.code}; retry {attempt + 2}/{max_attempts} in {wait_seconds}s.")
+            import time
+            time.sleep(wait_seconds)
+        except (urllib.error.URLError, TimeoutError) as exc:
+            if attempt == max_attempts - 1:
+                print(f"Gemini network request remained unavailable after {max_attempts} attempts: {exc}; trying a supported fallback model.")
+                return None
+            wait_seconds = min(20, 2 ** attempt)
+            print(f"Temporary Gemini network error; retry {attempt + 2}/{max_attempts} in {wait_seconds}s.")
+            import time
+            time.sleep(wait_seconds)
+    return None
 
 data = request_model(model)
 if data is None:
