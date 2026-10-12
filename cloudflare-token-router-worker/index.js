@@ -1,5 +1,5 @@
 const API_BASE = "https://api.cloudflare.com/client/v4";
-const BUILD_ID = "2026-10-11-token-router-worker-v1";
+const BUILD_ID = "2026-10-12-token-router-worker-v2";
 const MAX_BODY_BYTES = 4096;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
 
@@ -148,8 +148,33 @@ async function cloudflareRequest(method, path, token) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (request.method === "GET" && url.pathname === "/health") {
-      return json({ ok: true, service: "mosharrof-cloudflare-token-router", build: BUILD_ID, mode: "read-only", access_configured: !!env.ROUTER_ACCESS_TOKEN, profiles_configured: !!env.CLOUDFLARE_TOKEN_PROFILES });
+    if (request.method === "GET" && (url.pathname === "/health" || url.pathname === "/ready")) {
+      const accessConfigured = typeof env.ROUTER_ACCESS_TOKEN === "string" && env.ROUTER_ACCESS_TOKEN.trim().length > 0;
+      let profiles = [];
+      let profileConfigValid = false;
+      try {
+        profiles = parseProfiles(env);
+        profileConfigValid = typeof env.CLOUDFLARE_TOKEN_PROFILES === "string" && env.CLOUDFLARE_TOKEN_PROFILES.trim().length > 0;
+      } catch {
+        profileConfigValid = false;
+      }
+      const enabledProfiles = profiles.filter((profile) => profile.enabled);
+      const enabledProfilesWithSecret = enabledProfiles.filter((profile) =>
+        typeof env[profile.secret_binding] === "string" && env[profile.secret_binding].trim().length > 0
+      );
+      const ready = accessConfigured && profileConfigValid && enabledProfilesWithSecret.length > 0;
+      const payload = {
+        ok: url.pathname === "/health" ? true : ready,
+        service: "mosharrof-cloudflare-token-router",
+        build: BUILD_ID,
+        mode: "read-only",
+        access_configured: accessConfigured,
+        profiles_configured: !!env.CLOUDFLARE_TOKEN_PROFILES,
+        profile_config_valid: profileConfigValid,
+        enabled_profiles_count: enabledProfiles.length,
+        enabled_profiles_with_secret_count: enabledProfilesWithSecret.length,
+      };
+      return json(payload, url.pathname === "/ready" && !ready ? 503 : 200);
     }
     if (request.method !== "POST" || url.pathname !== "/v1/operation") return json({ error: "NOT_FOUND" }, 404);
     if (!(await authorized(request, env))) return json({ error: "UNAUTHORIZED" }, 401);
