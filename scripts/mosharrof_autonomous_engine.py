@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Guarded Mosharrof autonomous implementation engine."""
-import json, os, re, subprocess, urllib.request, urllib.error
+import json, os, re, subprocess, time, urllib.request, urllib.error
 from pathlib import Path
 
 repo = os.environ["REPOSITORY"]
@@ -65,30 +65,52 @@ Current snapshot:
 """
 
 base = "https://generativelanguage.googleapis.com/v1beta"
-def request_model(model_name):
+TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
+
+def request_model(model_name, attempts=4):
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"},
     }).encode()
-    req = urllib.request.Request(
-        f"{base}/models/{model_name}:generateContent",
-        data=payload,
-        headers={"Content-Type": "application/json", "x-goog-api-key": key},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=180) as response:
-            return json.load(response)
-    except urllib.error.HTTPError as exc:
-        if exc.code != 404:
+    last_error = None
+    for attempt in range(attempts):
+        req = urllib.request.Request(
+            f"{base}/models/{model_name}:generateContent",
+            data=payload,
+            headers={"Content-Type": "application/json", "x-goog-api-key": key},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=180) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:500]
-            raise SystemExit(f"Gemini request failed (HTTP {exc.code}): {detail}")
-        return None
+            if exc.code == 404:
+                return None
+            last_error = f"HTTP {exc.code}: {detail}"
+            if exc.code not in TRANSIENT_HTTP_CODES:
+                raise RuntimeError(f"Gemini request failed ({last_error})") from exc
+        except (urllib.error.URLError, TimeoutError) as exc:
+            last_error = f"{type(exc).__name__}: {exc}"
+        if attempt < attempts - 1:
+            delay = min(2 ** (attempt + 1), 8)
+            print(f"Gemini temporarily unavailable for {model_name}; retry {attempt + 2}/{attempts} in {delay}s.")
+            time.sleep(delay)
+    raise RuntimeError(f"Gemini model {model_name} remained unavailable after {attempts} attempts ({last_error}).")
 
-data = request_model(model)
+last_error = None
+try:
+    data = request_model(model)
+except RuntimeError as exc:
+    data = None
+    last_error = str(exc)
+
 if data is None:
     req = urllib.request.Request(f"{base}/models", headers={"x-goog-api-key": key})
-    with urllib.request.urlopen(req, timeout=30) as response:
-        catalog = json.load(response)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            catalog = json.load(response)
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as exc:
+        raise SystemExit(f"Unable to list Gemini fallback models: {type(exc).__name__}: {exc}") from exc
     available = [
         item.get("name", "").removeprefix("models/")
         for item in catalog.get("models", [])
@@ -98,22 +120,21 @@ if data is None:
         (name for name in available if name and "flash" in name.lower() and name != model),
         key=lambda name: (("preview" in name.lower()), name),
     )
-    if model in available:
-        candidates.insert(0, model)
     if not candidates:
-        raise SystemExit("Gemini API key has no listed model supporting generateContent.")
-    last_error = None
+        detail = f" Preferred model error: {last_error}" if last_error else ""
+        raise SystemExit("No alternative Gemini Flash model supporting generateContent is available." + detail)
     for candidate in candidates:
         try:
             data = request_model(candidate)
             if data is not None:
                 model = candidate
-                print(f"Gemini model selected from API-supported model list: {model}")
+                print(f"Gemini fallback model selected from API-supported model list: {model}")
                 break
-        except SystemExit as exc:
+        except RuntimeError as exc:
             last_error = str(exc)
+            print(f"Gemini fallback {candidate} unavailable; trying the next supported model.")
     if data is None:
-        raise SystemExit(last_error or "No listed Gemini model accepted the request.")
+        raise SystemExit(last_error or "No API-listed Gemini Flash model accepted the request.")
 
 try:
     proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
