@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Guarded Mosharrof autonomous implementation engine."""
-import json, os, re, subprocess, urllib.request, urllib.error
+import json, os, re, subprocess, time, urllib.request, urllib.error
 from pathlib import Path
 
 repo = os.environ["REPOSITORY"]
@@ -70,19 +70,50 @@ def request_model(model_name):
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"},
     }).encode()
-    req = urllib.request.Request(
-        f"{base}/models/{model_name}:generateContent",
-        data=payload,
-        headers={"Content-Type": "application/json", "x-goog-api-key": key},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=180) as response:
-            return json.load(response)
-    except urllib.error.HTTPError as exc:
-        if exc.code != 404:
+    transient_codes = {429, 500, 502, 503, 504}
+    for attempt in range(4):
+        req = urllib.request.Request(
+            f"{base}/models/{model_name}:generateContent",
+            data=payload,
+            headers={"Content-Type": "application/json", "x-goog-api-key": key},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=180) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:500]
+            if exc.code == 404:
+                return None
+            if exc.code in transient_codes:
+                if attempt < 3:
+                    delay = 2 ** (attempt + 1)
+                    print(
+                        f"Gemini HTTP {exc.code} for {model_name}; "
+                        f"retry {attempt + 1}/3 in {delay}s."
+                    )
+                    time.sleep(delay)
+                    continue
+                print(
+                    f"Gemini model {model_name} remains temporarily unavailable "
+                    f"after retries; checking supported fallback models."
+                )
+                return None
             raise SystemExit(f"Gemini request failed (HTTP {exc.code}): {detail}")
-        return None
+        except urllib.error.URLError as exc:
+            if attempt < 3:
+                delay = 2 ** (attempt + 1)
+                print(
+                    f"Gemini network error for {model_name}; "
+                    f"retry {attempt + 1}/3 in {delay}s."
+                )
+                time.sleep(delay)
+                continue
+            print(
+                f"Gemini network error persisted for {model_name}; "
+                f"checking supported fallback models."
+            )
+            return None
+    return None
 
 data = request_model(model)
 if data is None:
@@ -98,8 +129,10 @@ if data is None:
         (name for name in available if name and "flash" in name.lower() and name != model),
         key=lambda name: (("preview" in name.lower()), name),
     )
-    if model in available:
-        candidates.insert(0, model)
+    # The configured model already failed above; prefer a different supported
+    # Flash model instead of immediately repeating the same failing endpoint.
+    if not candidates and model in available:
+        candidates.append(model)
     if not candidates:
         raise SystemExit("Gemini API key has no listed model supporting generateContent.")
     last_error = None
