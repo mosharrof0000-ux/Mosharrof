@@ -21,8 +21,26 @@ jobs:
   propose:
     name: Isolated task + tests + visual QA + PR
     runs-on: ubuntu-latest
+    outputs:
+      app_configured: ${{ steps.preflight.outputs.configured }}
     steps:
+      - name: Check autonomous credentials without exposing values
+        id: preflight
+        shell: bash
+        env:
+          APP_CLIENT_ID: ${{ vars.MOSHARROF_APP_CLIENT_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.MOSHARROF_APP_PRIVATE_KEY }}
+        run: |
+          if [[ -n "${APP_CLIENT_ID:-}" && -n "${APP_PRIVATE_KEY:-}" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "GitHub App credentials are configured; isolated agent work may proceed." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "SAFE PAUSE: autonomous PR creation was skipped because MOSHARROF_APP_CLIENT_ID and/or MOSHARROF_APP_PRIVATE_KEY is not configured. No credentials were printed and no repository changes were made." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Create short-lived GitHub App token
+        if: steps.preflight.outputs.configured == 'true'
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
@@ -35,6 +53,7 @@ jobs:
           permission-checks: read
 
       - name: Checkout main
+        if: steps.preflight.outputs.configured == 'true'
         uses: actions/checkout@v6
         with:
           ref: main
@@ -43,6 +62,7 @@ jobs:
           persist-credentials: true
 
       - name: Install test and browser dependencies
+        if: steps.preflight.outputs.configured == 'true'
         run: |
           python3 -m pip install -r requirements.txt
           npm init -y
@@ -50,6 +70,7 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Select request
+        if: steps.preflight.outputs.configured == 'true'
         id: request
         env:
           INPUT_REQUEST: ${{ inputs.request }}
@@ -61,6 +82,7 @@ jobs:
           fi
 
       - name: Run guarded autonomous implementation
+        if: steps.preflight.outputs.configured == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -81,6 +103,7 @@ jobs:
   boundary:
     name: Protected promotion boundary
     needs: propose
+    if: needs.propose.outputs.app_configured == 'true'
     runs-on: ubuntu-latest
     steps:
       - run: |
