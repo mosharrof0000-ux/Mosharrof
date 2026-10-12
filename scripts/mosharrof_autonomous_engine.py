@@ -22,7 +22,7 @@ if not key:
     raise SystemExit("GEMINI_API_KEY is required.")
 
 blocked = re.compile(
-    r"(rm\\s+-rf|git\\s+push\\s+--force|git\\s+reset\\s+--hard|gh\\s+repo\\s+delete|delete[-_ ]repository|drop\\s+database)",
+    r"(rm\s+-rf|git\s+push\s+--force|git\s+reset\s+--hard|gh\s+repo\s+delete|delete[-_ ]repository|drop\s+database)",
     re.I,
 )
 allowed = ("web/", "tests/", "scripts/", "docs/", "README.md", "requirements.txt")
@@ -35,11 +35,11 @@ for root in ("web", "tests", "scripts", "docs"):
         continue
     for f in sorted(p.rglob("*")):
         if f.is_file() and f.stat().st_size < 200000 and f.suffix.lower() in suffixes:
-            snapshot.append(f"FILE: {f}\\n" + f.read_text(encoding="utf-8", errors="ignore"))
+            snapshot.append(f"FILE: {f}\n" + f.read_text(encoding="utf-8", errors="ignore"))
 for name in ("README.md", "requirements.txt"):
     p = Path(name)
     if p.exists():
-        snapshot.append(f"FILE: {p}\\n" + p.read_text(encoding="utf-8", errors="ignore"))
+        snapshot.append(f"FILE: {p}\n" + p.read_text(encoding="utf-8", errors="ignore"))
 
 prompt = f"""You are the guarded Mosharrof software engineer.
 
