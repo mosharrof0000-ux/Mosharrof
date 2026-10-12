@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Guarded Mosharrof autonomous implementation engine."""
-import json, os, re, subprocess, urllib.request, urllib.error
+import json, os, re, subprocess, time, urllib.request, urllib.error
 from pathlib import Path
 
 repo = os.environ["REPOSITORY"]
@@ -22,7 +22,7 @@ if not key:
     raise SystemExit("GEMINI_API_KEY is required.")
 
 blocked = re.compile(
-    r"(rm\s+-rf|git\s+push\s+--force|git\s+reset\s+--hard|gh\s+repo\s+delete|delete[-_ ]repository|drop\s+database)",
+    r"(rm\\s+-rf|git\\s+push\\s+--force|git\\s+reset\\s+--hard|gh\\s+repo\\s+delete|delete[-_ ]repository|drop\\s+database)",
     re.I,
 )
 allowed = ("web/", "tests/", "scripts/", "docs/", "README.md", "requirements.txt")
@@ -35,11 +35,11 @@ for root in ("web", "tests", "scripts", "docs"):
         continue
     for f in sorted(p.rglob("*")):
         if f.is_file() and f.stat().st_size < 200000 and f.suffix.lower() in suffixes:
-            snapshot.append(f"FILE: {f}\n" + f.read_text(encoding="utf-8", errors="ignore"))
+            snapshot.append(f"FILE: {f}\\n" + f.read_text(encoding="utf-8", errors="ignore"))
 for name in ("README.md", "requirements.txt"):
     p = Path(name)
     if p.exists():
-        snapshot.append(f"FILE: {p}\n" + p.read_text(encoding="utf-8", errors="ignore"))
+        snapshot.append(f"FILE: {p}\\n" + p.read_text(encoding="utf-8", errors="ignore"))
 
 prompt = f"""You are the guarded Mosharrof software engineer.
 
@@ -65,6 +65,10 @@ Current snapshot:
 """
 
 base = "https://generativelanguage.googleapis.com/v1beta"
+TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
+MAX_TRANSIENT_RETRIES = 3
+
+
 def request_model(model_name):
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
@@ -75,14 +79,37 @@ def request_model(model_name):
         data=payload,
         headers={"Content-Type": "application/json", "x-goog-api-key": key},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=180) as response:
-            return json.load(response)
-    except urllib.error.HTTPError as exc:
-        if exc.code != 404:
+    for attempt in range(MAX_TRANSIENT_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=180) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:500]
+            if exc.code == 404:
+                return None
+            if exc.code in TRANSIENT_HTTP_CODES and attempt < MAX_TRANSIENT_RETRIES:
+                delay = min(30, 5 * (2 ** attempt))
+                print(
+                    f"Gemini temporarily unavailable (HTTP {exc.code}); "
+                    f"retry {attempt + 1}/{MAX_TRANSIENT_RETRIES} in {delay}s.",
+                    flush=True,
+                )
+                time.sleep(delay)
+                continue
             raise SystemExit(f"Gemini request failed (HTTP {exc.code}): {detail}")
-        return None
+        except (urllib.error.URLError, TimeoutError) as exc:
+            if attempt < MAX_TRANSIENT_RETRIES:
+                delay = min(30, 5 * (2 ** attempt))
+                print(
+                    f"Gemini network/timeout error; retry {attempt + 1}/"
+                    f"{MAX_TRANSIENT_RETRIES} in {delay}s.",
+                    flush=True,
+                )
+                time.sleep(delay)
+                continue
+            raise SystemExit(f"Gemini request failed after retries: {exc}")
+    return None
+
 
 data = request_model(model)
 if data is None:
