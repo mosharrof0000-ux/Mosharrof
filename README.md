@@ -56,3 +56,14 @@ The GitHub Pages deployment workflow is `.github/workflows/deploy-pages.yml`.
 **Live URL:** https://mosharrof0000-ux.github.io/Mosharrof/
 
 Deployment is test-gated: the Pages deployment runs only after the Python test suite succeeds on `main`.
+
+### Autonomous agent activation
+
+The scheduled/manual autonomous pipeline uses a short-lived GitHub App token to create an isolated branch and pull request. To activate that write-capable path, configure these repository-level Actions values (never commit them):
+
+- **Actions variable** `MOSHARROF_APP_CLIENT_ID`: the Client ID of a GitHub App installed on `mosharrof0000-ux/Mosharrof`.
+- **Actions secret** `MOSHARROF_APP_PRIVATE_KEY`: the matching App private key PEM.
+- The installed App must have repository access to `Mosharrof` and only the permissions needed for the workflow: Contents (write), Pull requests (write), and Checks (read).
+- `GEMINI_API_KEY` must remain an Actions secret for model calls.
+
+If the App variable or secret is missing, the workflow safely pauses and records the reason in its Actions summary; it does not print secret values, write files, or claim a PR was created. If token creation reports “Integration not found,” confirm that the Client ID/private key belong to the same App and that the App is installed on this repository. Do not paste private keys or tokens into chat or commit them.
