@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Guarded Mosharrof autonomous implementation engine."""
-import json, os, re, subprocess, urllib.request, urllib.error
+import json, os, re, subprocess, time, urllib.request, urllib.error
 from pathlib import Path
 
 repo = os.environ["REPOSITORY"]
@@ -65,7 +65,12 @@ Current snapshot:
 """
 
 base = "https://generativelanguage.googleapis.com/v1beta"
-def request_model(model_name):
+TRANSIENT_HTTP_CODES = {408, 429, 500, 502, 503, 504}
+
+class GeminiTransientError(Exception):
+    pass
+
+def request_model(model_name, attempts=3):
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"},
@@ -75,45 +80,52 @@ def request_model(model_name):
         data=payload,
         headers={"Content-Type": "application/json", "x-goog-api-key": key},
     )
-    # Retry temporary capacity/rate-limit failures, then allow supported-model fallback.
-    transient_statuses = {408, 429, 500, 502, 503, 504}
-    max_attempts = 5
-    for attempt in range(max_attempts):
+    for attempt in range(attempts):
         try:
             with urllib.request.urlopen(req, timeout=180) as response:
                 return json.load(response)
         except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")[:500]
             if exc.code == 404:
                 return None
-            if exc.code not in transient_statuses:
-                detail = exc.read().decode("utf-8", errors="replace")[:500]
+            if exc.code not in TRANSIENT_HTTP_CODES:
                 raise SystemExit(f"Gemini request failed (HTTP {exc.code}): {detail}")
-            if attempt == max_attempts - 1:
-                print(f"Gemini model {model_name} remained unavailable after {max_attempts} attempts (HTTP {exc.code}); trying a supported fallback model.")
-                return None
-            retry_after = exc.headers.get("Retry-After")
-            try:
-                wait_seconds = min(30, max(1, int(retry_after))) if retry_after else min(20, 2 ** attempt)
-            except (TypeError, ValueError):
-                wait_seconds = min(20, 2 ** attempt)
-            print(f"Temporary Gemini HTTP {exc.code}; retry {attempt + 2}/{max_attempts} in {wait_seconds}s.")
-            import time
-            time.sleep(wait_seconds)
+            if attempt + 1 < attempts:
+                retry_after = exc.headers.get("Retry-After", "")
+                try:
+                    wait_seconds = min(60, max(1, int(retry_after)))
+                except (TypeError, ValueError):
+                    wait_seconds = min(30, 2 ** attempt * 3)
+                print(f"Gemini {model_name} returned transient HTTP {exc.code}; retry {attempt + 2}/{attempts} in {wait_seconds}s.")
+                time.sleep(wait_seconds)
+                continue
+            raise GeminiTransientError(f"Gemini model {model_name} remained unavailable (HTTP {exc.code}) after {attempts} attempts: {detail}")
         except (urllib.error.URLError, TimeoutError) as exc:
-            if attempt == max_attempts - 1:
-                print(f"Gemini network request remained unavailable after {max_attempts} attempts: {exc}; trying a supported fallback model.")
-                return None
-            wait_seconds = min(20, 2 ** attempt)
-            print(f"Temporary Gemini network error; retry {attempt + 2}/{max_attempts} in {wait_seconds}s.")
-            import time
-            time.sleep(wait_seconds)
-    return None
+            if attempt + 1 < attempts:
+                wait_seconds = min(30, 3 * (2 ** attempt))
+                print(f"Gemini {model_name} network error; retry {attempt + 2}/{attempts} in {wait_seconds}s.")
+                time.sleep(wait_seconds)
+                continue
+            raise GeminiTransientError(f"Gemini model {model_name} network failure after {attempts} attempts: {exc}")
+    raise GeminiTransientError(f"Gemini model {model_name} failed after {attempts} attempts.")
 
-data = request_model(model)
+transient_failure = None
+try:
+    data = request_model(model)
+except GeminiTransientError as exc:
+    transient_failure = str(exc)
+    print(f"{transient_failure}; searching for an alternate supported Flash model.")
+
 if data is None:
     req = urllib.request.Request(f"{base}/models", headers={"x-goog-api-key": key})
-    with urllib.request.urlopen(req, timeout=30) as response:
-        catalog = json.load(response)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            catalog = json.load(response)
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")[:500]
+        raise SystemExit(f"Gemini model catalog failed (HTTP {exc.code}): {detail}")
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise SystemExit(f"Gemini model catalog network failure: {exc}")
     available = [
         item.get("name", "").removeprefix("models/")
         for item in catalog.get("models", [])
@@ -123,11 +135,11 @@ if data is None:
         (name for name in available if name and "flash" in name.lower() and name != model),
         key=lambda name: (("preview" in name.lower()), name),
     )
-    if model in available:
+    if model in available and transient_failure is None:
         candidates.insert(0, model)
     if not candidates:
-        raise SystemExit("Gemini API key has no listed model supporting generateContent.")
-    last_error = None
+        raise SystemExit(transient_failure or "Gemini API key has no listed alternate Flash model supporting generateContent.")
+    last_error = transient_failure
     for candidate in candidates:
         try:
             data = request_model(candidate)
@@ -135,8 +147,9 @@ if data is None:
                 model = candidate
                 print(f"Gemini model selected from API-supported model list: {model}")
                 break
-        except SystemExit as exc:
+        except (SystemExit, GeminiTransientError) as exc:
             last_error = str(exc)
+            print(f"Alternate Gemini model {candidate} unavailable; trying another supported model.")
     if data is None:
         raise SystemExit(last_error or "No listed Gemini model accepted the request.")
 
