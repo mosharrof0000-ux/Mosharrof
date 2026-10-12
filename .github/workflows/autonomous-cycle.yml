@@ -62,6 +62,7 @@ jobs:
       - name: Autonomous planner and patcher
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
         run: |
           test -n "$GEMINI_API_KEY"
           python3 .github/scripts/mosharrof_agent.py /tmp/task.txt
