@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Guarded autonomous patcher with Gemini model discovery and safe fallback."""
-import json, os, subprocess, pathlib, requests
+import json, os, sys, subprocess, pathlib, requests
 
 task=pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").strip()
 if not task:
