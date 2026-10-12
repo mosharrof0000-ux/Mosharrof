@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
 """Guarded Mosharrof autonomous implementation engine."""
-import json, os, re, subprocess, urllib.request
+import json, os, re, subprocess, urllib.request, urllib.error
 from pathlib import Path
 
 repo = os.environ["REPOSITORY"]
 request_file = Path(os.environ.get("REQUEST_FILE", "/tmp/request.txt"))
-request = request_file.read_text(encoding="utf-8").strip()
+if request_file.is_file():
+    request = request_file.read_text(encoding="utf-8").strip()
+else:
+    request = os.environ.get("REQUEST", "").strip()
+if not request:
+    request = "Conservative scheduled Mosharrof audit: identify a clear, safe, testable improvement; if none is justified, make no change."
 
-# Verify that every registered entity is awake before any autonomous reasoning.\nsubprocess.run(["python3", "scripts/entity_awareness.py"], check=True)
+# Verify registered entities before any autonomous reasoning.
+subprocess.run(["python3", "scripts/entity_awareness.py"], check=True)
 key = os.environ.get("GEMINI_API_KEY", "").strip()
 model = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash").strip()
 run_id = os.environ.get("GITHUB_RUN_ID", "local")
 
-if not request:
-    raise SystemExit("No autonomous request supplied.")
 if not key:
     raise SystemExit("GEMINI_API_KEY is required.")
 
 blocked = re.compile(
-    r"(rm\s+-rf|git\s+push\s+--force|git\s+reset\s+--hard|gh\s+repo\s+delete|delete[-_ ]repository|drop\s+database)",
+    r"(rm\\s+-rf|git\\s+push\\s+--force|git\\s+reset\\s+--hard|gh\\s+repo\\s+delete|delete[-_ ]repository|drop\\s+database)",
     re.I,
 )
 allowed = ("web/", "tests/", "scripts/", "docs/", "README.md", "requirements.txt")
@@ -31,11 +35,11 @@ for root in ("web", "tests", "scripts", "docs"):
         continue
     for f in sorted(p.rglob("*")):
         if f.is_file() and f.stat().st_size < 200000 and f.suffix.lower() in suffixes:
-            snapshot.append(f"FILE: {f}\n" + f.read_text(encoding="utf-8", errors="ignore"))
+            snapshot.append(f"FILE: {f}\\n" + f.read_text(encoding="utf-8", errors="ignore"))
 for name in ("README.md", "requirements.txt"):
     p = Path(name)
     if p.exists():
-        snapshot.append(f"FILE: {p}\n" + p.read_text(encoding="utf-8", errors="ignore"))
+        snapshot.append(f"FILE: {p}\\n" + p.read_text(encoding="utf-8", errors="ignore"))
 
 prompt = f"""You are the guarded Mosharrof software engineer.
 
@@ -60,24 +64,64 @@ Current snapshot:
 {chr(10).join(snapshot)}
 """
 
-payload = json.dumps({
-    "contents": [{"parts": [{"text": prompt}]}],
-    "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"},
-}).encode()
+base = "https://generativelanguage.googleapis.com/v1beta"
+def request_model(model_name):
+    payload = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"},
+    }).encode()
+    req = urllib.request.Request(
+        f"{base}/models/{model_name}:generateContent",
+        data=payload,
+        headers={"Content-Type": "application/json", "x-goog-api-key": key},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=180) as response:
+            return json.load(response)
+    except urllib.error.HTTPError as exc:
+        if exc.code != 404:
+            detail = exc.read().decode("utf-8", errors="replace")[:500]
+            raise SystemExit(f"Gemini request failed (HTTP {exc.code}): {detail}")
+        return None
 
-req = urllib.request.Request(
-    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-    data=payload,
-    headers={"Content-Type": "application/json", "x-goog-api-key": key},
-)
-with urllib.request.urlopen(req, timeout=180) as response:
-    data = json.load(response)
+data = request_model(model)
+if data is None:
+    req = urllib.request.Request(f"{base}/models", headers={"x-goog-api-key": key})
+    with urllib.request.urlopen(req, timeout=30) as response:
+        catalog = json.load(response)
+    available = [
+        item.get("name", "").removeprefix("models/")
+        for item in catalog.get("models", [])
+        if "generateContent" in item.get("supportedGenerationMethods", [])
+    ]
+    candidates = sorted(
+        (name for name in available if name and "flash" in name.lower() and name != model),
+        key=lambda name: (("preview" in name.lower()), name),
+    )
+    if model in available:
+        candidates.insert(0, model)
+    if not candidates:
+        raise SystemExit("Gemini API key has no listed model supporting generateContent.")
+    last_error = None
+    for candidate in candidates:
+        try:
+            data = request_model(candidate)
+            if data is not None:
+                model = candidate
+                print(f"Gemini model selected from API-supported model list: {model}")
+                break
+        except SystemExit as exc:
+            last_error = str(exc)
+    if data is None:
+        raise SystemExit(last_error or "No listed Gemini model accepted the request.")
 
-proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+try:
+    proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+    raise SystemExit(f"Gemini returned an invalid structured plan: {exc}")
 changes = proposal.get("files", [])
 if not isinstance(changes, list):
     raise SystemExit("Invalid agent response.")
-
 if not changes:
     print("NO_CHANGE")
     raise SystemExit(0)
@@ -93,17 +137,18 @@ for item in changes:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(body, encoding="utf-8")
 
-# Every autonomous cycle must first prove that every registered entity has
-# a complete, non-destructive operational contract.
 subprocess.run(["python3", "scripts/mosharrof_vitality.py"], check=True)
 subprocess.run(["python3", "-m", "pytest", "-q"], check=True)
 
 Path("artifacts/visual").mkdir(parents=True, exist_ok=True)
-subprocess.Popen(
+server = subprocess.Popen(
     ["python3", "-m", "http.server", "4173", "--directory", "web"],
     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
 )
-subprocess.run(["node", "scripts/mosharrof_visual_qa.mjs", "http://127.0.0.1:4173"], check=True)
+try:
+    subprocess.run(["node", "scripts/mosharrof_visual_qa.mjs", "http://127.0.0.1:4173"], check=True)
+finally:
+    server.terminate()
 subprocess.run(["python3", "scripts/entity_awareness.py"], check=True)
 
 slug = re.sub(r"[^a-z0-9-]+", "-", request.lower()).strip("-")[:48] or "task"
@@ -133,8 +178,5 @@ subprocess.run([
     "gh", "pr", "create", "--base", "main", "--head", branch,
     "--title", "Auto: Mosharrof guarded task", "--body", body
 ], check=True)
-
-# Hand promotion to GitHub's protected merge queue. GitHub evaluates required
-# checks and branch protection; the engine never pushes directly to main.
 subprocess.run(["gh", "pr", "merge", branch, "--auto", "--squash"], check=True)
 print(f"PR created and auto-merge requested: {branch}")
