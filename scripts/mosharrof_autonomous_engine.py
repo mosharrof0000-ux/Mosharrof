@@ -110,6 +110,7 @@ def request_model(model_name, attempts=3):
     raise GeminiTransientError(f"Gemini model {model_name} failed after {attempts} attempts.")
 
 transient_failure = None
+data = None
 try:
     data = request_model(model)
 except GeminiTransientError as exc:
