@@ -35,6 +35,12 @@ Non-secret variable:
 
 The profile metadata must match each token's real Cloudflare permissions and resources. The router's metadata is not a grant; Cloudflare remains authoritative. Do not enable any profile until it has been verified.
 
+## Health and readiness
+
+- `GET /health` reports service liveness and secret-free configuration diagnostics. It remains HTTP 200 while the Worker is running, even if the router is not configured.
+- `GET /ready` returns HTTP 200 only when the router access secret is present and at least one enabled profile has valid metadata plus its bound provider secret. Otherwise it returns HTTP 503.
+- Responses expose only booleans and counts; never secret values, profile names, or resource IDs.
+
 ## Deployment gate
 
 The Wrangler file is isolated and has no route or account ID. The manually triggered workflow `.github/workflows/cloudflare-token-router-isolated-deploy.yml` deploys only this Worker and does not configure a route, enable `workers.dev`, or change the existing chat/TTS Worker.
