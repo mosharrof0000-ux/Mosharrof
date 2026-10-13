@@ -115,6 +115,9 @@ jobs:
           grep -q 'setNavigationBarContrastEnforced(false)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           echo "Native Android edge-to-edge shell: PASS"
 
+      - name: Verify mediated Android device-control contract
+        run: node scripts/test_device_control_contract.mjs
+
       - name: Build debug APK
         working-directory: android
         run: |
