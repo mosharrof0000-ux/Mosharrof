@@ -1,226 +1,176 @@
-/* MOSHARROF AI — true edge-to-edge / clean transparent glass (no blur, no border, no cloudy layer)
-   Web layer: full viewport canvas + floating chrome. Content scrolls clearly under glass.
-*/
-:root{
-  --mos-safe-top:env(safe-area-inset-top,0px);
-  --mos-safe-bottom:env(safe-area-inset-bottom,0px);
-  --mos-safe-left:env(safe-area-inset-left,0px);
-  --mos-safe-right:env(safe-area-inset-right,0px);
+/* MOSHARROF AI — edge-to-edge full canvas.
+   Keep the existing two round controls; hide only the centered brand/header chrome.
+   Web content scrolls behind transparent Android system bars. */
+:root {
+  --mos-safe-top: env(safe-area-inset-top, 0px);
+  --mos-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mos-safe-left: env(safe-area-inset-left, 0px);
+  --mos-safe-right: env(safe-area-inset-right, 0px);
 }
-
-html,body{
-  width:100%;
-  height:100%;
-  min-height:100%;
-  margin:0;
-  overflow:hidden;
-  background:#020b1c;
+html, body, .app {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
-
-body{
-  overscroll-behavior:none;
+.app {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100svh !important;
+  max-height: none !important;
+  overflow: hidden !important;
 }
-
-.app{
-  position:fixed !important;
-  inset:0 !important;
-  width:100vw !important;
-  height:100dvh !important;
-  min-height:100svh !important;
-  max-height:none !important;
-  overflow:hidden !important;
+.main {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  padding: 0 !important;
 }
-
-/* Full canvas: nothing is reserved for the bars. */
-.main{
-  position:absolute !important;
-  inset:0 !important;
-  width:100% !important;
-  height:100% !important;
-  min-height:100% !important;
-  padding:0 !important;
+/* Only the two existing round buttons remain visible in the top chrome. */
+header.top, .top {
+  position: fixed !important;
+  inset: 0 0 auto 0 !important;
+  z-index: 200 !important;
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+  align-items: start !important;
+  gap: 8px !important;
+  width: 100% !important;
+  height: calc(58px + var(--mos-safe-top)) !important;
+  min-height: 0 !important;
+  padding: calc(7px + var(--mos-safe-top)) max(10px, var(--mos-safe-right)) 0 max(10px, var(--mos-safe-left)) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  pointer-events: none;
 }
-
-/* Header floats — clean transparent glass, no border, no blur */
-.top{
-  position:absolute !important;
-  top:0 !important;
-  left:0 !important;
-  right:0 !important;
-  z-index:80 !important;
-  width:100% !important;
-  height:auto !important;
-  min-height:58px !important;
+header.top .brand, .top .brand { display: none !important; }
+header.top .left-btn, header.top .right-btn, .top .left-btn, .top .right-btn {
+  pointer-events: auto;
+  align-self: start !important;
+  margin: 0 !important;
+}
+.top::before, .top::after { content: none !important; display: none !important; }
+/* Full viewport scroll surface: scrollable text can pass behind status/navigation bars. */
+.content {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+.hero { position: absolute !important; inset: 0 !important; min-height: 0 !important; }
+.chat-scroll {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  background: transparent !important;
+}
+.messages {
+  min-height: 100% !important;
   padding:
-    calc(7px + var(--mos-safe-top))
-    max(10px,var(--mos-safe-right))
-    7px
-    max(10px,var(--mos-safe-left)) !important;
-  border:0 !important;
-  outline:none !important;
-  box-shadow:none !important;
-  background:rgba(255,255,255,0.05) !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
+    calc(74px + var(--mos-safe-top))
+    max(14px, var(--mos-safe-left))
+    calc(150px + var(--mos-safe-bottom))
+    max(14px, var(--mos-safe-right)) !important;
+  box-sizing: border-box !important;
 }
-
-/* Main content fills the exact viewport and scrolls under floating chrome. */
-.content{
-  position:absolute !important;
-  inset:0 !important;
-  width:100% !important;
-  height:100% !important;
-  min-height:0 !important;
-  padding:0 !important;
-  overflow:auto !important;
-  overscroll-behavior-y:contain;
-  -webkit-overflow-scrolling:touch;
+/* Keep the current composer and all of its buttons; only let it float over the full canvas. */
+.composer {
+  position: fixed !important;
+  left: max(12px, var(--mos-safe-left)) !important;
+  right: max(12px, var(--mos-safe-right)) !important;
+  bottom: calc(8px + var(--mos-safe-bottom)) !important;
+  width: auto !important;
+  max-width: 820px !important;
+  margin: 0 auto !important;
+  z-index: 9999 !important;
 }
-
-/* Home composer is a floating dock */
-.content>.hero>.composer{
-  position:fixed !important;
-  left:max(12px,var(--mos-safe-left)) !important;
-  right:max(12px,var(--mos-safe-right)) !important;
-  bottom:calc(12px + var(--mos-safe-bottom)) !important;
-  width:auto !important;
-  max-width:900px !important;
-  margin:0 auto !important;
-  z-index:85 !important;
-}
-
-/* Clean transparent zones — no blur, no dark/cloudy layer, no border */
-/* No synthetic overlay layers: the real header/composer stay above the scroll layer. */
-
-/* Chat mode */
-.chat-mode .content{
-  padding:0 !important;
-  overflow:hidden !important;
-}
-
-.chat-mode .chat-scroll{
-  position:absolute !important;
-  inset:0 !important;
-  width:100% !important;
-  height:100% !important;
-  min-height:0 !important;
-  padding:0 !important;
-  overflow-y:auto !important;
-  overflow-x:hidden !important;
-  z-index:5 !important;
-  -webkit-overflow-scrolling:touch;
-}
-
-.chat-mode .messages{
-  min-height:100% !important;
-  padding:
-    calc(86px + var(--mos-safe-top))
-    max(14px,var(--mos-safe-left))
-    calc(180px + var(--mos-safe-bottom))
-    max(14px,var(--mos-safe-right)) !important;
-}
-
-.chat-mode .composer{
-  position:fixed !important;
-  left:max(12px,var(--mos-safe-left)) !important;
-  right:max(12px,var(--mos-safe-right)) !important;
-  bottom:calc(10px + var(--mos-safe-bottom)) !important;
-  width:auto !important;
-  max-width:900px !important;
-  margin:0 auto !important;
-  z-index:85 !important;
-}
-
-.top,
-.chat-mode .left-btn,
-.chat-mode .right-btn,
-.chat-mode .composer,
-.drawer,
-.plugin,
-.modal,
-.toast{
-  isolation:isolate;
-}
-
-.drawer{z-index:90 !important}
-.plugin{z-index:91 !important}
-.modal{z-index:95 !important}
-.toast{z-index:100 !important}
-
-@media(max-height:620px){
-  .content{
-    padding-bottom:calc(135px + var(--mos-safe-bottom)) !important;
+.drawer { z-index: 300 !important; }
+.plugin { z-index: 310 !important; }
+.modal { z-index: 320 !important; }
+.toast { z-index: 330 !important; }
+/* Day mode follows the Android/device appearance preference. */
+@media (prefers-color-scheme: light) {
+  html, body { background: #fff !important; color: #171717 !important; }
+  .app { background: #fff !important; color: #171717 !important; }
+  .main, .content, .hero, .chat-scroll { background: transparent !important; }
+  .round {
+    background: rgba(255,255,255,.86) !important;
+    color: #171717 !important;
+    border-color: rgba(0,0,0,.13) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,.09) !important;
   }
-  .app::before{height:calc(70px + var(--mos-safe-top))}
-  .app::after{height:calc(110px + var(--mos-safe-bottom))}
-  .chat-mode .chat-scroll{
-    padding-top:calc(66px + var(--mos-safe-top)) !important;
-    padding-bottom:calc(145px + var(--mos-safe-bottom)) !important;
+  .round:hover { background: #f2f2f2 !important; border-color: rgba(0,0,0,.2) !important; }
+  .menu-icon { color: #171717 !important; }
+  .message, .message.ai, .message.ai .rich-content,
+  .message.ai .rich-content p, .message.ai .rich-content li,
+  .message.ai .rich-content blockquote, .message.ai .rich-content strong,
+  .message.ai .rich-content h1, .message.ai .rich-content h2,
+  .message.ai .rich-content h3, .message.ai .rich-content h4 {
+    color: #202124 !important;
+    text-shadow: none !important;
+  }
+  .message.user { background: #f0f0f0 !important; color: #202124 !important; }
+  .message .label, .message .time, .response-route { color: #6b7280 !important; }
+  .composer {
+    background: rgba(255,255,255,.94) !important;
+    color: #202124 !important;
+    border-color: rgba(0,0,0,.14) !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,.12) !important;
+  }
+  .composer textarea, .composer input, .composer select {
+    background: transparent !important; color: #202124 !important;
+  }
+  .composer textarea::placeholder, .composer input::placeholder { color: #737373 !important; }
+  .composer-tool-toggle, .composer-action, .send, .message-actions,
+  .message-actions-toggle, .message-action, .message-speak-shortcut,
+  .message-feedback-shortcut, .feedback-option, .feedback-button,
+  .composer-tools-menu, .plugin, .modal, .drawer, .feedback-panel,
+  .audio-setting-row select, .feedback-comment {
+    background-color: #fff !important;
+    color: #202124 !important;
+    border-color: rgba(0,0,0,.14) !important;
+  }
+  .drawer, .plugin, .modal, .feedback-panel { box-shadow: 0 10px 32px rgba(0,0,0,.16) !important; }
+  .message.ai .rich-content blockquote { background: #f7f7f7 !important; border-left-color: #999 !important; }
+  .message.ai .rich-content hr { border-top-color: rgba(0,0,0,.15) !important; }
+  .message.ai .rich-content :not(pre)>code { background: #f2f2f2 !important; color: #754b00 !important; border-color: #ddd !important; }
+  .message.ai .rich-content table { background: #fff !important; }
+  .message.ai .rich-content th { background: #f1f1f1 !important; color: #202124 !important; }
+  .message.ai .rich-content th, .message.ai .rich-content td { border-color: #e5e5e5 !important; }
+  .message.ai .rich-content a { color: #145bb5 !important; }
+  .response-timer { background: #f3f3f3 !important; color: #087a35 !important; border-color: #ddd !important; }
+  .response-timer.is-error { color: #d11b1b !important; }
+  .voice-companion { background: #f3f3f3 !important; color: #333 !important; border-color: #ddd !important; }
+  .voice-companion.is-download { background: #e9f8ee !important; color: #176b32 !important; }
+  .message-speak-shortcut.is-ready, .message-action.is-ready,
+  .message-speak-shortcut.is-speaking, .message-action.is-speaking {
+    background: #e7f7ec !important; color: #176b32 !important;
+  }
+  .message-speak-shortcut.is-stop-requested, .message-action.is-stop-requested {
+    background: #fff0f0 !important; color: #b91c1c !important;
   }
 }
-
-@media(prefers-reduced-motion:reduce){
-  .chat-mode .chat-scroll{scroll-behavior:auto !important}
-}
-
-
-/* Final clean-glass override: no visible edge, no blur, no cloudy layer.
-   Text/content must remain fully sharp while scrolling underneath. */
-.system-glass{
-  position:absolute !important;
-  left:0 !important;
-  right:0 !important;
-  border:0 !important;
-  outline:0 !important;
-  box-shadow:none !important;
-  background:transparent !important;
-  background-image:none !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  filter:none !important;
-  pointer-events:none !important;
-}
-.system-glass.top-zone{
-  top:0 !important;
-  height:calc(72px + var(--mos-safe-top)) !important;
-}
-.system-glass.bottom-zone{
-  bottom:0 !important;
-  height:calc(120px + var(--mos-safe-bottom)) !important;
-}
-
-.top,
-.composer,
-.chat-mode .composer{
-  border:0 !important;
-  outline:0 !important;
-  box-shadow:none !important;
-  background:rgba(255,255,255,.025) !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  filter:none !important;
-}
-
-.top::before,.top::after,
-.composer::before,.composer::after,
-.system-glass::before,.system-glass::after{
-  content:none !important;
-  display:none !important;
-}
-
-.chat-mode .chat-scroll,
-.chat-mode .messages,
-.chat-mode .messages *{
-  filter:none !important;
-  opacity:1;
-}
-
-.chat-mode .chat-scroll{
-  background:transparent !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-}
-
-.chat-mode .messages{
-  text-shadow:0 1px 10px rgba(0,0,0,.28);
+/* Respect reduced-motion preferences and avoid decorative overlays. */
+@media (prefers-reduced-motion: reduce) {
+  .chat-scroll { scroll-behavior: auto !important; }
 }
