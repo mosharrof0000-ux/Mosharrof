@@ -83,7 +83,7 @@ class DeviceActionBroker:
         ):
             raise ValueError("A configured permission guard is required")
         if audit_ledger is None or not callable(getattr(audit_ledger, "record", None)):
-            raise ValueError("A persistent audit ledger is required")
+            raise ValueError("A trusted audit ledger is required")
         if not callable(approval_check):
             raise ValueError("A fresh-action approval checker is required")
 
