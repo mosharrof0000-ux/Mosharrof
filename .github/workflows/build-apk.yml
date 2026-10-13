@@ -2,7 +2,7 @@ name: Build MOSHARROF Android APK
 
 on:
   push:
-    branches: [main, feat/device-action-broker]
+    branches: [main, feat/device-action-broker, fix/device-command-routing]
   pull_request:
     branches: [main]
   workflow_dispatch:
