@@ -61,9 +61,9 @@ jobs:
                   "com.android.settings", "com.google.android.apps.maps",
                   "com.spotify.music", "com.google.android.dialer",
               ]
-              query_block = "    <queries>\\n" + "".join(
-                  f'        <package android:name="{package}" />\\n' for package in packages
-              ) + "    </queries>\\n    "
+              query_block = "    <queries>\n" + "".join(
+                  f'        <package android:name="{package}" />\n' for package in packages
+              ) + "    </queries>\n    "
               if "<application" not in source:
                   raise SystemExit("Android manifest application element not found")
               source = source.replace("<application", query_block + "<application", 1)
