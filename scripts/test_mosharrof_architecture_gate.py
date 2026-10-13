@@ -102,5 +102,37 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
         self.assertIn("cannot compare", result.stdout)
 
 
+    def test_oversized_source_file_is_blocked(self) -> None:
+        self.add_organ("const ready = true;\\n" * 250)
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("251 lines exceeds the 250-line limit", result.stdout)
+
+    def test_legacy_shell_replacement_is_blocked(self) -> None:
+        shell = self.repo / "web" / "index.html"
+        shell.parent.mkdir(parents=True)
+        shell.write_text("<html>replacement</html>\\n", encoding="utf-8")
+        self.git("add", ".")
+        self.git("commit", "-m", "attempt legacy shell replacement")
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("web/index.html is frozen legacy shell", result.stdout)
+
+    def test_cross_organ_private_import_is_blocked(self) -> None:
+        self.add_organ('import { privateThing } from "../target-organ/index.js";\\nexport {};\\n')
+        target = self.repo / "organs" / "target-organ"
+        (target / "tests").mkdir(parents=True)
+        (target / "organ.json").write_text(
+            json.dumps({"id": "target-organ", "public_api": ["publicThing"]}), encoding="utf-8"
+        )
+        (target / "index.js").write_text("export const privateThing = 1;\\n", encoding="utf-8")
+        (target / "README.md").write_text("target\\n", encoding="utf-8")
+        (target / "tests" / "README.md").write_text("tests\\n", encoding="utf-8")
+        self.git("add", ".")
+        self.git("commit", "-m", "add target organ")
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("direct cross-organ import", result.stdout)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
