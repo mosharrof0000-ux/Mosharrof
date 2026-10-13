@@ -65,7 +65,7 @@ class ProjectInventoryTests(unittest.TestCase):
 
     def test_unavailable_optional_sources_are_explicit_not_called_success(self):
         def partial(url):
-            if url.endswith("/repos/mosharrof0000-ux/Mosharrof"):
+            if url.rstrip("/").endswith("/repos/mosharrof0000-ux/Mosharrof"):
                 return self.metadata, None
             if url.endswith("/commits/main"):
                 return self.commit, None
