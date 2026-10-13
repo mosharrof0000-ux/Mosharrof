@@ -23,7 +23,13 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Prove the gate blocks invalid replacements
+        run: python3 -m unittest -v scripts/test_mosharrof_architecture_gate.py
       - name: Fetch target branch
         run: git fetch --no-tags origin main:refs/remotes/origin/main
-      - name: Enforce organ isolation and file-size limits
+      - name: Enforce organ isolation, link caps, and file-size limits
         run: python3 scripts/mosharrof_architecture_gate.py origin/main
