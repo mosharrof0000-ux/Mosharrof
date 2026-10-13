@@ -72,7 +72,7 @@ def count_links(source_text: str, suffix: str) -> list[str]:
 def main() -> int:
     errors: list[str] = []
     try:
-        changed = [p for p in git("diff", "--name-only", "--diff-filter=ACMR", f"{BASE}...HEAD").splitlines() if p]
+        changed = [p for p in git("diff", "--name-only", "--diff-filter=ACMRD", f"{BASE}...HEAD").splitlines() if p]
     except subprocess.CalledProcessError as exc:
         print(f"ARCHITECTURE GATE: FAIL — cannot compare against {BASE}: {exc}", file=sys.stderr)
         return 2
