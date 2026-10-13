@@ -38,6 +38,16 @@ def test_worker_health_reports_provider_configuration_without_secret_values():
     assert 'const WORKER_BUILD_ID="2026-10-13-chat-multi-provider-failover-v1";' in worker
 
 
+def test_chat_providers_have_bounded_timeouts_so_failover_can_continue():
+    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+    assert "const CHAT_PROVIDER_TIMEOUT_MS=7000;" in worker
+    assert "signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)" in worker
+    assert 'withChatProviderTimeout(env.AI.run(model' in worker
+    assert 'CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai"' in worker
+    assert 'CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai"' in worker
+    assert "max_tokens:1024" in worker
+
+
 def test_worker_javascript_parses_with_node():
     subprocess.run(["node", "--check", "worker/screenshot-analysis.js"], check=True)
 

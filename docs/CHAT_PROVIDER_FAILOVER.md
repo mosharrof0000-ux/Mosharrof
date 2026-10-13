@@ -9,7 +9,7 @@ The chat Worker keeps the current frontend API contract (POST /chat with a JSON 
 
 ## Behavior
 
-- HTTP quota/rate-limit, unsupported-model, upstream-server, empty-response, and network failures are recorded as a provider attempt and do not stop the remaining fallback chain.
+- Each provider call has a 7-second timeout; Gemini and OpenAI-compatible calls are aborted on timeout, and Cloudflare Workers AI is bounded by a timeout race. HTTP quota/rate-limit, unsupported-model, upstream-server, empty-response, timeout, and network failures are recorded as a provider attempt and do not stop the remaining fallback chain.
 - A successful response includes provider, model, and a safe attempted list so the client/diagnostics can identify the provider that answered.
 - GET /health reports the provider order and configured/not-configured booleans only. It never returns credential values.
 - Optional Groq/OpenRouter keys are read from GitHub Actions secrets and written to Cloudflare Worker secrets by the existing deployment workflow; they are never sent to the browser or committed to the repository.
