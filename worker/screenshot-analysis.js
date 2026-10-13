@@ -286,11 +286,24 @@ async function tts(request,env){
 }
 
 
+const CHAT_PROVIDER_TIMEOUT_MS=7000;
+
+async function withChatProviderTimeout(promise,ms,label){
+  let timer;
+  try{
+    return await Promise.race([
+      promise,
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+"_timeout")),ms);})
+    ]);
+  }finally{if(timer)clearTimeout(timer);}
+}
+
 async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
     method:"POST",
     headers:{"content-type":"application/json","x-goog-api-key":apiKey},
-    body:JSON.stringify(body)
+    body:JSON.stringify(body),
+    signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)
   });
   const data=await upstream.json().catch(()=>({}));
   return {upstream,data,model};
@@ -304,10 +317,10 @@ async function generateWithCloudflareChat(text,env){
   let last=null;
   for(const model of models){
     try{
-      const result=await env.AI.run(model,{messages:[
+      const result=await withChatProviderTimeout(env.AI.run(model,{messages:[
         {role:"system",content:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform."},
         {role:"user",content:text}
-      ],max_tokens:2048,temperature:0.3});
+      ],max_tokens:1024,temperature:0.3}),CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
       const answer=String(result?.response||result?.choices?.[0]?.message?.content||"").trim();
       if(answer)return {ok:true,provider:"cloudflare-workers-ai",model,text:answer};
       last={model,reason:"empty_response"};
@@ -325,7 +338,8 @@ async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,t
       body:JSON.stringify({model,messages:[
         {role:"system",content:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform."},
         {role:"user",content:text}
-      ],temperature:0.3,max_tokens:2048})
+      ],temperature:0.3,max_tokens:1024}),
+      signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)
     });
     const data=await upstream.json().catch(()=>({}));
     if(!upstream.ok)return {ok:false,provider,model,status:upstream.status,reason:data?.error?.message||("HTTP "+upstream.status)};
