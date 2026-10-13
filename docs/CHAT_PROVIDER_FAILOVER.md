@@ -3,7 +3,7 @@
 The chat Worker keeps the current frontend API contract (POST /chat with a JSON body containing text) and tries providers in this order:
 
 1. **Gemini** — configured Flash models, with any authorized GEMINI_API_KEY through GEMINI_API_KEY_5 credentials tried as alternatives.
-2. **Cloudflare Workers AI** — uses the existing AI binding; no separate model API key is required. The default model is @cf/meta/llama-3.1-8b-instruct. It can be overridden by the Worker variable CLOUDFLARE_CHAT_MODEL or CLOUDFLARE_CHAT_MODELS (comma-separated).
+2. **Cloudflare Workers AI** — uses the existing AI binding; no separate model API key is required. The default model order is @cf/zai-org/glm-4.7-flash followed by @cf/meta/llama-3.3-70b-instruct-fp8-fast. These defaults avoid the older Llama 3.1 ID deprecated in Cloudflare's May 2026 model refresh. It can be overridden by the Worker variable CLOUDFLARE_CHAT_MODEL or CLOUDFLARE_CHAT_MODELS (comma-separated).
 3. **Groq** — optional, configured only when the repository Actions secret GROQ_API_KEY is present. Default model: llama-3.1-8b-instant.
 4. **OpenRouter** — optional, configured only when the repository Actions secret OPENROUTER_API_KEY is present. Default model: meta-llama/llama-3.3-70b-instruct:free.
 
