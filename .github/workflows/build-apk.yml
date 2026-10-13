@@ -227,7 +227,8 @@ jobs:
                       WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                       PixelFormat.TRANSLUCENT);
                   params.gravity = Gravity.TOP | Gravity.START;
-                  params.x = dp(12); params.y = dp(220);
+                  android.content.SharedPreferences savedPosition = getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE);
+                  params.x = savedPosition.getInt("x", dp(12)); params.y = savedPosition.getInt("y", dp(220));
                   bubble.setOnTouchListener((v, event) -> {
                       switch (event.getAction()) {
                           case MotionEvent.ACTION_DOWN:
@@ -240,7 +241,13 @@ jobs:
                               return true;
                           case MotionEvent.ACTION_UP:
                               long held = System.currentTimeMillis() - downAt;
-                              if (!moved && held >= 650) toggleCompact();
+                              if (moved) getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).edit().putInt("x", params.x).putInt("y", params.y).apply();
+                              if (!moved && held >= 650) {
+                                  Toast.makeText(VoiceOverlayService.this, "MOSHARROF ভাসমান সহকারী লুকানো হয়েছে · অ্যাপ খুলে আবার চালু করুন", Toast.LENGTH_LONG).show();
+                                  removeBubble();
+                                  stopForeground(true);
+                                  stopSelf();
+                              }
                               else if (!moved) {
                                   if (compact) { compact = false; styleBubble(); }
                                   else { Intent voice = new Intent(VoiceOverlayService.this, VoiceCommandActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(voice); }
