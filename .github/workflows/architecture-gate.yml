@@ -1,0 +1,29 @@
+name: MOSHARROF Mandatory Architecture Gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: architecture-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  architecture:
+    name: Mandatory Organ Isolation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposed commit and history
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Fetch target branch
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - name: Enforce organ isolation and file-size limits
+        run: python3 scripts/mosharrof_architecture_gate.py origin/main
