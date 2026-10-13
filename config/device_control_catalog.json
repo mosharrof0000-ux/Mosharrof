@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "status": "planning",
+  "status": "partial",
   "policy": {
     "approval_mode": "every_action",
     "least_privilege": true,
@@ -111,7 +111,14 @@
       ],
       "limits": [
         "not arbitrary in-app control"
-      ]
+      ],
+      "implemented_actions": [
+        "launch_supported_app"
+      ],
+      "unsupported_actions": [
+        "list_visible_launchable_apps"
+      ],
+      "runtime_note": "Only package names visible under the explicit Android <queries> allowlist can launch."
     },
     {
       "id": "contacts.lookup",
@@ -151,12 +158,19 @@
       ],
       "limits": [
         "no call on ambiguous match or cancel"
-      ]
+      ],
+      "implemented_actions": [
+        "prepare_call"
+      ],
+      "unsupported_actions": [
+        "start_confirmed_call"
+      ],
+      "runtime_note": "Opens ACTION_DIAL only; never places a call automatically."
     },
     {
       "id": "messages.draft",
       "domain": "communications",
-      "status": "planned",
+      "status": "partial",
       "actions": [
         "prepare_message",
         "open_supported_messaging_app"
@@ -172,12 +186,18 @@
       ],
       "limits": [
         "no silent sending without per-message confirmation"
-      ]
+      ],
+      "implemented_actions": [
+        "prepare_message",
+        "open_supported_messaging_app"
+      ],
+      "unsupported_actions": [],
+      "runtime_note": "Opens an SMS draft with ACTION_SENDTO; user must press Send in the messaging app."
     },
     {
       "id": "email.draft",
       "domain": "communications",
-      "status": "planned",
+      "status": "partial",
       "actions": [
         "prepare_email",
         "open_email_app"
@@ -193,13 +213,20 @@
       ],
       "limits": [
         "login and provider policy apply"
-      ]
+      ],
+      "implemented_actions": [
+        "prepare_email",
+        "open_email_app"
+      ],
+      "unsupported_actions": [],
+      "runtime_note": "Opens an email draft; user must press Send in the email app."
     },
     {
       "id": "files.search_selected",
       "domain": "files",
-      "status": "planned",
+      "status": "partial",
       "actions": [
+        "select_user_file",
         "search_user_selected_files",
         "read_selected_file_metadata"
       ],
@@ -213,7 +240,15 @@
       ],
       "limits": [
         "no broad storage access by default"
-      ]
+      ],
+      "implemented_actions": [
+        "select_user_file_uri"
+      ],
+      "unsupported_actions": [
+        "search_user_selected_files",
+        "read_selected_file_metadata"
+      ],
+      "runtime_note": "Android document picker returns the user-selected URI; this bridge does not read the file contents."
     },
     {
       "id": "files.create_export",
@@ -256,7 +291,7 @@
     {
       "id": "storage.summary",
       "domain": "storage",
-      "status": "planned",
+      "status": "partial",
       "actions": [
         "read_available_storage_totals",
         "list_large_accessible_files"
@@ -271,12 +306,19 @@
       ],
       "limits": [
         "other apps' private data may be inaccessible"
-      ]
+      ],
+      "implemented_actions": [
+        "read_available_storage_totals"
+      ],
+      "unsupported_actions": [
+        "list_large_accessible_files"
+      ],
+      "runtime_note": "Uses Android StatFs; does not enumerate other apps' private files."
     },
     {
       "id": "memory.diagnostics",
       "domain": "diagnostics",
-      "status": "planned",
+      "status": "partial",
       "actions": [
         "read_available_memory_metrics",
         "explain_performance_symptoms"
@@ -291,12 +333,19 @@
       ],
       "limits": [
         "no promise of complete per-app RAM visibility"
-      ]
+      ],
+      "implemented_actions": [
+        "read_available_memory_metrics"
+      ],
+      "unsupported_actions": [
+        "explain_performance_symptoms"
+      ],
+      "runtime_note": "Uses ActivityManager.MemoryInfo; no per-app private RAM breakdown."
     },
     {
       "id": "settings.open_page",
       "domain": "device_settings",
-      "status": "planned",
+      "status": "partial",
       "actions": [
         "open_supported_settings_page"
       ],
@@ -310,7 +359,12 @@
       ],
       "limits": [
         "restricted toggles fall back to Settings"
-      ]
+      ],
+      "implemented_actions": [
+        "open_supported_settings_page"
+      ],
+      "unsupported_actions": [],
+      "runtime_note": "Opens the corresponding Settings activity; does not silently change restricted toggles."
     },
     {
       "id": "camera.capture",
@@ -524,7 +578,7 @@
     {
       "id": "audit.events",
       "domain": "security",
-      "status": "planned",
+      "status": "partial",
       "actions": [
         "record_minimal_audit_metadata",
         "redact_sensitive_fields",
@@ -540,7 +594,47 @@
       ],
       "limits": [
         "do not log credentials, raw audio or full private payloads"
-      ]
+      ],
+      "implemented_actions": [
+        "record_minimal_audit_metadata",
+        "redact_sensitive_fields"
+      ],
+      "unsupported_actions": [
+        "expire_temporary_grants"
+      ],
+      "runtime_note": "SQLite append-only audit store exists and is tested; it is not yet the global runtime ledger for every Mosharrof subsystem."
     }
-  ]
+  ],
+  "implementation_summary": {
+    "status": "partial",
+    "native_bridge": "implemented_not_yet_verified_on_physical_device",
+    "consent": "web_confirmation_plus_native_android_confirmation",
+    "implemented_capabilities": [
+      "settings.open_page",
+      "apps.launch",
+      "phone.call",
+      "messages.draft",
+      "email.draft",
+      "files.search_selected",
+      "storage.summary",
+      "memory.diagnostics",
+      "audit.events"
+    ],
+    "explicitly_not_implemented": [
+      "overlay.voice_manager",
+      "quick_settings.voice_tile",
+      "contacts.lookup",
+      "camera.capture",
+      "screen.capture",
+      "location.once",
+      "reminders.create",
+      "bluetooth.assist",
+      "files.create_export",
+      "web.research",
+      "repository.change",
+      "automation.workflow"
+    ],
+    "destructive_actions": "permanently_blocked",
+    "note": "Capability entries remain partial/planned until the exact action passes Android device acceptance tests. APK build success is not device verification."
+  }
 }
