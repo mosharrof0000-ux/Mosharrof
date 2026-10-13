@@ -48,6 +48,26 @@ jobs:
           npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir web
           npx cap add android
           npx cap sync android
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          source = manifest.read_text(encoding="utf-8")
+          if "<queries>" not in source:
+              packages = [
+                  "com.android.chrome", "com.google.android.youtube", "com.whatsapp",
+                  "org.telegram.messenger", "com.facebook.katana", "com.instagram.android",
+                  "com.google.android.gm", "com.google.android.apps.messaging",
+                  "com.android.settings", "com.google.android.apps.maps",
+                  "com.spotify.music", "com.google.android.dialer",
+              ]
+              query_block = "    <queries>\\n" + "".join(
+                  f'        <package android:name="{package}" />\\n' for package in packages
+              ) + "    </queries>\\n    "
+              if "<application" not in source:
+                  raise SystemExit("Android manifest application element not found")
+              source = source.replace("<application", query_block + "<application", 1)
+              manifest.write_text(source, encoding="utf-8")
+          PY
 
       - name: Apply native Android edge-to-edge shell
         run: |
