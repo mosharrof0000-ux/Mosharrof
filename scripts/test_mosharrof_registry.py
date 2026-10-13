@@ -102,5 +102,18 @@ class OrganRegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(RegistryError, "missing required organ.json"):
             build_registry(self.root)
 
+
+    def test_registry_cli_generates_deploy_artifact(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script = repo_root / "scripts" / "mosharrof_registry.py"
+        result = subprocess.run(
+            ["python3", str(script), "--root", str(self.root), "--output", "web/runtime/organs.registry.json"],
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        output = self.root / "web" / "runtime" / "organs.registry.json"
+        self.assertTrue(output.is_file())
+        self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["organs"], [])
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
