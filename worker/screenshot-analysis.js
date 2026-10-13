@@ -1,5 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-13-chat-multi-provider-failover-v1";
+const WORKER_BUILD_ID="2026-10-13-chat-live-provider-status-v1";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -309,13 +309,14 @@ async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
   return {upstream,data,model};
 }
 
-async function generateWithCloudflareChat(text,env){
+async function generateWithCloudflareChat(text,env,onStatus){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   const configured=String(env.CLOUDFLARE_CHAT_MODELS||env.CLOUDFLARE_CHAT_MODEL||"@cf/zai-org/glm-4.7-flash,@cf/meta/llama-3.3-70b-instruct-fp8-fast");
   const models=[...new Set(configured.split(",").map(x=>x.trim()).filter(Boolean))];
   if(!models.length)models.push("@cf/zai-org/glm-4.7-flash","@cf/meta/llama-3.3-70b-instruct-fp8-fast");
   let last=null;
   for(const model of models){
+    if(onStatus)onStatus({stage:"trying",provider:"cloudflare-workers-ai",model});
     try{
       const result=await withChatProviderTimeout(env.AI.run(model,{messages:[
         {role:"system",content:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform."},
@@ -324,13 +325,15 @@ async function generateWithCloudflareChat(text,env){
       const answer=String(result?.response||result?.choices?.[0]?.message?.content||"").trim();
       if(answer)return {ok:true,provider:"cloudflare-workers-ai",model,text:answer};
       last={model,reason:"empty_response"};
-    }catch(e){last={model,reason:String(e&&e.message||e)};}
+      if(onStatus)onStatus({stage:"failed",provider:"cloudflare-workers-ai",model});
+    }catch(e){last={model,reason:String(e&&e.message||e)};if(onStatus)onStatus({stage:"failed",provider:"cloudflare-workers-ai",model});}
   }
   return {ok:false,provider:"cloudflare-workers-ai",model:last?.model||null,reason:last?.reason||"all_models_failed"};
 }
 
-async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={}){
+async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={},onStatus){
   if(!apiKey)return {ok:false,provider,reason:"not_configured"};
+  if(onStatus)onStatus({stage:"trying",provider,model});
   try{
     const upstream=await fetch(endpoint,{
       method:"POST",
@@ -342,11 +345,11 @@ async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,t
       signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)
     });
     const data=await upstream.json().catch(()=>({}));
-    if(!upstream.ok)return {ok:false,provider,model,status:upstream.status,reason:data?.error?.message||("HTTP "+upstream.status)};
+    if(!upstream.ok){if(onStatus)onStatus({stage:"failed",provider,model});return {ok:false,provider,model,status:upstream.status,reason:data?.error?.message||("HTTP "+upstream.status)};}
     const answer=String(data?.choices?.[0]?.message?.content||"").trim();
-    if(!answer)return {ok:false,provider,model,status:upstream.status,reason:"empty_response"};
+    if(!answer){if(onStatus)onStatus({stage:"failed",provider,model});return {ok:false,provider,model,status:upstream.status,reason:"empty_response"};}
     return {ok:true,provider,model,text:answer};
-  }catch(e){return {ok:false,provider,model,reason:String(e&&e.message||e)};}
+  }catch(e){if(onStatus)onStatus({stage:"failed",provider,model});return {ok:false,provider,model,reason:String(e&&e.message||e)};}
 }
 
 function bytesToBase64(bytes){
@@ -518,12 +521,11 @@ async function transcribeAudio(request,env){
   return reply({error:"audio_transcription_failed",attempted},502);
 }
 
-async function chat(request,env){
-  const body=await request.json();
+async function runChat(body,env,onStatus){
   const text=String(body.text||"").trim();
-  if(!text)return reply({error:"text_required"},400);
-  if(text.length>12000)return reply({error:"text_too_large"},413);
-
+  if(!text)return {status:400,data:{error:"text_required"}};
+  if(text.length>12000)return {status:413,data:{error:"text_too_large"}};
+  const report=event=>{if(typeof onStatus==="function")onStatus(event);};
   const attempted=[];
   const configuredKeys=[
     ["primary",String(env.GEMINI_API_KEY||"").trim()],
@@ -536,9 +538,6 @@ async function chat(request,env){
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
   const payload={contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\nUser:\n"+text}]}]};
-
-  // Try the preferred model against each authorized key, then alternate models
-  // against the primary key. This bounds latency while preserving key/model failover.
   const geminiPlan=[];
   if(configuredKeys.length){
     for(const [slot,apiKey] of configuredKeys)geminiPlan.push({model:preferred[0],slot,apiKey});
@@ -546,47 +545,86 @@ async function chat(request,env){
   }
   for(const attempt of geminiPlan){
     const {model,slot,apiKey}=attempt;
+    report({stage:"trying",provider:"gemini",model});
     try{
       const r=await callGemini(env,model,payload,apiKey);
       if(!r.upstream.ok){
         attempted.push({provider:"gemini",model,credential_slot:slot,status:r.upstream.status,reason:r.data?.error?.message||("HTTP "+r.upstream.status)});
+        report({stage:"failed",provider:"gemini",model});
         continue;
       }
       const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
-      if(answer)return reply({ok:true,provider:"gemini",model,text:answer,attempted},200);
+      if(answer){
+        report({stage:"answered",provider:"gemini",model});
+        return {status:200,data:{ok:true,provider:"gemini",model,text:answer,attempted}};
+      }
       attempted.push({provider:"gemini",model,credential_slot:slot,reason:"empty_response"});
-    }catch(e){attempted.push({provider:"gemini",model,credential_slot:slot,reason:String(e&&e.message||e)});}
+      report({stage:"failed",provider:"gemini",model});
+    }catch(e){
+      attempted.push({provider:"gemini",model,credential_slot:slot,reason:String(e&&e.message||e)});
+      report({stage:"failed",provider:"gemini",model});
+    }
   }
 
-  // Workers AI is the keyless, already-bound first external-provider fallback.
-  const cloudflare=await generateWithCloudflareChat(text,env);
+  const cloudflare=await generateWithCloudflareChat(text,env,report);
   attempted.push({provider:cloudflare.provider,model:cloudflare.model||null,status:cloudflare.status||null,reason:cloudflare.ok?null:cloudflare.reason||"failed"});
-  if(cloudflare.ok)return reply({ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted},200);
+  if(cloudflare.ok){
+    report({stage:"answered",provider:cloudflare.provider,model:cloudflare.model});
+    return {status:200,data:{ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted}};
+  }
 
-  // Optional providers are only called when their server-side secrets exist.
   const groq=await generateWithOpenAICompatibleChat(
     "groq","https://api.groq.com/openai/v1/chat/completions",
     String(env.GROQ_API_KEY||"").trim(),
-    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text
+    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text,{},report
   );
   attempted.push({provider:groq.provider,model:groq.model||null,status:groq.status||null,reason:groq.ok?null:groq.reason||"failed"});
-  if(groq.ok)return reply({ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted},200);
+  if(groq.ok){
+    report({stage:"answered",provider:groq.provider,model:groq.model});
+    return {status:200,data:{ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted}};
+  }
 
   const openrouter=await generateWithOpenAICompatibleChat(
     "openrouter","https://openrouter.ai/api/v1/chat/completions",
     String(env.OPENROUTER_API_KEY||"").trim(),
     String(env.OPENROUTER_CHAT_MODEL||"meta-llama/llama-3.3-70b-instruct:free").trim(),text,
-    {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"}
+    {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"},report
   );
   attempted.push({provider:openrouter.provider,model:openrouter.model||null,status:openrouter.status||null,reason:openrouter.ok?null:openrouter.reason||"failed"});
-  if(openrouter.ok)return reply({ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted},200);
+  if(openrouter.ok){
+    report({stage:"answered",provider:openrouter.provider,model:openrouter.model});
+    return {status:200,data:{ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted}};
+  }
 
-  return reply({
+  return {status:502,data:{
     error:"chat_provider_failed",
     message:"All configured AI providers are unavailable. Please try again shortly.",
     attempted,
     chat_provider_order:["gemini","cloudflare-workers-ai","groq","openrouter"]
-  },502);
+  }};
+}
+
+async function chat(request,env){
+  const body=await request.json();
+  if(body.stream_status!==true){
+    const result=await runChat(body,env);
+    return reply(result.data,result.status);
+  }
+  const encoder=new TextEncoder();
+  const stream=new ReadableStream({
+    start(controller){
+      const send=event=>{try{controller.enqueue(encoder.encode("data: "+JSON.stringify(event)+"\n\n"));}catch(e){}};
+      (async()=>{
+        try{
+          const result=await runChat(body,env,event=>send({type:"status",...event}));
+          send({type:"result",status:result.status,data:result.data});
+        }catch(e){
+          send({type:"result",status:500,data:{error:"chat_stream_failed",message:"The chat request could not be completed."}});
+        }finally{try{controller.close();}catch(e){}}
+      })();
+    }
+  });
+  return new Response(stream,{status:200,headers:{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache, no-transform","x-accel-buffering":"no"}});
 }
 
 async function handleRequest(request,env){
