@@ -62,6 +62,9 @@ class GitHubAppAdapter:
             raise ProvisioningDenied("github_app_bootstrap_missing")
         if not repository_ids or any(not isinstance(i, int) or i <= 0 for i in repository_ids):
             raise ProvisioningDenied("explicit_repository_ids_required")
+        expected_scope = "repository_ids:" + ",".join(str(i) for i in repository_ids)
+        if request.resource_scope != expected_scope or approval.resource_scope != expected_scope:
+            raise ProvisioningDenied("repository_scope_does_not_match_approval")
         if not permissions or set(permissions) - self.ALLOWED_PERMISSIONS:
             raise ProvisioningDenied("unknown_or_empty_permission_set")
         if any(level not in self.ALLOWED_LEVELS for level in permissions.values()):
