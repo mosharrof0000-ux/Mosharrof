@@ -110,7 +110,10 @@ if data is None:
         with urllib.request.urlopen(req, timeout=30) as response:
             catalog = json.load(response)
     except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as exc:
-        raise SystemExit(f"Unable to list Gemini fallback models: {type(exc).__name__}: {exc}") from exc
+        # Model discovery may fail independently of generateContent. Keep
+        # trying known Flash IDs instead of stopping after a transient 503.
+        print(f"Gemini model catalog unavailable ({type(exc).__name__}); trying the safe fallback list.")
+        catalog = {"models": []}
     available = [
         item.get("name", "").removeprefix("models/")
         for item in catalog.get("models", [])
@@ -120,6 +123,10 @@ if data is None:
         (name for name in available if name and "flash" in name.lower() and name != model),
         key=lambda name: (("preview" in name.lower()), name),
     )
+    fallback_models = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-2.5-flash", "gemini-2.0-flash"]
+    for fallback in fallback_models:
+        if fallback != model and fallback not in candidates:
+            candidates.append(fallback)
     if not candidates:
         detail = f" Preferred model error: {last_error}" if last_error else ""
         raise SystemExit("No alternative Gemini Flash model supporting generateContent is available." + detail)
