@@ -1,5 +1,5 @@
 /* Mosharrof SW — network-first for HTML so UI updates reach users */
-const CACHE = "mosharrof-v5-2026-09-28";
+const CACHE = "mosharrof-v6-2026-10-13";
 const PRECACHE = ["./manifest.json"];
 
 self.addEventListener("install", (event) => {
