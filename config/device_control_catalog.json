@@ -242,7 +242,7 @@
         "no broad storage access by default"
       ],
       "implemented_actions": [
-        "select_user_file_uri"
+        "select_user_file"
       ],
       "unsupported_actions": [
         "search_user_selected_files",
@@ -602,7 +602,7 @@
       "unsupported_actions": [
         "expire_temporary_grants"
       ],
-      "runtime_note": "SQLite append-only audit store exists and is tested; it is not yet the global runtime ledger for every Mosharrof subsystem."
+      "runtime_note": "Python SQLite append-only ledger and Android app-private JSONL audit exist; neither is yet the global ledger for every subsystem."
     }
   ],
   "implementation_summary": {
