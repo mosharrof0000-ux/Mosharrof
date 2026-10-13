@@ -1,6 +1,9 @@
 import unittest
 
+from src.core.audit_ledger import AuditLedger
 from src.core.device_action_broker import DeviceActionBroker
+from src.core.permission_guard import PermissionGuard
+from src.core.trusted_permission_service import TrustedPermissionService
 
 
 class DeviceActionBrokerTests(unittest.TestCase):
@@ -34,6 +37,58 @@ class DeviceActionBrokerTests(unittest.TestCase):
         }
         args.update(overrides)
         return self.broker.execute(**args)
+
+    def test_permission_guard_and_audit_ledger_adapter(self):
+        ledger = AuditLedger()
+        service = TrustedPermissionService(
+            grant_resolver=lambda entity: ["settings.open_page"],
+            scope_resolver=lambda entity: "device/settings/*",
+            policy_evaluator=lambda capability, entity, resource, scope: (
+                capability == "settings.open_page"
+                and entity == "device-manager"
+                and resource == "device/settings/display"
+                and scope == "device/settings/*"
+            ),
+            provider_readiness=lambda capability: True,
+            approval_verifier=lambda capability, entity, token: token == "fresh-approval",
+        )
+        broker = DeviceActionBroker.from_permission_guard(
+            permission_guard=PermissionGuard(trusted_permission_service=service),
+            approval_check=self.approval_check,
+            audit_ledger=ledger,
+        )
+        result = broker.execute(
+            capability="settings.open_page",
+            entity_id="device-manager",
+            resource_scope="device/settings/display",
+            approval_token="fresh-approval",
+            operation=lambda: {"opened": True},
+            verifier=lambda value: value.get("opened") is True,
+            action_id="action-ledger-1",
+        )
+        self.assertEqual(result["status"], "SUCCESS")
+        record = ledger.recent(1)[0]
+        self.assertEqual(record["action"], "settings.open_page")
+        self.assertEqual(record["status"], "SUCCESS")
+        self.assertEqual(record["details"]["action_id"], "action-ledger-1")
+        self.assertTrue(record["details"]["scope_present"])
+        self.assertNotIn("fresh-approval", str(ledger.recent()))
+        self.assertNotIn("device/settings/display", str(ledger.recent()))
+        self.assertNotIn("opened", str(ledger.recent()))
+
+    def test_adapter_requires_real_permission_guard_and_audit_ledger(self):
+        with self.assertRaises(ValueError):
+            DeviceActionBroker.from_permission_guard(
+                permission_guard=None,
+                approval_check=self.approval_check,
+                audit_ledger=AuditLedger(),
+            )
+        with self.assertRaises(ValueError):
+            DeviceActionBroker.from_permission_guard(
+                permission_guard=PermissionGuard(),
+                approval_check=self.approval_check,
+                audit_ledger=None,
+            )
 
     def test_success_requires_fresh_approval_authorization_and_verification(self):
         result = self.run_action()
