@@ -172,8 +172,9 @@ jobs:
               @Override public void onCreate() {
                   super.onCreate();
                   createChannel();
+                  hidden = getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).getBoolean("hidden", false);
                   startForeground(NOTIFICATION_ID, notification());
-                  if (Settings.canDrawOverlays(this)) showBubble();
+                  if (Settings.canDrawOverlays(this) && !hidden) showBubble();
                   else { Toast.makeText(this, "MOSHARROF ভাসমান বাটনের জন্য Display over other apps অনুমতি দিন", Toast.LENGTH_LONG).show(); stopSelf(); }
               }
 
@@ -181,12 +182,14 @@ jobs:
                   String action = intent == null ? null : intent.getAction();
                   if ("com.mosharrof.ai.HIDE_VOICE_OVERLAY".equals(action)) {
                       hidden = true;
+                      getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).edit().putBoolean("hidden", true).apply();
                       removeBubble();
                       startForeground(NOTIFICATION_ID, notification());
                       return START_STICKY;
                   }
                   if ("com.mosharrof.ai.SHOW_VOICE_OVERLAY".equals(action)) {
                       hidden = false;
+                      getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).edit().putBoolean("hidden", false).apply();
                       if (Settings.canDrawOverlays(this) && bubble == null) showBubble();
                       startForeground(NOTIFICATION_ID, notification());
                       return START_STICKY;
@@ -248,10 +251,11 @@ jobs:
                               long held = System.currentTimeMillis() - downAt;
                               if (moved) getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).edit().putInt("x", params.x).putInt("y", params.y).apply();
                               if (!moved && held >= 650) {
-                                  Toast.makeText(VoiceOverlayService.this, "MOSHARROF ভাসমান সহকারী লুকানো হয়েছে · অ্যাপ খুলে আবার চালু করুন", Toast.LENGTH_LONG).show();
+                                  hidden = true;
+                                  getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).edit().putBoolean("hidden", true).apply();
+                                  Toast.makeText(VoiceOverlayService.this, "MOSHARROF আইকন লুকানো হয়েছে · নোটিফিকেশনের ‘দেখান’ চাপলে ফিরবে", Toast.LENGTH_LONG).show();
                                   removeBubble();
-                                  stopForeground(true);
-                                  stopSelf();
+                                  startForeground(NOTIFICATION_ID, notification());
                               }
                               else if (!moved) {
                                   if (compact) { compact = false; styleBubble(); }
@@ -513,6 +517,8 @@ jobs:
           grep -q 'android:name=".VoiceOverlayService"' android/app/src/main/AndroidManifest.xml
           grep -q 'android.permission.SYSTEM_ALERT_WINDOW' android/app/src/main/AndroidManifest.xml
           grep -q 'windowManager.updateViewLayout' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
+          grep -q 'getBoolean("hidden", false)' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
+          grep -q 'putBoolean("hidden", true)' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
           grep -q 'mosharrofNativeVoiceCommand' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           echo "Native Android edge-to-edge + global voice manager: PASS"
 
