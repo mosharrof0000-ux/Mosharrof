@@ -17,6 +17,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Enforce architecture before tests and promotion
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            BASE="HEAD^"
+          else
+            git fetch --no-tags origin main:refs/remotes/origin/main
+            BASE="origin/main"
+          fi
+          python3 scripts/mosharrof_architecture_gate.py "$BASE"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
