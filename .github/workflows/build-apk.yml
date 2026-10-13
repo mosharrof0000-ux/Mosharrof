@@ -69,6 +69,7 @@ jobs:
           public class MainActivity extends BridgeActivity {
               @Override
               protected void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(MosharrofDeviceControlPlugin.class);
                   super.onCreate(savedInstanceState);
 
                   Window window = getWindow();
@@ -108,7 +109,10 @@ jobs:
 
           grep -q 'WindowCompat.setDecorFitsSystemWindows'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           grep -q 'setNavigationBarContrastEnforced(false)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          echo "Native Android edge-to-edge shell: PASS"
+          cp android-src/MosharrofDeviceControlPlugin.java             android/app/src/main/java/com/mosharrof/ai/MosharrofDeviceControlPlugin.java
+          grep -q '@CapacitorPlugin(name = "MosharrofDeviceControl")'             android/app/src/main/java/com/mosharrof/ai/MosharrofDeviceControlPlugin.java
+          grep -q 'registerPlugin(MosharrofDeviceControlPlugin.class)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          echo "Native Android edge-to-edge shell and device bridge: PASS"
 
       - name: Build debug APK
         working-directory: android
