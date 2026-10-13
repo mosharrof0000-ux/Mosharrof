@@ -64,6 +64,59 @@ class DeviceActionBroker:
         self._approval_check = approval_check
         self._audit_sink = audit_sink or (lambda event: None)
 
+    @classmethod
+    def from_permission_guard(
+        cls,
+        *,
+        permission_guard: Any,
+        approval_check: ApprovalCheck,
+        audit_ledger: Any,
+    ) -> "DeviceActionBroker":
+        """Wire the broker to the trusted PermissionGuard and append-only ledger.
+
+        The approval_check must validate a fresh approval bound to the exact
+        action_id, capability, entity_id and resource_scope. The ledger must be
+        a trusted application-owned sink; no no-op audit sink is used here.
+        """
+        if permission_guard is None or not callable(
+            getattr(permission_guard, "authorize_capability", None)
+        ):
+            raise ValueError("A configured permission guard is required")
+        if audit_ledger is None or not callable(getattr(audit_ledger, "record", None)):
+            raise ValueError("A persistent audit ledger is required")
+        if not callable(approval_check):
+            raise ValueError("A fresh-action approval checker is required")
+
+        def authorize(capability: str, *, entity_id: str,
+                      resource_scope: str, approval_token: Any) -> Mapping[str, Any]:
+            return permission_guard.authorize_capability(
+                capability,
+                entity_id=entity_id,
+                resource_scope=resource_scope,
+                approval_token=approval_token,
+            )
+
+        def audit_sink(event: Mapping[str, Any]) -> None:
+            # Keep the existing ledger contract while preserving privacy:
+            # never pass approval tokens, scope contents, arguments or results.
+            audit_ledger.record(
+                str(event.get("entity_id") or ""),
+                str(event.get("capability") or ""),
+                str(event.get("status") or "UNKNOWN"),
+                event_id=event.get("event_id"),
+                action_id=event.get("action_id"),
+                reason=event.get("reason"),
+                timestamp=event.get("timestamp"),
+                started_at=event.get("started_at"),
+                scope_present=bool(event.get("scope_present")),
+            )
+
+        return cls(
+            authorize=authorize,
+            approval_check=approval_check,
+            audit_sink=audit_sink,
+        )
+
     def _audit(
         self, *, action_id: str, capability: str, entity_id: str,
         resource_scope: str, status: str, reason: str, started_at: str,
