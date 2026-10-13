@@ -87,6 +87,7 @@ class DeviceActionBrokerTests(unittest.TestCase):
         serialized = str(self.audit)
         self.assertNotIn("fresh-approval", serialized)
         self.assertNotIn("do-not-audit", serialized)
+        self.assertNotIn("device/settings/display", serialized)
 
     def test_authorization_exception_fails_closed(self):
         self.broker = DeviceActionBroker(
