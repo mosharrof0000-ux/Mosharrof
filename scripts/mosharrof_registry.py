@@ -14,8 +14,19 @@ class RegistryError(ValueError):
 def build_registry(root: Path) -> dict[str, Any]:
     organs_root = root / "organs"
     manifests: dict[str, dict[str, Any]] = {}
-    if organs_root.exists():
-        for organ_folder in sorted(path for path in organs_root.iterdir() if path.is_dir() and not path.name.startswith("_")):
+    if not organs_root.is_dir():
+        raise RegistryError("organs/: required organ root folder is missing; every organ must have its own folder")
+    organ_folders = sorted(path for path in organs_root.iterdir() if path.is_dir() and not path.name.startswith("_"))
+    if not organ_folders:
+        raise RegistryError("organs/: no organ folders found; every organ must be isolated in its own folder")
+    for source in organs_root.iterdir():
+        if source.is_file() and source.suffix.lower() in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".css", ".html"}:
+            raise RegistryError(f"{source.relative_to(root)}: source cannot sit at the organs root; create a dedicated organ folder")
+    for organ_folder in organ_folders:
+        nested_manifests = [candidate for candidate in organ_folder.rglob("organ.json") if candidate != organ_folder / "organ.json"]
+        if nested_manifests:
+            nested = nested_manifests[0]
+            raise RegistryError(f"{nested.relative_to(root)}: nested organ detected; each organ must have its own top-level folder")
             manifest_path = organ_folder / "organ.json"
             folder_id = organ_folder.name
             if not manifest_path.is_file():
