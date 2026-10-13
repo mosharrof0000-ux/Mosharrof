@@ -765,7 +765,7 @@ jobs:
                       return true;
                   }
                   String target = normalized.replaceAll("কল দাও|কল করুন|ফোন করো?|ফোন দাও|ফোন করুন|আমাকে|দয়া করে|দয়া করে|call|phone|to", " ")
-                      .replaceAll("\\\\s+", " ").trim();
+                      .replaceAll("\\s+", " ").replaceAll("কে\\s*$", "").trim();
                   if (target.isEmpty()) {
                       Toast.makeText(this, "কাকে কল করতে চান, নামটি বলুন।", Toast.LENGTH_LONG).show();
                       return true;
@@ -800,7 +800,7 @@ jobs:
                   final String phoneNumber = matchedNumber;
                   new android.app.AlertDialog.Builder(this)
                       .setTitle("কল করার আগে নিশ্চিত করুন")
-                      .setMessage(contactName + " — " + phoneNumber + "\\\\nএই নম্বরে কল করবেন?")
+                      .setMessage(contactName + " — " + phoneNumber + "\nএই নম্বরে কল করবেন?")
                       .setPositiveButton("কল দিন", (dialog, which) -> {
                           try {
                               if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
