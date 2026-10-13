@@ -103,7 +103,7 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
 
 
     def test_oversized_source_file_is_blocked(self) -> None:
-        self.add_organ("const ready = true;\\n" * 250)
+        self.add_organ("const ready = true;\\n" * 251)
         result = self.run_gate()
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("251 lines exceeds the 250-line limit", result.stdout)
