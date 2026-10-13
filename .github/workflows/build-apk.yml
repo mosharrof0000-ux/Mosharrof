@@ -32,6 +32,7 @@ jobs:
 
       - name: Verify edge-to-edge web contract
         run: |
+          node --check web/device-control.js
           test -s web/index.html
           test -s web/edge-to-edge.css
           grep -q 'viewport-fit=cover' web/index.html
