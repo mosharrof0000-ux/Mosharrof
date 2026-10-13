@@ -59,4 +59,4 @@ def test_deploy_workflow_keeps_optional_provider_keys_server_side():
     assert "secret put GROQ_API_KEY" in workflow
     assert "secret put OPENROUTER_API_KEY" in workflow
     assert '"cloudflare_chat_configured":true' in workflow
-    assert "2026-10-13-chat-multi-provider-failover-v1" in workflow
+    assert "2026-10-13-chat-live-provider-status-v1" in workflow
