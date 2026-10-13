@@ -67,7 +67,7 @@ class DeviceActionBroker:
     def _audit(
         self, *, action_id: str, capability: str, entity_id: str,
         resource_scope: str, status: str, reason: str, started_at: str,
-    ) -> None:
+    ) -> bool:
         event = {
             "event_id": str(uuid.uuid4()),
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -81,10 +81,10 @@ class DeviceActionBroker:
         }
         try:
             self._audit_sink(event)
+            return True
         except Exception:
-            # Audit failure must not turn a failed or denied action into success.
-            # A successful operation is downgraded by the caller if audit fails.
-            raise
+            # Never claim a fully successful action when its audit write failed.
+            return False
 
     def execute(
         self,
@@ -106,11 +106,16 @@ class DeviceActionBroker:
 
         def finish(status: str, reason: str, verified: bool = False,
                    result: Any = None) -> dict[str, Any]:
-            self._audit(
+            audit_ok = self._audit(
                 action_id=action_id, capability=capability, entity_id=entity_id,
                 resource_scope=resource_scope, status=status, reason=reason,
                 started_at=started_at,
             )
+            if not audit_ok and status == "SUCCESS":
+                return ActionResult(
+                    action_id, "UNVERIFIED", "AUDIT_WRITE_FAILED_AFTER_ACTION",
+                    False, result,
+                ).as_dict()
             return ActionResult(action_id, status, reason, verified, result).as_dict()
 
         if not capability or not entity_id or not resource_scope:
