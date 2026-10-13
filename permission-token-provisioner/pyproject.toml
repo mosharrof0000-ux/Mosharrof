@@ -1,0 +1,10 @@
+[project]
+name = "mosharrof-permission-token-provisioner"
+version = "0.1.0"
+description = "Fail-closed policy core for an isolated credential provisioner"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
