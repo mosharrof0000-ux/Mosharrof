@@ -64,8 +64,22 @@ class OrganRegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(RegistryError, "must match folder"):
             build_registry(self.root)
 
-    def test_empty_repo_has_empty_registry(self) -> None:
-        self.assertEqual(build_registry(self.root)["organs"], [])
+    def test_missing_organs_root_blocks_registry(self) -> None:
+        with self.assertRaisesRegex(RegistryError, "required organ root folder is missing"):
+            build_registry(self.root)
+
+    def test_empty_organs_root_blocks_registry(self) -> None:
+        (self.root / "organs").mkdir()
+        with self.assertRaisesRegex(RegistryError, "no organ folders found"):
+            build_registry(self.root)
+
+    def test_nested_organ_is_blocked(self) -> None:
+        self.organ("outer-organ")
+        nested = self.root / "organs" / "outer-organ" / "nested-organ"
+        nested.mkdir()
+        (nested / "organ.json").write_text(json.dumps({"id": "nested-organ", "public_api": []}), encoding="utf-8")
+        with self.assertRaisesRegex(RegistryError, "nested organ detected"):
+            build_registry(self.root)
 
     def test_scaffolder_creates_required_files_and_refuses_overwrite(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
