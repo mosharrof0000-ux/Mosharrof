@@ -110,16 +110,16 @@ header.top .left-btn, header.top .right-btn, .top .left-btn, .top .right-btn {
 .toast { z-index: 330 !important; }
 /* Day mode follows the Android/device appearance preference. */
 @media (prefers-color-scheme: light) {
-  html, body { background: #fff !important; color: #171717 !important; }
-  .app { background: #fff !important; color: #171717 !important; }
+  html, body { background: #f5f3ee !important; color: #171717 !important; }
+  .app { background: #f5f3ee !important; color: #171717 !important; }
   .main, .content, .hero, .chat-scroll { background: transparent !important; }
   .round {
-    background: rgba(255,255,255,.86) !important;
+    background: rgba(248,246,240,.92) !important;
     color: #171717 !important;
     border-color: rgba(0,0,0,.13) !important;
     box-shadow: 0 2px 12px rgba(0,0,0,.09) !important;
   }
-  .round:hover { background: #f2f2f2 !important; border-color: rgba(0,0,0,.2) !important; }
+  .round:hover { background: #eeece5 !important; border-color: rgba(0,0,0,.2) !important; }
   .menu-icon { color: #171717 !important; }
   .message, .message.ai, .message.ai .rich-content,
   .message.ai .rich-content p, .message.ai .rich-content li,
@@ -132,7 +132,7 @@ header.top .left-btn, header.top .right-btn, .top .left-btn, .top .right-btn {
   .message.user { background: #f0f0f0 !important; color: #202124 !important; }
   .message .label, .message .time, .response-route { color: #6b7280 !important; }
   .composer {
-    background: rgba(255,255,255,.94) !important;
+    background: rgba(250,249,245,.96) !important;
     color: #202124 !important;
     border-color: rgba(0,0,0,.14) !important;
     box-shadow: 0 4px 24px rgba(0,0,0,.12) !important;
@@ -146,21 +146,21 @@ header.top .left-btn, header.top .right-btn, .top .left-btn, .top .right-btn {
   .message-feedback-shortcut, .feedback-option, .feedback-button,
   .composer-tools-menu, .plugin, .modal, .drawer, .feedback-panel,
   .audio-setting-row select, .feedback-comment {
-    background-color: #fff !important;
+    background-color: #faf9f5 !important;
     color: #202124 !important;
     border-color: rgba(0,0,0,.14) !important;
   }
   .drawer, .plugin, .modal, .feedback-panel { box-shadow: 0 10px 32px rgba(0,0,0,.16) !important; }
-  .message.ai .rich-content blockquote { background: #f7f7f7 !important; border-left-color: #999 !important; }
+  .message.ai .rich-content blockquote { background: #f2f0e9 !important; border-left-color: #999 !important; }
   .message.ai .rich-content hr { border-top-color: rgba(0,0,0,.15) !important; }
-  .message.ai .rich-content :not(pre)>code { background: #f2f2f2 !important; color: #754b00 !important; border-color: #ddd !important; }
-  .message.ai .rich-content table { background: #fff !important; }
-  .message.ai .rich-content th { background: #f1f1f1 !important; color: #202124 !important; }
+  .message.ai .rich-content :not(pre)>code { background: #efede5 !important; color: #754b00 !important; border-color: #ddd !important; }
+  .message.ai .rich-content table { background: #faf9f5 !important; }
+  .message.ai .rich-content th { background: #efede7 !important; color: #202124 !important; }
   .message.ai .rich-content th, .message.ai .rich-content td { border-color: #e5e5e5 !important; }
   .message.ai .rich-content a { color: #145bb5 !important; }
-  .response-timer { background: #f3f3f3 !important; color: #087a35 !important; border-color: #ddd !important; }
+  .response-timer { background: #f1efe7 !important; color: #087a35 !important; border-color: #ddd !important; }
   .response-timer.is-error { color: #d11b1b !important; }
-  .voice-companion { background: #f3f3f3 !important; color: #333 !important; border-color: #ddd !important; }
+  .voice-companion { background: #f1efe7 !important; color: #333 !important; border-color: #ddd !important; }
   .voice-companion.is-download { background: #e9f8ee !important; color: #176b32 !important; }
   .message-speak-shortcut.is-ready, .message-action.is-ready,
   .message-speak-shortcut.is-speaking, .message-action.is-speaking {
