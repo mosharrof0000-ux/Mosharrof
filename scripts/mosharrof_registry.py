@@ -15,8 +15,14 @@ def build_registry(root: Path) -> dict[str, Any]:
     organs_root = root / "organs"
     manifests: dict[str, dict[str, Any]] = {}
     if organs_root.exists():
-        for manifest_path in sorted(organs_root.glob("*/organ.json")):
-            folder_id = manifest_path.parent.name
+        for organ_folder in sorted(path for path in organs_root.iterdir() if path.is_dir() and not path.name.startswith("_")):
+            manifest_path = organ_folder / "organ.json"
+            folder_id = organ_folder.name
+            if not manifest_path.is_file():
+                raise RegistryError(f"organs/{folder_id}: missing required organ.json")
+            for required in ("index.js", "README.md", "tests/README.md"):
+                if not (organ_folder / required).is_file():
+                    raise RegistryError(f"organs/{folder_id}: missing required {required}")
             try:
                 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as exc:
