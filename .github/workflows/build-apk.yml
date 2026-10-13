@@ -59,7 +59,7 @@ jobs:
           html = page.read_text(encoding="utf-8")
           link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-2">'
           if link not in html:
-              html = html.replace("</head>", f"  {link}\\n</head>", 1)
+              html = html.replace("</head>", f"  {link}\n</head>", 1)
           if link not in html:
               raise SystemExit("Android-only stylesheet injection failed")
           page.write_text(html, encoding="utf-8")
