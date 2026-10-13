@@ -697,15 +697,46 @@ header.top{
   function releaseActiveAudioUrl(expectedUrl){if(expectedUrl&&activeAudioUrl!==expectedUrl)return;if(activeAudioUrl){try{URL.revokeObjectURL(activeAudioUrl);}catch(e){}activeAudioUrl=null;}}
   var activeSpeech=null;
   var activeSpeechButton=null;
+  function updateLiveChatRoute(event){
+    var typingNode=$("#typing"),route=typingNode&&typingNode.querySelector(".response-route");if(!route||!event)return;
+    var provider=providerShortName(event.provider),model=event.model?String(event.model).split("/").pop():"";
+    if(event.stage==="trying")route.textContent="সংযোগ: "+provider+(model?" · "+model:"");
+    else if(event.stage==="failed")route.textContent=provider+" ব্যর্থ · বিকল্প খোঁজা হচ্ছে";
+    else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
+  }
   function coreReply(t,image){
-    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null})})
-      .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
-        var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
-        if(!res.ok){var failure=new Error(data.provider_message||data.message||data.error||("HTTP "+res.status));failure.responseMeta={provider:null,model:null,attempted:responseMeta.attempted,failed:true};throw failure;}
-        var answer=String(data.text||"").trim();
-        if(!answer){var empty=new Error("empty_response");empty.responseMeta={provider:responseMeta.provider,model:responseMeta.model,attempted:responseMeta.attempted,failed:true};throw empty;}
-        return {text:answer,responseMeta:responseMeta};
-      });});
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
+      .then(function(res){
+        function finish(data,status){
+          var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
+          if(status<200||status>=300){var failure=new Error(data.provider_message||data.message||data.error||("HTTP "+status));failure.responseMeta={provider:null,model:null,attempted:responseMeta.attempted,failed:true};throw failure;}
+          var answer=String(data.text||"").trim();
+          if(!answer){var empty=new Error("empty_response");empty.responseMeta={provider:responseMeta.provider,model:responseMeta.model,attempted:responseMeta.attempted,failed:true};throw empty;}
+          return {text:answer,responseMeta:responseMeta};
+        }
+        if((res.headers.get("content-type")||"").toLowerCase().indexOf("text/event-stream")===-1){
+          return res.json().catch(function(){return {};}).then(function(data){return finish(data,res.status);});
+        }
+        return new Promise(function(resolve,reject){
+          var reader=res.body.getReader(),decoder=new TextDecoder(),buffer="",settled=false;
+          function handleBlock(block){
+            var line=block.split(/\r?\n/).find(function(item){return item.indexOf("data:")===0;});if(!line)return;
+            var event;try{event=JSON.parse(line.slice(5).trim());}catch(e){return;}
+            if(event.type==="status"){updateLiveChatRoute(event);return;}
+            if(event.type!=="result"||settled)return;
+            settled=true;try{resolve(finish(event.data||{},Number(event.status||500)));}catch(e){reject(e);}
+          }
+          function read(){
+            reader.read().then(function(part){
+              if(part.done){if(!settled)reject(new Error("chat_stream_ended_without_result"));return;}
+              buffer+=decoder.decode(part.value,{stream:true});
+              var split;while((split=buffer.indexOf("\n\n"))>=0){var block=buffer.slice(0,split);buffer=buffer.slice(split+2);handleBlock(block);}
+              read();
+            }).catch(function(error){if(!settled)reject(error);});
+          }
+          read();
+        });
+      });
   }
   function setSpeakButton(button,label){
     var preparing=label.indexOf("প্রস্তুত")!==-1,playing=label.indexOf("বন্ধ")!==-1;
