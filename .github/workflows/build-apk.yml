@@ -57,7 +57,28 @@ jobs:
           from pathlib import Path
           page = Path("android-web/index.html")
           html = page.read_text(encoding="utf-8")
-          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-4">'
+          # In Android only, route spoken app-launch commands through a strict native allowlist.
+          voice_hook = r"""input.value=[voiceBaseText,transcript].filter(Boolean).join(voiceBaseText?"\n":"");resize();
+          finishVoiceProcessingTimer(true);"""
+          voice_replacement = r"""input.value=[voiceBaseText,transcript].filter(Boolean).join(voiceBaseText?"\n":"");resize();
+          finishVoiceProcessingTimer(true);
+          var spoken=String(transcript||"").toLowerCase();
+          var actionWords=/(খোলো|চালু কর|চালু করো|যাও|চলে যাও|ওপেন|open|launch|go to)/i.test(spoken);
+          var target=null;
+          if(actionWords&&/(youtube|ইউটিউব)/i.test(spoken))target="youtube";
+          else if(actionWords&&/(facebook|ফেসবুক)/i.test(spoken))target="facebook";
+          else if(actionWords&&/(whatsapp|হোয়াটসঅ্যাপ|হোয়াটসঅ্যাপ)/i.test(spoken))target="whatsapp";
+          else if(actionWords&&/(chrome|ক্রোম)/i.test(spoken))target="chrome";
+          else if(actionWords&&/(maps|ম্যাপস|গুগল ম্যাপ)/i.test(spoken))target="maps";
+          if(target&&window.MosharrofNative&&MosharrofNative.openApp){
+            input.value="";resize();MosharrofNative.openApp(target);
+            showVoiceMessage("অ্যাপ চালু করা হচ্ছে: "+target);
+          } else { send(); }"""
+          if voice_hook in html:
+              html = html.replace(voice_hook, voice_replacement, 1)
+          else:
+              raise SystemExit("Android voice-to-chat integration hook was not found; refusing to build without it")
+          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-5">'
           if link not in html:
               html = html.replace("</head>", f"  {link}\n</head>", 1)
           if link not in html:
@@ -79,7 +100,7 @@ jobs:
             fab.addEventListener("pointermove",function(e){
               if(!fab.hasPointerCapture||!fab.hasPointerCapture(e.pointerId))return;
               var dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)>7||Math.abs(dy)>7){moved=true;if(longTimer){clearTimeout(longTimer);longTimer=null;}}
-              if(moved){fab.style.left=Math.max(0,Math.min(window.innerWidth-40,ox+dx))+"px";fab.style.top=Math.max(0,Math.min(window.innerHeight-40,oy+dy))+"px";fab.style.right="auto";fab.style.bottom="auto";}
+              if(moved){fab.classList.add("is-moved");fab.style.left=Math.max(0,Math.min(window.innerWidth-40,ox+dx))+"px";fab.style.top=Math.max(0,Math.min(window.innerHeight-40,oy+dy))+"px";fab.style.right="auto";fab.style.bottom="auto";}
             });
             fab.addEventListener("pointerup",function(){
               if(longTimer){clearTimeout(longTimer);longTimer=null;}
