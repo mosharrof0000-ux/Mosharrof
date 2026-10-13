@@ -1,10 +1,12 @@
 from pathlib import Path
+import subprocess
 
 
 def test_chat_failover_has_keyless_cloudflare_fallback_and_optional_providers():
     worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
     assert "async function generateWithCloudflareChat" in worker
     assert "env.AI.run(model" in worker
+    assert '"@cf/zai-org/glm-4.7-flash,@cf/meta/llama-3.3-70b-instruct-fp8-fast"' in worker
     assert "async function generateWithOpenAICompatibleChat" in worker
     assert 'String(env.GROQ_API_KEY||"").trim()' in worker
     assert 'String(env.OPENROUTER_API_KEY||"").trim()' in worker
@@ -34,6 +36,10 @@ def test_worker_health_reports_provider_configuration_without_secret_values():
     assert 'openrouter_chat_configured:!!env.OPENROUTER_API_KEY' in worker
     assert 'gemini_chat_key_slots:[!!env.GEMINI_API_KEY' in worker
     assert 'const WORKER_BUILD_ID="2026-10-13-chat-multi-provider-failover-v1";' in worker
+
+
+def test_worker_javascript_parses_with_node():
+    subprocess.run(["node", "--check", "worker/screenshot-analysis.js"], check=True)
 
 
 def test_deploy_workflow_keeps_optional_provider_keys_server_side():
