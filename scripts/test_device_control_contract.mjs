@@ -14,6 +14,7 @@ for (const method of [
   assert.ok(plugin.includes(method), `Native plugin missing ${method}`);
 }
 assert.ok(plugin.includes("@CapacitorPlugin(name = \"DeviceControl\")"));
+assert.ok(plugin.includes("getFloatingBubbleStatus"), "Overlay permission status must be queryable after returning from Settings");
 assert.ok(plugin.includes("userMediated"));
 assert.ok(plugin.includes("new Intent(action)"));
 assert.ok(!plugin.includes("WRITE_SETTINGS"), "Must not request silent system-setting writes");
@@ -23,6 +24,9 @@ assert.ok(ui.includes("window.Capacitor") && ui.includes("Plugins.DeviceControl"
 assert.ok(ui.includes('data-device-action="wifi"'));
 assert.ok(ui.includes("ওয়েবসাইট একা ফোনের সেটিংস বদলাতে পারে না"));
 assert.ok(page.includes('<script src="./device-control.js"></script>'));
+assert.ok(page.includes('<script src="./sidebar-recovery.js"></script>'));
+assert.ok(ui.includes("pendingBubblePermission") && ui.includes("visibilitychange"), "Overlay permission should resume automatically after returning from Android Settings");
+assert.ok(workflow.includes("android.permission.RECORD_AUDIO"), "Android manifest must declare microphone permission for voice input");
 assert.ok(workflow.includes("cp native/android/DeviceControlPlugin.java"));
 assert.ok(workflow.includes("registerPlugin(DeviceControlPlugin.class)"));
 
