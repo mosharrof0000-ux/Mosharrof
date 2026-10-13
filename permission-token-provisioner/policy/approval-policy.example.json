@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "mode": "deny_by_default",
+  "owner_approval": {
+    "required_for_each_privileged_action": true,
+    "approval_must_bind": [
+      "provider",
+      "action",
+      "permission_set",
+      "resource_scope",
+      "environment",
+      "expires_at"
+    ],
+    "reject_expired_approval": true,
+    "reject_replayed_approval": true
+  },
+  "allowed_automation": {
+    "credential_selection": true,
+    "read_only_health_checks": true,
+    "reuse_existing_scoped_credential": true,
+    "automatic_privilege_escalation": false,
+    "create_credential_without_approval": false,
+    "rotate_credential_without_approval": false,
+    "revoke_or_delete_without_approval": false,
+    "write_secret_without_approval": false,
+    "fallback_to_broader_credential": false
+  },
+  "credential_constraints": {
+    "least_privilege": true,
+    "shortest_supported_ttl": true,
+    "secret_values_in_audit": false,
+    "secret_values_in_logs": false,
+    "secret_values_in_client": false
+  },
+  "failure_behavior": "fail_closed"
+}
