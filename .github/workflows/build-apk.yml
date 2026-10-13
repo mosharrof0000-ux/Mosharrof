@@ -52,6 +52,7 @@ jobs:
       - name: Apply native Android edge-to-edge shell
         run: |
           mkdir -p android/app/src/main/java/com/mosharrof/ai
+          cp native/android/DeviceControlPlugin.java android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
           cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
           package com.mosharrof.ai;
 
@@ -69,6 +70,7 @@ jobs:
           public class MainActivity extends BridgeActivity {
               @Override
               protected void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(DeviceControlPlugin.class);
                   super.onCreate(savedInstanceState);
 
                   Window window = getWindow();
@@ -106,6 +108,9 @@ jobs:
           }
           JAVA
 
+          test -s android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
+          grep -q 'registerPlugin(DeviceControlPlugin.class)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'openWifiSettings' android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
           grep -q 'WindowCompat.setDecorFitsSystemWindows'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           grep -q 'setNavigationBarContrastEnforced(false)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           echo "Native Android edge-to-edge shell: PASS"
