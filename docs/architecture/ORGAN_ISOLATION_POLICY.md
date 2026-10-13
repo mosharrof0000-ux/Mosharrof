@@ -21,13 +21,13 @@ This policy is a release requirement, not a style suggestion. A pull request tha
 
 A file that exceeds its limit must be split by responsibility; increasing the limit to avoid splitting is not an acceptable workaround. Large functions should also be decomposed into small, named units and tested.
 
-## Mandatory connection/link limit
+## Mandatory link limit
 
-- **One production source file may declare at most 20 module/dependency links** (imports, dynamic imports, or `require` calls).
+- **Every production source file may contain at most 20 declared links.** For JavaScript/TypeScript this includes static imports, side-effect imports, re-exports, dynamic imports, and `require()`. For HTML it includes `href`, `src`, `action`, and `poster`; for CSS it includes `@import` and `url()` references.
 - The 21st link is forbidden. Before adding it, create a dedicated helper/link module and move a coherent group of related dependencies there; the original file must connect to that module through its public interface.
 - The helper/link module is subject to the same 20-link cap and all file-size, ownership, test, and cross-organ rules. Do not evade the cap by moving every link into one oversized hub.
 - Link modules must be split hierarchically as needed. Each file/node in the link graph must respect the cap, so the architecture can scale to hundreds or thousands of organs without a single giant connection file.
-- The architecture gate counts declared import/dependency links in changed production source files and fails the build when a file exceeds the cap. Do not increase the cap to avoid splitting.
+- CI includes negative tests that intentionally construct an over-limit module and HTML file, and verifies the gate rejects them. If the gate fails to reject a violation, those tests fail.
 
 ## Legacy migration and safety
 
