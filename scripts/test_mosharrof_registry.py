@@ -92,5 +92,11 @@ class OrganRegistryTests(unittest.TestCase):
         self.assertIn("at most 20 dependencies", result.stdout)
 
 
+    def test_organ_without_manifest_or_required_files_blocks_registry(self) -> None:
+        folder = self.root / "organs" / "incomplete-organ"
+        folder.mkdir(parents=True)
+        with self.assertRaisesRegex(RegistryError, "missing required organ.json"):
+            build_registry(self.root)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
