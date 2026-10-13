@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
@@ -42,7 +43,7 @@ class SQLiteAuditLedger:
     def __init__(self, database_path: str | Path = "data/audit/device-actions.sqlite3"):
         self.database_path = Path(database_path)
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS audit_events (
@@ -83,7 +84,7 @@ class SQLiteAuditLedger:
         timestamp = details.get("timestamp")
         if isinstance(timestamp, str) and timestamp:
             now = timestamp
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             cursor = connection.execute(
                 "INSERT INTO audit_events(timestamp, entity_id, action, status, details_json) "
                 "VALUES (?, ?, ?, ?, ?)",
@@ -102,7 +103,7 @@ class SQLiteAuditLedger:
         limit = max(0, min(int(limit), 1000))
         if limit == 0:
             return []
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             rows = connection.execute(
                 "SELECT sequence, timestamp, entity_id, action, status, details_json "
                 "FROM audit_events ORDER BY sequence DESC LIMIT ?", (limit,)
