@@ -27,9 +27,9 @@ class DeviceActionBrokerTests(unittest.TestCase):
 
     def run_action(self, **overrides):
         args = {
-            "capability": "settings.open_page",
+            "capability": "system.settings.read",
             "entity_id": "device-manager",
-            "resource_scope": "device/settings/display",
+            "resource_scope": "system/settings/display",
             "approval_token": "fresh-approval",
             "operation": lambda: {"opened": True},
             "verifier": lambda result: result.get("opened") is True,
@@ -41,13 +41,13 @@ class DeviceActionBrokerTests(unittest.TestCase):
     def test_permission_guard_and_audit_ledger_adapter(self):
         ledger = AuditLedger()
         service = TrustedPermissionService(
-            grant_resolver=lambda entity: ["settings.open_page"],
-            scope_resolver=lambda entity: "device/settings/*",
+            grant_resolver=lambda entity: ["system.settings.read"],
+            scope_resolver=lambda entity: "system/settings/*",
             policy_evaluator=lambda capability, entity, resource, scope: (
-                capability == "settings.open_page"
+                capability == "system.settings.read"
                 and entity == "device-manager"
-                and resource == "device/settings/display"
-                and scope == "device/settings/*"
+                and resource == "system/settings/display"
+                and scope == "system/settings/*"
             ),
             provider_readiness=lambda capability: True,
             approval_verifier=lambda capability, entity, token: token == "fresh-approval",
@@ -58,9 +58,9 @@ class DeviceActionBrokerTests(unittest.TestCase):
             audit_ledger=ledger,
         )
         result = broker.execute(
-            capability="settings.open_page",
+            capability="system.settings.read",
             entity_id="device-manager",
-            resource_scope="device/settings/display",
+            resource_scope="system/settings/display",
             approval_token="fresh-approval",
             operation=lambda: {"opened": True},
             verifier=lambda value: value.get("opened") is True,
@@ -68,12 +68,12 @@ class DeviceActionBrokerTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "SUCCESS")
         record = ledger.recent(1)[0]
-        self.assertEqual(record["action"], "settings.open_page")
+        self.assertEqual(record["action"], "system.settings.read")
         self.assertEqual(record["status"], "SUCCESS")
         self.assertEqual(record["details"]["action_id"], "action-ledger-1")
         self.assertTrue(record["details"]["scope_present"])
         self.assertNotIn("fresh-approval", str(ledger.recent()))
-        self.assertNotIn("device/settings/display", str(ledger.recent()))
+        self.assertNotIn("system/settings/display", str(ledger.recent()))
         self.assertNotIn("opened", str(ledger.recent()))
 
     def test_adapter_requires_real_permission_guard_and_audit_ledger(self):
@@ -143,7 +143,7 @@ class DeviceActionBrokerTests(unittest.TestCase):
         serialized = str(self.audit)
         self.assertNotIn("fresh-approval", serialized)
         self.assertNotIn("do-not-audit", serialized)
-        self.assertNotIn("device/settings/display", serialized)
+        self.assertNotIn("system/settings/display", serialized)
 
     def test_authorization_exception_fails_closed(self):
         self.broker = DeviceActionBroker(
