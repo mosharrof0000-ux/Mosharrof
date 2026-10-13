@@ -32,6 +32,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+      - name: Validate all organ manifests and declared links
+        run: python3 scripts/mosharrof_registry.py --validate-only
       - run: python -m pip install -r requirements.txt
       - run: python -m pytest -q
       - name: Verify Pages artifact
@@ -48,6 +50,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
+      - name: Generate registry from organ manifests
+        run: python3 scripts/mosharrof_registry.py --output web/runtime/organs.registry.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
