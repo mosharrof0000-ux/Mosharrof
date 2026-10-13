@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Guarded autonomous patcher with Gemini model discovery and safe fallback."""
-import json, os, sys, subprocess, pathlib, requests
+import json, os, sys, subprocess, pathlib, time, requests
 
 task=pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").strip()
 if not task:
@@ -48,10 +48,38 @@ def generate(model):
         timeout=120,
     )
 
-response=generate(preferred)
-if response.status_code==404:
-    catalog=requests.get(f"{base}/models",params={"key":key},timeout=30)
-    catalog.raise_for_status()
+TRANSIENT_HTTP_CODES={429,500,502,503,504}
+
+def generate_with_retry(model, attempts=4):
+    last_response=None
+    for attempt in range(attempts):
+        try:
+            response=generate(model)
+        except requests.RequestException as exc:
+            if attempt == attempts-1:
+                print(f"Gemini network request failed for {model} after {attempts} attempts ({type(exc).__name__}).")
+                return None
+            delay=min(2**attempt,8)
+            print(f"Gemini network issue for {model}; retry {attempt+2}/{attempts} in {delay}s.")
+            time.sleep(delay)
+            continue
+        last_response=response
+        if response.ok or response.status_code not in TRANSIENT_HTTP_CODES:
+            return response
+        if attempt < attempts-1:
+            delay=min(2**attempt,8)
+            print(f"Gemini temporarily unavailable for {model} (HTTP {response.status_code}); retry {attempt+2}/{attempts} in {delay}s.")
+            time.sleep(delay)
+    return last_response
+
+response=generate_with_retry(preferred)
+if response is None or response.status_code==404 or (not response.ok and response.status_code in TRANSIENT_HTTP_CODES):
+    try:
+        catalog=requests.get(f"{base}/models",params={"key":key},timeout=30)
+    except requests.RequestException as exc:
+        raise SystemExit(f"Unable to list Gemini fallback models ({type(exc).__name__}).") from None
+    if not catalog.ok:
+        raise SystemExit(f"Unable to list Gemini fallback models: HTTP {catalog.status_code}.")
     available=[]
     for item in catalog.json().get("models",[]):
         name=item.get("name","").removeprefix("models/")
@@ -61,21 +89,29 @@ if response.status_code==404:
         (name for name in available if "flash" in name.lower() and name!=preferred),
         key=lambda name: (("preview" in name.lower()), name),
     )
-    if preferred in available:
-        alternatives.insert(0,preferred)
     if not alternatives:
-        raise SystemExit("Gemini API key has no listed model supporting generateContent.")
+        if response is not None:
+            response.raise_for_status()
+        raise SystemExit("Gemini API key has no alternative listed Flash model supporting generateContent.")
     errors=[]
     for model in alternatives:
-        response=generate(model)
-        if response.ok:
-            print("Gemini model selected from API-supported model list: "+model)
+        candidate=generate_with_retry(model)
+        if candidate is not None and candidate.ok:
+            response=candidate
+            print("Gemini fallback model selected from API-supported model list: "+model)
             break
-        errors.append(f"{model}: HTTP {response.status_code}")
-        if response.status_code not in (400,404):
+        status=candidate.status_code if candidate is not None else "network error"
+        errors.append(f"{model}: {status}")
+        if candidate is not None and candidate.status_code in (401,403):
+            response=candidate
             break
     else:
+        if response is None:
+            raise SystemExit("No listed Gemini model accepted the request. "+", ".join(errors))
+        errors.insert(0,f"{preferred}: HTTP {response.status_code}")
         raise SystemExit("No listed Gemini model accepted the request. "+", ".join(errors))
+if response is None:
+    raise SystemExit("Gemini request failed: no response from the configured model or supported alternatives.")
 response.raise_for_status()
 try:
     plan=json.loads(response.json()["candidates"][0]["content"]["parts"][0]["text"])
