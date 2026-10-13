@@ -1,4 +1,4 @@
-/* MOSHARROF AI — true edge-to-edge / clean transparent glass (no blur, no border, no cloudy layer)
+/* MOSHARROF AI — true edge-to-edge / restrained frosted-glass chrome (no visible border)
    Web layer: full viewport canvas + floating chrome. Content scrolls clearly under glass.
 */
 :root{
@@ -41,7 +41,7 @@ body{
   padding:0 !important;
 }
 
-/* Header floats — clean transparent glass, no border, no blur */
+/* Header floats above the full-screen canvas with a restrained frosted-glass effect. */
 .top{
   position:absolute !important;
   top:0 !important;
@@ -59,9 +59,9 @@ body{
   border:0 !important;
   outline:none !important;
   box-shadow:none !important;
-  background:rgba(255,255,255,0.05) !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
+  background:rgba(10,14,24,0.44) !important;
+  backdrop-filter:blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(160%) !important;
 }
 
 /* Main content fills the exact viewport and scrolls under floating chrome. */
@@ -189,7 +189,15 @@ body{
   height:calc(120px + var(--mos-safe-bottom)) !important;
 }
 
-.top,
+.top{
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  background:rgba(10,14,24,.44) !important;
+  backdrop-filter:blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(160%) !important;
+  filter:none !important;
+}
 .composer,
 .chat-mode .composer{
   border:0 !important;
