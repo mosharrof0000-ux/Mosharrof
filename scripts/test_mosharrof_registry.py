@@ -128,7 +128,7 @@ class OrganRegistryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout)
         output = self.root / "web" / "runtime" / "organs.registry.json"
         self.assertTrue(output.is_file())
-        self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["organs"], [])
+        self.assertEqual([item["id"] for item in json.loads(output.read_text(encoding="utf-8"))["organs"]], ["deployment-organ"])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
