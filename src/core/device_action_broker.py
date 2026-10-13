@@ -138,6 +138,7 @@ class DeviceActionBroker:
                 capability,
                 entity_id=entity_id,
                 resource_scope=resource_scope,
+                approval_token=approval_token,
             )
         except Exception:
             decision = {"status": "DENIED", "reason": "AUTHORIZATION_SERVICE_ERROR"}
