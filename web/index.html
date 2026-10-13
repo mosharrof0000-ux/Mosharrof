@@ -269,6 +269,7 @@ header.top{
 <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+<script src="./device-control.js"></script>
 <script>
 (function(){
   var REG={core:"coordination and governance",chat:"conversation interface",sidebar:"navigation and entity discovery",voice:"context-aware voice processing",storage:"file indexing and organization",tool_factory:"safe tool creation and execution",quran_research:"Quran language research"};
@@ -1101,7 +1102,7 @@ header.top{
       for(var ri=0;ri<session.messages.length;ri++){var rm=session.messages[ri];addMsg(rm.role,rm.text,rm.at,true,rm.feedback,ri,rm.elapsedMs,rm.responseMeta);}
       editTargetIndex=null;
     }
-    addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);
+    addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var deviceAction=window.MosharrofDeviceControl&&window.MosharrofDeviceControl.parse(text);if(deviceAction){window.MosharrofDeviceControl.request(deviceAction,function(message){addMsg("ai",message);});busy=false;sendBtn.disabled=false;input.focus();return;}var requestStartedAt=performance.now();typing(requestStartedAt);
     var imageMode=!attached&&looksLikeImagePrompt(text);
     var request=imageMode?imageReply(text):coreReply(text,attached);
     request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);busy=false;sendBtn.disabled=false;input.focus();});}
