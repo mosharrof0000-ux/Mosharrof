@@ -57,7 +57,7 @@ jobs:
           from pathlib import Path
           page = Path("android-web/index.html")
           html = page.read_text(encoding="utf-8")
-          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-3">'
+          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-4">'
           if link not in html:
               html = html.replace("</head>", f"  {link}\n</head>", 1)
           if link not in html:
