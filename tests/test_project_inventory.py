@@ -38,7 +38,7 @@ class ProjectInventoryTests(unittest.TestCase):
         }]}
 
     def fake_get(self, url):
-        if url.endswith("/repos/mosharrof0000-ux/Mosharrof"):
+        if url.rstrip("/").endswith("/repos/mosharrof0000-ux/Mosharrof"):
             return self.metadata, None
         if url.endswith("/commits/main"):
             return self.commit, None
