@@ -17,9 +17,9 @@ def test_chat_failover_has_keyless_cloudflare_fallback_and_optional_providers():
 
 def test_chat_provider_order_is_gemini_then_workers_ai_then_optional_fallbacks():
     worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
-    chat = worker[worker.index("async function chat(request,env){"):worker.index("async function handleRequest(request,env){")]
+    chat = worker[worker.index("async function runChat(body,env,onStatus){"):worker.index("async function chat(request,env){")]
     gemini_loop = chat.index("const geminiPlan=[]")
-    cloudflare = chat.index("generateWithCloudflareChat(text,env)")
+    cloudflare = chat.index("generateWithCloudflareChat(text,env,report)")
     groq = chat.index('"groq","https://api.groq.com/openai/v1/chat/completions"')
     openrouter = chat.index('"openrouter","https://openrouter.ai/api/v1/chat/completions"')
     assert gemini_loop < cloudflare < groq < openrouter
@@ -35,7 +35,7 @@ def test_worker_health_reports_provider_configuration_without_secret_values():
     assert 'groq_chat_configured:!!env.GROQ_API_KEY' in worker
     assert 'openrouter_chat_configured:!!env.OPENROUTER_API_KEY' in worker
     assert 'gemini_chat_key_slots:[!!env.GEMINI_API_KEY' in worker
-    assert 'const WORKER_BUILD_ID="2026-10-13-chat-multi-provider-failover-v1";' in worker
+    assert 'const WORKER_BUILD_ID="2026-10-13-chat-live-provider-status-v1";' in worker
 
 
 def test_chat_providers_have_bounded_timeouts_so_failover_can_continue():
