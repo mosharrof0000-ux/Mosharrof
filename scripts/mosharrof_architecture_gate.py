@@ -80,18 +80,35 @@ def main() -> int:
     if "web/index.html" in changed:
         errors.append("web/index.html is frozen legacy shell; migrate code into organs/ or core/ before editing it.")
 
+    organs_root = ROOT / "organs"
+    organ_folders = sorted(path for path in organs_root.iterdir() if path.is_dir() and not path.name.startswith("_")) if organs_root.is_dir() else []
+    if not organs_root.is_dir():
+        errors.append("organs/: required organ root folder is missing; every organ must have its own folder.")
+    elif not organ_folders:
+        errors.append("organs/: no organ folders found; deployment is blocked until every organ is isolated in its own folder.")
+    for source in organs_root.iterdir() if organs_root.is_dir() else []:
+        if source.is_file() and source.suffix.lower() in SOURCE_SUFFIXES:
+            errors.append(f"{source.relative_to(ROOT)}: source cannot sit at the organs root; create a dedicated organs/<organ-id>/ folder.")
     changed_organs = {name for path in changed if (name := organ_name(path))}
-    for name in sorted(changed_organs):
-        folder = ROOT / "organs" / name
+    known_ids = set()
+    for folder in organ_folders:
+        name = folder.name
+        manifest = folder / "organ.json"
         for required in ("organ.json", "index.js", "README.md", "tests/README.md"):
             if not (folder / required).is_file():
                 errors.append(f"organ '{name}' is incomplete: missing organs/{name}/{required}")
-        manifest = folder / "organ.json"
+        nested_manifests = [candidate for candidate in folder.rglob("organ.json") if candidate != manifest]
+        for nested in nested_manifests:
+            errors.append(f"{nested.relative_to(ROOT)}: nested organ detected inside organs/{name}; each organ must have its own top-level folder.")
         if manifest.is_file():
             try:
                 data = json.loads(manifest.read_text(encoding="utf-8"))
-                if data.get("id") != name:
-                    errors.append(f"{manifest.relative_to(ROOT)}: manifest id must equal '{name}'")
+                organ_id = data.get("id")
+                if organ_id != name:
+                    errors.append(f"{manifest.relative_to(ROOT)}: manifest id must equal folder name '{name}'")
+                if organ_id in known_ids:
+                    errors.append(f"{manifest.relative_to(ROOT)}: duplicate organ id '{organ_id}'")
+                known_ids.add(organ_id)
                 if not isinstance(data.get("public_api"), list):
                     errors.append(f"{manifest.relative_to(ROOT)}: public_api must be an array")
             except (OSError, json.JSONDecodeError) as exc:
