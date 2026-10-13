@@ -51,7 +51,7 @@
     replyObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
     talk.addEventListener("click", function () {
       speakNextReply = true;
-      lastSpokenReply = null;
+      lastSpokenReply = document.querySelector(".message.ai:not(.typing)");
       setOpen(false);
       var voice = document.getElementById("composerVoiceBtn");
       if (voice) {
