@@ -10,6 +10,9 @@ const page = readFileSync("web/index.html", "utf8");
 
 assert.ok(ui.includes("mosharrofVoiceDock"));
 assert.ok(ui.includes("composerVoiceBtn"));
+assert.ok(ui.includes("speakNextReply"), "Voice input should arm automatic spoken AI reply");
+assert.ok(ui.includes(".message.ai:not(.typing)"), "Only completed assistant replies should be read aloud");
+assert.ok(ui.includes(".message-speak-shortcut"), "Reuse the existing MOSHARROF reply speech control");
 assert.ok(ui.includes("translateX(calc(100% - 9px)"), "Dock should stay tucked to the screen edge when closed");
 assert.ok(ui.includes("mosharrof:open-voice"));
 assert.ok(tile.includes("TileService"));
