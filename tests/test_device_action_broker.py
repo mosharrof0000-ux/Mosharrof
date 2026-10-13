@@ -82,6 +82,7 @@ class DeviceActionBrokerTests(unittest.TestCase):
     def test_audit_excludes_approval_token_and_result_payload(self):
         result = self.run_action(
             operation=lambda: {"private_payload": "do-not-audit"},
+            verifier=lambda _: True,
         )
         self.assertEqual(result["status"], "SUCCESS")
         serialized = str(self.audit)
