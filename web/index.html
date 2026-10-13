@@ -562,14 +562,16 @@ header.top{
   function chatRouteSummary(meta){
     if(!meta)return "";
     var winner=meta.provider?providerShortName(meta.provider):"";
+    var modelLabel=meta.model?String(meta.model).split("/").pop():"";
+    var answered=winner+(modelLabel?" · "+modelLabel:"");
     var attempts=Array.isArray(meta.attempted)?meta.attempted:[];
     var route=[];
     attempts.forEach(function(item){var name=providerShortName(item&&item.provider);if(name&&route.indexOf(name)<0)route.push(name);});
     if(winner&&route.indexOf(winner)<0)route.push(winner);
     if(meta.failed)return "চেষ্টা: "+(route.length?route.join(" → "):"AI সংযোগ")+" · ব্যর্থ";
     var fallback=route.filter(function(name){return name!==winner;});
-    if(fallback.length)return "শুরু: "+(route[0]||"AI")+" · বিকল্প: "+fallback.join(" → ")+" · উত্তর: "+(winner||"AI");
-    return "উত্তর: "+(winner||route[0]||"AI");
+    if(fallback.length)return "শুরু: "+(route[0]||"AI")+" · বিকল্প: "+fallback.join(" → ")+" · উত্তর: "+(answered||"AI");
+    return "উত্তর: "+(answered||route[0]||"AI");
   }
   function addMsg(role,text,ts,skipSave,feedback,messageIndexOverride,elapsedMs,responseMeta){
     var at=ts||nowISO();
