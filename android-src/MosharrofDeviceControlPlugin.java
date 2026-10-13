@@ -133,7 +133,7 @@ public class MosharrofDeviceControlPlugin extends Plugin {
             return;
         }
         try {
-            Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:" + Uri.encode(recipient)));
+            Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:" + recipient));
             intent.putExtra(Intent.EXTRA_SUBJECT, "");
             intent.putExtra(Intent.EXTRA_TEXT, body);
             getActivity().startActivity(intent);
