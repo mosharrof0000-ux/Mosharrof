@@ -105,7 +105,8 @@ jobs:
           </queries>
           """
           if "<queries>" not in xml:
-            xml = xml.replace("<application", queries + "\n    <application", 1)          permissions = [
+            xml = xml.replace("<application", queries + "\n    <application", 1)
+          permissions = [
             '    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />',
             '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />',
             '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />',
