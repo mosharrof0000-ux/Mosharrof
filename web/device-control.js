@@ -32,7 +32,21 @@
         summary:"মোশাররফ Android-এর " + page + " সেটিংস খোলার অনুমতি চাইছে। কোনো সেটিং নিজে থেকে বদলাবে না।"};
     }
 
-    if (/(স্টোরেজ|মেমোরি|র‍্যাম|ram|storage|memory).*(কত|দেখাও|দেখুন|পরীক্ষা|status|check|show)?/i.test(lower)) {
+    // File/photo inspection must never be misrouted to the RAM/storage-metrics action.
+    // This build does not yet implement a consent-gated MediaStore duplicate scan.
+    var asksForDuplicateFiles = /(?:ডুপ্লিকেট|একই|duplicate|duplicates|একাধিক|নকল)/i.test(lower) &&
+      /(?:ফাইল|ছবি|ফটো|photo|image|মেমোরি|স্টোরেজ|memory|storage)/i.test(lower);
+    var asksToInspectPhotos = /(?:ছবি|ফটো|photo|photos|image|images|গ্যালারি|gallery)/i.test(lower) &&
+      /(?:দেখ|খুঁজ|চেক|পরীক্ষা|স্ক্যান|scan|check|find|show|inspect|মেমোরি|স্টোরেজ|ফোন|ডিভাইস)/i.test(lower);
+    if (asksForDuplicateFiles || asksToInspectPhotos) {
+      return {kind:"unavailable",title:"ফাইল ও ছবির স্ক্যান এখনো উপলভ্য নয়",
+        detail:"কোনো ফাইল স্ক্যান বা পরিবর্তন করা হয়নি।",
+        summary:"এই সংস্করণে Android MediaStore-এর সম্মতিভিত্তিক ছবি/ফাইল স্ক্যান সংযুক্ত নয়। তাই ডুপ্লিকেট বা ছবির তালিকা যাচাই করা হয়নি; স্টোরেজ/RAM রিপোর্টকে ফাইল স্ক্যান হিসেবে দেখানো হবে না।"};
+    }
+
+    // Only report system metrics when the user explicitly asks about capacity/availability.
+    if (/(স্টোরেজ|মেমোরি|র‍্যাম|ram|storage|memory)/i.test(lower) &&
+        /(?:কত|দেখাও|দেখুন|পরীক্ষা|চেক|status|check|show|উপলভ্য|available|free|জানাও|জানুন|ফাঁকা)/i.test(lower)) {
       return {kind:"diagnostics",title:"ডিভাইসের উপলভ্য স্টোরেজ ও মেমোরি দেখুন",
         detail:"শুধু Android-এর প্রকাশ্য সিস্টেম মেট্রিক",payload:{},
         summary:"মোশাররফ উপলভ্য স্টোরেজ ও মেমোরির মেট্রিক পড়তে অনুমতি চাইছে। অন্য অ্যাপের ব্যক্তিগত ডেটা পড়বে না।"};
