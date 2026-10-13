@@ -16,3 +16,4 @@ def test_edge_to_edge_contract_keeps_full_viewport_and_frosted_header():
     assert "safe-area-inset-bottom" in css
     assert "backdrop-filter:blur(18px) saturate(160%) !important;" in css
     assert "-webkit-backdrop-filter:blur(18px) saturate(160%) !important;" in css
+    assert ".top .brand{display:none !important;}" in css
