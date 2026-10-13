@@ -29,6 +29,10 @@ jobs:
           python-version: "3.12"
       - name: Prove the gate blocks invalid replacements
         run: python3 -m unittest -v scripts/test_mosharrof_architecture_gate.py
+      - name: Validate registry and safe organ scaffolding
+        run: python3 -m unittest -v scripts/test_mosharrof_registry.py
+      - name: Validate every organ manifest and dependency edge
+        run: python3 scripts/mosharrof_registry.py --validate-only
       - name: Fetch target branch
         run: git fetch --no-tags origin main:refs/remotes/origin/main
       - name: Enforce organ isolation, link caps, and file-size limits
