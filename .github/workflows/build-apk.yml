@@ -53,9 +53,56 @@ jobs:
         run: |
           mkdir -p android/app/src/main/java/com/mosharrof/ai
           cp native/android/DeviceControlPlugin.java android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
+          cp native/android/MosharrofBubbleService.java android/app/src/main/java/com/mosharrof/ai/MosharrofBubbleService.java
+          cp native/android/MosharrofVoiceTileService.java android/app/src/main/java/com/mosharrof/ai/MosharrofVoiceTileService.java
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          tree = ET.parse(path)
+          root = tree.getroot()
+          ns = "http://schemas.android.com/apk/res/android"
+          ET.register_namespace("android", ns)
+          def attr(name): return "{" + ns + "}" + name
+          permissions = {
+              "android.permission.SYSTEM_ALERT_WINDOW",
+              "android.permission.FOREGROUND_SERVICE",
+              "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+              "android.permission.POST_NOTIFICATIONS",
+          }
+          existing = {item.get(attr("name")) for item in root.findall("uses-permission")}
+          for name in sorted(permissions - existing):
+              ET.SubElement(root, "uses-permission", {attr("name"): name})
+          app = root.find("application")
+          if app is None:
+              raise SystemExit("Android manifest has no application element")
+          services = {item.get(attr("name")) for item in app.findall("service")}
+          if ".MosharrofBubbleService" not in services:
+              service = ET.SubElement(app, "service", {
+                  attr("name"): ".MosharrofBubbleService",
+                  attr("exported"): "false",
+                  attr("foregroundServiceType"): "specialUse",
+              })
+              prop = ET.SubElement(service, "property", {
+                  attr("name"): "android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE",
+                  attr("value"): "User-enabled floating voice shortcut",
+              })
+          if ".MosharrofVoiceTileService" not in services:
+              tile = ET.SubElement(app, "service", {
+                  attr("name"): ".MosharrofVoiceTileService",
+                  attr("label"): "MOSHARROF AI",
+                  attr("icon"): "@android:drawable/ic_btn_speak_now",
+                  attr("permission"): "android.permission.BIND_QUICK_SETTINGS_TILE",
+                  attr("exported"): "true",
+              })
+              filt = ET.SubElement(tile, "intent-filter")
+              ET.SubElement(filt, "action", {attr("name"): "android.service.quicksettings.action.QS_TILE"})
+          tree.write(path, encoding="utf-8", xml_declaration=True)
+          PY
           cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
           package com.mosharrof.ai;
 
+          import android.content.Intent;
           import android.graphics.Color;
           import android.os.Build;
           import android.os.Bundle;
@@ -72,6 +119,7 @@ jobs:
               protected void onCreate(Bundle savedInstanceState) {
                   registerPlugin(DeviceControlPlugin.class);
                   super.onCreate(savedInstanceState);
+                  dispatchVoiceRequest(getIntent());
 
                   Window window = getWindow();
 
@@ -105,18 +153,43 @@ jobs:
                       controller.setAppearanceLightNavigationBars(false);
                   }
               }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  dispatchVoiceRequest(intent);
+              }
+
+              private void dispatchVoiceRequest(Intent intent) {
+                  if (intent == null || !"com.mosharrof.ai.OPEN_VOICE".equals(intent.getAction())) return;
+                  getWindow().getDecorView().postDelayed(() -> {
+                      if (getBridge() != null && getBridge().getWebView() != null) {
+                          getBridge().getWebView().evaluateJavascript(
+                              "window.dispatchEvent(new Event('mosharrof:open-voice'))", null);
+                      }
+                  }, 1100);
+              }
           }
           JAVA
 
           test -s android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
+          test -s android/app/src/main/java/com/mosharrof/ai/MosharrofBubbleService.java
+          test -s android/app/src/main/java/com/mosharrof/ai/MosharrofVoiceTileService.java
           grep -q 'registerPlugin(DeviceControlPlugin.class)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'dispatchVoiceRequest' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'MosharrofBubbleService' android/app/src/main/AndroidManifest.xml
+          grep -q 'MosharrofVoiceTileService' android/app/src/main/AndroidManifest.xml
+          grep -q 'SYSTEM_ALERT_WINDOW' android/app/src/main/AndroidManifest.xml
           grep -q 'openWifiSettings' android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
           grep -q 'WindowCompat.setDecorFitsSystemWindows'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           grep -q 'setNavigationBarContrastEnforced(false)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           echo "Native Android edge-to-edge shell: PASS"
 
       - name: Verify mediated Android device-control contract
-        run: node scripts/test_device_control_contract.mjs
+        run: |
+          node scripts/test_device_control_contract.mjs
+          node scripts/test_voice_companion_contract.mjs
 
       - name: Build debug APK
         working-directory: android
