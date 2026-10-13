@@ -144,6 +144,16 @@ jobs:
                   android:excludeFromRecents="true"
                   android:theme="@android:style/Theme.Translucent.NoTitleBar" />
               <service
+                  android:name=".VoiceQuickSettingsTile"
+                  android:label="MOSHARROF Voice"
+                  android:icon="@android:drawable/ic_btn_speak_now"
+                  android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+                  android:exported="true">
+                  <intent-filter>
+                      <action android:name="android.service.quicksettings.action.QS_TILE" />
+                  </intent-filter>
+              </service>
+              <service
                   android:name=".VoiceOverlayService"
                   android:exported="false"
                   android:foregroundServiceType="specialUse">
@@ -183,6 +193,27 @@ jobs:
           import android.widget.Toast;
 
           public class VoiceOverlayService extends Service {
+              private static VoiceOverlayService activeInstance;
+              private float lastAudioLevel = 0f;
+              public static void setVoiceListening(boolean value) {
+                  if (activeInstance != null && activeInstance.bubble != null) activeInstance.bubble.setListening(value);
+              }
+              public static void setVoiceLevel(float rmsDb) {
+                  if (activeInstance == null || activeInstance.bubble == null) return;
+                  float normalized = Math.max(0f, Math.min(1f, (rmsDb + 2f) / 12f));
+                  activeInstance.lastAudioLevel = normalized;
+                  activeInstance.bubble.setAudioLevel(normalized);
+              }
+              public static void setVoiceError() {
+                  if (activeInstance != null && activeInstance.bubble != null) activeInstance.bubble.setError(true);
+              }
+              public static void setVoiceSuccess() {
+                  if (activeInstance != null && activeInstance.bubble != null) {
+                      activeInstance.bubble.setListening(false);
+                      activeInstance.bubble.setError(false);
+                  }
+              }
+              public static void setPartialTranscript(String ignored) {}
               private static final String CHANNEL = "mosharrof_voice_manager";
               private static final int NOTIFICATION_ID = 5801;
               private static final String ACTION_STOP = "com.mosharrof.ai.STOP_VOICE_OVERLAY";
@@ -198,6 +229,7 @@ jobs:
 
               @Override public void onCreate() {
                   super.onCreate();
+                  activeInstance = this;
                   createChannel();
                   hidden = getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).getBoolean("hidden", false);
                   startForeground(NOTIFICATION_ID, notification());
@@ -316,8 +348,14 @@ jobs:
               private final class MicBubbleView extends View {
                   private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
                   private boolean isCompact;
+                  private boolean listening = false;
+                  private boolean error = false;
+                  private float audioLevel = 0f;
                   MicBubbleView(android.content.Context context) { super(context); setWillNotDraw(false); }
                   void setCompact(boolean value) { isCompact = value; invalidate(); }
+                  void setListening(boolean value) { listening = value; if (value) error = false; invalidate(); }
+                  void setError(boolean value) { error = value; listening = false; invalidate(); }
+                  void setAudioLevel(float value) { audioLevel = Math.max(0f, Math.min(1f, value)); invalidate(); }
                   @Override protected void onDraw(Canvas canvas) {
                       super.onDraw(canvas);
                       float w = getWidth(), h = getHeight();
@@ -334,7 +372,7 @@ jobs:
                           canvas.drawCircle(w/2f, h/2f, dp(2), paint);
                           return;
                       }
-                      paint.setColor(Color.WHITE);
+                      paint.setColor(error ? Color.rgb(255,69,69) : (listening ? Color.rgb(74,222,128) : Color.WHITE));
                       paint.setStrokeWidth(dp(1.8f));
                       paint.setStrokeCap(Paint.Cap.ROUND);
                       paint.setStyle(Paint.Style.STROKE);
@@ -342,12 +380,24 @@ jobs:
                       canvas.drawArc(new RectF(w*.25f, h*.31f, w*.75f, h*.75f), 0, 180, false, paint);
                       canvas.drawLine(w*.50f, h*.75f, w*.50f, h*.86f, paint);
                       canvas.drawLine(w*.38f, h*.86f, w*.62f, h*.86f, paint);
+                      if (listening) {
+                          paint.setStyle(Paint.Style.STROKE);
+                          paint.setStrokeWidth(dp(1.5f));
+                          paint.setStrokeCap(Paint.Cap.ROUND);
+                          float[] heights = new float[] {0.18f,0.30f,0.45f,0.62f,0.48f,0.32f,0.20f};
+                          for (int i=0;i<heights.length;i++) {
+                              float level = Math.max(0.10f, Math.min(1f, audioLevel));
+                              float bar = dp(3) + dp(11) * heights[i] * level;
+                              float x = w*.23f + i*w*.09f;
+                              canvas.drawLine(x, h*.5f-bar*.5f, x, h*.5f+bar*.5f, paint);
+                          }
+                      }
                   }
               }
 
               private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
               private void removeBubble() { if (windowManager != null && bubble != null) { try { windowManager.removeView(bubble); } catch (Exception ignored) {} } bubble = null; }
-              @Override public void onDestroy() { removeBubble(); super.onDestroy(); }
+              @Override public void onDestroy() { removeBubble(); if (activeInstance == this) activeInstance = null; super.onDestroy(); }
               @Override public IBinder onBind(Intent intent) { return null; }
           }
           JAVA
@@ -356,32 +406,73 @@ jobs:
 
           import android.app.Activity;
           import android.content.Intent;
-          import android.speech.RecognizerIntent;
           import android.os.Bundle;
+          import android.os.Handler;
+          import android.os.Looper;
+          import android.speech.RecognitionListener;
+          import android.speech.RecognizerIntent;
+          import android.speech.SpeechRecognizer;
           import android.widget.Toast;
           import android.content.pm.ResolveInfo;
           import java.util.ArrayList;
           import java.util.List;
           import java.util.Locale;
 
-          public class VoiceCommandActivity extends Activity {
+          public class VoiceCommandActivity extends Activity implements RecognitionListener {
+              private SpeechRecognizer recognizer;
+              private final Handler handler = new Handler(Looper.getMainLooper());
+              private boolean completed = false;
+
               @Override protected void onCreate(Bundle state) {
                   super.onCreate(state);
+                  if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+                      VoiceOverlayService.setVoiceError();
+                      Toast.makeText(this, "এই ডিভাইসে voice recognition পাওয়া যায়নি।", Toast.LENGTH_LONG).show();
+                      finish();
+                      return;
+                  }
+                  recognizer = SpeechRecognizer.createSpeechRecognizer(this);
+                  recognizer.setRecognitionListener(this);
                   Intent speech = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                   speech.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                   speech.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD");
                   speech.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "bn-BD");
+                  speech.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                  speech.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
                   speech.putExtra(RecognizerIntent.EXTRA_PROMPT, "MOSHARROF-কে বলুন: কোনো অ্যাপ খুলুন অথবা প্রশ্ন করুন");
-                  try { startActivityForResult(speech, 5804); }
-                  catch (Exception e) { Toast.makeText(this, "এই ডিভাইসে Android voice recognition পাওয়া যায়নি। MOSHARROF অ্যাপ খুলে মাইক্রোফোন ব্যবহার করুন।", Toast.LENGTH_LONG).show(); finish(); }
+                  VoiceOverlayService.setVoiceListening(true);
+                  try { recognizer.startListening(speech); }
+                  catch (Exception e) { VoiceOverlayService.setVoiceError(); finish(); }
               }
 
-              @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-                  super.onActivityResult(requestCode, resultCode, data);
-                  if (requestCode != 5804) { finish(); return; }
-                  if (resultCode != RESULT_OK || data == null) { finish(); return; }
-                  ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                  if (matches == null || matches.isEmpty()) { finish(); return; }
+              @Override public void onReadyForSpeech(Bundle params) { VoiceOverlayService.setVoiceListening(true); }
+              @Override public void onBeginningOfSpeech() { VoiceOverlayService.setVoiceListening(true); }
+              @Override public void onRmsChanged(float rmsdB) { VoiceOverlayService.setVoiceLevel(rmsdB); }
+              @Override public void onBufferReceived(byte[] buffer) {}
+              @Override public void onEndOfSpeech() { VoiceOverlayService.setVoiceListening(false); }
+              @Override public void onPartialResults(Bundle partialResults) {
+                  ArrayList<String> results = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                  if (results != null && !results.isEmpty()) VoiceOverlayService.setPartialTranscript(results.get(0));
+              }
+              @Override public void onEvent(int eventType, Bundle params) {}
+
+              @Override public void onError(int error) {
+                  if (completed) return;
+                  completed = true;
+                  VoiceOverlayService.setVoiceError();
+                  if (error != SpeechRecognizer.ERROR_NO_MATCH && error != SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                      Toast.makeText(this, "কথা বোঝা যায়নি বা মাইক্রোফোনে সমস্যা হয়েছে। আবার চেষ্টা করুন।", Toast.LENGTH_SHORT).show();
+                  }
+                  finish();
+              }
+
+              @Override public void onResults(Bundle results) {
+                  if (completed) return;
+                  completed = true;
+                  ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                  if (matches == null || matches.isEmpty()) { VoiceOverlayService.setVoiceError(); finish(); return; }
+                  VoiceOverlayService.setVoiceListening(false);
+                  VoiceOverlayService.setVoiceSuccess();
                   String spoken = matches.get(0).trim();
                   String normalized = spoken.toLowerCase(Locale.ROOT);
                   String pkg = null;
@@ -433,9 +524,42 @@ jobs:
                   for (String word : words) if (text.contains(word)) return true;
                   return false;
               }
+
+              @Override protected void onDestroy() {
+                  if (recognizer != null) { recognizer.destroy(); recognizer = null; }
+                  if (!completed) VoiceOverlayService.setVoiceListening(false);
+                  super.onDestroy();
+              }
           }
           JAVA
           echo "Android global voice manager sources: PASS"
+
+
+          cat > android/app/src/main/java/com/mosharrof/ai/VoiceQuickSettingsTile.java <<'JAVA'
+          package com.mosharrof.ai;
+
+          import android.content.Intent;
+          import android.service.quicksettings.Tile;
+          import android.service.quicksettings.TileService;
+
+          public class VoiceQuickSettingsTile extends TileService {
+              @Override public void onStartListening() {
+                  super.onStartListening();
+                  Tile tile = getQsTile();
+                  if (tile != null) {
+                      tile.setLabel("MOSHARROF Voice");
+                      tile.setState(Tile.STATE_ACTIVE);
+                      tile.updateTile();
+                  }
+              }
+              @Override public void onClick() {
+                  super.onClick();
+                  Intent voice = new Intent(this, VoiceCommandActivity.class);
+                  voice.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                  startActivityAndCollapse(voice);
+              }
+          }
+          JAVA
 
       - name: Apply native Android edge-to-edge shell
         run: |
@@ -552,6 +676,9 @@ jobs:
           grep -q 'getBoolean("hidden", false)' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
           grep -q 'putBoolean("hidden", true)' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
           grep -q 'mosharrofNativeVoiceCommand' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'class VoiceQuickSettingsTile' android/app/src/main/java/com/mosharrof/ai/VoiceQuickSettingsTile.java
+          grep -q 'onRmsChanged' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
+          grep -q 'setVoiceLevel' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
           echo "Native Android edge-to-edge + global voice manager: PASS"
 
       - name: Build debug APK
