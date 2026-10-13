@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Guarded autonomous patcher with Gemini model discovery and safe fallback."""
-import json, os, sys, subprocess, pathlib, requests
+import json, os, sys, subprocess, pathlib, requests, time
 
 task=pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").strip()
 if not task:
@@ -37,45 +37,65 @@ if not key:
     raise SystemExit("GEMINI_API_KEY is not configured.")
 
 base="https://generativelanguage.googleapis.com/v1beta"
-preferred=os.environ.get("GEMINI_MODEL","gemini-3.6-flash").strip()
-models=[preferred]
-def generate(model):
-    return requests.post(
-        f"{base}/models/{model}:generateContent",
-        params={"key":key},
-        json={"contents":[{"parts":[{"text":prompt}]}],
-              "generationConfig":{"temperature":0.1,"responseMimeType":"application/json"}},
-        timeout=120,
-    )
+TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
 
-response=generate(preferred)
-if response.status_code==404:
-    catalog=requests.get(f"{base}/models",params={"key":key},timeout=30)
-    catalog.raise_for_status()
-    available=[]
-    for item in catalog.json().get("models",[]):
-        name=item.get("name","").removeprefix("models/")
-        if name and "generateContent" in item.get("supportedGenerationMethods",[]):
+def generate(model, attempts=3):
+    """Retry temporary Gemini errors, returning the final response for fallback decisions."""
+    response = None
+    last_error = "no response"
+    for attempt in range(attempts):
+        try:
+            response = requests.post(
+                f"{base}/models/{model}:generateContent",
+                params={"key": key},
+                json={"contents": [{"parts": [{"text": prompt}]}],
+                      "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"}},
+                timeout=120,
+            )
+            if response.ok or response.status_code == 404 or response.status_code not in TRANSIENT_HTTP_CODES:
+                return response
+            last_error = f"HTTP {response.status_code}"
+        except requests.RequestException as exc:
+            response = None
+            last_error = f"{type(exc).__name__}: {exc}"
+        if attempt < attempts - 1:
+            delay = min(2 ** (attempt + 1), 8)
+            print(f"Gemini temporarily unavailable for {model}; retry {attempt + 2}/{attempts} in {delay}s.")
+            time.sleep(delay)
+    print(f"Gemini model {model} unavailable after {attempts} attempts ({last_error}); checking supported fallbacks.")
+    return response
+
+response = generate(preferred)
+if response is None or response.status_code == 404 or response.status_code in TRANSIENT_HTTP_CODES:
+    try:
+        catalog = requests.get(f"{base}/models", params={"key": key}, timeout=30)
+        catalog.raise_for_status()
+    except requests.RequestException as exc:
+        raise SystemExit(f"Unable to list Gemini fallback models: {type(exc).__name__}: {exc}") from exc
+    available = []
+    for item in catalog.json().get("models", []):
+        name = item.get("name", "").removeprefix("models/")
+        if name and "generateContent" in item.get("supportedGenerationMethods", []):
             available.append(name)
-    alternatives=sorted(
-        (name for name in available if "flash" in name.lower() and name!=preferred),
+    alternatives = sorted(
+        (name for name in available if "flash" in name.lower() and name != preferred),
         key=lambda name: (("preview" in name.lower()), name),
     )
-    if preferred in available:
-        alternatives.insert(0,preferred)
     if not alternatives:
-        raise SystemExit("Gemini API key has no listed model supporting generateContent.")
-    errors=[]
+        detail = f" Preferred model error: HTTP {response.status_code}" if response is not None else ""
+        raise SystemExit("No alternative Gemini Flash model supporting generateContent is available." + detail)
+    errors = []
     for model in alternatives:
-        response=generate(model)
-        if response.ok:
-            print("Gemini model selected from API-supported model list: "+model)
+        candidate = generate(model, attempts=2)
+        if candidate is not None and candidate.ok:
+            response = candidate
+            print("Gemini fallback model selected from API-supported model list: " + model)
             break
-        errors.append(f"{model}: HTTP {response.status_code}")
-        if response.status_code not in (400,404):
-            break
+        errors.append(f"{model}: HTTP {candidate.status_code}" if candidate is not None else f"{model}: network error")
     else:
-        raise SystemExit("No listed Gemini model accepted the request. "+", ".join(errors))
+        raise SystemExit("No listed Gemini Flash model accepted the request. " + ", ".join(errors))
+if response is None:
+    raise SystemExit("Gemini request failed without an HTTP response.")
 response.raise_for_status()
 try:
     plan=json.loads(response.json()["candidates"][0]["content"]["parts"][0]["text"])
