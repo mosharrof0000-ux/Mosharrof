@@ -57,7 +57,7 @@ def generate(model, attempts=3):
             last_error = f"HTTP {response.status_code}"
         except requests.RequestException as exc:
             response = None
-            last_error = f"{type(exc).__name__}: {exc}"
+            last_error = type(exc).__name__
         if attempt < attempts - 1:
             delay = min(2 ** (attempt + 1), 8)
             print(f"Gemini temporarily unavailable for {model}; retry {attempt + 2}/{attempts} in {delay}s.")
@@ -71,7 +71,7 @@ if response is None or response.status_code == 404 or response.status_code in TR
         catalog = requests.get(f"{base}/models", params={"key": key}, timeout=30)
         catalog.raise_for_status()
     except requests.RequestException as exc:
-        raise SystemExit(f"Unable to list Gemini fallback models: {type(exc).__name__}: {exc}") from exc
+        raise SystemExit(f"Unable to list Gemini fallback models ({type(exc).__name__}); credentials were not logged.") from None
     available = []
     for item in catalog.json().get("models", []):
         name = item.get("name", "").removeprefix("models/")
