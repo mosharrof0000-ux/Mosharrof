@@ -1,24 +1,20 @@
 from pathlib import Path
 
 
-def test_chat_response_timer_uses_crisp_compact_box_without_glow():
+def test_chat_response_timer_reuses_existing_voice_timer_box_with_color_only_change():
     html = Path("web/index.html").read_text(encoding="utf-8")
-    assert ".response-timer{flex:none;display:inline-flex" in html
-    assert "min-width:48px;height:28px;padding:0 7px" in html
-    assert "border:1px solid rgba(57,255,120,.62)" in html
-    assert "background:#07150b;color:#39ff78" in html
-    assert ".response-timer.is-error{border-color:rgba(255,69,69,.72)" in html
-    assert "background:#1b0808;color:#ff4545" in html
-    timer_css = html.split(".response-timer{", 1)[1].split("}", 1)[0]
-    error_css = html.split(".response-timer.is-error{", 1)[1].split("}", 1)[0]
-    assert "text-shadow:none" in timer_css
-    assert "filter:none" in timer_css
-    assert "box-shadow:none" in timer_css
-    assert "text-shadow:none" in error_css
-    assert "filter:none" in error_css
-    assert "box-shadow:none" in error_css
-    assert "text-shadow:0 0 4px" not in timer_css + error_css
-
+    voice_css = html.split(".voice-companion{", 1)[1].split("}", 1)[0]
+    response_css = html.split(".response-timer{", 1)[1].split("}", 1)[0]
+    assert "min-width:48px;height:28px;padding:0 7px" in voice_css
+    assert "border:1px solid rgba(255,255,255,.2);border-radius:9px;background:#111" in voice_css
+    assert "min-width:48px;height:28px;padding:0 7px" in response_css
+    assert "border:1px solid rgba(255,255,255,.2);border-radius:9px;background:#111" in response_css
+    assert "font:11px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace" in response_css
+    assert "color:#39ff78" in response_css
+    assert ".response-timer.is-error{color:#ff4545}" in html
+    assert "text-shadow" not in response_css
+    assert "filter:" not in response_css
+    assert "box-shadow:" not in response_css
 
 def test_chat_timer_shows_live_elapsed_time_and_compact_provider_route():
     html = Path("web/index.html").read_text(encoding="utf-8")
