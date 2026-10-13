@@ -723,6 +723,9 @@ jobs:
 
               private void routeTranscript(String spoken) {
                   String normalized = spoken.toLowerCase(Locale.ROOT);
+                  if (isCallCommand(normalized)) {
+                      if (handleCallCommand(spoken, normalized)) return;
+                  }
                   String pkg = null;
                   if (hasAppWord(normalized, "youtube", "ইউটিউব")) pkg = "com.google.android.youtube";
                   else if (hasAppWord(normalized, "facebook", "ফেসবুক")) pkg = "com.facebook.katana";
@@ -748,6 +751,71 @@ jobs:
                   chat.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                   startActivity(chat);
                   finish();
+              }
+
+              private boolean isCallCommand(String normalized) {
+                  return normalized.matches(".*(কল দাও|কল করুন|ফোন কর|ফোন দাও|ফোন করুন|call|phone) .*")
+                      || normalized.endsWith("কল দাও") || normalized.endsWith("ফোন কর")
+                      || normalized.endsWith("ফোন দাও") || normalized.startsWith("call ");
+              }
+
+              private boolean handleCallCommand(String spoken, String normalized) {
+                  if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                      Toast.makeText(this, "নাম ধরে কল করতে Contacts অনুমতি দরকার। MOSHARROF AI-এর Settings থেকে Contacts চালু করুন।", Toast.LENGTH_LONG).show();
+                      return true;
+                  }
+                  String target = normalized.replaceAll("কল দাও|কল করুন|ফোন করো?|ফোন দাও|ফোন করুন|আমাকে|দয়া করে|দয়া করে|call|phone|to", " ")
+                      .replaceAll("\\\\s+", " ").trim();
+                  if (target.isEmpty()) {
+                      Toast.makeText(this, "কাকে কল করতে চান, নামটি বলুন।", Toast.LENGTH_LONG).show();
+                      return true;
+                  }
+                  String matchedName = null;
+                  String matchedNumber = null;
+                  Cursor cursor = null;
+                  try {
+                      cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                          new String[]{ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER},
+                          null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
+                      if (cursor != null) {
+                          while (cursor.moveToNext()) {
+                              String name = cursor.getString(0);
+                              String number = cursor.getString(1);
+                              if (name != null && number != null && (name.toLowerCase(Locale.ROOT).contains(target) || target.contains(name.toLowerCase(Locale.ROOT)))) {
+                                  matchedName = name;
+                                  matchedNumber = number;
+                                  break;
+                              }
+                          }
+                      }
+                  } catch (SecurityException ignored) {
+                  } finally {
+                      if (cursor != null) cursor.close();
+                  }
+                  if (matchedNumber == null) {
+                      Toast.makeText(this, "Contacts-এ ‘" + target + "’ নামটি পাওয়া যায়নি। নামটি যাচাই করে আবার বলুন।", Toast.LENGTH_LONG).show();
+                      return true;
+                  }
+                  final String contactName = matchedName;
+                  final String phoneNumber = matchedNumber;
+                  new android.app.AlertDialog.Builder(this)
+                      .setTitle("কল করার আগে নিশ্চিত করুন")
+                      .setMessage(contactName + " — " + phoneNumber + "\\\\nএই নম্বরে কল করবেন?")
+                      .setPositiveButton("কল দিন", (dialog, which) -> {
+                          try {
+                              if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                                  Toast.makeText(this, "Phone অনুমতি নেই। Settings থেকে অনুমতি দিন।", Toast.LENGTH_LONG).show();
+                                  return;
+                              }
+                              Intent call = new Intent(Intent.ACTION_CALL, android.net.Uri.parse("tel:" + android.net.Uri.encode(phoneNumber)));
+                              startActivity(call);
+                          } catch (SecurityException | android.content.ActivityNotFoundException error) {
+                              Toast.makeText(this, "কল শুরু করা যায়নি। Phone permission যাচাই করুন।", Toast.LENGTH_LONG).show();
+                          }
+                      })
+                      .setNegativeButton("বাতিল", (dialog, which) -> {})
+                      .show();
+                  return true;
               }
 
               private String findInstalledLauncher(String spoken) {
@@ -818,6 +886,8 @@ jobs:
           import android.content.Intent;
           import android.content.pm.PackageManager;
           import android.content.res.Configuration;
+          import android.database.Cursor;
+          import android.provider.ContactsContract;
           import android.graphics.Color;
           import android.net.Uri;
           import android.os.Build;
@@ -977,6 +1047,9 @@ jobs:
           grep -q 'android.permission.READ_CONTACTS' android/app/src/main/AndroidManifest.xml
           grep -q 'android.permission.CALL_PHONE' android/app/src/main/AndroidManifest.xml
           grep -q 'beginPermissionSetup' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'isCallCommand' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
+          grep -q 'ContactsContract.CommonDataKinds.Phone.CONTENT_URI' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
+          grep -q 'Intent.ACTION_CALL' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
           grep -q 'requestNextPermission' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           grep -q 'windowManager.updateViewLayout' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
           grep -q 'getBoolean("hidden", false)' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
