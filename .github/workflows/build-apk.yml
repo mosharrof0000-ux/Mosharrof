@@ -344,7 +344,8 @@ jobs:
                       canvas.drawLine(w*.38f, h*.86f, w*.62f, h*.86f, paint);
                   }
               }
-\n              private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+
+              private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
               private void removeBubble() { if (windowManager != null && bubble != null) { try { windowManager.removeView(bubble); } catch (Exception ignored) {} } bubble = null; }
               @Override public void onDestroy() { removeBubble(); super.onDestroy(); }
               @Override public IBinder onBind(Intent intent) { return null; }
