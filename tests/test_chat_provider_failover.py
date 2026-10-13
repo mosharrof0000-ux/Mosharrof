@@ -33,7 +33,7 @@ def test_worker_health_reports_provider_configuration_without_secret_values():
     assert 'groq_chat_configured:!!env.GROQ_API_KEY' in worker
     assert 'openrouter_chat_configured:!!env.OPENROUTER_API_KEY' in worker
     assert 'gemini_chat_key_slots:[!!env.GEMINI_API_KEY' in worker
-    assert 'worker_build:"2026-10-13-chat-multi-provider-failover-v1"' in worker
+    assert 'const WORKER_BUILD_ID="2026-10-13-chat-multi-provider-failover-v1";' in worker
 
 
 def test_deploy_workflow_keeps_optional_provider_keys_server_side():
