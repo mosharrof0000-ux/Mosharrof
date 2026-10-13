@@ -16,4 +16,4 @@ def test_deploy_workflow_sets_optional_failover_secrets_and_checks_build():
     assert 'secrets.GEMINI_API_KEY_2' in workflow
     assert 'secrets.GEMINI_API_KEY_5' in workflow
     assert 'secrets.GEMINI_TTS_FALLBACK_MODELS' in workflow
-    assert '2026-10-13-chat-multi-provider-failover-v1' in workflow
+    assert '2026-10-13-chat-live-provider-status-v1' in workflow
