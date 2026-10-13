@@ -16,4 +16,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -r requirements.txt
+      - name: Install lightweight personal voice API test dependencies
+        run: python -m pip install -r services/personal-voice-api/requirements-test.txt
       - run: python -m pytest -q
