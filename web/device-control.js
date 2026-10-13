@@ -132,8 +132,6 @@
         }
         if (action === "info") {
           var info = await bridge.getDeviceInfo();
-        if (action === "info") {
-          var info = await bridge.getDeviceInfo();
           notify("ডিভাইস: " + (info.manufacturer || "") + " " +
             (info.model || "অজানা") + " · Android " +
             (info.androidVersion || "অজানা"));
