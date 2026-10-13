@@ -298,9 +298,9 @@ async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
 
 async function generateWithCloudflareChat(text,env){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
-  const configured=String(env.CLOUDFLARE_CHAT_MODELS||env.CLOUDFLARE_CHAT_MODEL||"@cf/meta/llama-3.1-8b-instruct");
+  const configured=String(env.CLOUDFLARE_CHAT_MODELS||env.CLOUDFLARE_CHAT_MODEL||"@cf/zai-org/glm-4.7-flash,@cf/meta/llama-3.3-70b-instruct-fp8-fast");
   const models=[...new Set(configured.split(",").map(x=>x.trim()).filter(Boolean))];
-  if(!models.length)models.push("@cf/meta/llama-3.1-8b-instruct");
+  if(!models.length)models.push("@cf/zai-org/glm-4.7-flash","@cf/meta/llama-3.3-70b-instruct-fp8-fast");
   let last=null;
   for(const model of models){
     try{
