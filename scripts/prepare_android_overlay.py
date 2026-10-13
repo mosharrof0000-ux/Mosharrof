@@ -170,7 +170,7 @@ import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
+import android.app.AlertDialog;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
