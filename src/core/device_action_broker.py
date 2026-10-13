@@ -60,9 +60,15 @@ class DeviceActionBroker:
         approval_check: ApprovalCheck,
         audit_sink: AuditSink | None = None,
     ) -> None:
+        if not callable(authorize):
+            raise ValueError("A trusted authorization callback is required")
+        if not callable(approval_check):
+            raise ValueError("A fresh-action approval checker is required")
+        if not callable(audit_sink):
+            raise ValueError("An explicit audit sink is required")
         self._authorize = authorize
         self._approval_check = approval_check
-        self._audit_sink = audit_sink or (lambda event: None)
+        self._audit_sink = audit_sink
 
     @classmethod
     def from_permission_guard(
@@ -200,6 +206,15 @@ class DeviceActionBroker:
             if isinstance(decision, Mapping):
                 reason = str(decision.get("reason") or reason)[:80]
             return finish("DENIED", reason)
+
+        # Prove the audit sink is writable before any side effect. A broken
+        # sink must stop execution rather than discover the failure afterward.
+        if not self._audit(
+            action_id=action_id, capability=capability, entity_id=entity_id,
+            resource_scope=resource_scope, status="READY_TO_EXECUTE",
+            reason="PRE_EXECUTION_AUDIT_CHECK", started_at=started_at,
+        ):
+            return finish("DENIED", "AUDIT_UNAVAILABLE_BEFORE_ACTION")
 
         try:
             result = operation()
