@@ -55,6 +55,7 @@ jobs:
           cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
           package com.mosharrof.ai;
 
+          import android.content.res.Configuration;
           import android.graphics.Color;
           import android.os.Build;
           import android.os.Bundle;
@@ -99,8 +100,12 @@ jobs:
                       WindowCompat.getInsetsController(window, window.getDecorView());
 
                   if (controller != null) {
-                      controller.setAppearanceLightStatusBars(false);
-                      controller.setAppearanceLightNavigationBars(false);
+                      // Dark system icons on a light device theme; white icons at night.
+                      int nightMode = getResources().getConfiguration().uiMode
+                          & Configuration.UI_MODE_NIGHT_MASK;
+                      boolean lightTheme = nightMode != Configuration.UI_MODE_NIGHT_YES;
+                      controller.setAppearanceLightStatusBars(lightTheme);
+                      controller.setAppearanceLightNavigationBars(lightTheme);
                   }
               }
           }
@@ -108,6 +113,8 @@ jobs:
 
           grep -q 'WindowCompat.setDecorFitsSystemWindows'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           grep -q 'setNavigationBarContrastEnforced(false)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'Configuration.UI_MODE_NIGHT_MASK' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'controller.setAppearanceLightStatusBars(lightTheme)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           echo "Native Android edge-to-edge shell: PASS"
 
       - name: Build debug APK
