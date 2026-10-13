@@ -1,5 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-11-gemini-tts-multi-route-failover-v1";
+const WORKER_BUILD_ID="2026-10-13-chat-multi-provider-failover-v1";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -286,14 +286,53 @@ async function tts(request,env){
 }
 
 
-async function callGemini(env, model, body){
+async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
     method:"POST",
-    headers:{"content-type":"application/json","x-goog-api-key":env.GEMINI_API_KEY},
+    headers:{"content-type":"application/json","x-goog-api-key":apiKey},
     body:JSON.stringify(body)
   });
   const data=await upstream.json().catch(()=>({}));
   return {upstream,data,model};
+}
+
+async function generateWithCloudflareChat(text,env){
+  if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
+  const configured=String(env.CLOUDFLARE_CHAT_MODELS||env.CLOUDFLARE_CHAT_MODEL||"@cf/meta/llama-3.1-8b-instruct");
+  const models=[...new Set(configured.split(",").map(x=>x.trim()).filter(Boolean))];
+  if(!models.length)models.push("@cf/meta/llama-3.1-8b-instruct");
+  let last=null;
+  for(const model of models){
+    try{
+      const result=await env.AI.run(model,{messages:[
+        {role:"system",content:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform."},
+        {role:"user",content:text}
+      ],max_tokens:2048,temperature:0.3});
+      const answer=String(result?.response||result?.choices?.[0]?.message?.content||"").trim();
+      if(answer)return {ok:true,provider:"cloudflare-workers-ai",model,text:answer};
+      last={model,reason:"empty_response"};
+    }catch(e){last={model,reason:String(e&&e.message||e)};}
+  }
+  return {ok:false,provider:"cloudflare-workers-ai",model:last?.model||null,reason:last?.reason||"all_models_failed"};
+}
+
+async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={}){
+  if(!apiKey)return {ok:false,provider,reason:"not_configured"};
+  try{
+    const upstream=await fetch(endpoint,{
+      method:"POST",
+      headers:{"content-type":"application/json","authorization":"Bearer "+apiKey,...extraHeaders},
+      body:JSON.stringify({model,messages:[
+        {role:"system",content:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform."},
+        {role:"user",content:text}
+      ],temperature:0.3,max_tokens:2048})
+    });
+    const data=await upstream.json().catch(()=>({}));
+    if(!upstream.ok)return {ok:false,provider,model,status:upstream.status,reason:data?.error?.message||("HTTP "+upstream.status)};
+    const answer=String(data?.choices?.[0]?.message?.content||"").trim();
+    if(!answer)return {ok:false,provider,model,status:upstream.status,reason:"empty_response"};
+    return {ok:true,provider,model,text:answer};
+  }catch(e){return {ok:false,provider,model,reason:String(e&&e.message||e)};}
 }
 
 function bytesToBase64(bytes){
@@ -470,27 +509,71 @@ async function chat(request,env){
   const text=String(body.text||"").trim();
   if(!text)return reply({error:"text_required"},400);
   if(text.length>12000)return reply({error:"text_too_large"},413);
-  if(!env.GEMINI_API_KEY)return reply({error:"chat_provider_not_configured"},503);
-  const preferred=env.GEMINI_CHAT_MODEL? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)] : CHAT_MODELS;
+
+  const attempted=[];
+  const configuredKeys=[
+    ["primary",String(env.GEMINI_API_KEY||"").trim()],
+    ["project2",String(env.GEMINI_API_KEY_2||"").trim()],
+    ["project3",String(env.GEMINI_API_KEY_3||"").trim()],
+    ["project4",String(env.GEMINI_API_KEY_4||"").trim()],
+    ["project5",String(env.GEMINI_API_KEY_5||"").trim()]
+  ].filter(item=>item[1]);
+  const preferred=env.GEMINI_CHAT_MODEL
+    ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
+    : CHAT_MODELS;
   const payload={contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\nUser:\n"+text}]}]};
-  let last=null;
+
+  // First use Gemini models and any separately authorized Gemini credentials.
   for(const model of preferred){
-    try{
-      const r=await callGemini(env, model, payload);
-      last=r;
-      if(!r.upstream.ok){if([404,429,503,500].includes(r.upstream.status))continue;return reply({error:"chat_provider_failed",provider_status:r.upstream.status,provider_message:r.data?.error?.message||null,model},502);}
-      const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
-      if(!answer)continue;
-      return reply({ok:true,model,text:answer},200);
-    }catch(e){last={error:String(e&&e.message||e)};continue;}
+    for(const [slot,apiKey] of configuredKeys){
+      try{
+        const r=await callGemini(env,model,payload,apiKey);
+        if(!r.upstream.ok){
+          attempted.push({provider:"gemini",model,credential_slot:slot,status:r.upstream.status,reason:r.data?.error?.message||("HTTP "+r.upstream.status)});
+          continue;
+        }
+        const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
+        if(answer)return reply({ok:true,provider:"gemini",model,text:answer,attempted},200);
+        attempted.push({provider:"gemini",model,credential_slot:slot,reason:"empty_response"});
+      }catch(e){attempted.push({provider:"gemini",model,credential_slot:slot,reason:String(e&&e.message||e)});}
+    }
   }
-  return reply({error:"chat_provider_failed",provider_status:last?.upstream?.status||null,provider_message:last?.data?.error?.message||last?.error||"all_models_failed",tried:preferred},502);
+
+  // Workers AI is the keyless, already-bound first external-provider fallback.
+  const cloudflare=await generateWithCloudflareChat(text,env);
+  attempted.push({provider:cloudflare.provider,model:cloudflare.model||null,status:cloudflare.status||null,reason:cloudflare.ok?null:cloudflare.reason||"failed"});
+  if(cloudflare.ok)return reply({ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted},200);
+
+  // Optional providers are only called when their server-side secrets exist.
+  const groq=await generateWithOpenAICompatibleChat(
+    "groq","https://api.groq.com/openai/v1/chat/completions",
+    String(env.GROQ_API_KEY||"").trim(),
+    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text
+  );
+  attempted.push({provider:groq.provider,model:groq.model||null,status:groq.status||null,reason:groq.ok?null:groq.reason||"failed"});
+  if(groq.ok)return reply({ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted},200);
+
+  const openrouter=await generateWithOpenAICompatibleChat(
+    "openrouter","https://openrouter.ai/api/v1/chat/completions",
+    String(env.OPENROUTER_API_KEY||"").trim(),
+    String(env.OPENROUTER_CHAT_MODEL||"meta-llama/llama-3.3-70b-instruct:free").trim(),text,
+    {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"}
+  );
+  attempted.push({provider:openrouter.provider,model:openrouter.model||null,status:openrouter.status||null,reason:openrouter.ok?null:openrouter.reason||"failed"});
+  if(openrouter.ok)return reply({ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted},200);
+
+  return reply({
+    error:"chat_provider_failed",
+    message:"All configured AI providers are unavailable. Please try again shortly.",
+    attempted,
+    chat_provider_order:["gemini","cloudflare-workers-ai","groq","openrouter"]
+  },502);
 }
 
 async function handleRequest(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,cloudflare_workers_ai_configured:!!env.AI,free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!(env.GEMINI_API_KEY||env.GEMINI_API_KEY_2||env.GEMINI_API_KEY_3||env.GEMINI_API_KEY_4||env.GEMINI_API_KEY_5),gemini_tts_models:[...new Set([String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts"),...String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean),"gemini-2.5-flash-preview-tts"])],gemini_tts_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,gemini_chat_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],cloudflare_workers_ai_configured:!!env.AI,cloudflare_chat_configured:!!env.AI,groq_chat_configured:!!env.GROQ_API_KEY,openrouter_chat_configured:!!env.OPENROUTER_API_KEY,chat_provider_order:["gemini","cloudflare-workers-ai","groq","openrouter"],free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!(env.GEMINI_API_KEY||env.GEMINI_API_KEY_2||env.GEMINI_API_KEY_3||env.GEMINI_API_KEY_4||env.GEMINI_API_KEY_5),gemini_tts_models:[...new Set([String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts"),...String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean),"gemini-2.5-flash-preview-tts"])],gemini_tts_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);
