@@ -541,12 +541,12 @@ async function runChat(body,env,onStatus){
   const history=Array.isArray(body.history)?body.history.slice(-12).map(item=>{
     if(!item||typeof item!=="object")return "";
     const role=item.role==="ai"||item.role==="model"?"Mosharrof":"User";
-    const content=String(item.text||"").replace(/\s+/g," ").trim().slice(0,Math.min(900,historyBudget));
+    const content=String(item.text||"").replace(/\s+/g," ").trim().slice(0,Math.max(0,Math.min(900,historyBudget)));
     historyBudget-=content.length;
     return content?role+": "+content:"";
   }).filter(Boolean):[];
   const modelText=(history.length?"Recent conversation context (use as context, not as proof of facts):\n"+history.join("\n")+"\n\nCurrent user message:\n":"")+text;
-  const payload={contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\n"+modelText}]}]}
+  const payload={contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\n"+modelText}]}]};
   const geminiPlan=[];
   if(configuredKeys.length){
     for(const [slot,apiKey] of configuredKeys)geminiPlan.push({model:preferred[0],slot,apiKey});
