@@ -69,6 +69,7 @@ jobs:
               "android.permission.FOREGROUND_SERVICE",
               "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
               "android.permission.POST_NOTIFICATIONS",
+              "android.permission.RECORD_AUDIO",
           }
           existing = {item.get(attr("name")) for item in root.findall("uses-permission")}
           for name in sorted(permissions - existing):
