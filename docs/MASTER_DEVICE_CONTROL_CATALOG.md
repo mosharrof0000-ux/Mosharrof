@@ -1,6 +1,6 @@
 # MOSHARROF AI — Master Device Control Catalog
 
-**Status:** planning baseline; not a claim that these capabilities are implemented.  
+**Status:** partial implementation; this catalog is not a claim that every capability is implemented or device-verified.  
 **Owner:** MOSHARROF AI Device Manager  
 **Scope:** Android phone first; other devices only through explicitly supported integrations.  
 **Safety baseline:** per-action approval, least privilege, result verification, audit trail, rollback where possible, no direct edits to `main` or live deployment.
@@ -29,6 +29,26 @@ If permission is denied, expired, revoked, unavailable, or outside scope, stop t
 The current repository policy says DELETE and destructive operations are permanently blocked, scope escape is blocked, and activation without tests is blocked. Therefore this catalog **does not authorize deleting files, uninstalling apps, wiping data, destructive cleanup, or destructive repository operations**, even if a user confirms. Initially, cleanup features may only identify candidates, estimate space, and prepare a reversible proposal. Any future change to this global policy requires a separate, reviewed policy decision and must not be smuggled in through a feature module.
 
 Never request broad storage, Accessibility, notification, location, or contact access at app startup simply because it might be useful later. Ask in context. Android runtime and special permissions are distinct; special permissions may require the user to navigate to Android Settings. The app must re-check permission at the time of use and degrade gracefully when denied.
+
+
+## Current testable Android bridge (partial)
+
+The current feature branch adds a Capacitor bridge with both a web confirmation card and a second native Android confirmation. The native bridge writes minimal metadata to app-private `device-action-audit.jsonl` before execution and refuses to start an action if that write fails. It does not log phone numbers, message bodies, email bodies, raw file URIs, tokens, or operation payloads.
+
+Commands available in the APK build:
+
+- `সেটিংস খোলো Wi-Fi` — asks twice, then opens the Wi-Fi Settings activity.
+- `সেটিংস খোলো Bluetooth` — opens Bluetooth Settings.
+- `স্টোরেজ কত দেখাও` — after approval, reads public Android storage and RAM metrics.
+- `কল করো 01712345678` — after approval, opens the dialer only; it never places a call.
+- `মেসেজ লিখো 01712345678: আমি পরে ফোন করব` — after approval, opens an SMS draft; it never sends.
+- `ইমেইল লিখো test@example.com: রিপোর্ট দেখুন` — after approval, opens an email draft; it never sends.
+- `অ্যাপ খোলো com.google.android.youtube` — asks twice and attempts to launch an app from the declared Android package-visibility allowlist.
+- `ফাইল বাছাই করো` — opens the Android document picker; the bridge returns the selected URI only and does not read the file contents.
+
+The app must report an unsupported command as unsupported, not pretend that it ran. Delete, wipe, format, factory reset, and destructive cleanup remain permanently blocked. A successful APK build or intent launch does not verify behavior on the user's physical phone.
+
+Still outside this bridge: overlay service, Quick Settings tile, contacts lookup, camera capture, screen capture, location, reminders, Bluetooth transfer, file content reading/export, repository mutation, and general automation. These require separate platform adapters and acceptance tests; do not label them verified yet.
 
 ## Capability status vocabulary
 
