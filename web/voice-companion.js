@@ -33,7 +33,25 @@
     }
     tab.addEventListener("click", function () { setOpen(!dock.classList.contains("open")); });
     hide.addEventListener("click", function () { setOpen(false); });
+    var speakNextReply = false;
+    var lastSpokenReply = null;
+    function speakReplyIfReady() {
+      if (!speakNextReply) return;
+      var replies = document.querySelectorAll(".message.ai:not(.typing)");
+      if (!replies.length) return;
+      var reply = replies[replies.length - 1];
+      if (reply === lastSpokenReply) return;
+      var speaker = reply.querySelector(".message-speak-shortcut");
+      if (!speaker) return;
+      lastSpokenReply = reply;
+      speakNextReply = false;
+      speaker.click();
+    }
+    var replyObserver = new MutationObserver(speakReplyIfReady);
+    replyObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
     talk.addEventListener("click", function () {
+      speakNextReply = true;
+      lastSpokenReply = null;
       setOpen(false);
       var voice = document.getElementById("composerVoiceBtn");
       if (voice) {
