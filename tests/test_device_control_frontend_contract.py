@@ -29,6 +29,12 @@ class DeviceControlFrontendContractTests(unittest.TestCase):
         self.assertIn("registerPlugin(MosharrofDeviceControlPlugin.class)", workflow)
         self.assertIn("<queries>", workflow)
 
+    def test_frontend_loads_device_control_module_and_styles(self):
+        html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('src="./device-control.js"', html)
+        self.assertIn('href="./device-control.css"', html)
+        self.assertIn("window.MosharrofDeviceControl.parse(text)", html)
+
     def test_frontend_intercepts_only_supported_explicit_commands(self):
         if not shutil.which("node"):
             self.skipTest("Node.js is unavailable in this test environment")
