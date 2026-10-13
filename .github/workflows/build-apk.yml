@@ -38,8 +38,7 @@ jobs:
           grep -q 'edge-to-edge' web/edge-to-edge.css
           grep -q 'safe-area-inset-top' web/edge-to-edge.css
           grep -q 'safe-area-inset-bottom' web/edge-to-edge.css
-          grep -q 'backdrop-filter' web/edge-to-edge.css
-          # The source website remains unchanged; full-screen CSS is packaged only in Android.
+          # Keep the live website independent from Android-only styles and controls.
           if grep -q 'edge-to-edge.css' web/index.html; then
             echo "Website must not load Android-only edge-to-edge stylesheet" >&2
             exit 1
@@ -50,20 +49,18 @@ jobs:
         run: |
           npm init -y
           npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
-          # Bundle a private copy for Android; never alter the live website source.
           rm -rf android-web
           cp -a web android-web
           python - <<'PY'
           from pathlib import Path
           page = Path("android-web/index.html")
           html = page.read_text(encoding="utf-8")
-          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-4">'
+          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-5">'
           if link not in html:
-              html = html.replace("</head>", f"  {link}\n</head>", 1)
+              html = html.replace("</head>", f"  {link}\\n</head>", 1)
           if link not in html:
               raise SystemExit("Android-only stylesheet injection failed")
-          # Add a floating Android-only microphone control without changing the website source.
-          fab = """<button id="mosharrofVoiceFab" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
+          fab = """<button id="mosharrofVoiceFab" type="button" aria-label="ভয়েস ম্যানেজার" title="ভয়েস ম্যানেজার"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
           <script>
           (function () {
             var fab = document.getElementById("mosharrofVoiceFab");
@@ -82,83 +79,381 @@ jobs:
           })();
           </script>"""
           if 'id="mosharrofVoiceFab"' not in html:
-              html = html.replace("</body>", fab + "\n</body>", 1)
+              html = html.replace("</body>", fab + "\\n</body>", 1)
+          # Let the native Android voice manager submit speech transcripts through the existing chat pipeline.
+          bridge = '''  window.mosharrofNativeVoiceCommand = function (text) {
+            try { input.value = String(text || ""); resize(); send(); return true; }
+            catch (error) { console.error("Native voice command could not be sent", error); return false; }
+          };
+          '''
+          marker = "})();\\n</script>"
+          at = html.rfind(marker)
+          if at < 0:
+              raise SystemExit("Could not find chat script closure for native voice bridge")
+          html = html[:at] + bridge + html[at:]
           page.write_text(html, encoding="utf-8")
           PY
           grep -q 'edge-to-edge.css' android-web/index.html
           grep -q 'id="mosharrofVoiceFab"' android-web/index.html
-          grep -q 'new MutationObserver(sync)' android-web/index.html
+          grep -q 'window.mosharrofNativeVoiceCommand' android-web/index.html
           npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir android-web
           npx cap add android
           npx cap sync android
 
+      - name: Add Android global voice manager
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          xml = manifest.read_text(encoding="utf-8")
+          permissions = [
+            '    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />',
+            '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />',
+            '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />',
+            '    <uses-permission android:name="android.permission.RECORD_AUDIO" />',
+          ]
+          for item in permissions:
+            if item not in xml:
+              xml = xml.replace("<application", item + "\\n    <application", 1)
+          components = """
+              <activity
+                  android:name=".VoiceCommandActivity"
+                  android:exported="false"
+                  android:excludeFromRecents="true"
+                  android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+              <service
+                  android:name=".VoiceOverlayService"
+                  android:exported="false"
+                  android:foregroundServiceType="specialUse">
+                  <property
+                      android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                      android:value="User-enabled movable MOSHARROF voice manager overlay" />
+              </service>
+          """
+          if "android:name=".VoiceOverlayService"" not in xml:
+            xml = xml.replace("</application>", components + "\\n</application>", 1)
+          manifest.write_text(xml, encoding="utf-8")
+          PY
+          mkdir -p android/app/src/main/java/com/mosharrof/ai
+          cat > android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java <<'JAVA'
+          package com.mosharrof.ai;
+
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.app.Service;
+          import android.content.Intent;
+          import android.graphics.Color;
+          import android.graphics.PixelFormat;
+          import android.graphics.drawable.GradientDrawable;
+          import android.os.Build;
+          import android.os.IBinder;
+          import android.provider.Settings;
+          import android.view.Gravity;
+          import android.view.MotionEvent;
+          import android.view.View;
+          import android.view.WindowManager;
+          import android.widget.TextView;
+          import android.widget.Toast;
+
+          public class VoiceOverlayService extends Service {
+              private static final String CHANNEL = "mosharrof_voice_manager";
+              private static final int NOTIFICATION_ID = 5801;
+              private static final String ACTION_STOP = "com.mosharrof.ai.STOP_VOICE_OVERLAY";
+              private WindowManager windowManager;
+              private TextView bubble;
+              private WindowManager.LayoutParams params;
+              private boolean compact = false;
+              private long downAt;
+              private float downRawX, downRawY;
+              private int startX, startY;
+              private boolean moved;
+
+              @Override public void onCreate() {
+                  super.onCreate();
+                  createChannel();
+                  startForeground(NOTIFICATION_ID, notification());
+                  if (Settings.canDrawOverlays(this)) showBubble();
+                  else { Toast.makeText(this, "MOSHARROF ভাসমান বাটনের জন্য Display over other apps অনুমতি দিন", Toast.LENGTH_LONG).show(); stopSelf(); }
+              }
+
+              @Override public int onStartCommand(Intent intent, int flags, int startId) {
+                  if (intent != null && ACTION_STOP.equals(intent.getAction())) {
+                      removeBubble();
+                      stopForeground(true);
+                      stopSelf();
+                      return START_NOT_STICKY;
+                  }
+                  if (Settings.canDrawOverlays(this) && bubble == null) showBubble();
+                  return START_STICKY;
+              }
+
+              private void createChannel() {
+                  if (Build.VERSION.SDK_INT >= 26) {
+                      NotificationChannel channel = new NotificationChannel(CHANNEL, "MOSHARROF Voice Manager", NotificationManager.IMPORTANCE_LOW);
+                      channel.setDescription("Notification to keep the user-enabled floating voice manager available");
+                      ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(channel);
+                  }
+              }
+
+              private Notification notification() {
+                  Intent open = new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  PendingIntent openPi = PendingIntent.getActivity(this, 5802, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  Intent stop = new Intent(this, VoiceOverlayService.class).setAction(ACTION_STOP);
+                  PendingIntent stopPi = PendingIntent.getService(this, 5803, stop, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
+                  b.setSmallIcon(android.R.drawable.ic_btn_speak_now).setContentTitle("MOSHARROF Voice Manager")
+                   .setContentText("ভাসমান মাইক্রোফোন চালু আছে · অ্যাপ খুলে সেটিংস বদলান")
+                   .setContentIntent(openPi).setOngoing(true).addAction(android.R.drawable.ic_menu_close_clear_cancel, "লুকান", stopPi);
+                  return b.build();
+              }
+
+              private void showBubble() {
+                  if (bubble != null) return;
+                  windowManager = (WindowManager)getSystemService(WINDOW_SERVICE);
+                  bubble = new TextView(this);
+                  bubble.setText("🎙");
+                  bubble.setTextSize(19);
+                  bubble.setTextColor(Color.WHITE);
+                  bubble.setGravity(Gravity.CENTER);
+                  GradientDrawable bg = new GradientDrawable();
+                  bg.setColor(Color.rgb(8,8,8)); bg.setCornerRadius(dp(11));
+                  bg.setStroke(dp(1), Color.argb(90,255,255,255));
+                  bubble.setBackground(bg);
+                  bubble.setElevation(dp(8));
+                  params = new WindowManager.LayoutParams(dp(44), dp(44),
+                      Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE,
+                      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                      PixelFormat.TRANSLUCENT);
+                  params.gravity = Gravity.TOP | Gravity.START;
+                  params.x = dp(12); params.y = dp(220);
+                  bubble.setOnTouchListener((v, event) -> {
+                      switch (event.getAction()) {
+                          case MotionEvent.ACTION_DOWN:
+                              downAt = System.currentTimeMillis(); downRawX = event.getRawX(); downRawY = event.getRawY();
+                              startX = params.x; startY = params.y; moved = false; return true;
+                          case MotionEvent.ACTION_MOVE:
+                              float dx = event.getRawX() - downRawX, dy = event.getRawY() - downRawY;
+                              if (Math.abs(dx) > dp(5) || Math.abs(dy) > dp(5)) moved = true;
+                              if (moved) { params.x = Math.max(0, startX + (int)dx); params.y = Math.max(0, startY + (int)dy); try { windowManager.updateViewLayout(bubble, params); } catch (Exception ignored) {} }
+                              return true;
+                          case MotionEvent.ACTION_UP:
+                              long held = System.currentTimeMillis() - downAt;
+                              if (!moved && held >= 650) toggleCompact();
+                              else if (!moved) {
+                                  if (compact) { compact = false; styleBubble(); }
+                                  else { Intent voice = new Intent(VoiceOverlayService.this, VoiceCommandActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(voice); }
+                              }
+                              return true;
+                      }
+                      return true;
+                  });
+                  try { windowManager.addView(bubble, params); } catch (Exception e) { bubble = null; stopSelf(); }
+              }
+
+              private void toggleCompact() {
+                  compact = !compact;
+                  styleBubble();
+                  Toast.makeText(this, compact ? "ম্যানেজার ছোট করা হয়েছে · ট্যাপ করলে আবার খুলবে" : "ভয়েস ম্যানেজার প্রস্তুত", Toast.LENGTH_SHORT).show();
+              }
+
+              private void styleBubble() {
+                  if (bubble == null || params == null) return;
+                  params.width = dp(compact ? 18 : 44); params.height = dp(compact ? 34 : 44);
+                  GradientDrawable bg = new GradientDrawable();
+                  bg.setColor(compact ? Color.rgb(45,45,45) : Color.rgb(8,8,8));
+                  bg.setCornerRadius(dp(compact ? 9 : 11));
+                  bg.setStroke(dp(1), Color.argb(100,255,255,255));
+                  bubble.setBackground(bg); bubble.setText(compact ? "•" : "🎙"); bubble.setTextSize(compact ? 18 : 19);
+                  try { windowManager.updateViewLayout(bubble, params); } catch (Exception ignored) {}
+              }
+
+              private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+              private void removeBubble() { if (windowManager != null && bubble != null) { try { windowManager.removeView(bubble); } catch (Exception ignored) {} } bubble = null; }
+              @Override public void onDestroy() { removeBubble(); super.onDestroy(); }
+              @Override public IBinder onBind(Intent intent) { return null; }
+          }
+          JAVA
+          cat > android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java <<'JAVA'
+          package com.mosharrof.ai;
+
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.speech.RecognizerIntent;
+          import android.os.Bundle;
+          import android.widget.Toast;
+          import java.util.ArrayList;
+          import java.util.Locale;
+
+          public class VoiceCommandActivity extends Activity {
+              @Override protected void onCreate(Bundle state) {
+                  super.onCreate(state);
+                  Intent speech = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                  speech.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                  speech.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD");
+                  speech.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "bn-BD");
+                  speech.putExtra(RecognizerIntent.EXTRA_PROMPT, "MOSHARROF-কে বলুন: কোনো অ্যাপ খুলুন অথবা প্রশ্ন করুন");
+                  try { startActivityForResult(speech, 5804); }
+                  catch (Exception e) { Toast.makeText(this, "এই ডিভাইসে Android voice recognition পাওয়া যায়নি। MOSHARROF অ্যাপ খুলে মাইক্রোফোন ব্যবহার করুন।", Toast.LENGTH_LONG).show(); finish(); }
+              }
+
+              @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+                  if (requestCode != 5804) { finish(); return; }
+                  if (resultCode != RESULT_OK || data == null) { finish(); return; }
+                  ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                  if (matches == null || matches.isEmpty()) { finish(); return; }
+                  String spoken = matches.get(0).trim();
+                  String normalized = spoken.toLowerCase(Locale.ROOT);
+                  String pkg = null;
+                  if (hasAppWord(normalized, "youtube", "ইউটিউব")) pkg = "com.google.android.youtube";
+                  else if (hasAppWord(normalized, "facebook", "ফেসবুক")) pkg = "com.facebook.katana";
+                  else if (hasAppWord(normalized, "instagram", "ইনস্টাগ্রাম")) pkg = "com.instagram.android";
+                  else if (hasAppWord(normalized, "whatsapp", "হোয়াটসঅ্যাপ", "হোয়াটসঅ্যাপ")) pkg = "com.whatsapp";
+                  else if (hasAppWord(normalized, "chrome", "ক্রোম", "browser", "ব্রাউজার")) pkg = "com.android.chrome";
+                  else if (hasAppWord(normalized, "tiktok", "টিকটক", "টিক টক")) pkg = "com.zhiliaoapp.musically";
+                  else if (hasAppWord(normalized, "maps", "গুগল ম্যাপ", "ম্যাপ")) pkg = "com.google.android.apps.maps";
+                  else if (hasAppWord(normalized, "gmail", "জিমেইল")) pkg = "com.google.android.gm";
+                  else if (hasAppWord(normalized, "settings", "সেটিংস")) {
+                      try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); } catch (Exception ignored) {}
+                      finish(); return;
+                  }
+                  boolean launchVerb = normalized.matches(".*(খোলো|খুলুন|চালু কর|যাও|open|launch|go to|খুলে দাও).*");
+                  if (pkg != null && launchVerb) {
+                      Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
+                      if (launch != null) { launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(launch); finish(); return; }
+                      Toast.makeText(this, "এই অ্যাপটি ইনস্টল করা নেই; MOSHARROF-এ প্রশ্নটি পাঠাচ্ছি।", Toast.LENGTH_SHORT).show();
+                  }
+                  Intent chat = new Intent(this, MainActivity.class);
+                  chat.putExtra("mosharrof_voice_command", spoken);
+                  chat.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  startActivity(chat);
+                  finish();
+              }
+
+              private boolean hasAppWord(String text, String... words) {
+                  for (String word : words) if (text.contains(word)) return true;
+                  return false;
+              }
+          }
+          JAVA
+          echo "Android global voice manager sources: PASS"
+
       - name: Apply native Android edge-to-edge shell
         run: |
-          mkdir -p android/app/src/main/java/com/mosharrof/ai
           cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
           package com.mosharrof.ai;
 
+          import android.app.AlertDialog;
+          import android.content.Intent;
           import android.content.res.Configuration;
           import android.graphics.Color;
+          import android.net.Uri;
           import android.os.Build;
           import android.os.Bundle;
+          import android.os.Handler;
+          import android.os.Looper;
+          import android.provider.Settings;
           import android.view.Window;
           import android.view.WindowManager;
-
           import androidx.core.view.WindowCompat;
           import androidx.core.view.WindowInsetsControllerCompat;
-
           import com.getcapacitor.BridgeActivity;
+          import org.json.JSONObject;
 
           public class MainActivity extends BridgeActivity {
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
+              private static final int OVERLAY_REQUEST = 5805;
+              private static boolean askedForOverlayThisSession = false;
+              private final Handler handler = new Handler(Looper.getMainLooper());
+
+              @Override protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-
                   Window window = getWindow();
-
-                  // Draw the WebView behind the status/navigation bars.
                   WindowCompat.setDecorFitsSystemWindows(window, false);
-
-                  // Transparent bars: the MOSHARROF canvas supplies the background.
                   window.setStatusBarColor(Color.TRANSPARENT);
                   window.setNavigationBarColor(Color.TRANSPARENT);
-
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                      window.setNavigationBarContrastEnforced(false);
-                  }
-
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) window.setNavigationBarContrastEnforced(false);
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                       WindowManager.LayoutParams lp = window.getAttributes();
-                      lp.layoutInDisplayCutoutMode =
-                          WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+                      lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
                       window.setAttributes(lp);
                   }
-
-                  window.setSoftInputMode(
-                      WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-                  );
-
-                  WindowInsetsControllerCompat controller =
-                      WindowCompat.getInsetsController(window, window.getDecorView());
-
+                  window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+                  WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
                   if (controller != null) {
-                      // Dark system icons on a light device theme; white icons at night.
-                      int nightMode = getResources().getConfiguration().uiMode
-                          & Configuration.UI_MODE_NIGHT_MASK;
+                      int nightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
                       boolean lightTheme = nightMode != Configuration.UI_MODE_NIGHT_YES;
                       controller.setAppearanceLightStatusBars(lightTheme);
                       controller.setAppearanceLightNavigationBars(lightTheme);
                   }
+                  handleVoiceIntent(getIntent());
+                  if (Settings.canDrawOverlays(this)) startVoiceOverlay();
+                  else if (!askedForOverlayThisSession) {
+                      askedForOverlayThisSession = true;
+                      new AlertDialog.Builder(this)
+                        .setTitle("MOSHARROF ভয়েস ম্যানেজার")
+                        .setMessage("হোমস্ক্রিন ও অন্য অ্যাপের ওপর ছোট ভাসমান মাইক্রোফোন ব্যবহার করতে 'Display over other apps' অনুমতি দিন। চাইলে এখন নয় নির্বাচন করতে পারেন।")
+                        .setPositiveButton("অনুমতি দিন", (d, w) -> {
+                            Intent permission = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                            try { startActivityForResult(permission, OVERLAY_REQUEST); }
+                            catch (Exception e) { startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)); }
+                        })
+                        .setNegativeButton("এখন নয়", (d, w) -> {})
+                        .show();
+                  }
+              }
+
+              @Override protected void onResume() {
+                  super.onResume();
+                  if (Settings.canDrawOverlays(this)) startVoiceOverlay();
+              }
+
+              @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+                  if (requestCode == OVERLAY_REQUEST && Settings.canDrawOverlays(this)) startVoiceOverlay();
+              }
+
+              @Override protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  handleVoiceIntent(intent);
+              }
+
+              private void startVoiceOverlay() {
+                  Intent service = new Intent(this, VoiceOverlayService.class);
+                  if (Build.VERSION.SDK_INT >= 26) startForegroundService(service); else startService(service);
+              }
+
+              private void handleVoiceIntent(Intent intent) {
+                  if (intent == null) return;
+                  String command = intent.getStringExtra("mosharrof_voice_command");
+                  if (command == null || command.trim().isEmpty()) return;
+                  intent.removeExtra("mosharrof_voice_command");
+                  deliverVoiceCommand(command.trim(), 0);
+              }
+
+              private void deliverVoiceCommand(String command, int attempt) {
+                  if (attempt > 8 || isFinishing()) return;
+                  try {
+                      if (getBridge() != null && getBridge().getWebView() != null) {
+                          String js = "(function(){if(window.mosharrofNativeVoiceCommand){window.mosharrofNativeVoiceCommand(" + JSONObject.quote(command) + ");return true;}return false;})()";
+                          getBridge().getWebView().evaluateJavascript(js, value -> {
+                              if (!"true".equals(value)) handler.postDelayed(() -> deliverVoiceCommand(command, attempt + 1), 350);
+                          });
+                          return;
+                      }
+                  } catch (Exception ignored) {}
+                  handler.postDelayed(() -> deliverVoiceCommand(command, attempt + 1), 350);
               }
           }
           JAVA
-
-          grep -q 'WindowCompat.setDecorFitsSystemWindows'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          grep -q 'setNavigationBarContrastEnforced(false)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          grep -q 'Configuration.UI_MODE_NIGHT_MASK' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          grep -q 'controller.setAppearanceLightStatusBars(lightTheme)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          echo "Native Android edge-to-edge shell: PASS"
+          grep -q 'WindowCompat.setDecorFitsSystemWindows' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'android:name=".VoiceOverlayService"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.SYSTEM_ALERT_WINDOW' android/app/src/main/AndroidManifest.xml
+          grep -q 'windowManager.updateViewLayout' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
+          grep -q 'mosharrofNativeVoiceCommand' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          echo "Native Android edge-to-edge + global voice manager: PASS"
 
       - name: Build debug APK
         working-directory: android
@@ -178,13 +473,3 @@ jobs:
         with:
           name: MOSHARROF-AI-Android-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 90
-
-      - name: Publish GitHub Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="apk-${{ github.run_number }}"
-          gh release create "$TAG"             android/app/build/outputs/apk/debug/app-debug.apk             --title "MOSHARROF AI Android APK ${{ github.run_number }}"             --notes "Built and verified from main commit ${{ github.sha }}."
