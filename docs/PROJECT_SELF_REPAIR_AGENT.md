@@ -1,5 +1,16 @@
 # MOSHARROF AI — Project Awareness and Safe Self-Repair
 
+## Current implementation status (2026-10-13)
+
+**Implemented in this branch: P1 read-only project inventory foundation.**
+- `scripts/mosharrof_project_inventory.py` reads repository metadata, the default-branch commit, open pull requests, and recent Actions runs through read-only GitHub API requests.
+- Optional health checks accept HTTPS URLs only and issue a GET request.
+- Output records UTC generation time, exact observed SHA, source availability, warnings, and explicit safety flags showing that no write, deployment, or promotion occurred.
+- `.github/workflows/project-inventory.yml` provides a manual-only workflow_dispatch entry point with read-only repository permissions, a short timeout, a run summary, and a 14-day JSON artifact.
+- `tests/test_project_inventory.py` covers report contents, unavailable sources, malformed repository names, metadata failure, and HTTPS-only health checks.
+
+This is a read-only inventory, **not yet an autonomous repair agent**. It does not edit code, open PRs, merge, deploy, or run continuously. The workflow becomes manually runnable from the Actions tab after the PR and its prerequisite branches are reviewed and merged. CI for the current implementation commit: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/38425274894
+
 Status: foundation specification; implementation is phased. This document does not claim that autonomous repair is already running.
 
 ## Goal
