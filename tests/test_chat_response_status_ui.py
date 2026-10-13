@@ -18,6 +18,7 @@ def test_chat_timer_shows_live_elapsed_time_and_compact_provider_route():
     assert 'প্রথম চেষ্টা: Gemini' in html
     assert "function providerShortName(provider)" in html
     assert "function chatRouteSummary(meta)" in html
+    assert 'var answered=winner+(modelLabel?" · "+modelLabel:"")' in html
     assert "শুরু: " in html and "বিকল্প: " in html and "উত্তর: " in html
     assert 'route.textContent=chatRouteSummary(responseMeta)' in html
     assert 'timer.textContent="⏱ "+elapsedLabel(elapsedMs)' in html
