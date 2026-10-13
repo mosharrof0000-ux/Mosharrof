@@ -49,6 +49,11 @@ class DeviceControlFrontendContractTests(unittest.TestCase):
             sms: api.parse('মেসেজ লিখো 01712345678: আমি পরে ফোন করব'),
             email: api.parse('ইমেইল লিখো test@example.com: রিপোর্ট দেখুন'),
             file: api.parse('ফাইল বাছাই করো'),
+            memoryMetrics: api.parse('আমার ফোনের উপলভ্য মেমোরি দেখুন'),
+            duplicateMemory: api.parse('আমার মেমোরি চেকরুন কি ডুপ্লিকেট আছে'),
+            duplicateFiles: api.parse('ফোনের কি ডুপ্লিকেট ফাইল আছে তা চেকরুন'),
+            duplicateScan: api.parse('মেমোরিতে থাকা ডুপ্লিকেট ফাইলগুলো যাচাই করুন'),
+            photosInMemory: api.parse('মেমোরিতে আমার কি ছবি আছে দেখুন'),
             ordinary: api.parse('বাংলাদেশের ইতিহাস বলুন')
           };
           process.stdout.write(JSON.stringify(cases));
@@ -64,6 +69,11 @@ class DeviceControlFrontendContractTests(unittest.TestCase):
         self.assertEqual(parsed["sms"]["kind"], "sms")
         self.assertEqual(parsed["email"]["kind"], "email")
         self.assertEqual(parsed["file"]["kind"], "file")
+        self.assertEqual(parsed["memoryMetrics"]["kind"], "diagnostics")
+        self.assertEqual(parsed["duplicateMemory"]["kind"], "unavailable")
+        self.assertEqual(parsed["duplicateFiles"]["kind"], "unavailable")
+        self.assertEqual(parsed["duplicateScan"]["kind"], "unavailable")
+        self.assertEqual(parsed["photosInMemory"]["kind"], "unavailable")
         self.assertIsNone(parsed["ordinary"])
 
 
