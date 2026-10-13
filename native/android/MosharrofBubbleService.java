@@ -24,6 +24,7 @@ public final class MosharrofBubbleService extends Service {
     private WindowManager windowManager;
     private View bubble;
     private WindowManager.LayoutParams params;
+    private boolean expanded = false;
 
     @Override public void onCreate() {
         super.onCreate();
@@ -54,27 +55,28 @@ public final class MosharrofBubbleService extends Service {
         if (!Settings.canDrawOverlays(this) || bubble != null) return;
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         TextView view = new TextView(this);
-        view.setText("M");
+        view.setText("›");
         view.setTextColor(Color.WHITE);
-        view.setTextSize(18);
+        view.setTextSize(20);
         view.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         view.setGravity(Gravity.CENTER);
         GradientDrawable background = new GradientDrawable(
             GradientDrawable.Orientation.TL_BR, new int[] {0xFF00D9FF, 0xFF7655FF});
-        background.setShape(GradientDrawable.OVAL);
-        background.setStroke(2, 0xCCFFFFFF);
+        background.setShape(GradientDrawable.RECTANGLE);
+        background.setCornerRadii(new float[] {dp(16), dp(16), 0, 0, 0, 0, dp(16), dp(16)});
+        background.setStroke(1, 0xCCFFFFFF);
         view.setBackground(background);
         view.setContentDescription("MOSHARROF AI-তে কথা বলুন");
         int type = Build.VERSION.SDK_INT >= 26
             ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             : WindowManager.LayoutParams.TYPE_PHONE;
         params = new WindowManager.LayoutParams(
-            dp(54), dp(54), type,
+            dp(14), dp(58), type,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL;
-        params.x = dp(5);
+        params.x = 0;
         view.setOnTouchListener(new View.OnTouchListener() {
             private float downX, downY;
             private int startX, startY;
@@ -95,10 +97,15 @@ public final class MosharrofBubbleService extends Service {
                 }
                 if (event.getAction() == MotionEvent.ACTION_UP) {
                     if (!moved) {
-                        Intent intent = new Intent(MosharrofBubbleService.this, MainActivity.class);
-                        intent.setAction("com.mosharrof.ai.OPEN_VOICE");
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                        startActivity(intent);
+                        if (!expanded) {
+                            setBubbleExpanded(true);
+                        } else {
+                            setBubbleExpanded(false);
+                            Intent intent = new Intent(MosharrofBubbleService.this, MainActivity.class);
+                            intent.setAction("com.mosharrof.ai.OPEN_VOICE");
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            startActivity(intent);
+                        }
                     }
                     return true;
                 }
@@ -108,6 +115,32 @@ public final class MosharrofBubbleService extends Service {
         bubble = view;
         try { windowManager.addView(bubble, params); }
         catch (RuntimeException error) { bubble = null; stopSelf(); }
+    }
+
+    private void setBubbleExpanded(boolean show) {
+        if (bubble == null || params == null || windowManager == null) return;
+        expanded = show;
+        TextView view = (TextView) bubble;
+        params.width = dp(show ? 54 : 14);
+        params.height = dp(show ? 54 : 58);
+        params.x = 0;
+        view.setText(show ? "M" : "›");
+        view.setTextSize(show ? 18 : 20);
+        GradientDrawable background = new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR, new int[] {0xFF00D9FF, 0xFF7655FF});
+        if (show) {
+            background.setShape(GradientDrawable.OVAL);
+        } else {
+            background.setShape(GradientDrawable.RECTANGLE);
+            background.setCornerRadii(new float[] {dp(16), dp(16), 0, 0, 0, 0, dp(16), dp(16)});
+        }
+        background.setStroke(1, 0xCCFFFFFF);
+        view.setBackground(background);
+        view.setContentDescription(show
+            ? "MOSHARROF AI-তে কথা শুরু করুন"
+            : "MOSHARROF AI খুলতে টাচ করুন");
+        try { windowManager.updateViewLayout(bubble, params); }
+        catch (RuntimeException ignored) { }
     }
 
     private int dp(int value) {
