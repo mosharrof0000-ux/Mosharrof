@@ -102,6 +102,10 @@ jobs:
               <package android:name="com.zhiliaoapp.musically" />
               <package android:name="com.google.android.apps.maps" />
               <package android:name="com.google.android.gm" />
+              <intent>
+                  <action android:name="android.intent.action.MAIN" />
+                  <category android:name="android.intent.category.LAUNCHER" />
+              </intent>
           </queries>
           """
           if "<queries>" not in xml:
