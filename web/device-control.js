@@ -79,7 +79,7 @@
       {pattern:/(?:স্ক্রিনশট|screen capture|screen recording).*(?:নাও|করো|খোলো|capture|record)/i, title:"স্ক্রিন ক্যাপচার", reason:"MediaProjection-এর সিস্টেম-সম্মতি প্রবাহ এখনো সংযুক্ত নয়।"},
       {pattern:/(?:কন্টাক্ট|contact).*(?:খুঁজে|দেখাও|search|find)/i, title:"কন্টাক্ট খোঁজা", reason:"Android contact picker adapter এখনো সংযুক্ত নয়।"},
       {pattern:/(?:ব্লুটুথ|bluetooth).*(?:পাঠাও|transfer|send|ফাইল)/i, title:"Bluetooth স্থানান্তর", reason:"নিরাপদ file-transfer flow এখনো সংযুক্ত নয়।"},
-      {pattern:/(?:মুছে ফেল|ডিলিট|delete|destroy|wipe|format|factory reset|ফ্যাক্টরি রিসেট)/i, title:"নিষিদ্ধ ধ্বংসাত্মক কাজ", reason:"নীতি অনুযায়ী delete, wipe, format ও factory reset স্থায়ীভাবে নিষিদ্ধ।"}
+      {pattern:/(?:ফাইল|ডেটা|সবকিছু|ডিভাইস).*(?:মুছে ফেল|ডিলিট|delete|destroy|wipe|format|factory reset|ফ্যাক্টরি রিসেট)|^(?:মুছে ফেল|ডিলিট|delete|destroy|wipe|format|factory reset|ফ্যাক্টরি রিসেট)/i, title:"নিষিদ্ধ ধ্বংসাত্মক কাজ", reason:"নীতি অনুযায়ী delete, wipe, format ও factory reset স্থায়ীভাবে নিষিদ্ধ।"}
     ];
     for (var unsupportedIndex = 0; unsupportedIndex < unsupportedRules.length; unsupportedIndex++) {
       var unsupported = unsupportedRules[unsupportedIndex];
@@ -184,7 +184,14 @@
           finish("Android ফলাফল নিশ্চিত করেনি। অবস্থা: " + String(statusCode || "UNVERIFIED"));
         }
       }).catch(function (error) {
-        finish("কাজ সম্পন্ন হয়নি: " + String(error && error.message || "অজানা সমস্যা"));
+        var reason = String(error && error.message || "অজানা সমস্যা");
+        if (reason.indexOf("AUDIT_WRITE_FAILED_AFTER_ACTION") !== -1) {
+          finish("UNVERIFIED: কাজ শুরু হয়ে থাকতে পারে, কিন্তু Audit রেকর্ড নিশ্চিত করা যায়নি। ফলাফল যাচাই করুন।");
+        } else if (reason.indexOf("USER_CANCELLED") !== -1) {
+          finish("আপনি Android-এর অনুমতি বাতিল করেছেন। কাজ চালানো হয়নি।");
+        } else {
+          finish("কাজ সম্পন্ন হয়নি: " + reason);
+        }
       });
     });
   }
