@@ -61,6 +61,15 @@ jobs:
           if link not in html:
               raise SystemExit("Android-only stylesheet injection failed")
           # Use the native Android overlay as the single movable voice control.
+          # Speak replies generated from a voice command, using MOSHARROF's configured TTS path.
+          html = html.replace('var pendingImage=null;', 'var pendingImage=null;\n  var nativeVoiceReplyPending=false;', 1)
+          html = html.replace(
+              'msgEl.appendChild(n);bottom();\n    if(!skipSave)',
+              '''msgEl.appendChild(n);bottom();
+          if(role==="ai"&&nativeVoiceReplyPending){nativeVoiceReplyPending=false;window.setTimeout(function(){var speakButton=n.querySelector(".message-speak-shortcut");if(speakButton)speakButton.click();},150);}
+          if(!skipSave)''',
+              1
+          )
           # Let the native Android voice manager submit speech transcripts through the existing chat pipeline.
           bridge = '''  window.mosharrofNativeVoiceCommand = function (text) {
             try { window.mosharrofAutoSpeakNext = true; input.value = String(text || ""); resize(); send(); return true; }
