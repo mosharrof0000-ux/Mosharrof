@@ -118,6 +118,7 @@ class OrganRegistryTests(unittest.TestCase):
 
 
     def test_registry_cli_generates_deploy_artifact(self) -> None:
+        self.organ("deployment-organ", ["start"])
         repo_root = Path(__file__).resolve().parents[1]
         script = repo_root / "scripts" / "mosharrof_registry.py"
         result = subprocess.run(
