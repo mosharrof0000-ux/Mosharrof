@@ -5,10 +5,13 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.StatFs;
 import android.provider.Settings;
+import android.provider.AlarmClock;
+import android.provider.ContactsContract;
 import android.text.TextUtils;
 
 import androidx.activity.result.ActivityResult;
@@ -231,6 +234,106 @@ public class MosharrofDeviceControlPlugin extends Plugin {
             result.put("packageName", requestedPackage);
             call.resolve(result);
         });
+    }
+
+    @PluginMethod
+    public void pickContact(PluginCall call) {
+        confirm(call, "contacts.lookup", "কন্টাক্ট বাছাই করবেন?",
+            "Android-এর system contact picker খুলবে। আপনি নিজে একজন contact বেছে নেবেন।", () -> {
+                Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+                if (intent.resolveActivity(getContext().getPackageManager()) == null) {
+                    call.reject("CONTACT_PICKER_UNAVAILABLE");
+                    return;
+                }
+                if (!writeAudit("contacts.lookup", "PICKER_REQUESTED")) {
+                    call.reject("AUDIT_UNAVAILABLE_BEFORE_ACTION");
+                    return;
+                }
+                startActivityForResult(call, intent, "contactPickerResult");
+            });
+    }
+
+    @ActivityCallback
+    private void contactPickerResult(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        if (result == null || result.getResultCode() != Activity.RESULT_OK ||
+                result.getData() == null || result.getData().getData() == null) {
+            writeAudit("contacts.lookup", "USER_CANCELLED");
+            call.reject("CONTACT_PICKER_CANCELLED");
+            return;
+        }
+        Uri uri = result.getData().getData();
+        String name = "";
+        String number = "";
+        try (Cursor cursor = getContext().getContentResolver().query(
+                uri,
+                new String[] {
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                },
+                null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+                int numberIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                if (nameIndex >= 0) name = cursor.getString(nameIndex);
+                if (numberIndex >= 0) number = cursor.getString(numberIndex);
+            }
+        } catch (Exception error) {
+            call.reject("CONTACT_DETAILS_UNAVAILABLE");
+            return;
+        }
+        if (name.isEmpty() && number.isEmpty()) {
+            call.reject("CONTACT_DETAILS_EMPTY");
+            return;
+        }
+        if (!writeAudit("contacts.lookup", "CONTACT_SELECTED")) {
+            call.reject("AUDIT_WRITE_FAILED_AFTER_ACTION");
+            return;
+        }
+        JSObject value = new JSObject();
+        value.put("status", "CONTACT_SELECTED");
+        value.put("name", name);
+        value.put("number", number);
+        value.put("message", "User-selected contact details returned");
+        call.resolve(value);
+    }
+
+    @PluginMethod
+    public void setAlarm(PluginCall call) {
+        Integer hourValue = call.getInt("hour");
+        Integer minuteValue = call.getInt("minute");
+        String label = call.getString("label", "MOSHARROF reminder");
+        int hour = hourValue == null ? -1 : hourValue;
+        int minute = minuteValue == null ? -1 : minuteValue;
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            call.reject("INVALID_ALARM_TIME");
+            return;
+        }
+        final int alarmHour = hour;
+        final int alarmMinute = minute;
+        final String alarmLabel = label == null ? "MOSHARROF reminder" : label;
+        confirm(call, "reminders.schedule_alarm", "Clock-এ অ্যালার্ম প্রস্তুত করবেন?",
+            String.format(Locale.ROOT, "সময়: %02d:%02d\\nলেবেল: %s\\nClock অ্যাপে আপনাকে চূড়ান্তভাবে নিশ্চিত করতে হবে।",
+                alarmHour, alarmMinute, alarmLabel), () -> {
+                Intent intent = new Intent(AlarmClock.ACTION_SET_ALARM);
+                intent.putExtra(AlarmClock.EXTRA_HOUR, alarmHour);
+                intent.putExtra(AlarmClock.EXTRA_MINUTES, alarmMinute);
+                intent.putExtra(AlarmClock.EXTRA_MESSAGE, alarmLabel);
+                intent.putExtra(AlarmClock.EXTRA_SKIP_UI, false);
+                if (intent.resolveActivity(getContext().getPackageManager()) == null) {
+                    call.reject("ALARM_APP_UNAVAILABLE");
+                    return;
+                }
+                getActivity().startActivity(intent);
+                if (!writeAudit("reminders.schedule_alarm", "ALARM_EDITOR_OPENED")) {
+                    call.reject("AUDIT_WRITE_FAILED_AFTER_ACTION");
+                    return;
+                }
+                JSObject value = new JSObject();
+                value.put("status", "LAUNCHED");
+                value.put("message", "Clock alarm editor opened; user must confirm there");
+                call.resolve(value);
+            });
     }
 
     @PluginMethod
