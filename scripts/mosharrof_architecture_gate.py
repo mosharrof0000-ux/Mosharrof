@@ -15,21 +15,18 @@ LINE_LIMITS = {
     ".js": 250, ".mjs": 250, ".cjs": 250, ".jsx": 250,
     ".ts": 250, ".tsx": 250, ".css": 350, ".html": 300,
 }
-# Maximum explicit module/dependency links in any one production source file.
-# Overflow must be split into a dedicated helper/link module; do not raise this cap.
 MAX_LINKS_PER_FILE = 20
+# Covers static imports, side-effect imports, re-exports, dynamic imports, and require().
 IMPORT_RE = re.compile(
-    r"""(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*)["']([^"']+)["']"""
+    r"""(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']"""
 )
-errors: list[str] = []
+HTML_LINK_RE = re.compile(r"""\b(?:href|src|action|poster)\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
+CSS_IMPORT_RE = re.compile(r"""@import\s+(?:url\(\s*)?["']?([^"'\s;)]+)""", re.IGNORECASE)
+CSS_URL_RE = re.compile(r"""url\(\s*["']?([^"'\s)]+)""", re.IGNORECASE)
 
 
 def git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
-
-
-def fail(message: str) -> None:
-    errors.append(message)
 
 
 def organ_name(path: str) -> str | None:
@@ -58,7 +55,22 @@ def resolve_import(source: Path, specifier: str) -> Path | None:
     return None
 
 
+def count_links(source_text: str, suffix: str) -> list[str]:
+    """Return declared file/module/web-resource links for a supported source type."""
+    if suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
+        return IMPORT_RE.findall(source_text)
+    if suffix == ".html":
+        return HTML_LINK_RE.findall(source_text)
+    if suffix == ".css":
+        # url() is counted as one reference; avoid double-counting url(...) within @import.
+        imports = CSS_IMPORT_RE.findall(source_text)
+        without_imports = CSS_IMPORT_RE.sub("", source_text)
+        return imports + CSS_URL_RE.findall(without_imports)
+    return []
+
+
 def main() -> int:
+    errors: list[str] = []
     try:
         changed = [p for p in git("diff", "--name-only", "--diff-filter=ACMR", f"{BASE}...HEAD").splitlines() if p]
     except subprocess.CalledProcessError as exc:
@@ -66,24 +78,24 @@ def main() -> int:
         return 2
 
     if "web/index.html" in changed:
-        fail("web/index.html is frozen legacy shell; migrate code into organs/ or core/ before editing it.")
+        errors.append("web/index.html is frozen legacy shell; migrate code into organs/ or core/ before editing it.")
 
     changed_organs = {name for path in changed if (name := organ_name(path))}
     for name in sorted(changed_organs):
         folder = ROOT / "organs" / name
         for required in ("organ.json", "index.js", "README.md", "tests/README.md"):
             if not (folder / required).is_file():
-                fail(f"organ '{name}' is incomplete: missing organs/{name}/{required}")
+                errors.append(f"organ '{name}' is incomplete: missing organs/{name}/{required}")
         manifest = folder / "organ.json"
         if manifest.is_file():
             try:
                 data = json.loads(manifest.read_text(encoding="utf-8"))
                 if data.get("id") != name:
-                    fail(f"{manifest.relative_to(ROOT)}: manifest id must equal '{name}'")
+                    errors.append(f"{manifest.relative_to(ROOT)}: manifest id must equal '{name}'")
                 if not isinstance(data.get("public_api"), list):
-                    fail(f"{manifest.relative_to(ROOT)}: public_api must be an array")
+                    errors.append(f"{manifest.relative_to(ROOT)}: public_api must be an array")
             except (OSError, json.JSONDecodeError) as exc:
-                fail(f"{manifest.relative_to(ROOT)} is not valid JSON: {exc}")
+                errors.append(f"{manifest.relative_to(ROOT)} is not valid JSON: {exc}")
 
     for path in changed:
         p = Path(path)
@@ -91,43 +103,44 @@ def main() -> int:
         if suffix not in SOURCE_SUFFIXES or is_policy_or_test(path):
             continue
         if not p.parts or p.parts[0] not in {"organs", "core"}:
-            fail(f"{path}: production source must belong to a dedicated organs/<organ>/ or core/ module.")
+            errors.append(f"{path}: production source must belong to a dedicated organs/<organ>/ or core/ module.")
             continue
         full = ROOT / p
         if not full.is_file():
-            fail(f"{path}: changed source file is missing from checkout.")
+            errors.append(f"{path}: changed source file is missing from checkout.")
             continue
         source_text = full.read_text(encoding="utf-8")
         lines = len(source_text.splitlines())
         limit = LINE_LIMITS[suffix]
         if lines > limit:
-            fail(f"{path}: {lines} lines exceeds the {limit}-line limit; split by responsibility.")
+            errors.append(f"{path}: {lines} lines exceeds the {limit}-line limit; split by responsibility.")
 
-        # Enforce the connection cap even for package imports that cannot be resolved locally.
-        import_links = IMPORT_RE.findall(source_text)
-        if len(import_links) > MAX_LINKS_PER_FILE:
-            fail(
-                f"{path}: {len(import_links)} module links exceeds the {MAX_LINKS_PER_FILE}-link-per-file limit; "
+        links = count_links(source_text, suffix)
+        if len(links) > MAX_LINKS_PER_FILE:
+            errors.append(
+                f"{path}: {len(links)} links exceeds the {MAX_LINKS_PER_FILE}-link-per-file limit; "
                 "move related links into a dedicated helper/link module and connect through its public API."
             )
 
         current_organ = organ_name(path)
-        if current_organ:
-            for specifier in import_links:
+        if suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
+            for specifier in links:
                 target = resolve_import(full, specifier)
                 if target is None:
                     continue
                 target_organ = organ_name(str(target))
                 if target_organ and target_organ != current_organ:
-                    fail(f"{path}: direct cross-organ import to {target}; use a declared public API/message contract.")
+                    errors.append(
+                        f"{path}: direct cross-organ import to {target}; use a declared public API/message contract."
+                    )
 
-        if "components" in p.parts and p.name.endswith((".js", ".jsx", ".ts", ".tsx")):
+        if "components" in p.parts and suffix in {".js", ".jsx", ".ts", ".tsx"}:
             if not current_organ:
-                fail(f"{path}: UI component is not owned by an organ.")
+                errors.append(f"{path}: UI component is not owned by an organ.")
             else:
                 test_path = ROOT / "organs" / current_organ / "tests" / f"{p.stem}.test.js"
                 if not test_path.is_file():
-                    fail(f"{path}: dedicated component test is required at {test_path.relative_to(ROOT)}.")
+                    errors.append(f"{path}: dedicated component test is required at {test_path.relative_to(ROOT)}.")
 
     if errors:
         print("ARCHITECTURE GATE: FAIL")
@@ -141,7 +154,7 @@ def main() -> int:
         "changed_files_checked": len(changed),
         "changed_organs_checked": sorted(changed_organs),
         "max_links_per_file": MAX_LINKS_PER_FILE,
-        "policy": "isolated organs; frozen legacy shell; enforced file-size and link-count limits; component tests",
+        "policy": "isolated organs; frozen legacy shell; enforced file-size, link-count, and component-test limits",
     }, ensure_ascii=False))
     return 0
 
