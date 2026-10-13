@@ -420,6 +420,8 @@ jobs:
           import android.speech.SpeechRecognizer;
           import android.widget.Toast;
           import android.content.pm.ResolveInfo;
+          import android.database.Cursor;
+          import android.provider.ContactsContract;
           import java.util.ArrayList;
           import java.util.List;
           import java.util.Locale;
