@@ -57,6 +57,11 @@ header.top{
 .message{max-width:min(88%,760px);font-size:15px;line-height:1.7;word-break:break-word;color:#ececec}
 .message .label{display:block;font-size:11px;color:#8e8e93;margin-bottom:6px}
 .message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active{background:#303030}.voice-companion{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:28px;padding:0 7px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:#111;color:#d4d4d8;font:11px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}.voice-companion.is-late{border-color:#ef4444;background:#3b1010;color:#ff8b8b}.voice-companion.is-download{width:32px;min-width:32px;padding:0;color:#b9f5c9;border-color:rgba(74,190,110,.65);background:#12351f}.voice-companion svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.voice-companion:disabled{opacity:.65;cursor:wait}.message-speak-shortcut.is-ready,.message-action.is-ready,.message-speak-shortcut.is-speaking,.message-action.is-speaking{background:#12351f;border-color:rgba(74,190,110,.8);color:#b9f5c9}.message-speak-shortcut.is-stop-requested,.message-action.is-stop-requested{background:#3a1014;border-color:rgba(239,68,68,.85);color:#ffb4b4}
+.response-status-row{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%;margin:0 0 6px;font-size:10px;line-height:1.3;color:#92929a}
+.response-timer{flex:none;color:#39ff78;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 4px rgba(57,255,120,.9),0 0 9px rgba(57,255,120,.62),0 0 16px rgba(57,255,120,.28)}
+.response-timer.is-error{color:#ff4545;text-shadow:0 0 4px rgba(255,69,69,.95),0 0 9px rgba(255,69,69,.65),0 0 16px rgba(255,69,69,.3)}
+.response-route{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a1a1aa}
+.message.typing .response-status-row{margin-bottom:7px}
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
 
@@ -550,11 +555,37 @@ header.top{
     });
   }
   function fallbackCopy(value,button,done){var area=document.createElement("textarea");area.value=value;area.setAttribute("readonly","");area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();try{if(document.execCommand("copy"))done();else button.textContent="কপি করা যায়নি";}catch(e){button.textContent="কপি করা যায়নি";}area.remove();}
-  function addMsg(role,text,ts,skipSave,feedback,messageIndexOverride,elapsedMs){
+  function providerShortName(provider){
+    var names={"gemini":"Gemini","cloudflare-workers-ai":"Workers AI","groq":"Groq","openrouter":"OpenRouter"};
+    return names[String(provider||"").toLowerCase()]||String(provider||"AI");
+  }
+  function chatRouteSummary(meta){
+    if(!meta)return "";
+    var winner=meta.provider?providerShortName(meta.provider):"";
+    var attempts=Array.isArray(meta.attempted)?meta.attempted:[];
+    var route=[];
+    attempts.forEach(function(item){var name=providerShortName(item&&item.provider);if(name&&route.indexOf(name)<0)route.push(name);});
+    if(winner&&route.indexOf(winner)<0)route.push(winner);
+    if(meta.failed)return "চেষ্টা: "+(route.length?route.join(" → "):"AI সংযোগ")+" · ব্যর্থ";
+    var fallback=route.filter(function(name){return name!==winner;});
+    if(fallback.length)return "শুরু: "+(route[0]||"AI")+" · বিকল্প: "+fallback.join(" → ")+" · উত্তর: "+(winner||"AI");
+    return "উত্তর: "+(winner||route[0]||"AI");
+  }
+  function addMsg(role,text,ts,skipSave,feedback,messageIndexOverride,elapsedMs,responseMeta){
     var at=ts||nowISO();
     var n=document.createElement("div");
     /* message-renderer contract markers: */ n.className='message ai'; if(role==="user")n.className='message user'; else n.className="message ai";
-    if(role!=="user"){var l=document.createElement("span");l.className="label";l.textContent=typeof elapsedMs==="number"?elapsedLabel(elapsedMs):"MOSHARROF AI · core";n.appendChild(l);}
+    if(role!=="user"){
+      if(typeof elapsedMs==="number"){
+        var metaRow=document.createElement("span");metaRow.className="response-status-row";
+        var timer=document.createElement("span");timer.className="response-timer"+(responseMeta&&responseMeta.failed?" is-error":"");
+        timer.textContent="⏱ "+elapsedLabel(elapsedMs).replace("সময় নিয়েছে · ","");
+        var route=document.createElement("span");route.className="response-route";route.textContent=chatRouteSummary(responseMeta)||"MOSHARROF AI";
+        metaRow.appendChild(timer);metaRow.appendChild(route);n.appendChild(metaRow);
+      }else{
+        var l=document.createElement("span");l.className="label";l.textContent="MOSHARROF AI · core";n.appendChild(l);
+      }
+    }
     if(role==="user"){n.appendChild(document.createTextNode(text));}
     else{
       var rich=document.createElement("div");rich.className="rich-content";rich.innerHTML=renderRichText(text);applySmartTypography(rich,text);n.appendChild(rich);enhanceRichContent(rich);
@@ -569,7 +600,7 @@ header.top{
     var messageIndex=typeof messageIndexOverride==="number"?messageIndexOverride:session.messages.length;
     if(text && text.indexOf("🖼️")!==0)addMessageToolbar(n,role,text,at,messageIndex,feedback||null);
     msgEl.appendChild(n);bottom();
-    if(!skipSave){var savedMessage={role:role,text:text,at:at};if(role==="ai"&&typeof elapsedMs==="number")savedMessage.elapsedMs=elapsedMs;if(role==="ai"&&feedback)savedMessage.feedback=feedback;session.messages.push(savedMessage);session.lastActiveAt=at;saveStore(session);updateMeta();}
+    if(!skipSave){var savedMessage={role:role,text:text,at:at};if(role==="ai"&&typeof elapsedMs==="number")savedMessage.elapsedMs=elapsedMs;if(role==="ai"&&responseMeta)savedMessage.responseMeta=responseMeta;if(role==="ai"&&feedback)savedMessage.feedback=feedback;session.messages.push(savedMessage);session.lastActiveAt=at;saveStore(session);updateMeta();}
     return n;
   }
   function renderFeedbackPanel(panel,messageIndex,kind,feedback,trigger){
@@ -649,7 +680,7 @@ header.top{
     if(navigator.share){navigator.share(payload).then(function(){toast("শেয়ার মেনু খোলা হয়েছে");}).catch(function(e){if(e&&e.name!=="AbortError")copyMessage(text);});}
     else copyMessage(text);
   }
-  function typing(startedAt){var started=typeof startedAt==="number"?startedAt:performance.now();var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="label"></span><span class="dots"><span></span><span></span><span></span></span>';var label=n.querySelector(".label");function refresh(){label.textContent="ভাবছে · "+elapsedLabel(performance.now()-started).replace("সময় নিয়েছে · ","");}refresh();n._elapsedTimer=window.setInterval(refresh,100);msgEl.appendChild(n);bottom();}
+  function typing(startedAt){var started=typeof startedAt==="number"?startedAt:performance.now();var n=document.createElement("div");n.className="message ai typing";n.id="typing";n.innerHTML='<span class="response-status-row"><span class="response-timer"></span><span class="response-route">প্রথম চেষ্টা: Gemini</span></span><span class="dots"><span></span><span></span><span></span></span>';var timer=n.querySelector(".response-timer");function refresh(){timer.textContent="⏱ "+elapsedLabel(performance.now()-started).replace("সময় নিয়েছে · ","");}refresh();n._elapsedTimer=window.setInterval(refresh,100);msgEl.appendChild(n);bottom();}
   function untype(){var t=$("#typing");if(t){if(t._elapsedTimer)window.clearInterval(t._elapsedTimer);t.remove();}}
   var CHAT_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat";
   var IMAGE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/generate-image";
@@ -667,10 +698,11 @@ header.top{
   function coreReply(t,image){
     return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null})})
       .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
-        if(!res.ok)throw new Error(data.provider_message||data.error||("HTTP "+res.status));
+        var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
+        if(!res.ok){var failure=new Error(data.provider_message||data.message||data.error||("HTTP "+res.status));failure.responseMeta={provider:null,model:null,attempted:responseMeta.attempted,failed:true};throw failure;}
         var answer=String(data.text||"").trim();
-        if(!answer)throw new Error("empty_response");
-        return answer;
+        if(!answer){var empty=new Error("empty_response");empty.responseMeta={provider:responseMeta.provider,model:responseMeta.model,attempted:responseMeta.attempted,failed:true};throw empty;}
+        return {text:answer,responseMeta:responseMeta};
       });});
   }
   function setSpeakButton(button,label){
@@ -1032,17 +1064,17 @@ header.top{
     if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
       session.messages=session.messages.slice(0,editTargetIndex);
       msgEl.innerHTML="";
-      for(var ri=0;ri<session.messages.length;ri++){var rm=session.messages[ri];addMsg(rm.role,rm.text,rm.at,true,rm.feedback,ri,rm.elapsedMs);}
+      for(var ri=0;ri<session.messages.length;ri++){var rm=session.messages[ri];addMsg(rm.role,rm.text,rm.at,true,rm.feedback,ri,rm.elapsedMs,rm.responseMeta);}
       editTargetIndex=null;
     }
     addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);
     var imageMode=!attached&&looksLikeImagePrompt(text);
     var request=imageMode?imageReply(text):coreReply(text,attached);
-    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r,undefined,false,null,undefined,elapsedMs);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"স্ক্রিনশট বিশ্লেষণে সমস্যা হয়েছে। আবার চেষ্টা করুন।";addMsg("ai",message,undefined,false,null,undefined,elapsedMs);busy=false;sendBtn.disabled=false;input.focus();});}
+    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
-  function restoreMessages(){msgEl.innerHTML="";if(session.messages&&session.messages.length){for(var i=0;i<session.messages.length;i++){var m=session.messages[i];addMsg(m.role,m.text,m.at,true,m.feedback,i,m.elapsedMs);}}else{addMsg("ai","আমি কীভাবে আপনাকে সাহায্য করতে পারি?",nowISO(),true);}}
+  function restoreMessages(){msgEl.innerHTML="";if(session.messages&&session.messages.length){for(var i=0;i<session.messages.length;i++){var m=session.messages[i];addMsg(m.role,m.text,m.at,true,m.feedback,i,m.elapsedMs,m.responseMeta);}}else{addMsg("ai","আমি কীভাবে আপনাকে সাহায্য করতে পারি?",nowISO(),true);}}
   function updateHistoryList(){var list=$("#historyList"),search=$("#historySearch");if(!list)return;var query=search?search.value.trim().toLocaleLowerCase():"";var filtered=chatSessions.slice().sort(function(a,b){return String(b.lastActiveAt||b.openedAt||"").localeCompare(String(a.lastActiveAt||a.openedAt||""));}).filter(function(item){return sessionTitle(item).toLocaleLowerCase().indexOf(query)!==-1;});list.innerHTML="";if(!filtered.length){var empty=document.createElement("div");empty.className="history-empty";empty.textContent=query?"এই শিরোনামে কোনো চ্যাট পাওয়া যায়নি।":"এখনো কোনো চ্যাট হিস্ট্রি নেই।";list.appendChild(empty);return;}filtered.forEach(function(item){var b=document.createElement("button");b.type="button";b.className="history-item"+(item.id===session.id?" active":"");b.setAttribute("aria-current",item.id===session.id?"page":"false");var title=document.createElement("span");title.textContent=sessionTitle(item);var time=document.createElement("small");time.textContent=shortTime(item.lastActiveAt||item.openedAt);b.appendChild(title);b.appendChild(time);b.title=sessionTitle(item);b.onclick=function(){switchSession(item.id);};list.appendChild(b);});}
   function switchSession(id){if(busy){toast("উত্তর আসা পর্যন্ত অপেক্ষা করুন");return;}var chosen=null;for(var i=0;i<chatSessions.length;i++){if(chatSessions[i].id===id){chosen=chatSessions[i];break;}}if(!chosen)return;session=chosen;session.openedAt=session.openedAt||nowISO();session.closedAt=null;session.lastActiveAt=nowISO();saveStore(session);restoreMessages();updateMeta();updateHistoryList();closeD();toast("আগের চ্যাট খোলা হয়েছে");}
   function showHistory(){openD("left");updateHistoryList();}
