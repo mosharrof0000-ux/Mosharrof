@@ -83,12 +83,17 @@ if response is None or response.status_code==404 or response.status_code in TRAN
     except (requests.RequestException, ValueError) as exc:
         code=getattr(getattr(exc,"response",None),"status_code",None)
         detail=f"HTTP {code}" if code else type(exc).__name__
-        raise SystemExit(f"Unable to list Gemini fallback models ({detail}); no credentials were logged.") from exc
+        print(f"Gemini model catalog unavailable ({detail}); trying the safe fallback list.")
+        available=[]
 
     alternatives=sorted(
         (name for name in available if "flash" in name.lower() and name!=preferred),
         key=lambda name: (("preview" in name.lower()),name),
     )
+    fallback_models=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-2.5-flash","gemini-2.0-flash"]
+    for fallback in fallback_models:
+        if fallback!=preferred and fallback not in alternatives:
+            alternatives.append(fallback)
     if not alternatives:
         raise SystemExit("No alternative Gemini Flash model supporting generateContent is available.")
     errors=[]
