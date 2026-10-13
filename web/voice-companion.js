@@ -46,11 +46,17 @@
     });
     window.addEventListener("mosharrof:open-voice", function () {
       setOpen(true);
-      window.setTimeout(function () {
+      var attempts = 0;
+      function activateVoice() {
         var voice = document.getElementById("composerVoiceBtn");
-        if (voice) voice.click();
-        else setOpen(true);
-      }, 900);
+        if (voice) {
+          voice.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          voice.click();
+          return;
+        }
+        if (++attempts < 12) window.setTimeout(activateVoice, 400);
+      }
+      window.setTimeout(activateVoice, 400);
     });
     /* A native tile or overlay is opt-in; the website dock stays tucked at the edge. */
     window.MOSHARROFVoiceCompanion = {
