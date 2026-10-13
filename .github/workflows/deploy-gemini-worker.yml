@@ -192,6 +192,28 @@ jobs:
             printf '%s' "$SARVAM" | npx --yes wrangler@3 secret put SARVAM_API_KEY --config wrangler.toml
           fi
 
+      - name: Set optional chat provider secrets
+        working-directory: worker
+        env:
+          RAW_GROQ: ${{ secrets.GROQ_API_KEY }}
+          RAW_OPENROUTER: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          GROQ="$(printf '%s' "$RAW_GROQ" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          OPENROUTER="$(printf '%s' "$RAW_OPENROUTER" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [ -n "$GROQ" ]; then
+            printf '%s' "$GROQ" | npx --yes wrangler@3 secret put GROQ_API_KEY --config wrangler.toml
+            echo "Groq chat fallback configured (secret value hidden)."
+          else
+            echo "Groq secret not set; provider will be skipped by the Worker."
+          fi
+          if [ -n "$OPENROUTER" ]; then
+            printf '%s' "$OPENROUTER" | npx --yes wrangler@3 secret put OPENROUTER_API_KEY --config wrangler.toml
+            echo "OpenRouter chat fallback configured (secret value hidden)."
+          else
+            echo "OpenRouter secret not set; provider will be skipped by the Worker."
+          fi
+
       - name: Verify live TTS end-to-end
         shell: bash
         run: |
@@ -201,10 +223,12 @@ jobs:
           echo "Checking live TTS configuration..."
           curl -fsS --connect-timeout 10 --max-time 20 "$HEALTH" > /tmp/tts-health.json
           cat /tmp/tts-health.json
-          grep -q '"worker_build":"2026-10-11-gemini-tts-multi-route-failover-v1"' /tmp/tts-health.json
+          grep -q '"worker_build":"2026-10-13-chat-multi-provider-failover-v1"' /tmp/tts-health.json
           grep -q '"tts_endpoint":"/tts"' /tmp/tts-health.json
           grep -q '"transcribe_audio_endpoint":"/transcribe-audio"' /tmp/tts-health.json
-          echo "Worker build and both audio routes verified."
+          grep -q '"cloudflare_chat_configured":true' /tmp/tts-health.json
+          grep -q '"chat_provider_order":\["gemini","cloudflare-workers-ai","groq","openrouter"\]' /tmp/tts-health.json
+          echo "Worker build, chat provider order, and audio routes verified."
 
           if grep -q '"elevenlabs_configured":true' /tmp/tts-health.json; then
             echo "ElevenLabs configured: running primary clear Bengali TTS verification."
