@@ -24,8 +24,9 @@
     var lower = value.toLocaleLowerCase();
 
     var settingMatch = lower.match(/(?:সেটিংস|settings)\s*(?:খোলো|খুলুন|open)?(?:\s+(সাধারণ|ওয়াইফাই|ওয়াইফাই|wifi|wi-fi|ব্লুটুথ|bluetooth|ডিসপ্লে|display|শব্দ|sound|ব্যাটারি|battery|অ্যাপ|apps|অনুমতি|permissions|লোকেশন|location))?/i);
+    var prefixPageMatch = lower.match(/(সাধারণ|ওয়াইফাই|ওয়াইফাই|wifi|wi-fi|ব্লুটুথ|bluetooth|ডিসপ্লে|display|শব্দ|sound|ব্যাটারি|battery|অ্যাপ|apps|অনুমতি|permissions|লোকেশন|location)\\s+(?:সেটিংস|settings)/i);
     if (settingMatch) {
-      var settingKey = String(settingMatch[1] || "সাধারণ").toLocaleLowerCase();
+      var settingKey = String((prefixPageMatch && prefixPageMatch[1]) || settingMatch[1] || "সাধারণ").toLocaleLowerCase();
       var page = SETTINGS[settingKey] || "general";
       return {kind:"settings", title:"Android সেটিংস খুলুন", detail:"পৃষ্ঠা: " + page, payload:{page:page},
         summary:"মোশাররফ Android-এর " + page + " সেটিংস খোলার অনুমতি চাইছে। কোনো সেটিং নিজে থেকে বদলাবে না।"};
