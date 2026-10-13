@@ -289,7 +289,7 @@ header.top{
   function fmtTime(iso){if(!iso)return "—";try{var d=new Date(iso);return d.toLocaleString("bn-BD",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true});}catch(e){return iso;}}
   function shortTime(iso){if(!iso)return "";try{return new Date(iso).toLocaleTimeString("bn-BD",{hour:"2-digit",minute:"2-digit",hour12:true});}catch(e){return "";}}
   function makeSession(){return{id:"chat-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8),openedAt:nowISO(),closedAt:null,lastActiveAt:nowISO(),messages:[]};}
-  function sessionTitle(item){var messages=item&&Array.isArray(item.messages)?item.messages:[];for(var i=0;i<messages.length;i++){if(messages[i]&&messages[i].role==="user"&&String(messages[i].text||"").trim()){var title=String(messages[i].text).replace(/\\s+/g," ").trim();return title.length>42?title.slice(0,41)+"…":title;}}return "নতুন চ্যাট";}
+  function sessionTitle(item){var messages=item&&Array.isArray(item.messages)?item.messages:[];for(var i=0;i<messages.length;i++){if(messages[i]&&messages[i].role==="user"&&String(messages[i].text||"").trim()){var title=String(messages[i].text).replace(/\s+/g," ").trim();return title.length>42?title.slice(0,41)+"…":title;}}return "নতুন চ্যাট";}
   function loadSessionData(){try{var raw=localStorage.getItem(SESSIONS_KEY);if(raw){var parsed=JSON.parse(raw);if(Array.isArray(parsed))chatSessions=parsed.filter(function(x){return x&&Array.isArray(x.messages);});}}catch(e){chatSessions=[];}var legacy=null;try{legacy=JSON.parse(localStorage.getItem(STORE_KEY)||"null");}catch(e){}if(!chatSessions.length&&legacy&&Array.isArray(legacy.messages)){legacy.id=legacy.id||("chat-migrated-"+Date.now().toString(36));chatSessions=[legacy];}var activeId=null;try{activeId=localStorage.getItem(ACTIVE_SESSION_KEY);}catch(e){}var active=null;for(var i=0;i<chatSessions.length;i++){if(!chatSessions[i].id)chatSessions[i].id="chat-"+Date.now().toString(36)+"-"+i;if(chatSessions[i].id===activeId)active=chatSessions[i];}if(!active&&chatSessions.length)active=chatSessions[0];if(!active){active=makeSession();chatSessions.push(active);}active.openedAt=active.openedAt||nowISO();active.lastActiveAt=active.lastActiveAt||nowISO();active.closedAt=null;return active;}
   function saveStore(data){try{if(!data.id)data.id="chat-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);var index=-1;for(var i=0;i<chatSessions.length;i++){if(chatSessions[i].id===data.id){index=i;break;}}if(index<0)chatSessions.push(data);else chatSessions[index]=data;chatSessions.sort(function(a,b){return String(b.lastActiveAt||b.openedAt||"").localeCompare(String(a.lastActiveAt||a.openedAt||""));});localStorage.setItem(SESSIONS_KEY,JSON.stringify(chatSessions));localStorage.setItem(ACTIVE_SESSION_KEY,data.id);localStorage.setItem(STORE_KEY,JSON.stringify(data));}catch(e){toast("চ্যাট সংরক্ষণে স্টোরেজ সমস্যা হয়েছে");}updateHistoryList();}
   var session=loadSessionData();
@@ -364,7 +364,8 @@ header.top{
       id=String(id||"").toLowerCase();
       if(!/^[a-z0-9-]{2,48}$/.test(id)||!config||!String(config.family||"").trim())return false;
       var family=String(config.family).trim();
-      if(/[<>{};"'\\\n\r]/.test(family))return false;
+      if(/[<>{};"'\\
+]/.test(family))return false;
       var source=config.source==="self-hosted"?"self-hosted":"google";
       var src=String(config.src||"");
       var format=String(config.format||"woff2").toLowerCase();
@@ -493,13 +494,13 @@ header.top{
   function detectTypographyGenre(source,root){
     if(root){
       var registeredGenres=Object.keys(MOSHARROF_TYPOGRAPHY.genres);
-      for(var gi=0;gi<registeredGenres.length;gi++){
+      for(var gi=0;gi<registeredGenres.length;gi){
         var registeredGenre=registeredGenres[gi];
         if(root.querySelector(".font-"+registeredGenre))return registeredGenre;
       }
     }
     var fence=String.fromCharCode(96).repeat(3);
-    var value=String(source||"").replace(new RegExp(fence+"[\\s\\S]*?"+fence,"g")," ").replace(/<[^>]*>/g," ").trim();
+    var value=String(source||"").replace(new RegExp(fence+"[\s\S]*?"+fence,"g")," ").replace(/<[^>]*>/g," ").trim();
     var first=value.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||"";
     /* Detect song headings anywhere in the response, not only on the first line.
        This covers AI replies that start with an introduction before the lyrics. */
@@ -823,7 +824,7 @@ header.top{
   }
   function detectTtsGenre(text){
     var s=String(text||"");
-    if(/(?:^|\\n|[#* >])\\s*(?:গান(?:ের কথা|টি|:)?|lyrics|song|কোরাস|স্থায়ী|স্থায়ী|অন্তরা|সঞ্চারী|আভোগ|মুখড়া|মুখড়া)\\b?/im.test(s))return "song";
+    if(/(?:^|\n|[#* >])\s*(?:গান(?:ের কথা|টি|:)?|lyrics|song|কোরাস|স্থায়ী|স্থায়ী|অন্তরা|সঞ্চারী|আভোগ|মুখড়া|মুখড়া)\b?/im.test(s))return "song";
     if(/(?:কবিতা|poem|ছন্দোবদ্ধ|পঙ্?ক্তি|গীতিকবিতা)/i.test(s))return "poem";
     return "chat";
   }
@@ -980,20 +981,15 @@ header.top{
     function enqueue(i){
       var p=i*4,r=d[p],g=d[p+1],b=d[p+2],a=d[p+3];
       if(a===0)return;
-      if(r>=232&&g>=232&&b>=232&&Math.max(r,g,b)-Math.min(r,g,b)<=28){
-        d[p+3]=0;queue[tail++]=i;
-      }
+      if(r>=232&&g>=232&&b>=232&&Math.max(r,g,b)-Math.min(r,g,b)<=28){d[p+3]=0;queue[tail++]=i;}
     }
     for(var x=0;x<w;x++){enqueue(x);if(h>1)enqueue((h-1)*w+x);}
     for(var y=1;y<h-1;y++){enqueue(y*w);if(w>1)enqueue(y*w+w-1);}
     while(head<tail){
       var i=queue[head++],x=i%w,y=(i/w)|0;
-      if(x>0)enqueue(i-1);
-      if(x+1<w)enqueue(i+1);
-      if(y>0)enqueue(i-w);
-      if(y+1<h)enqueue(i+w);
+      if(x>0)enqueue(i-1);if(x+1<w)enqueue(i+1);if(y>0)enqueue(i-w);if(y+1<h)enqueue(i+w);
     }
-    if(tail)ctx.putImageData(image,0,0);
+    ctx.putImageData(image,0,0);
     return tail>0;
   }
   function hasTransparentPixels(canvas){
@@ -1104,7 +1100,7 @@ header.top{
     addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);
     var imageMode=!attached&&looksLikeImagePrompt(text);
     var request=imageMode?imageReply(text):coreReply(text,attached);
-    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);busy=false;sendBtn.disabled=false;input.focus();});}
+    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন。":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন。"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
@@ -1115,16 +1111,16 @@ header.top{
   function newChat(){if(busy){toast("উত্তর আসা পর্যন্ত অপেক্ষা করুন");return;}session.closedAt=nowISO();session.lastActiveAt=nowISO();saveStore(session);session=makeSession();chatSessions.unshift(session);saveStore(session);msgEl.innerHTML="";addMsg("ai","নতুন কথোপকথন।");updateMeta();updateHistoryList();closeD();toast("নতুন চ্যাট");}
   function clearMsg(){session.messages=[];session.lastActiveAt=nowISO();saveStore(session);msgEl.innerHTML="";addMsg("ai","মেসেজ মুছে ফেলা হয়েছে।");updateMeta();updateHistoryList();closeD();toast("Cleared");}
   dL.innerHTML='<div class="dhead"><div class="dlogo">M</div><div><strong>MOSHARROF</strong><small>Entity System</small></div><button class="dclose" id="cL">✕</button></div><div class="history-tools"><input class="history-search" id="historySearch" type="search" placeholder="চ্যাটের শিরোনাম খুঁজুন..." aria-label="চ্যাট হিস্ট্রি খুঁজুন"><button class="history-new" id="historyNewChat" type="button">＋ নতুন চ্যাট</button><div class="history-heading">আগের চ্যাট</div><div class="history-list" id="historyList" aria-live="polite"></div></div><div class="session-meta" id="sessionMeta"></div><nav class="nav" id="navL"></nav>';
-  dR.innerHTML='<div class="dhead"><div class="dlogo">⋮</div><div><strong>Options</strong></div><button class="dclose" id="cR" aria-label="ডান মেনু বন্ধ করুন"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="nav" id="navR">'+
-    '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2v-5.5A7.5 7.5 0 0 1 10.5 8H13a8 8 0 0 1 8 3.5Z"/><path d="M8 3h5a6 6 0 0 1 6 5"/></svg><span>Chat & history</span></div><div class="nav-family-items">'+
-    '<button id="historyBtn" type="button" aria-label="ইতিহাস"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2M3 12H1m2-6L1 4"/></svg></span><span class="nav-copy"><span>ইতিহাস</span><small>খোলা/বন্ধ সময়</small></span></button>'+
-    '<button id="newChat" type="button" aria-label="নতুন চ্যাট"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="nav-copy"><span>নতুন চ্যাট</span><small>নতুন কথোপকথন শুরু করুন</small></span></button>'+
-    '<button id="clearMsg" type="button" aria-label="পরিষ্কার"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg></span><span class="nav-copy"><span>পরিষ্কার</span><small>বর্তমান কথোপকথনের মেসেজ মুছুন</small></span></button>'+
-    '</div></section>'+
-    '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/></svg><span>Audio Settings</span></div><div class="audio-setting-row"><label for="ttsProviderSelect">ভয়েস ইঞ্জিন</label><select id="ttsProviderSelect"><option value="auto">স্বয়ংক্রিয় · ফ্রি-ফার্স্ট</option><option value="edge">Edge-TTS · Realistic</option><option value="gemini">Google Gemini AI Voice</option><option value="azure">Microsoft Azure AI Speech</option><option value="elevenlabs">ElevenLabs Premium</option><option value="browser">Default Browser Voice</option><option value="sarvam">Sarvam Bengali Voice</option></select><label for="ttsVoiceSelect">Edge বাংলা কণ্ঠ</label><select id="ttsVoiceSelect"><option value="bn-BD-PradeepNeural">প্রদীপ · পুরুষ কণ্ঠ</option><option value="bn-BD-NabanitaNeural">নবনীতা · নারী কণ্ঠ</option></select><small>স্বয়ংক্রিয় মোডে Edge-TTS → Google Gemini → Microsoft Azure → Sarvam; গান/কবিতায় ElevenLabs আগে চেষ্টা হবে। প্রয়োজনীয় API key/region না থাকলে ইঞ্জিনটি এড়িয়ে যাবে।</small></div></section>'+
-    '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/></svg><span>Voice & interaction</span></div><div class="nav-family-items">'+
-    '<button id="voiceBtn" type="button" aria-label="কণ্ঠস্বর"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></span><span class="nav-copy"><span>কণ্ঠস্বর</span><small>কথা বলে লিখুন · আবার চাপলে থামবে</small></span></button>'+
-    '<div class="audio-setting-row"><label for="sttLanguageSelect">কথা শনাক্ত করার ভাষা</label><select id="sttLanguageSelect"><option value="bn-BD">বাংলা (বাংলাদেশ)</option><option value="en-US">English (US)</option><option value="hi-IN">हिन्दी</option></select><small>ব্রাউজার সমর্থন করলে মাইক্রোফোনের কথা লেখায় রূপান্তর হবে। কিছু ব্রাউজারে অডিও অনলাইন সার্ভিসে প্রক্রিয়াকৃত হতে পারে।</small></div>'+
+  dR.innerHTML='<div class="dhead"><div class="dlogo">⋮</div><div><strong>Options</strong></div><button class="dclose" id="cR" aria-label="ডান মেনু বন্ধ করুন"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><div class="nav" id="navR">'+ 
+    '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2v-5.5A7.5 7.5 0 0 1 10.5 8H13a8 8 0 0 1 8 3.5Z"/><path d="M8 3h5a6 6 0 0 1 6 5"/></svg><span>Chat & history</span></div><div class="nav-family-items">'+ 
+    '<button id="historyBtn" type="button" aria-label="ইতিহাস"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2M3 12H1m2-6L1 4"/></svg></span><span class="nav-copy"><span>ইতিহাস</span><small>খোলা/বন্ধ সময়</small></span></button>'+ 
+    '<button id="newChat" type="button" aria-label="নতুন চ্যাট"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="nav-copy"><span>নতুন চ্যাট</span><small>নতুন কথোপকথন শুরু করুন</small></span></button>'+ 
+    '<button id="clearMsg" type="button" aria-label="পরিষ্কার"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg></span><span class="nav-copy"><span>পরিষ্কার</span><small>বর্তমান কথোপকথনের মেসেজ মুছুন</small></span></button>'+ 
+    '</div></section>'+ 
+    '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/></svg><span>Audio Settings</span></div><div class="audio-setting-row"><label for="ttsProviderSelect">ভয়েস ইঞ্জিন</label><select id="ttsProviderSelect"><option value="auto">স্বয়ংক্রিয় · ফ্রি-ফার্স্ট</option><option value="edge">Edge-TTS · Realistic</option><option value="gemini">Google Gemini AI Voice</option><option value="azure">Microsoft Azure AI Speech</option><option value="elevenlabs">ElevenLabs Premium</option><option value="browser">Default Browser Voice</option><option value="sarvam">Sarvam Bengali Voice</option></select><label for="ttsVoiceSelect">Edge বাংলা কণ্ঠ</label><select id="ttsVoiceSelect"><option value="bn-BD-PradeepNeural">প্রদীপ · পুরুষ কণ্ঠ</option><option value="bn-BD-NabanitaNeural">নবনীতা · নারী কণ্ঠ</option></select><small>স্বয়ংক্রিয় মোডে Edge-TTS → Google Gemini → Microsoft Azure → Sarvam; গান/কবিতায় ElevenLabs আগে চেষ্টা হবে। প্রয়োজনীয় API key/region না থাকলে ইঞ্জিনটি এড়িয়ে যাবে।</small></div></section>'+ 
+    '<section class="nav-family"><div class="nav-family-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m0 10v4M3 12h4m10 0h4"/><circle cx="12" cy="12" r="5"/></svg><span>Voice & interaction</span></div><div class="nav-family-items">'+ 
+    '<button id="voiceBtn" type="button" aria-label="কণ্ঠস্বর"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></span><span class="nav-copy"><span>কণ্ঠস্বর</span><small>কথা বলে লিখুন · আবার চাপলে থামবে</small></span></button>'+ 
+    '<div class="audio-setting-row"><label for="sttLanguageSelect">কথা শনাক্ত করার ভাষা</label><select id="sttLanguageSelect"><option value="bn-BD">বাংলা (বাংলাদেশ)</option><option value="en-US">English (US)</option><option value="hi-IN">हिन्दी</option></select><small>ব্রাউজার সমর্থন করলে মাইক্রোফোনের কথা লেখায় রূপান্তর হবে। কিছু ব্রাউজারে অডিও অনলাইন সার্ভিসে প্রক্রিয়াকৃত হতে পারে।</small></div>'+ 
     '</div></section></div>';
   var navL=$("#navL");
   var NAV_FAMILIES=[
