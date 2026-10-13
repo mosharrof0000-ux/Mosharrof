@@ -27,6 +27,14 @@ public class DeviceControlPlugin extends Plugin {
         call.resolve(result);
     }
 
+    @PluginMethod public void getFloatingBubbleStatus(PluginCall call) {
+        JSObject result = new JSObject();
+        boolean permitted = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(getContext());
+        result.put("overlayPermission", permitted);
+        result.put("serviceAvailable", true);
+        call.resolve(result);
+    }
+
     @PluginMethod public void enableFloatingBubble(PluginCall call) {
         if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(getContext())) {
             try {
