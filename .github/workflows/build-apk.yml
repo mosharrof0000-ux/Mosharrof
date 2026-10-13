@@ -101,6 +101,15 @@ jobs:
           for item in permissions:
             if item not in xml:
               xml = xml.replace("<application", item + "\n    <application", 1)
+          launcher_queries = """  <queries>
+              <intent>
+                  <action android:name="android.intent.action.MAIN" />
+                  <category android:name="android.intent.category.LAUNCHER" />
+              </intent>
+          </queries>
+          """
+          if "<queries>" not in xml:
+            xml = xml.replace("<application", launcher_queries + "\n    <application", 1)
           components = """
               <activity
                   android:name=".VoiceCommandActivity"
@@ -314,7 +323,9 @@ jobs:
           import android.speech.RecognizerIntent;
           import android.os.Bundle;
           import android.widget.Toast;
+          import android.content.pm.ResolveInfo;
           import java.util.ArrayList;
+          import java.util.List;
           import java.util.Locale;
 
           public class VoiceCommandActivity extends Activity {
@@ -350,7 +361,8 @@ jobs:
                       try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); } catch (Exception ignored) {}
                       finish(); return;
                   }
-                  boolean launchVerb = normalized.matches(".*(খোলো|খুলুন|চালু কর|যাও|open|launch|go to|খুলে দাও).*");
+                  boolean launchVerb = normalized.matches(".*(খোলো|খুলুন|চালু কর|যাও|open|launch|go to|খুলে দাও|খুলে ফেল).*");
+                  if (pkg == null && launchVerb) pkg = findInstalledLauncher(normalized);
                   if (pkg != null && launchVerb) {
                       Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
                       if (launch != null) { launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(launch); finish(); return; }
@@ -361,6 +373,24 @@ jobs:
                   chat.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                   startActivity(chat);
                   finish();
+              }
+
+              private String findInstalledLauncher(String spoken) {
+                  String target = spoken.toLowerCase(Locale.ROOT)
+                      .replaceAll("খোলো|খুলুন|চালু করো?|যাও|চলে যাও|open|launch|go to|খুলে দাও|খুলে ফেল", " ")
+                      .trim();
+                  if (target.isEmpty()) return null;
+                  Intent launcher = new Intent(Intent.ACTION_MAIN);
+                  launcher.addCategory(Intent.CATEGORY_LAUNCHER);
+                  List<ResolveInfo> apps = getPackageManager().queryIntentActivities(launcher, 0);
+                  for (ResolveInfo item : apps) {
+                      if (item.activityInfo == null) continue;
+                      String label = String.valueOf(item.loadLabel(getPackageManager())).toLowerCase(Locale.ROOT);
+                      String packageName = item.activityInfo.packageName.toLowerCase(Locale.ROOT);
+                      if (!label.isEmpty() && (target.contains(label) || label.contains(target))) return item.activityInfo.packageName;
+                      if (target.length() >= 3 && packageName.contains(target)) return item.activityInfo.packageName;
+                  }
+                  return null;
               }
 
               private boolean hasAppWord(String text, String... words) {
@@ -465,7 +495,7 @@ jobs:
               }
 
               private void deliverVoiceCommand(String command, int attempt) {
-                  if (attempt > 8 || isFinishing()) return;
+                  if (attempt > 30 || isFinishing()) return;
                   try {
                       if (getBridge() != null && getBridge().getWebView() != null) {
                           String js = "(function(){if(window.mosharrofNativeVoiceCommand){window.mosharrofNativeVoiceCommand(" + JSONObject.quote(command) + ");return true;}return false;})()";
