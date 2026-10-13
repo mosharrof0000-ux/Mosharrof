@@ -1,3 +1,4 @@
+// This contract complements the native APK build; passing it alone does not prove device behavior.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
