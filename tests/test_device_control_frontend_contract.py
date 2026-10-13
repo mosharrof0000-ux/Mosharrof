@@ -18,6 +18,9 @@ class DeviceControlFrontendContractTests(unittest.TestCase):
         self.assertNotIn("Intent.ACTION_CALL", source)
         self.assertIn("no message was sent", source)
         self.assertIn("no email was sent", source)
+        self.assertIn('new File(getContext().getFilesDir(), "device-action-audit.jsonl")', source)
+        self.assertIn('writeAudit(actionName, "APPROVED_FOR_EXECUTION")', source)
+        self.assertIn('call.reject("AUDIT_UNAVAILABLE_BEFORE_ACTION")', source)
 
     def test_apk_workflow_registers_native_plugin_and_checks_javascript(self):
         workflow = (ROOT / ".github" / "workflows" / "build-apk.yml").read_text(encoding="utf-8")
