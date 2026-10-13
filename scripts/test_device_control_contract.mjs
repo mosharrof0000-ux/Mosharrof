@@ -18,7 +18,6 @@ assert.ok(plugin.includes("userMediated"));
 assert.ok(plugin.includes("new Intent(action)"));
 assert.ok(!plugin.includes("WRITE_SETTINGS"), "Must not request silent system-setting writes");
 assert.ok(!plugin.includes("AccessibilityService"), "Must not add broad accessibility control");
-assert.ok(ui.includes('id = "mosDeviceControls"') || ui.includes('id = "mosDeviceControls"') === false);
 assert.ok(ui.includes('id="mosDeviceControls"'));
 assert.ok(ui.includes("window.Capacitor") && ui.includes("Plugins.DeviceControl"));
 assert.ok(ui.includes('data-device-action="wifi"'));
