@@ -63,19 +63,38 @@ jobs:
           if link not in html:
               raise SystemExit("Android-only stylesheet injection failed")
           # Add a floating Android-only microphone control without changing the website source.
-          fab = """<button id="mosharrofVoiceFab" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
+          fab = """<button id="mosharrofVoiceFab" type="button" aria-label="ভয়েস সহকারী" title="টেনে সরান · চেপে ধরে লুকান"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
           <script>
           (function () {
             var fab = document.getElementById("mosharrofVoiceFab");
             var mic = document.getElementById("composerVoiceBtn");
             if (!fab || !mic) return;
-            fab.addEventListener("click", function () { mic.click(); });
+            var sx=0,sy=0,ox=0,oy=0,moved=false,longPress=false,longTimer=null;
+            try { var saved=JSON.parse(localStorage.getItem("mosharrof_voice_fab_pos")||"null"); if(saved&&Number.isFinite(saved.x)&&Number.isFinite(saved.y)){fab.style.left=saved.x+"px";fab.style.top=saved.y+"px";fab.style.right="auto";fab.style.bottom="auto";} } catch(e){}
+            fab.addEventListener("pointerdown",function(e){
+              sx=e.clientX;sy=e.clientY;var r=fab.getBoundingClientRect();ox=r.left;oy=r.top;moved=false;longPress=false;
+              try{fab.setPointerCapture(e.pointerId);}catch(err){}
+              longTimer=setTimeout(function(){longPress=true;if(window.MosharrofNative&&MosharrofNative.hideOverlay)MosharrofNative.hideOverlay();fab.title="ভাসমান সহকারী লুকানো হয়েছে · আবার চাপুন চালু করতে";},750);
+            });
+            fab.addEventListener("pointermove",function(e){
+              if(!fab.hasPointerCapture||!fab.hasPointerCapture(e.pointerId))return;
+              var dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)>7||Math.abs(dy)>7){moved=true;if(longTimer){clearTimeout(longTimer);longTimer=null;}}
+              if(moved){fab.style.left=Math.max(0,Math.min(window.innerWidth-40,ox+dx))+"px";fab.style.top=Math.max(0,Math.min(window.innerHeight-40,oy+dy))+"px";fab.style.right="auto";fab.style.bottom="auto";}
+            });
+            fab.addEventListener("pointerup",function(){
+              if(longTimer){clearTimeout(longTimer);longTimer=null;}
+              if(moved){try{localStorage.setItem("mosharrof_voice_fab_pos",JSON.stringify({x:parseFloat(fab.style.left)||0,y:parseFloat(fab.style.top)||0}));}catch(e){}}
+            });
+            fab.addEventListener("click",function(e){
+              if(moved||longPress){e.preventDefault();e.stopImmediatePropagation();moved=false;longPress=false;return;}
+              if(window.MosharrofNative&&MosharrofNative.showOverlay)MosharrofNative.showOverlay();
+              mic.click();
+            });
             function sync() {
-              ["is-listening", "is-processing", "is-transcription-success", "is-transcription-error"].forEach(function (name) {
-                fab.classList.toggle(name, mic.classList.contains(name));
-              });
+              ["is-listening", "is-processing", "is-transcription-success", "is-transcription-error"].forEach(function (name) { fab.classList.toggle(name, mic.classList.contains(name)); });
               fab.setAttribute("aria-pressed", mic.getAttribute("aria-pressed") || "false");
-              fab.title = mic.title || "ভয়েস ইনপুট";
+              if(!mic.classList.contains("is-listening")&&!mic.classList.contains("is-processing"))fab.title="টেনে সরান · চেপে ধরে ভাসমান আইকন লুকান";
+              else fab.title=mic.title||"ভয়েস ইনপুট";
             }
             new MutationObserver(sync).observe(mic, { attributes: true, attributeFilter: ["class", "title", "aria-pressed"] });
             sync();
@@ -92,73 +111,15 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Apply native Android edge-to-edge shell
+      - name: Prepare native movable system-wide assistant overlay
         run: |
-          mkdir -p android/app/src/main/java/com/mosharrof/ai
-          cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
-          package com.mosharrof.ai;
-
-          import android.content.res.Configuration;
-          import android.graphics.Color;
-          import android.os.Build;
-          import android.os.Bundle;
-          import android.view.Window;
-          import android.view.WindowManager;
-
-          import androidx.core.view.WindowCompat;
-          import androidx.core.view.WindowInsetsControllerCompat;
-
-          import com.getcapacitor.BridgeActivity;
-
-          public class MainActivity extends BridgeActivity {
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-
-                  Window window = getWindow();
-
-                  // Draw the WebView behind the status/navigation bars.
-                  WindowCompat.setDecorFitsSystemWindows(window, false);
-
-                  // Transparent bars: the MOSHARROF canvas supplies the background.
-                  window.setStatusBarColor(Color.TRANSPARENT);
-                  window.setNavigationBarColor(Color.TRANSPARENT);
-
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                      window.setNavigationBarContrastEnforced(false);
-                  }
-
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                      WindowManager.LayoutParams lp = window.getAttributes();
-                      lp.layoutInDisplayCutoutMode =
-                          WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
-                      window.setAttributes(lp);
-                  }
-
-                  window.setSoftInputMode(
-                      WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-                  );
-
-                  WindowInsetsControllerCompat controller =
-                      WindowCompat.getInsetsController(window, window.getDecorView());
-
-                  if (controller != null) {
-                      // Dark system icons on a light device theme; white icons at night.
-                      int nightMode = getResources().getConfiguration().uiMode
-                          & Configuration.UI_MODE_NIGHT_MASK;
-                      boolean lightTheme = nightMode != Configuration.UI_MODE_NIGHT_YES;
-                      controller.setAppearanceLightStatusBars(lightTheme);
-                      controller.setAppearanceLightNavigationBars(lightTheme);
-                  }
-              }
-          }
-          JAVA
-
-          grep -q 'WindowCompat.setDecorFitsSystemWindows'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          grep -q 'setNavigationBarContrastEnforced(false)'             android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          grep -q 'Configuration.UI_MODE_NIGHT_MASK' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          grep -q 'controller.setAppearanceLightStatusBars(lightTheme)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-          echo "Native Android edge-to-edge shell: PASS"
+          python scripts/prepare_android_overlay.py
+          grep -q 'MosharrofOverlayService' android/app/src/main/AndroidManifest.xml
+          grep -q 'SYSTEM_ALERT_WINDOW' android/app/src/main/AndroidManifest.xml
+          grep -q 'setDecorFitsSystemWindows' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'JavascriptInterface' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          grep -q 'ACTION_MANAGE_OVERLAY_PERMISSION' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+          echo "Native movable system-wide assistant overlay: PASS"
 
       - name: Build debug APK
         working-directory: android
