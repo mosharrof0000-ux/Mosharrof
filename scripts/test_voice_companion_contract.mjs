@@ -10,7 +10,7 @@ const page = readFileSync("web/index.html", "utf8");
 
 assert.ok(ui.includes("mosharrofVoiceDock"));
 assert.ok(ui.includes("composerVoiceBtn"));
-assert.ok(ui.includes("site-hidden"));
+assert.ok(ui.includes("translateX(calc(100% - 9px)"), "Dock should stay tucked to the screen edge when closed");
 assert.ok(ui.includes("mosharrof:open-voice"));
 assert.ok(tile.includes("TileService"));
 assert.ok(tile.includes("OPEN_VOICE"));
