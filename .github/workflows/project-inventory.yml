@@ -1,0 +1,83 @@
+name: MOSHARROF Read-only Project Inventory
+
+on:
+  workflow_dispatch:
+    inputs:
+      check_live_site:
+        description: "Check the public Pages URL with a read-only HTTPS GET"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: mosharrof-project-inventory
+  cancel-in-progress: false
+
+jobs:
+  inventory:
+    name: Build evidence-backed status report
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout selected revision
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Collect read-only GitHub project state
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [ "${{ inputs.check_live_site }}" = "true" ]; then
+            python scripts/mosharrof_project_inventory.py \
+              --repo "$GH_REPO" \
+              --health-url "https://mosharrof0000-ux.github.io/Mosharrof/" \
+              --output project-inventory.json
+          else
+            python scripts/mosharrof_project_inventory.py \
+              --repo "$GH_REPO" \
+              --output project-inventory.json
+          fi
+      - name: Summarize evidence without exposing secrets
+        if: always()
+        run: |
+          if [ ! -f project-inventory.json ]; then
+            echo "## MOSHARROF Project Inventory" >> "$GITHUB_STEP_SUMMARY"
+            echo "Inventory failed before producing a report. Inspect the preceding step logs." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          with open("project-inventory.json", encoding="utf-8") as handle:
+              report = json.load(handle)
+          repo = report["repository"]
+          commit = report.get("default_branch_commit") or {}
+          print("## MOSHARROF Project Inventory")
+          print(f"- Generated: {report['generated_at']}")
+          print(f"- Repository: {repo['full_name']}")
+          print(f"- Default branch: {repo['default_branch']}")
+          print(f"- Observed commit: {commit.get('sha', 'UNAVAILABLE')}")
+          print(f"- Open PRs: {len(report['open_pull_requests'] or []) if report['open_pull_requests'] is not None else 'UNAVAILABLE'}")
+          runs = report.get("recent_workflow_runs")
+          print(f"- Recent workflow runs retrieved: {len(runs) if runs is not None else 'UNAVAILABLE'}")
+          health = report["health_check"]
+          print(f"- Live health check: {health['status']}")
+          print(f"- Warnings: {', '.join(report['warnings']) if report['warnings'] else 'none'}")
+          print("- Changes made: none (read-only)")
+          print("- Promotion authorized: no")
+          PY
+      - name: Upload inventory report
+        if: always() && hashFiles('project-inventory.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-project-inventory
+          path: project-inventory.json
+          if-no-files-found: error
+          retention-days: 14
