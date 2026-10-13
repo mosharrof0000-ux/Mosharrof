@@ -33,6 +33,10 @@ jobs:
         run: python3 -m unittest -v scripts/test_mosharrof_registry.py
       - name: Validate every organ manifest and dependency edge
         run: python3 scripts/mosharrof_registry.py --validate-only
+      - name: Setup Node.js for runtime contract tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Test runtime registry and link manager
         run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs
       - name: Fetch target branch
