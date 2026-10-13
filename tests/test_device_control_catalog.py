@@ -55,7 +55,7 @@ class DeviceControlCatalogTests(unittest.TestCase):
             "DELETE and destructive operations",
             "Required test matrix",
             "Release gates",
-            "never edit",
+            "no direct edits",
         ):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase.lower(), text.lower())
