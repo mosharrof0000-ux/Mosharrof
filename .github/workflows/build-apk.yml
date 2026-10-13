@@ -92,7 +92,22 @@ jobs:
           from pathlib import Path
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           xml = manifest.read_text(encoding="utf-8")
-          queries = """\n          <queries>\n              <package android:name="com.google.android.youtube" />\n              <package android:name="com.facebook.katana" />\n              <package android:name="com.instagram.android" />\n              <package android:name="com.whatsapp" />\n              <package android:name="com.android.chrome" />\n              <package android:name="com.zhiliaoapp.musically" />\n              <package android:name="com.google.android.apps.maps" />\n              <package android:name="com.google.android.gm" />\n          </queries>\n          """\n          if "<queries>" not in xml:\n            xml = xml.replace("<application", queries + "\\n    <application", 1)\n          permissions = [
+          queries = """
+          <queries>
+              <package android:name="com.google.android.youtube" />
+              <package android:name="com.facebook.katana" />
+              <package android:name="com.instagram.android" />
+              <package android:name="com.whatsapp" />
+              <package android:name="com.android.chrome" />
+              <package android:name="com.zhiliaoapp.musically" />
+              <package android:name="com.google.android.apps.maps" />
+              <package android:name="com.google.android.gm" />
+          </queries>
+          """
+          if "<queries>" not in xml:
+            xml = xml.replace("<application", queries + "\
+    <application", 1)
+          permissions = [
             '    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />',
             '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />',
             '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />',
