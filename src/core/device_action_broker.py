@@ -75,7 +75,7 @@ class DeviceActionBroker:
             "action_id": action_id,
             "capability": capability,
             "entity_id": entity_id,
-            "resource_scope": resource_scope,
+            "scope_present": bool(resource_scope),
             "status": status,
             "reason": reason,
         }
