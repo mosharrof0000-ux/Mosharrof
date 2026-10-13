@@ -16,7 +16,7 @@ def test_chat_failover_has_keyless_cloudflare_fallback_and_optional_providers():
 def test_chat_provider_order_is_gemini_then_workers_ai_then_optional_fallbacks():
     worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
     chat = worker[worker.index("async function chat(request,env){"):worker.index("async function handleRequest(request,env){")]
-    gemini_loop = chat.index("for(const model of preferred)")
+    gemini_loop = chat.index("const geminiPlan=[]")
     cloudflare = chat.index("generateWithCloudflareChat(text,env)")
     groq = chat.index('"groq","https://api.groq.com/openai/v1/chat/completions"')
     openrouter = chat.index('"openrouter","https://openrouter.ai/api/v1/chat/completions"')
