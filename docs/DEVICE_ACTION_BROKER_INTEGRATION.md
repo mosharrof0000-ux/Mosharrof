@@ -9,7 +9,7 @@ This follow-up adds a reusable enforcement primitive at `src/core/device_action_
 - Missing context, denied authorization, exceptions, and blocked destructive capabilities fail closed.
 - An operation is reported as `SUCCESS` only when the supplied independent verifier returns true.
 - Verification failure is reported as `UNVERIFIED`; operation exceptions are `FAILED`.
-- Audit events include non-sensitive action metadata only; approval tokens, operation results, and exception messages are excluded.
+- Audit events include minimal action metadata and only a boolean indicating that a scope was supplied; raw resource scopes, approval tokens, operation results, and exception messages are excluded.
 - DELETE, destroy, wipe, format, purge, and factory-reset capability names are blocked independently of grants.
 
 ## Important integration boundary
