@@ -23,6 +23,12 @@ jobs:
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
+            BASE="${{ github.event.before }}"
+            if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+              echo "ARCHITECTURE GATE: FAIL — missing push base; refusing promotion."
+              exit 2
+            fi
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             BASE="HEAD^"
           else
             git fetch --no-tags origin main:refs/remotes/origin/main
