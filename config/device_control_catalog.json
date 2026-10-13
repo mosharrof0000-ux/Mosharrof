@@ -1,0 +1,546 @@
+{
+  "schema_version": "1.0.0",
+  "status": "planning",
+  "policy": {
+    "approval_mode": "every_action",
+    "least_privilege": true,
+    "check_permission_at_point_of_use": true,
+    "verify_result": true,
+    "report_unverified_as_success": false,
+    "deny_scope_escape": true,
+    "delete_allowed": false,
+    "destructive_operations_allowed": false,
+    "broad_access_by_default": false,
+    "temporary_access_must_expire": true,
+    "secrets_in_client_or_logs": false
+  },
+  "risk_classes": [
+    "read_private_data",
+    "local_change",
+    "external_effect",
+    "restricted"
+  ],
+  "capability_statuses": [
+    "planned",
+    "partial",
+    "existing_ci_built",
+    "blocked_by_platform_provider",
+    "verified"
+  ],
+  "capabilities": [
+    {
+      "id": "voice.intent",
+      "domain": "voice",
+      "status": "partial",
+      "actions": [
+        "recognize_speech",
+        "review_transcript",
+        "submit_command",
+        "cancel_command"
+      ],
+      "permissions": [
+        "RECORD_AUDIO when invoked"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "transcript visible before submit",
+        "submission response or explicit failure"
+      ],
+      "limits": [
+        "device SpeechRecognizer is not raw-audio streaming"
+      ]
+    },
+    {
+      "id": "overlay.voice_manager",
+      "domain": "device_ui",
+      "status": "partial",
+      "actions": [
+        "show_overlay",
+        "move_overlay",
+        "hide_overlay",
+        "restore_overlay"
+      ],
+      "permissions": [
+        "SYSTEM_ALERT_WINDOW special access",
+        "POST_NOTIFICATIONS where required"
+      ],
+      "risk": "local_change",
+      "approval": "every_action",
+      "verify": [
+        "overlay visibility and position state"
+      ],
+      "limits": [
+        "user must grant special access in Settings"
+      ]
+    },
+    {
+      "id": "quick_settings.voice_tile",
+      "domain": "device_ui",
+      "status": "partial",
+      "actions": [
+        "open_voice_activity"
+      ],
+      "permissions": [
+        "user adds Quick Settings tile"
+      ],
+      "risk": "local_change",
+      "approval": "every_action",
+      "verify": [
+        "tile tap opens voice activity"
+      ],
+      "limits": [
+        "app cannot silently add its tile"
+      ]
+    },
+    {
+      "id": "apps.launch",
+      "domain": "apps",
+      "status": "partial",
+      "actions": [
+        "list_visible_launchable_apps",
+        "launch_supported_app"
+      ],
+      "permissions": [
+        "package visibility rules"
+      ],
+      "risk": "local_change",
+      "approval": "every_action",
+      "verify": [
+        "target package resolved and launch intent accepted"
+      ],
+      "limits": [
+        "not arbitrary in-app control"
+      ]
+    },
+    {
+      "id": "contacts.lookup",
+      "domain": "communications",
+      "status": "partial",
+      "actions": [
+        "search_contact",
+        "show_candidate"
+      ],
+      "permissions": [
+        "READ_CONTACTS or system contact picker"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "candidate name and number shown"
+      ],
+      "limits": [
+        "ambiguous matches require user selection"
+      ]
+    },
+    {
+      "id": "phone.call",
+      "domain": "communications",
+      "status": "partial",
+      "actions": [
+        "prepare_call",
+        "start_confirmed_call"
+      ],
+      "permissions": [
+        "CALL_PHONE if direct call path is used"
+      ],
+      "risk": "external_effect",
+      "approval": "every_action",
+      "verify": [
+        "confirmation captured and call intent accepted"
+      ],
+      "limits": [
+        "no call on ambiguous match or cancel"
+      ]
+    },
+    {
+      "id": "messages.draft",
+      "domain": "communications",
+      "status": "planned",
+      "actions": [
+        "prepare_message",
+        "open_supported_messaging_app"
+      ],
+      "permissions": [
+        "app-specific intent or provider authorization"
+      ],
+      "risk": "external_effect",
+      "approval": "every_action",
+      "verify": [
+        "recipient and body preview",
+        "provider receipt if API supports it"
+      ],
+      "limits": [
+        "no silent sending without per-message confirmation"
+      ]
+    },
+    {
+      "id": "email.draft",
+      "domain": "communications",
+      "status": "planned",
+      "actions": [
+        "prepare_email",
+        "open_email_app"
+      ],
+      "permissions": [
+        "email app/account or provider API"
+      ],
+      "risk": "external_effect",
+      "approval": "every_action",
+      "verify": [
+        "recipient subject and body preview",
+        "provider receipt if available"
+      ],
+      "limits": [
+        "login and provider policy apply"
+      ]
+    },
+    {
+      "id": "files.search_selected",
+      "domain": "files",
+      "status": "planned",
+      "actions": [
+        "search_user_selected_files",
+        "read_selected_file_metadata"
+      ],
+      "permissions": [
+        "Android picker URI grant or narrow MediaStore permission"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "resolved URI and file metadata"
+      ],
+      "limits": [
+        "no broad storage access by default"
+      ]
+    },
+    {
+      "id": "files.create_export",
+      "domain": "files",
+      "status": "planned",
+      "actions": [
+        "create_report",
+        "export_to_user_selected_destination"
+      ],
+      "permissions": [
+        "user-selected destination or scoped write access"
+      ],
+      "risk": "local_change",
+      "approval": "every_action",
+      "verify": [
+        "file exists and is readable",
+        "size/hash when applicable"
+      ],
+      "limits": [
+        "no overwrite without separate confirmation"
+      ]
+    },
+    {
+      "id": "files.delete",
+      "domain": "files",
+      "status": "blocked_by_platform_provider",
+      "actions": [
+        "identify_cleanup_candidates_only"
+      ],
+      "permissions": [],
+      "risk": "restricted",
+      "approval": "every_action",
+      "verify": [
+        "report candidate only"
+      ],
+      "limits": [
+        "DELETE and destructive operations are blocked by global policy"
+      ]
+    },
+    {
+      "id": "storage.summary",
+      "domain": "storage",
+      "status": "planned",
+      "actions": [
+        "read_available_storage_totals",
+        "list_large_accessible_files"
+      ],
+      "permissions": [
+        "system storage API or selected-file access"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "compare available totals with system source"
+      ],
+      "limits": [
+        "other apps' private data may be inaccessible"
+      ]
+    },
+    {
+      "id": "memory.diagnostics",
+      "domain": "diagnostics",
+      "status": "planned",
+      "actions": [
+        "read_available_memory_metrics",
+        "explain_performance_symptoms"
+      ],
+      "permissions": [
+        "public system APIs"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "record metric source and timestamp"
+      ],
+      "limits": [
+        "no promise of complete per-app RAM visibility"
+      ]
+    },
+    {
+      "id": "settings.open_page",
+      "domain": "device_settings",
+      "status": "planned",
+      "actions": [
+        "open_supported_settings_page"
+      ],
+      "permissions": [
+        "platform intent; special access only when applicable"
+      ],
+      "risk": "local_change",
+      "approval": "every_action",
+      "verify": [
+        "settings activity launched or failure reported"
+      ],
+      "limits": [
+        "restricted toggles fall back to Settings"
+      ]
+    },
+    {
+      "id": "camera.capture",
+      "domain": "camera_screen",
+      "status": "planned",
+      "actions": [
+        "capture_user_requested_photo",
+        "scan_qr"
+      ],
+      "permissions": [
+        "CAMERA when invoked"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "capture result and destination"
+      ],
+      "limits": [
+        "hardware may be absent; no covert capture"
+      ]
+    },
+    {
+      "id": "screen.capture",
+      "domain": "camera_screen",
+      "status": "planned",
+      "actions": [
+        "request_screen_capture",
+        "ocr_selected_capture"
+      ],
+      "permissions": [
+        "Android screen-capture consent"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "capture consent result and OCR output"
+      ],
+      "limits": [
+        "protected screens may not be capturable"
+      ]
+    },
+    {
+      "id": "location.once",
+      "domain": "location_sensors",
+      "status": "planned",
+      "actions": [
+        "read_location_for_named_task"
+      ],
+      "permissions": [
+        "location runtime permission when invoked"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "location timestamp and accuracy"
+      ],
+      "limits": [
+        "no background tracking by default"
+      ]
+    },
+    {
+      "id": "reminders.create",
+      "domain": "routines",
+      "status": "planned",
+      "actions": [
+        "create_reminder",
+        "create_timer",
+        "schedule_supported_alarm"
+      ],
+      "permissions": [
+        "POST_NOTIFICATIONS where required",
+        "exact-alarm special access if necessary"
+      ],
+      "risk": "local_change",
+      "approval": "every_action",
+      "verify": [
+        "schedule stored and fire/cancel behavior tested"
+      ],
+      "limits": [
+        "OEM background restrictions may affect delivery"
+      ]
+    },
+    {
+      "id": "network.status",
+      "domain": "connectivity",
+      "status": "planned",
+      "actions": [
+        "read_available_network_state",
+        "open_network_settings"
+      ],
+      "permissions": [
+        "public network-state permission as needed"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "state timestamp and settings intent result"
+      ],
+      "limits": [
+        "direct toggles vary by Android version"
+      ]
+    },
+    {
+      "id": "bluetooth.assist",
+      "domain": "connectivity",
+      "status": "planned",
+      "actions": [
+        "open_pairing_flow",
+        "prepare_user_confirmed_transfer"
+      ],
+      "permissions": [
+        "Bluetooth runtime permissions as required by Android version"
+      ],
+      "risk": "external_effect",
+      "approval": "every_action",
+      "verify": [
+        "pairing/transfer result where available"
+      ],
+      "limits": [
+        "user selects and confirms peer"
+      ]
+    },
+    {
+      "id": "web.research",
+      "domain": "research",
+      "status": "planned",
+      "actions": [
+        "search_web",
+        "summarize_sources",
+        "translate_selected_content"
+      ],
+      "permissions": [
+        "network access"
+      ],
+      "risk": "read_private_data",
+      "approval": "every_action",
+      "verify": [
+        "source links and retrieval status"
+      ],
+      "limits": [
+        "failed/stale sources must be labeled"
+      ]
+    },
+    {
+      "id": "ai.provider_router",
+      "domain": "ai_voice",
+      "status": "partial",
+      "actions": [
+        "select_configured_provider",
+        "fallback_after_retryable_error",
+        "report_provider_result"
+      ],
+      "permissions": [
+        "server-held provider credentials"
+      ],
+      "risk": "external_effect",
+      "approval": "every_action",
+      "verify": [
+        "provider ID and status without secret values"
+      ],
+      "limits": [
+        "quota, billing, network and provider policies apply"
+      ]
+    },
+    {
+      "id": "repository.change",
+      "domain": "coding",
+      "status": "planned",
+      "actions": [
+        "inspect_repo",
+        "create_feature_branch",
+        "commit_changes",
+        "open_pull_request",
+        "run_checks"
+      ],
+      "permissions": [
+        "narrow GitHub App/token permissions"
+      ],
+      "risk": "local_change",
+      "approval": "every_action",
+      "verify": [
+        "commit SHA, PR URL, CI checks and artifact"
+      ],
+      "limits": [
+        "never edit main directly; no secrets in logs"
+      ]
+    },
+    {
+      "id": "automation.workflow",
+      "domain": "automation",
+      "status": "planned",
+      "actions": [
+        "plan_steps",
+        "execute_approved_step",
+        "pause",
+        "cancel",
+        "report_results"
+      ],
+      "permissions": [
+        "individual permissions for each child action"
+      ],
+      "risk": "external_effect",
+      "approval": "every_action",
+      "verify": [
+        "per-step result and final reconciliation"
+      ],
+      "limits": [
+        "no blanket authorization; bounded retries and duplicate prevention"
+      ]
+    },
+    {
+      "id": "audit.events",
+      "domain": "security",
+      "status": "planned",
+      "actions": [
+        "record_minimal_audit_metadata",
+        "redact_sensitive_fields",
+        "expire_temporary_grants"
+      ],
+      "permissions": [
+        "internal app storage"
+      ],
+      "risk": "local_change",
+      "approval": "every_action",
+      "verify": [
+        "audit completeness and redaction tests"
+      ],
+      "limits": [
+        "do not log credentials, raw audio or full private payloads"
+      ]
+    }
+  ]
+}
