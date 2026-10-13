@@ -71,6 +71,23 @@
         detail:"Android-এর system file picker ব্যবহার হবে",payload:{},
         summary:"মোশাররফ শুধু আপনার নির্বাচিত ফাইলের URI পেতে অনুমতি চাইছে। পুরো স্টোরেজ স্ক্যান করবে না।"};
     }
+    var alarmMatch = value.match(/(?:অ্যালার্ম|alarm|ঘড়ি|clock)\\s*(?:সেট|set|তৈরি)?\\s*(?:করো|করুন)?\\s+(\\d{1,2}):(\\d{2})\\s*[:：-]\\s*(.+)$/i);
+    if (alarmMatch) {
+      var hour = Number(alarmMatch[1]), minute = Number(alarmMatch[2]);
+      if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) return {
+        kind:"alarm", title:"Clock-এ অ্যালার্ম প্রস্তুত করুন",
+        detail:"সময়: " + String(hour).padStart(2,"0") + ":" + String(minute).padStart(2,"0"),
+        payload:{hour:hour,minute:minute,label:alarmMatch[3].trim()},
+        summary:"মোশাররফ Clock অ্যাপে অ্যালার্ম প্রস্তুত করতে অনুমতি চাইছে। Clock অ্যাপে আপনাকে চূড়ান্তভাবে নিশ্চিত করতে হবে।"
+      };
+    }
+
+    if (/(?:কন্টাক্ট|contact).*(?:খুঁজে|দেখাও|search|find|বাছাই|pick)/i.test(lower)) {
+      return {kind:"contact",title:"একটি কন্টাক্ট বাছাই করুন",
+        detail:"Android system contact picker খুলবে; আপনি নিজে কন্টাক্ট নির্বাচন করবেন",
+        payload:{},summary:"মোশাররফ system contact picker খুলতে অনুমতি চাইছে। কোনো কন্টাক্ট নিজে থেকে নির্বাচন বা কল করবে না।"};
+    }
+
     var unsupportedRules = [
       {pattern:/(?:ক্যামেরা|camera).*(?:খোলো|চালু|ছবি তোলো|capture|open)/i, title:"ক্যামেরা নিয়ন্ত্রণ", reason:"ক্যামেরা ক্যাপচার ব্রিজ এখনো সংযুক্ত নয়।"},
       {pattern:/(?:লোকেশন|location).*(?:দেখাও|পাঠাও|খুঁজে|নাও|share|find|get)/i, title:"লোকেশন", reason:"একবারের লোকেশন ও তার Android permission flow এখনো সংযুক্ত নয়।"},
@@ -107,7 +124,9 @@
       sms: function () { return plugin.draftSms(action.payload); },
       email: function () { return plugin.draftEmail(action.payload); },
       launch: function () { return plugin.launchApp(action.payload); },
-      file: function () { return plugin.pickFile({}); }
+      file: function () { return plugin.pickFile({}); },
+      contact: function () { return plugin.pickContact({}); },
+      alarm: function () { return plugin.setAlarm(action.payload); }
     };
     if (!methods[action.kind]) return Promise.reject(new Error("এই কাজটি এখনো সমর্থিত নয়।"));
     return Promise.resolve().then(methods[action.kind]);
@@ -169,7 +188,11 @@
       status.textContent = "অনুমোদন গৃহীত—Android ফলাফল যাচাই হচ্ছে…";
       run(action).then(function (result) {
         var statusCode = result && (result.status || result.state);
-        if (action.kind === "diagnostics" && result) {
+        if (action.kind === "contact" && result && statusCode === "CONTACT_SELECTED") {
+          finish("নির্বাচিত কন্টাক্ট: " + String(result.name || "নাম পাওয়া যায়নি") +
+            (result.number ? " · " + String(result.number) : "") +
+            ". কন্টাক্টটি শুধু দেখানো হয়েছে; কল বা মেসেজ করা হয়নি.");
+        } else if (action.kind === "diagnostics" && result) {
           var storage = result.storage || {};
           var memory = result.memory || {};
           finish("যাচাইকৃত সিস্টেম রিপোর্ট: উপলভ্য স্টোরেজ " +
