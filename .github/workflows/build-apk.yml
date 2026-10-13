@@ -405,7 +405,10 @@ jobs:
           package com.mosharrof.ai;
 
           import android.app.Activity;
+          import android.Manifest;
           import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.os.Build;
           import android.os.Bundle;
           import android.os.Handler;
           import android.os.Looper;
@@ -431,16 +434,66 @@ jobs:
 
               @Override protected void onCreate(Bundle state) {
                   super.onCreate(state);
-                  if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-                      VoiceOverlayService.setVoiceError();
-                      Toast.makeText(this, "এই ডিভাইসে voice recognition পাওয়া যায়নি।", Toast.LENGTH_LONG).show();
-                      finish();
+                  buildControls();
+                  if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                      requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 5806);
+                      if (statusView != null) statusView.setText("মাইক্রোফোনের অনুমতি প্রয়োজন। একবার অনুমতি দিন।");
                       return;
                   }
-                  buildControls();
-                  recognizer = SpeechRecognizer.createSpeechRecognizer(this);
-                  recognizer.setRecognitionListener(this);
-                  startSegment();
+                  initializeVoice();
+              }
+
+              private void initializeVoice() {
+                  if (completed || isFinishing()) return;
+                  if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                      VoiceOverlayService.setVoiceError();
+                      if (statusView != null) statusView.setText("মাইক্রোফোনের অনুমতি নেই। অ্যাপের Settings থেকে Microphone অনুমতি চালু করুন।");
+                      return;
+                  }
+                  if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+                      VoiceOverlayService.setVoiceError();
+                      if (statusView != null) statusView.setText("এই ডিভাইসে voice recognition পাওয়া যায়নি।");
+                      Toast.makeText(this, "এই ডিভাইসে voice recognition পাওয়া যায়নি।", Toast.LENGTH_LONG).show();
+                      return;
+                  }
+                  try {
+                      if (recognizer != null) recognizer.destroy();
+                      recognizer = SpeechRecognizer.createSpeechRecognizer(this);
+                      recognizer.setRecognitionListener(this);
+                      paused = false;
+                      startSegment();
+                  } catch (SecurityException e) {
+                      VoiceOverlayService.setVoiceError();
+                      if (statusView != null) statusView.setText("মাইক্রোফোন ব্যবহার করা যাচ্ছে না। অনুমতি যাচাই করে আবার চেষ্টা করুন।");
+                  } catch (Exception e) {
+                      VoiceOverlayService.setVoiceError();
+                      if (statusView != null) statusView.setText("ভয়েস চালু করা যায়নি। আবার চেষ্টা করুন।");
+                  }
+              }
+
+              @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  if (requestCode != 5806) return;
+                  if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                      initializeVoice();
+                      return;
+                  }
+                  paused = true;
+                  VoiceOverlayService.setVoiceError();
+                  if (statusView != null) statusView.setText("মাইক্রোফোনের অনুমতি দেওয়া হয়নি। Settings থেকে Microphone চালু করে আবার খুলুন।");
+                  boolean canAskAgain = Build.VERSION.SDK_INT < 23 || shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO);
+                  if (!canAskAgain) {
+                      new android.app.AlertDialog.Builder(this)
+                          .setTitle("মাইক্রোফোন অনুমতি")
+                          .setMessage("অনুমতি বন্ধ আছে। ফোনের Settings → Apps → MOSHARROF AI → Permissions → Microphone থেকে অনুমতি চালু করুন।")
+                          .setPositiveButton("Settings খুলুন", (dialog, which) -> {
+                              Intent settings = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                  android.net.Uri.parse("package:" + getPackageName()));
+                              startActivity(settings);
+                          })
+                          .setNegativeButton("পরে", (dialog, which) -> {})
+                          .show();
+                  }
               }
 
               private void buildControls() {
@@ -521,7 +574,16 @@ jobs:
               }
 
               private void startSegment() {
-                  if (completed || paused || recognizer == null) return;
+                  if (completed || paused) return;
+                  if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                      VoiceOverlayService.setVoiceError();
+                      if (statusView != null) statusView.setText("মাইক্রোফোন অনুমতি নেই। অনুমতি দিয়ে আবার চালু করুন।");
+                      return;
+                  }
+                  if (recognizer == null) {
+                      initializeVoice();
+                      return;
+                  }
                   currentPartial = "";
                   updateTranscriptView();
                   statusView.setText("শুনছি… কথা চলার সময় লেখা এখানে দেখা যাবে");
@@ -600,6 +662,12 @@ jobs:
               @Override public void onError(int error) {
                   if (completed || paused) return;
                   VoiceOverlayService.setVoiceListening(false);
+                  if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) {
+                      paused = true;
+                      VoiceOverlayService.setVoiceError();
+                      if (statusView != null) statusView.setText("Android মাইক্রোফোন অনুমতি দেয়নি। Settings → Apps → MOSHARROF AI → Permissions → Microphone যাচাই করুন।");
+                      return;
+                  }
                   if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
                       statusView.setText("আরও বলুন… না হলে ‘পাঠান’ চাপুন।");
                       handler.postDelayed(this::startSegment, 300);
@@ -854,6 +922,9 @@ jobs:
           grep -q 'mosharrofNativeVoiceCommand' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
           grep -q 'class VoiceQuickSettingsTile' android/app/src/main/java/com/mosharrof/ai/VoiceQuickSettingsTile.java
           grep -q 'onRmsChanged' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
+          grep -q 'requestPermissions(new String\[\]{Manifest.permission.RECORD_AUDIO}' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
+          grep -q 'checkSelfPermission(Manifest.permission.RECORD_AUDIO)' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
+          grep -q 'ERROR_INSUFFICIENT_PERMISSIONS' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
           grep -q 'setVoiceLevel' android/app/src/main/java/com/mosharrof/ai/VoiceOverlayService.java
           echo "Native Android edge-to-edge + global voice manager: PASS"
 
