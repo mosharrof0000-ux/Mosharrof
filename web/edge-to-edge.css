@@ -138,9 +138,10 @@ header.top .right-btn, .top .right-btn {
   background: #080808 !important;
   color: #f2f2f2 !important;
   box-shadow: 0 3px 10px rgba(0,0,0,.22) !important;
-  touch-action: manipulation;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
+#mosharrofVoiceFab.is-moved { right: auto !important; bottom: auto !important; }
 #mosharrofVoiceFab svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 #mosharrofVoiceFab:active { transform: scale(.94); background: #303030 !important; }
 #mosharrofVoiceFab.is-listening { background: #123d2a !important; color: #4ade80 !important; border-color: rgba(74,222,128,.95) !important; box-shadow: 0 0 0 2px rgba(74,222,128,.12), 0 0 10px rgba(74,222,128,.42) !important; }
