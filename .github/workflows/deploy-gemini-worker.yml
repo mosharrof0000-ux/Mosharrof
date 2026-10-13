@@ -233,27 +233,6 @@ jobs:
           grep -q '"chat_provider_order":\["gemini","cloudflare-workers-ai","groq","openrouter"\]' /tmp/tts-health.json
           echo "Worker build, chat provider order, and audio routes verified."
 
-      - name: Verify live chat provider end-to-end
-        shell: bash
-        run: |
-          set -euo pipefail
-          CHAT="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat"
-          HTTP_CODE="$(curl -sS --connect-timeout 10 --max-time 90 -o /tmp/chat-response.json -w '%{http_code}' -X POST \
-            -H "Origin: https://mosharrof0000-ux.github.io" \
-            -H "Content-Type: application/json" \
-            --data '{"text":"বাংলায় এক বাক্যে বলুন: মোশাররফ এআই সংযোগ পরীক্ষা সফল কি না।"}' \
-            "$CHAT" || true)"
-          echo "Live chat HTTP status: $HTTP_CODE"
-          test "$HTTP_CODE" = "200"
-          python - <<'PY'
-          import json
-          d=json.load(open("/tmp/chat-response.json",encoding="utf-8"))
-          assert d.get("ok") is True, d
-          assert d.get("provider") in {"gemini","cloudflare-workers-ai","groq","openrouter"}, d
-          assert isinstance(d.get("text"),str) and d["text"].strip(), d
-          print("LIVE CHAT VERIFIED: provider=",d["provider"],"model=",d.get("model"))
-          PY
-
           if grep -q '"elevenlabs_configured":true' /tmp/tts-health.json; then
             echo "ElevenLabs configured: running primary clear Bengali TTS verification."
             HTTP_CODE="$(curl -sS --connect-timeout 10 --max-time 120 -o /tmp/tts-response.json -w '%{http_code}' -X POST               -H "Origin: https://mosharrof0000-ux.github.io"               -H "Content-Type: application/json"               --data '{"text":"এটি মোশাররফ এআই-এর লাইভ পরিষ্কার বাংলা কণ্ঠ পরীক্ষা।","language_code":"bn-BD","pace":0.95}'               "$TTS" || true)"
@@ -290,6 +269,29 @@ jobs:
             echo "No advanced TTS provider key is configured on the Worker."
             echo "This is not a deployment failure; browser speech synthesis remains the final fallback."
           fi
+
+
+      - name: Verify live chat provider end-to-end
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHAT="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat"
+          HTTP_CODE="$(curl -sS --connect-timeout 10 --max-time 90 -o /tmp/chat-response.json -w '%{http_code}' -X POST \
+            -H "Origin: https://mosharrof0000-ux.github.io" \
+            -H "Content-Type: application/json" \
+            --data '{"text":"বাংলায় এক বাক্যে বলুন: মোশাররফ এআই সংযোগ পরীক্ষা সফল কি না।"}' \
+            "$CHAT" || true)"
+          echo "Live chat HTTP status: $HTTP_CODE"
+          test "$HTTP_CODE" = "200"
+          python - <<'PY'
+          import json
+          d=json.load(open("/tmp/chat-response.json",encoding="utf-8"))
+          assert d.get("ok") is True, d
+          assert d.get("provider") in {"gemini","cloudflare-workers-ai","groq","openrouter"}, d
+          assert isinstance(d.get("text"),str) and d["text"].strip(), d
+          print("LIVE CHAT VERIFIED: provider=",d["provider"],"model=",d.get("model"))
+          PY
+
 
       - name: Verify Gemini TTS specifically
         shell: bash
