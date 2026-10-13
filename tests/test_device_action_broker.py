@@ -98,6 +98,17 @@ class DeviceActionBrokerTests(unittest.TestCase):
         self.assertEqual(result["status"], "DENIED")
         self.assertEqual(result["reason"], "AUTHORIZATION_SERVICE_ERROR")
 
+    def test_audit_failure_prevents_success_claim_after_execution(self):
+        self.broker = DeviceActionBroker(
+            authorize=self.authorize,
+            approval_check=self.approval_check,
+            audit_sink=lambda _: (_ for _ in ()).throw(RuntimeError()),
+        )
+        result = self.run_action()
+        self.assertEqual(result["status"], "UNVERIFIED")
+        self.assertEqual(result["reason"], "AUDIT_WRITE_FAILED_AFTER_ACTION")
+        self.assertFalse(result["verified"])
+
 
 if __name__ == "__main__":
     unittest.main()
