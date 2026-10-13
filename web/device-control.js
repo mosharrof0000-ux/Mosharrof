@@ -30,6 +30,50 @@
       '<p class="device-control-note">নিরাপত্তা: পরিবর্তন করার আগে Android-এর নিজস্ব সেটিংস খুলবে। ওয়েবসাইট একা ফোনের সেটিংস বদলাতে পারে না।</p>';
     nav.appendChild(section);
 
+    var pendingBubblePermission = false;
+    var resumeCheckBusy = false;
+    var resumeCheckTimer = null;
+
+    function getBridge() {
+      return window.Capacitor && window.Capacitor.Plugins &&
+        window.Capacitor.Plugins.DeviceControl;
+    }
+
+    async function resumeBubbleAfterPermission() {
+      if (!pendingBubblePermission || resumeCheckBusy || document.visibilityState === "hidden") return;
+      var bridge = getBridge();
+      if (!bridge || typeof bridge.getFloatingBubbleStatus !== "function") return;
+      resumeCheckBusy = true;
+      try {
+        var status = await bridge.getFloatingBubbleStatus();
+        if (status && status.overlayPermission) {
+          pendingBubblePermission = false;
+          var result = await bridge.enableFloatingBubble();
+          notify(result && result.enabled
+            ? "অনুমতি পাওয়া গেছে—ভাসমান MOSHARROF বাটন চালু হয়েছে। এখন হোমস্ক্রিনে বা অন্য অ্যাপে যান।"
+            : "অনুমতি পাওয়া গেছে, কিন্তু ভাসমান বাটন চালু হয়নি। আবার চেষ্টা করুন।");
+        } else {
+          pendingBubblePermission = false;
+          notify("ভাসমান বাটন চালু হয়নি। Android সেটিংসে MOSHARROF-এর 'অন্য অ্যাপের ওপর দেখান' অনুমতি চালু করে আবার চেষ্টা করুন।");
+        }
+      } catch (error) {
+        pendingBubblePermission = false;
+        console.error("MOSHARROF overlay resume failed", error);
+        notify("অনুমতি যাচাই করা যায়নি। ডান মেনু থেকে ভাসমান বাটন আবার চালু করুন।");
+      } finally {
+        resumeCheckBusy = false;
+      }
+    }
+
+    function scheduleBubblePermissionCheck() {
+      if (!pendingBubblePermission) return;
+      if (resumeCheckTimer) window.clearTimeout(resumeCheckTimer);
+      resumeCheckTimer = window.setTimeout(resumeBubbleAfterPermission, 700);
+    }
+    document.addEventListener("visibilitychange", scheduleBubblePermissionCheck);
+    window.addEventListener("focus", scheduleBubblePermissionCheck);
+    window.addEventListener("pageshow", scheduleBubblePermissionCheck);
+
     var methods = {
       wifi: "openWifiSettings",
       bluetooth: "openBluetoothSettings",
@@ -55,8 +99,7 @@
       var button = event.target.closest("button[data-device-action]");
       if (!button) return;
       var action = button.getAttribute("data-device-action");
-      var bridge = window.Capacitor && window.Capacitor.Plugins &&
-        window.Capacitor.Plugins.DeviceControl;
+      var bridge = getBridge();
 
       if (action === "tile-help") {
         notify("Android-এর ওপর থেকে দুবার নামান → সম্পাদনা/পেন্সিল চাপুন → MOSHARROF AI টাইলটি টেনে যোগ করুন। টাইলটি শুধু MOSHARROF APK-তে থাকবে।");
@@ -70,16 +113,25 @@
       try {
         if (action === "bubble-on") {
           var enabled = await bridge.enableFloatingBubble();
-          notify(enabled && enabled.permissionRequired
-            ? "Android-এর 'অন্য অ্যাপের ওপর দেখানোর অনুমতি' পৃষ্ঠা খুলেছে। MOSHARROF অনুমতি দিন, ফিরে এসে আবার 'ভাসমান ভয়েস বাটন চালু' চাপুন।"
-            : "MOSHARROF ভাসমান ভয়েস বাটন চালু হয়েছে।");
+          if (enabled && enabled.permissionRequired) {
+            pendingBubblePermission = true;
+            notify("Android-এর 'অন্য অ্যাপের ওপর দেখানোর অনুমতি' পৃষ্ঠা খুলেছে। অনুমতি চালু করে MOSHARROF-এ ফিরুন—বাটনটি স্বয়ংক্রিয়ভাবে চালু হবে।");
+          } else if (enabled && enabled.enabled) {
+            pendingBubblePermission = false;
+            notify("MOSHARROF ভাসমান ভয়েস বাটন চালু হয়েছে। এখন হোমস্ক্রিনে বা অন্য অ্যাপে যান।");
+          } else {
+            notify("ভাসমান বাটন চালু হয়নি। Android-এর overlay অনুমতি ও বিজ্ঞপ্তির অনুমতি পরীক্ষা করুন।");
+          }
           return;
         }
         if (action === "bubble-off") {
+          pendingBubblePermission = false;
           await bridge.disableFloatingBubble();
           notify("MOSHARROF ভাসমান বাটন বন্ধ করা হয়েছে।");
           return;
         }
+        if (action === "info") {
+          var info = await bridge.getDeviceInfo();
         if (action === "info") {
           var info = await bridge.getDeviceInfo();
           notify("ডিভাইস: " + (info.manufacturer || "") + " " +
