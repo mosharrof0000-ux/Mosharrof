@@ -165,7 +165,7 @@ jobs:
               private TextView bubble;
               private WindowManager.LayoutParams params;
               private boolean compact = false;
-              private boolean hidden = false;\n              private boolean hidden = false;
+              private boolean hidden = false;
               private long downAt;
               private float downRawX, downRawY;
               private int startX, startY;
