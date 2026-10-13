@@ -71,6 +71,24 @@
         detail:"Android-এর system file picker ব্যবহার হবে",payload:{},
         summary:"মোশাররফ শুধু আপনার নির্বাচিত ফাইলের URI পেতে অনুমতি চাইছে। পুরো স্টোরেজ স্ক্যান করবে না।"};
     }
+    var unsupportedRules = [
+      {pattern:/(?:ক্যামেরা|camera).*(?:খোলো|চালু|ছবি তোলো|capture|open)/i, title:"ক্যামেরা নিয়ন্ত্রণ", reason:"ক্যামেরা ক্যাপচার ব্রিজ এখনো সংযুক্ত নয়।"},
+      {pattern:/(?:লোকেশন|location).*(?:দেখাও|পাঠাও|খুঁজে|নাও|share|find|get)/i, title:"লোকেশন", reason:"একবারের লোকেশন ও তার Android permission flow এখনো সংযুক্ত নয়।"},
+      {pattern:/(?:রিমাইন্ডার|reminder|alarm|timer|টাইমার|অ্যালার্ম).*(?:তৈরি|সেট|বসাও|create|set)/i, title:"রিমাইন্ডার বা টাইমার", reason:"Android reminder/alarm flow এখনো সংযুক্ত নয়।"},
+      {pattern:/(?:ওভারলে|overlay|floating|ভাসমান).*(?:দেখাও|চালু|সরাও|লুকাও|show|move|hide)/i, title:"ভাসমান নিয়ন্ত্রণ", reason:"Android overlay service ও special-access যাচাই এখনো সংযুক্ত নয়।"},
+      {pattern:/(?:স্ক্রিনশট|screen capture|screen recording).*(?:নাও|করো|খোলো|capture|record)/i, title:"স্ক্রিন ক্যাপচার", reason:"MediaProjection-এর সিস্টেম-সম্মতি প্রবাহ এখনো সংযুক্ত নয়।"},
+      {pattern:/(?:কন্টাক্ট|contact).*(?:খুঁজে|দেখাও|search|find)/i, title:"কন্টাক্ট খোঁজা", reason:"Android contact picker adapter এখনো সংযুক্ত নয়।"},
+      {pattern:/(?:ব্লুটুথ|bluetooth).*(?:পাঠাও|transfer|send|ফাইল)/i, title:"Bluetooth স্থানান্তর", reason:"নিরাপদ file-transfer flow এখনো সংযুক্ত নয়।"},
+      {pattern:/(?:মুছে ফেল|ডিলিট|delete|destroy|wipe|format|factory reset|ফ্যাক্টরি রিসেট)/i, title:"নিষিদ্ধ ধ্বংসাত্মক কাজ", reason:"নীতি অনুযায়ী delete, wipe, format ও factory reset স্থায়ীভাবে নিষিদ্ধ।"}
+    ];
+    for (var unsupportedIndex = 0; unsupportedIndex < unsupportedRules.length; unsupportedIndex++) {
+      var unsupported = unsupportedRules[unsupportedIndex];
+      if (unsupported.pattern.test(lower)) return {
+        kind:"unavailable", title:unsupported.title,
+        detail:"কোনো ডিভাইস অপারেশন চালানো হয়নি।",
+        summary:unsupported.reason + " এই সংস্করণে কাজটি চালানো হবে না।"
+      };
+    }
     return null;
   }
 
@@ -97,6 +115,24 @@
 
   function request(action, onResult) {
     var host = document.getElementById("messages") || document.body;
+    if (action.kind === "unavailable") {
+      var notice = document.createElement("section");
+      notice.className = "device-approval-card";
+      notice.setAttribute("role", "status");
+      var noticeTitle = document.createElement("strong");
+      noticeTitle.textContent = action.title;
+      var noticeText = document.createElement("p");
+      noticeText.textContent = action.summary;
+      var noticeButton = document.createElement("button");
+      noticeButton.type = "button";
+      noticeButton.textContent = "বুঝেছি";
+      noticeButton.addEventListener("click", function () { notice.remove(); });
+      notice.append(noticeTitle, noticeText, noticeButton);
+      host.appendChild(notice);
+      notice.scrollIntoView({behavior:"smooth",block:"nearest"});
+      if (typeof onResult === "function") onResult(action.summary);
+      return;
+    }
     var card = document.createElement("section");
     card.className = "device-approval-card";
     card.setAttribute("role", "group");
