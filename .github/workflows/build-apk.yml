@@ -63,7 +63,7 @@ jobs:
           # Use the native Android overlay as the single movable voice control.
           # Let the native Android voice manager submit speech transcripts through the existing chat pipeline.
           bridge = '''  window.mosharrofNativeVoiceCommand = function (text) {
-            try { input.value = String(text || ""); resize(); send(); return true; }
+            try { window.mosharrofAutoSpeakNext = true; input.value = String(text || ""); resize(); send(); return true; }
             catch (error) { console.error("Native voice command could not be sent", error); return false; }
           };
           '''
@@ -72,10 +72,16 @@ jobs:
           if at < 0:
               raise SystemExit("Could not find chat script closure for native voice bridge")
           html = html[:at] + bridge + html[at:]
+          response_hook = r"""request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();})"""
+          response_replacement = r"""request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);if(window.mosharrofAutoSpeakNext){window.mosharrofAutoSpeakNext=false;window.setTimeout(function(){var nodes=msgEl.querySelectorAll(".message.ai");var last=nodes[nodes.length-1];var speak=last&&last.querySelector(".message-speak-shortcut");if(speak)speak.click();},250);}}busy=false;sendBtn.disabled=false;input.focus();})"""
+          if response_hook not in html:
+              raise SystemExit("Could not find chat response hook for Android voice auto-read")
+          html = html.replace(response_hook, response_replacement, 1)
           page.write_text(html, encoding="utf-8")
           PY
           grep -q 'edge-to-edge.css' android-web/index.html
           grep -q 'window.mosharrofNativeVoiceCommand' android-web/index.html
+          grep -q 'window.mosharrofAutoSpeakNext' android-web/index.html
           npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir android-web
           npx cap add android
           npx cap sync android
