@@ -16,6 +16,9 @@
       '<div class="nav-family-title"><span aria-hidden="true">▣</span><span>Android ডিভাইস নিয়ন্ত্রণ</span></div>' +
       '<div class="nav-family-items">' +
         '<button type="button" data-device-action="info"><span class="nav-icon" aria-hidden="true">ⓘ</span><span class="nav-copy"><span>ডিভাইসের তথ্য</span><small>মডেল ও Android সংস্করণ</small></span></button>' +
+        '<button type="button" data-device-action="bubble-on"><span class="nav-icon" aria-hidden="true">🎙</span><span class="nav-copy"><span>ভাসমান ভয়েস বাটন চালু</span><small>অন্য অ্যাপেও পাশে থাকবে</small></span></button>' +
+        '<button type="button" data-device-action="bubble-off"><span class="nav-icon" aria-hidden="true">⊖</span><span class="nav-copy"><span>ভাসমান বাটন বন্ধ</span><small>ফোনের স্ক্রিন থেকে সরান</small></span></button>' +
+        '<button type="button" data-device-action="tile-help"><span class="nav-icon" aria-hidden="true">▤</span><span class="nav-copy"><span>Quick Settings</span><small>ওপর থেকে নামিয়ে MOSHARROF যোগ করুন</small></span></button>' +
         '<button type="button" data-device-action="wifi"><span class="nav-icon" aria-hidden="true">⌁</span><span class="nav-copy"><span>Wi‑Fi সেটিংস</span><small>সিস্টেম সেটিংসে খুলুন</small></span></button>' +
         '<button type="button" data-device-action="bluetooth"><span class="nav-icon" aria-hidden="true">ᛒ</span><span class="nav-copy"><span>Bluetooth সেটিংস</span><small>সিস্টেম সেটিংসে খুলুন</small></span></button>' +
         '<button type="button" data-device-action="display"><span class="nav-icon" aria-hidden="true">☼</span><span class="nav-copy"><span>ডিসপ্লে</span><small>উজ্জ্বলতা ও স্ক্রিন</small></span></button>' +
@@ -55,12 +58,28 @@
       var bridge = window.Capacitor && window.Capacitor.Plugins &&
         window.Capacitor.Plugins.DeviceControl;
 
+      if (action === "tile-help") {
+        notify("Android-এর ওপর থেকে দুবার নামান → সম্পাদনা/পেন্সিল চাপুন → MOSHARROF AI টাইলটি টেনে যোগ করুন। টাইলটি শুধু MOSHARROF APK-তে থাকবে।");
+        return;
+      }
       if (!bridge) {
-        notify("এই নিয়ন্ত্রণের জন্য MOSHARROF-এর Android APK ইনস্টল করে খুলুন। ওয়েব ব্রাউজার সরাসরি ফোনের সেটিংস বদলাতে পারে না।");
+        notify("ফোনজুড়ে ভাসমান বাটন ও Quick Settings-এর জন্য MOSHARROF Android APK প্রয়োজন। ওয়েবসাইটের পাশের ছোট বাটনটি এখানেই কাজ করবে।");
         return;
       }
 
       try {
+        if (action === "bubble-on") {
+          var enabled = await bridge.enableFloatingBubble();
+          notify(enabled && enabled.permissionRequired
+            ? "Android-এর 'অন্য অ্যাপের ওপর দেখানোর অনুমতি' পৃষ্ঠা খুলেছে। MOSHARROF অনুমতি দিন, ফিরে এসে আবার 'ভাসমান ভয়েস বাটন চালু' চাপুন।"
+            : "MOSHARROF ভাসমান ভয়েস বাটন চালু হয়েছে।");
+          return;
+        }
+        if (action === "bubble-off") {
+          await bridge.disableFloatingBubble();
+          notify("MOSHARROF ভাসমান বাটন বন্ধ করা হয়েছে।");
+          return;
+        }
         if (action === "info") {
           var info = await bridge.getDeviceInfo();
           notify("ডিভাইস: " + (info.manufacturer || "") + " " +
