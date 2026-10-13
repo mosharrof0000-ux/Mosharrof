@@ -26,6 +26,10 @@ class OrganRegistryTests(unittest.TestCase):
             "id": organ_id, "name": organ_id, "public_api": public_api or [],
             "dependencies": dependencies or [],
         }), encoding="utf-8")
+        (folder / "index.js").write_text("export {};\\n", encoding="utf-8")
+        (folder / "README.md").write_text("test organ\\n", encoding="utf-8")
+        (folder / "tests").mkdir(exist_ok=True)
+        (folder / "tests" / "README.md").write_text("test plan\\n", encoding="utf-8")
         return folder
 
     def test_registry_builds_from_manifests_without_manual_index(self) -> None:
