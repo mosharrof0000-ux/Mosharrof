@@ -523,20 +523,25 @@ async function chat(request,env){
     : CHAT_MODELS;
   const payload={contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\nUser:\n"+text}]}]};
 
-  // First use Gemini models and any separately authorized Gemini credentials.
-  for(const model of preferred){
-    for(const [slot,apiKey] of configuredKeys){
-      try{
-        const r=await callGemini(env,model,payload,apiKey);
-        if(!r.upstream.ok){
-          attempted.push({provider:"gemini",model,credential_slot:slot,status:r.upstream.status,reason:r.data?.error?.message||("HTTP "+r.upstream.status)});
-          continue;
-        }
-        const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
-        if(answer)return reply({ok:true,provider:"gemini",model,text:answer,attempted},200);
-        attempted.push({provider:"gemini",model,credential_slot:slot,reason:"empty_response"});
-      }catch(e){attempted.push({provider:"gemini",model,credential_slot:slot,reason:String(e&&e.message||e)});}
-    }
+  // Try the preferred model against each authorized key, then alternate models
+  // against the primary key. This bounds latency while preserving key/model failover.
+  const geminiPlan=[];
+  if(configuredKeys.length){
+    for(const [slot,apiKey] of configuredKeys)geminiPlan.push({model:preferred[0],slot,apiKey});
+    for(const model of preferred.slice(1))geminiPlan.push({model,slot:configuredKeys[0][0],apiKey:configuredKeys[0][1]});
+  }
+  for(const attempt of geminiPlan){
+    const {model,slot,apiKey}=attempt;
+    try{
+      const r=await callGemini(env,model,payload,apiKey);
+      if(!r.upstream.ok){
+        attempted.push({provider:"gemini",model,credential_slot:slot,status:r.upstream.status,reason:r.data?.error?.message||("HTTP "+r.upstream.status)});
+        continue;
+      }
+      const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
+      if(answer)return reply({ok:true,provider:"gemini",model,text:answer,attempted},200);
+      attempted.push({provider:"gemini",model,credential_slot:slot,reason:"empty_response"});
+    }catch(e){attempted.push({provider:"gemini",model,credential_slot:slot,reason:String(e&&e.message||e)});}
   }
 
   // Workers AI is the keyless, already-bound first external-provider fallback.
