@@ -30,6 +30,28 @@ Status: phased implementation plan; not a claim that all features are already av
 - Do not store sensitive traits or infer mental-health states. Describe changes in thinking only from statements the user actually made.
 - Ask before consequential device actions; verify results and report failures honestly.
 
+## Personalization and safe improvement loop
+
+MOSHARROF must not claim that it secretly retrains its underlying AI model. The model provider controls model-weight updates. MOSHARROF can improve its usefulness for each person through a controlled application-level loop:
+
+1. **Observe only permitted inputs:** current conversation, saved chats the user allows it to reference, explicit feedback, and approved app events.
+2. **Retrieve context:** search for relevant prior messages and approved memories before answering; attach dates and sources so old plans are not mistaken for current ones.
+3. **Maintain a profile:** preferences, communication style, active goals, accessibility choices, projects, and follow-up commitments. Store user-stated facts separately from hypotheses.
+4. **Resolve change over time:** when a new statement conflicts with an older one, keep both in the timeline, mark the older item as superseded, and ask for clarification when the difference matters.
+5. **Learn from feedback:** use likes/dislikes and corrections to adjust response preferences, not to silently change factual memories or train a model without a clear policy and consent.
+6. **Check its own work:** run tests, validate tool results, record evidence, classify failures, and propose a patch or task. Code changes must go through branch, review, tests, and explicit promotion; never let an agent rewrite live/main directly.
+7. **Proactive assistance:** offer reminders, follow-up questions, or advice only when the user enables a category and schedule/trigger. Show why a reminder was suggested and provide snooze, edit, disable, and delete controls.
+
+## Notifications and background awareness
+
+- Background monitoring is a separate, opt-in feature; it is not always-on by default.
+- Support a visible, persistent state such as Off / Listening / Paused, plus an immediate stop control and a record of when capture started/stopped.
+- For reminders, prefer explicit user-defined times and goals. Any AI-suggested reminder must be a proposal until the user approves it.
+- Use Android's supported foreground-service and notification rules for microphone use. If the OS stops the service, report that honestly instead of claiming continuous listening.
+- Do not interpret silence, voice tone, facial expression, or limited chat evidence as a diagnosis or certain statement about a person's mood. Phrase emotional impressions as tentative and invite correction.
+- Identify speakers only with explicit enrollment and consent; never silently build voiceprints or infer the identity of a new person. Keep each participant's notes separate and let them inspect and delete their own data.
+- Notifications should be helpful, low-frequency, quiet-hour aware, and easy to turn off. Avoid shame, coercion, or manipulative language.
+
 ## Update strategy
 
 - Web UI and Worker source changes are delivered by their existing deployment workflows after reviewed PRs are merged; no new API key or APK is inherently needed for a code-only web change.
@@ -46,6 +68,8 @@ Status: phased implementation plan; not a claim that all features are already av
 - **P4 — Voice capture:** opt-in, visible foreground/background service where Android permits it, consent gates, explicit retention, and stop controls.
 - **P5 — Speaker profiles:** opt-in enrollment, confidence thresholds, no identity guessing, separate per-person access rules, and deletion support.
 - **P6 — Multi-device sync:** authenticated server-side storage with per-user isolation and recovery; do not use a shared unauthenticated Worker store for personal memories.
+- **P7 — Proactive support:** user-defined goals, opt-in reminders, quiet hours, notification rate limits, evidence-linked suggestions, and snooze/disable controls.
+- **P8 — Quality-improvement loop:** privacy-reviewed feedback analytics, regression tests for repeated failures, provider/model version tracking, and reviewed code changes. This improves the product's workflow and personalization; it does not mean the running model autonomously retrains itself.
 
 ## Definition of done
 
