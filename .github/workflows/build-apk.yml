@@ -57,14 +57,37 @@ jobs:
           from pathlib import Path
           page = Path("android-web/index.html")
           html = page.read_text(encoding="utf-8")
-          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-2">'
+          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-3">'
           if link not in html:
               html = html.replace("</head>", f"  {link}\n</head>", 1)
           if link not in html:
               raise SystemExit("Android-only stylesheet injection failed")
+          # Add a floating Android-only microphone control without changing the website source.
+          fab = """<button id="mosharrofVoiceFab" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
+          <script>
+          (function () {
+            var fab = document.getElementById("mosharrofVoiceFab");
+            var mic = document.getElementById("composerVoiceBtn");
+            if (!fab || !mic) return;
+            fab.addEventListener("click", function () { mic.click(); });
+            function sync() {
+              ["is-listening", "is-processing", "is-transcription-success", "is-transcription-error"].forEach(function (name) {
+                fab.classList.toggle(name, mic.classList.contains(name));
+              });
+              fab.setAttribute("aria-pressed", mic.getAttribute("aria-pressed") || "false");
+              fab.title = mic.title || "ভয়েস ইনপুট";
+            }
+            new MutationObserver(sync).observe(mic, { attributes: true, attributeFilter: ["class", "title", "aria-pressed"] });
+            sync();
+          })();
+          </script>"""
+          if 'id="mosharrofVoiceFab"' not in html:
+              html = html.replace("</body>", fab + "\n</body>", 1)
           page.write_text(html, encoding="utf-8")
           PY
           grep -q 'edge-to-edge.css' android-web/index.html
+          grep -q 'id="mosharrofVoiceFab"' android-web/index.html
+          grep -q 'new MutationObserver(sync)' android-web/index.html
           npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir android-web
           npx cap add android
           npx cap sync android
