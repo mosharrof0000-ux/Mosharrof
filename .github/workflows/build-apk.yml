@@ -164,7 +164,8 @@ jobs:
               private WindowManager windowManager;
               private TextView bubble;
               private WindowManager.LayoutParams params;
-              private boolean compact = false;\n              private boolean hidden = false;
+              private boolean compact = false;
+              private boolean hidden = false;\n              private boolean hidden = false;
               private long downAt;
               private float downRawX, downRawY;
               private int startX, startY;
@@ -179,13 +180,26 @@ jobs:
               }
 
               @Override public int onStartCommand(Intent intent, int flags, int startId) {
-                  if (intent != null && ACTION_STOP.equals(intent.getAction())) {
+                  String action = intent == null ? null : intent.getAction();
+                  if ("com.mosharrof.ai.HIDE_VOICE_OVERLAY".equals(action)) {
+                      hidden = true;
+                      removeBubble();
+                      startForeground(NOTIFICATION_ID, notification());
+                      return START_STICKY;
+                  }
+                  if ("com.mosharrof.ai.SHOW_VOICE_OVERLAY".equals(action)) {
+                      hidden = false;
+                      if (Settings.canDrawOverlays(this) && bubble == null) showBubble();
+                      startForeground(NOTIFICATION_ID, notification());
+                      return START_STICKY;
+                  }
+                  if (ACTION_STOP.equals(action)) {
                       removeBubble();
                       stopForeground(true);
                       stopSelf();
                       return START_NOT_STICKY;
                   }
-                  if (Settings.canDrawOverlays(this) && bubble == null) showBubble();
+                  if (Settings.canDrawOverlays(this) && bubble == null && !hidden) showBubble();
                   return START_STICKY;
               }
 
@@ -200,11 +214,11 @@ jobs:
               private Notification notification() {
                   Intent open = new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                   PendingIntent openPi = PendingIntent.getActivity(this, 5802, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                  Intent stop = new Intent(this, VoiceOverlayService.class).setAction(ACTION_STOP);
-                  PendingIntent stopPi = PendingIntent.getService(this, 5803, stop, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  Intent toggle = new Intent(this, VoiceOverlayService.class).setAction(hidden ? "com.mosharrof.ai.SHOW_VOICE_OVERLAY" : "com.mosharrof.ai.HIDE_VOICE_OVERLAY");
+                  PendingIntent togglePi = PendingIntent.getService(this, 5803, toggle, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                   Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
                   b.setSmallIcon(android.R.drawable.ic_btn_speak_now).setContentTitle("MOSHARROF Voice Manager")
-                   .setContentText("ভাসমান মাইক্রোফোন চালু আছে · অ্যাপ খুলে সেটিংস বদলান")
+                   .setContentText(hidden ? "ভাসমান মাইক্রোফোন লুকানো আছে" : "ভাসমান মাইক্রোফোন চালু আছে")
                    .setContentIntent(openPi).setOngoing(true).addAction(android.R.drawable.ic_menu_view, hidden ? "দেখান" : "লুকান", togglePi);
                   return b.build();
               }
