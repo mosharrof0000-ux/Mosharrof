@@ -39,13 +39,33 @@ jobs:
           grep -q 'safe-area-inset-top' web/edge-to-edge.css
           grep -q 'safe-area-inset-bottom' web/edge-to-edge.css
           grep -q 'backdrop-filter' web/edge-to-edge.css
-          echo "Edge-to-edge web contract: PASS"
+          # The source website remains unchanged; full-screen CSS is packaged only in Android.
+          if grep -q 'edge-to-edge.css' web/index.html; then
+            echo "Website must not load Android-only edge-to-edge stylesheet" >&2
+            exit 1
+          fi
+          echo "Android-only edge-to-edge contract: PASS"
 
       - name: Prepare Capacitor Android wrapper
         run: |
           npm init -y
           npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir web
+          # Bundle a private copy for Android; never alter the live website source.
+          rm -rf android-web
+          cp -a web android-web
+          python - <<'PY'
+          from pathlib import Path
+          page = Path("android-web/index.html")
+          html = page.read_text(encoding="utf-8")
+          link = '<link rel="stylesheet" href="./edge-to-edge.css?v=20261013-2">'
+          if link not in html:
+              html = html.replace("</head>", f"  {link}\\n</head>", 1)
+          if link not in html:
+              raise SystemExit("Android-only stylesheet injection failed")
+          page.write_text(html, encoding="utf-8")
+          PY
+          grep -q 'edge-to-edge.css' android-web/index.html
+          npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir android-web
           npx cap add android
           npx cap sync android
 
