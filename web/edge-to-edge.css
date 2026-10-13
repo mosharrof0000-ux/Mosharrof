@@ -64,6 +64,9 @@ body{
   -webkit-backdrop-filter:blur(18px) saturate(160%) !important;
 }
 
+/* Keep the two side controls; do not restore a centered title/header. */
+.top .brand{display:none !important;}
+
 /* Main content fills the exact viewport and scrolls under floating chrome. */
 .content{
   position:absolute !important;
