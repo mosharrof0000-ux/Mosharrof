@@ -48,6 +48,14 @@ class DeviceControlCatalogTests(unittest.TestCase):
         self.assertFalse(policy["secrets_in_client_or_logs"])
         self.assertTrue(policy["least_privilege"])
 
+    def test_partial_catalog_does_not_claim_all_device_actions_are_verified(self):
+        self.assertEqual(self.catalog["status"], "partial")
+        self.assertIn("implementation_summary", self.catalog)
+        self.assertNotIn("verified", self.catalog["implementation_summary"]["status"])
+        for capability in self.catalog["capabilities"]:
+            if capability.get("implemented_actions"):
+                self.assertEqual(capability["status"], "partial")
+
     def test_documented_safety_and_release_gates_exist(self):
         text = DOC_PATH.read_text(encoding="utf-8")
         for phrase in (
