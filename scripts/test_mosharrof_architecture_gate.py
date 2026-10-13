@@ -137,9 +137,9 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
 
     def test_dynamic_import_require_and_reexport_links_are_counted(self) -> None:
         source = "".join(
-            (f'import("dynamic-{i}");\\n' if i % 3 == 0 else
-             f'const dep{i} = require("required-{i}");\\n' if i % 3 == 1 else
-             f'export {{ default as dep{i} }} from "reexport-{i}";\\n')
+            (f'import("dynamic-{i}");\n' if i % 3 == 0 else
+             f'const dep{i} = require("required-{i}");\n' if i % 3 == 1 else
+             f'export {{ default as dep{i} }} from "reexport-{i}";\n')
             for i in range(21)
         )
         self.add_organ(source)
@@ -148,10 +148,10 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
         self.assertIn("21 links exceeds the 20-link-per-file limit", result.stdout)
 
     def test_twenty_one_css_resource_links_are_blocked(self) -> None:
-        self.add_organ("export {};\\n")
+        self.add_organ("export {};\n")
         css = self.repo / "organs" / "test-organ" / "components" / "view.css"
         css.parent.mkdir(parents=True)
-        css.write_text("".join(f'.item-{i} {{ background: url("/asset/{i}.svg"); }}\\n' for i in range(21)), encoding="utf-8")
+        css.write_text("".join(f'.item-{i} {{ background: url("/asset/{i}.svg"); }}\n' for i in range(21)), encoding="utf-8")
         self.git("add", ".")
         self.git("commit", "-m", "add excessive CSS links")
         result = self.run_gate()
