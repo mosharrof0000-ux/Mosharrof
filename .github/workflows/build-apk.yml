@@ -188,8 +188,12 @@ jobs:
                   createChannel();
                   hidden = getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).getBoolean("hidden", false);
                   startForeground(NOTIFICATION_ID, notification());
-                  if (Settings.canDrawOverlays(this) && !hidden) showBubble();
-                  else { Toast.makeText(this, "MOSHARROF ভাসমান বাটনের জন্য Display over other apps অনুমতি দিন", Toast.LENGTH_LONG).show(); stopSelf(); }
+                  if (!Settings.canDrawOverlays(this)) {
+                      Toast.makeText(this, "MOSHARROF ভাসমান বাটনের জন্য Display over other apps অনুমতি দিন", Toast.LENGTH_LONG).show();
+                      stopSelf();
+                  } else if (!hidden) {
+                      showBubble();
+                  }
               }
 
               @Override public int onStartCommand(Intent intent, int flags, int startId) {
