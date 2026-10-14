@@ -5,6 +5,7 @@ This is an isolated server-side project for requesting, validating, and provisio
 ## Implemented in this branch
 
 - Deny-by-default policy core with exact action/provider/permission/resource/environment matching, expiry checks, and replay-denial support.
+- Central provider dispatcher that rejects unsupported providers, production, and unexpected provider options before dispatch.
 - HMAC-signed approval verifier with constant-time signature comparison and atomic SQLite replay protection for isolated staging/single-instance deployments.
 - GitHub App adapter for short-lived installation tokens, explicit repository IDs, least-privilege permission levels, unexpected-permission rejection, and opaque vault handles.
 - Cloudflare user-token adapter using the documented `POST /user/tokens` endpoint, exact permission-group IDs/resource key, 1–1440 minute expiry, returned-policy validation, and opaque vault handles.
