@@ -9,7 +9,23 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, Protocol
 
-from .policy import Action, Approval, Decision, Request, evaluate
+from .policy import Action, Approval, Request
+
+
+_SECRET_KEY_PARTS = ("token", "secret", "password", "private_key", "authorization", "cookie", "credential_value")
+
+
+def _redact(value: Any) -> Any:
+    """Recursively remove likely secret-bearing fields from provider results."""
+    if isinstance(value, Mapping):
+        return {
+            str(key): ("[REDACTED]" if any(part in str(key).lower() for part in _SECRET_KEY_PARTS)
+                       else _redact(item))
+            for key, item in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [_redact(item) for item in value]
+    return value
 
 
 @dataclass(frozen=True)
@@ -70,8 +86,11 @@ class PermissionActionOrchestrator:
             return self._plan(intent, "DENIED", "production_integration_not_enabled")
 
         if request.action in {Action.SELECT_CREDENTIAL, Action.READ_ONLY_HEALTH_CHECK}:
-            handle = self._router.select_credential(request)
-            if not handle:
+            try:
+                handle = self._router.select_credential(request)
+            except Exception:
+                return self._plan(intent, "FAILED", "credential_selection_failed")
+            if not isinstance(handle, str) or not handle.startswith("vault://"):
                 return self._plan(intent, "APPROVAL_REQUIRED", "no_eligible_existing_credential")
             try:
                 result = self._router.execute(request, credential_handle=handle)
@@ -79,7 +98,7 @@ class PermissionActionOrchestrator:
                 # Do not include provider exceptions: they can contain secrets.
                 return self._plan(intent, "FAILED", "credential_execution_failed")
             return self._plan(intent, "COMPLETED", "existing_credential_used",
-                              credential_handle=handle, result=result)
+                              credential_handle=handle, result=_redact(result))
 
         if request.action not in {
             Action.CREATE_CREDENTIAL, Action.WRITE_SECRET, Action.CHANGE_PERMISSIONS,
@@ -110,9 +129,7 @@ class PermissionActionOrchestrator:
         if not isinstance(handle, str) or not handle.startswith("vault://"):
             return self._plan(intent, "FAILED", "provisioner_did_not_return_opaque_vault_handle")
         return self._plan(intent, "READY", "credential_created_and_stored",
-                          credential_handle=handle,
-                          result={k: v for k, v in credential.items()
-                                  if k not in {"token", "value", "secret", "access_token"}})
+                          credential_handle=handle, result=_redact(credential))
 
     @staticmethod
     def _plan(intent: TaskIntent, status: str, reason: str, *,
