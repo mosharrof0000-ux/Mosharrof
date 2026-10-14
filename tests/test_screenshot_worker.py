@@ -12,3 +12,15 @@ def test_screenshot_worker_contract():
     assert "IMAGE_PROVIDER_ORDER" in s
     assert "free_image_providers" in s
     assert "<html" not in s.lower()
+
+
+def test_video_generation_contract_is_server_side_and_fail_closed():
+    from pathlib import Path
+    s=Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+    assert 'const VIDEO_MODEL="fal-ai/wan/v2.7/text-to-video"' in s
+    assert "env.FAL_KEY" in s
+    assert '"Authorization":"Key "+key' in s
+    assert "duration:10" in s
+    assert "video_provider_not_configured" in s
+    assert '/generate-video' in s
+    assert '/video-status' in s
