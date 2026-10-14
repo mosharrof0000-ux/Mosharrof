@@ -100,10 +100,60 @@ def test_delete_removes_secret_and_metadata(tmp_path):
     path = tmp_path / "vault.db"
     vault = EncryptedSQLiteVault(path, encryption_key=KEY)
     handle = vault.store_secret(
-        name="delete-test", value="secret", expires_at="later",
+        name="delete-test", value="secret", expires_at="2099-01-01T00:00:00Z",
         metadata={"provider": "test"},
     )
     vault.delete(handle)
+    with sqlite3.connect(path) as connection:
+        assert connection.execute("SELECT 1 FROM vault_entries").fetchone() is None
+        assert connection.execute("SELECT 1 FROM vault_metadata").fetchone() is None
+
+
+
+def test_metadata_rejects_sensitive_field_names_and_raw_secret(tmp_path):
+    vault = EncryptedSQLiteVault(tmp_path / "vault.db", encryption_key=KEY)
+    with pytest.raises(ValueError, match="vault_metadata_contains_sensitive_field"):
+        vault.store_secret(
+            name="metadata-test", value="raw-secret",
+            expires_at="2099-01-01T00:00:00Z",
+            metadata={"api_key": "other"},
+        )
+    with pytest.raises(ValueError, match="vault_metadata_must_not_contain_raw_secret"):
+        vault.store_secret(
+            name="metadata-test", value="raw-secret",
+            expires_at="2099-01-01T00:00:00Z",
+            metadata={"note": "raw-secret"},
+        )
+
+
+def test_store_secret_rejects_invalid_or_naive_expiry(tmp_path):
+    vault = EncryptedSQLiteVault(tmp_path / "vault.db", encryption_key=KEY)
+    with pytest.raises(ValueError, match="vault_expiry_must_be_timezone_aware_iso8601"):
+        vault.store_secret(
+            name="expiry-test", value="secret", expires_at="2099-01-01T00:00:00",
+            metadata={"provider": "test"},
+        )
+    with pytest.raises(ValueError, match="vault_expiry_must_be_in_future"):
+        vault.store_secret(
+            name="expiry-test", value="secret", expires_at="2000-01-01T00:00:00Z",
+            metadata={"provider": "test"},
+        )
+
+
+def test_expired_secret_cannot_be_read_and_is_deleted(tmp_path):
+    path = tmp_path / "vault.db"
+    vault = EncryptedSQLiteVault(path, encryption_key=KEY)
+    handle = vault.store_secret(
+        name="expired-test", value="expired-secret",
+        expires_at="2099-01-01T00:00:00Z", metadata={"provider": "test"},
+    )
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "UPDATE vault_metadata SET expires_at = ? WHERE entry_id = ?",
+            ("2000-01-01T00:00:00Z", handle.removeprefix("vault://")),
+        )
+    with pytest.raises(KeyError, match="vault_entry_expired"):
+        vault.get(handle)
     with sqlite3.connect(path) as connection:
         assert connection.execute("SELECT 1 FROM vault_entries").fetchone() is None
         assert connection.execute("SELECT 1 FROM vault_metadata").fetchone() is None
