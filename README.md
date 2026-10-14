@@ -67,3 +67,16 @@ The scheduled/manual autonomous pipeline uses a short-lived GitHub App token to 
 - `GEMINI_API_KEY` must remain an Actions secret for model calls.
 
 If the App variable or secret is missing, the workflow safely pauses and records the reason in its Actions summary; it does not print secret values, write files, or claim a PR was created. If token creation reports “Integration not found,” confirm that the Client ID/private key belong to the same App and that the App is installed on this repository. Do not paste private keys or tokens into chat or commit them.
+
+
+## AI video generation (10-second default)
+
+MOSHARROF AI recognizes direct Bengali/English video requests and submits them to the server-side fal.ai Wan 2.7 text-to-video queue. The default output is a 10-second 720p video with a 16:9 aspect ratio; Shorts/Reels/TikTok prompts select 9:16. The app polls the queue, then displays a playable preview and an open/save link. The browser never receives the provider API key.
+
+Provider setup:
+1. Create a fal.ai API key from https://fal.ai/dashboard/keys.
+2. In GitHub repository **Settings → Secrets and variables → Actions**, add repository secret `FAL_KEY`.
+3. Merge the feature PR and confirm the Worker deployment and health workflow.
+4. Run a real video-generation smoke test only after confirming provider credits/billing are available; inference may be paid and is not represented as free.
+
+Without `FAL_KEY`, the Worker fails closed with `video_provider_not_configured`; it does not silently substitute a fake video. Wan 2.7 supports 2–15 second outputs; MOSHARROF currently requests 10 seconds by default.
