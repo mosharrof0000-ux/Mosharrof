@@ -1,5 +1,7 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-13-chat-live-provider-status-v1";
+const WORKER_BUILD_ID="2026-10-14-video-generation-v1";
+const VIDEO_MODEL="fal-ai/wan/v2.7/text-to-video";
+const FAL_QUEUE_BASE="https://queue.fal.run/"+VIDEO_MODEL;
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -627,10 +629,47 @@ async function chat(request,env){
   return new Response(stream,{status:200,headers:{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache, no-transform","x-accel-buffering":"no"}});
 }
 
+function videoReply(data,status){return reply(data,status);}
+async function generateVideo(request,env){
+  const key=String(env.FAL_KEY||"").trim();
+  if(!key)return videoReply({ok:false,error:"video_provider_not_configured",message:"ভিডিও তৈরি চালু করতে সার্ভারে FAL_KEY নিরাপদে কনফিগার করতে হবে।"},503);
+  let body; try{body=await request.json();}catch{return videoReply({ok:false,error:"invalid_json"},400);}
+  const prompt=typeof body.prompt==="string"?body.prompt.trim():"";
+  if(!prompt)return videoReply({ok:false,error:"prompt_required"},400);
+  if(prompt.length>5000)return videoReply({ok:false,error:"prompt_too_long",max_length:5000},413);
+  const aspect=["16:9","9:16","1:1","4:3","3:4"].includes(body.aspect_ratio)?body.aspect_ratio:"16:9";
+  const payload={prompt,aspect_ratio:aspect,resolution:"720p",duration:10,enable_prompt_expansion:true,enable_safety_checker:true};
+  try{
+    const upstream=await fetch(FAL_QUEUE_BASE,{method:"POST",headers:{"Authorization":"Key "+key,"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(payload)});
+    const data=await upstream.json().catch(()=>({}));
+    if(!upstream.ok){const code=upstream.status===401||upstream.status===403?"video_provider_auth_failed":upstream.status===402?"video_provider_credit_required":upstream.status===429?"video_provider_rate_limited":"video_submit_failed";return videoReply({ok:false,error:code,status:upstream.status,message:"ভিডিও তৈরির অনুরোধ গ্রহণ করা যায়নি। API key, credit ও provider status যাচাই করুন।"},upstream.status===429?429:(upstream.status===402?402:502));}
+    const id=String(data.request_id||"");
+    if(!/^[A-Za-z0-9_-]{8,128}$/.test(id))return videoReply({ok:false,error:"video_request_id_missing"},502);
+    return videoReply({ok:true,request_id:id,status:"IN_QUEUE",model:VIDEO_MODEL,duration:10,aspect_ratio:aspect},202);
+  }catch{return videoReply({ok:false,error:"video_provider_unreachable",message:"ভিডিও সার্ভারের সঙ্গে যোগাযোগ করা যায়নি।"},502);}
+}
+async function videoStatus(request,env){
+  const key=String(env.FAL_KEY||"").trim(); if(!key)return videoReply({ok:false,error:"video_provider_not_configured"},503);
+  let body; try{body=await request.json();}catch{return videoReply({ok:false,error:"invalid_json"},400);}
+  const id=typeof body.request_id==="string"?body.request_id:""; if(!/^[A-Za-z0-9_-]{8,128}$/.test(id))return videoReply({ok:false,error:"invalid_video_request_id"},400);
+  const url=FAL_QUEUE_BASE+"/requests/"+encodeURIComponent(id);
+  try{
+    const sr=await fetch(url+"/status",{headers:{"Authorization":"Key "+key,"Accept":"application/json"}}); const sd=await sr.json().catch(()=>({}));
+    if(!sr.ok)return videoReply({ok:false,error:"video_status_unavailable",status:sr.status},502);
+    const status=String(sd.status||"UNKNOWN");
+    if(status==="FAILED"||status==="CANCELLED")return videoReply({ok:false,error:"video_generation_failed",status,detail:String(sd.error||"").slice(0,300)},502);
+    if(status!=="COMPLETED")return videoReply({ok:true,status,logs:Array.isArray(sd.logs)?sd.logs.slice(-3).map(x=>String(x.message||"").slice(0,180)):[]},200);
+    const rr=await fetch(url,{headers:{"Authorization":"Key "+key,"Accept":"application/json"}}); const rd=await rr.json().catch(()=>({}));
+    if(!rr.ok)return videoReply({ok:false,error:"video_result_unavailable"},502);
+    const video=rd.video||rd.output?.video||null; const videoUrl=video&&typeof video.url==="string"?video.url:"";
+    if(!videoUrl||!/^https:\/\//i.test(videoUrl))return videoReply({ok:false,error:"video_output_missing"},502);
+    return videoReply({ok:true,status:"COMPLETED",video_url:videoUrl,content_type:String(video.content_type||"video/mp4"),file_name:String(video.file_name||"mosharrof-video.mp4"),duration:Number(video.duration)||10,model:VIDEO_MODEL,actual_prompt:typeof rd.actual_prompt==="string"?rd.actual_prompt.slice(0,1000):undefined},200);
+  }catch{return videoReply({ok:false,error:"video_status_unreachable"},502);}
+}
 async function handleRequest(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
-    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,gemini_chat_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],cloudflare_workers_ai_configured:!!env.AI,cloudflare_chat_configured:!!env.AI,groq_chat_configured:!!env.GROQ_API_KEY,openrouter_chat_configured:!!env.OPENROUTER_API_KEY,chat_provider_order:["gemini","cloudflare-workers-ai","groq","openrouter"],free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!(env.GEMINI_API_KEY||env.GEMINI_API_KEY_2||env.GEMINI_API_KEY_3||env.GEMINI_API_KEY_4||env.GEMINI_API_KEY_5),gemini_tts_models:[...new Set([String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts"),...String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean),"gemini-2.5-flash-preview-tts"])],gemini_tts_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
+    return reply({ok:true,service:"mosharrof-screenshot-analysis",worker_build:WORKER_BUILD_ID,video_generation_configured:!!env.FAL_KEY,video_generation_endpoint:"/generate-video",video_status_endpoint:"/video-status",video_model:VIDEO_MODEL,video_default_duration_seconds:10,tts_endpoint:"/tts",transcribe_audio_endpoint:"/transcribe-audio",gemini_configured:!!env.GEMINI_API_KEY,gemini_chat_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],cloudflare_workers_ai_configured:!!env.AI,cloudflare_chat_configured:!!env.AI,groq_chat_configured:!!env.GROQ_API_KEY,openrouter_chat_configured:!!env.OPENROUTER_API_KEY,chat_provider_order:["gemini","cloudflare-workers-ai","groq","openrouter"],free_image_providers:FREE_IMAGE_PROVIDERS,tts_providers:TTS_PROVIDERS,edge_tts_configured:!!env.EDGE_TTS_API_URL,edge_tts_voice_configured:!!env.EDGE_TTS_VOICE,gemini_tts_configured:!!(env.GEMINI_API_KEY||env.GEMINI_API_KEY_2||env.GEMINI_API_KEY_3||env.GEMINI_API_KEY_4||env.GEMINI_API_KEY_5),gemini_tts_models:[...new Set([String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts"),...String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean),"gemini-2.5-flash-preview-tts"])],gemini_tts_key_slots:[!!env.GEMINI_API_KEY,!!env.GEMINI_API_KEY_2,!!env.GEMINI_API_KEY_3,!!env.GEMINI_API_KEY_4,!!env.GEMINI_API_KEY_5],azure_tts_configured:!!env.AZURE_SPEECH_KEY&&!!env.AZURE_SPEECH_REGION,sarvam_configured:!!env.SARVAM_API_KEY,elevenlabs_configured:!!env.ELEVENLABS_API_KEY,elevenlabs_voice_configured:!!env.ELEVENLABS_VOICE_ID,elevenlabs_key_expiry_configured:!!env.ELEVENLABS_KEY_EXPIRES_AT,elevenlabs_key_expired:elevenLabsKeyExpired(env),paid_tts_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chat_models:CHAT_MODELS,vision_models:VISION_MODELS},200);
   }
   const origin=request.headers.get("Origin")||"";
   if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);
@@ -638,6 +677,8 @@ async function handleRequest(request,env){
   try{
     const pathname=new URL(request.url).pathname;
     if(pathname==="/generate-image")return await generateImage(request,env);
+    if(pathname==="/generate-video")return await generateVideo(request,env);
+    if(pathname==="/video-status")return await videoStatus(request,env);
     if(pathname==="/tts")return await tts(request,env);
     if(pathname==="/chat")return await chat(request,env);
     if(pathname==="/transcribe-audio")return await transcribeAudio(request,env);
