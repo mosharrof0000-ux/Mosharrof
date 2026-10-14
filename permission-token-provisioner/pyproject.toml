@@ -3,7 +3,7 @@ name = "mosharrof-permission-token-provisioner"
 version = "0.2.0"
 description = "Fail-closed policy core and scoped GitHub App credential provisioner"
 requires-python = ">=3.11"
-dependencies = ["PyJWT[crypto]>=2.8,<3"]
+dependencies = ["PyJWT[crypto]>=2.8,<3", "cryptography>=44,<47"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
