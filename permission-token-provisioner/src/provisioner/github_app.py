@@ -117,6 +117,19 @@ class GitHubAppAdapter:
             raise ProvisioningDenied("github_response_missing_token_or_expiry")
         if not isinstance(data.get("permissions"), dict):
             raise ProvisioningDenied("github_response_missing_permissions")
-        if any(data["permissions"].get(k) != v for k, v in permissions.items()):
+        returned_permissions = data["permissions"]
+        if any(returned_permissions.get(k) != v for k, v in permissions.items()):
             raise ProvisioningDenied("provider_granted_permissions_do_not_match_request")
+        # GitHub may include implicit metadata:read. Reject every other unrequested
+        # permission so the adapter never silently accepts scope expansion.
+        extras = {k: v for k, v in returned_permissions.items() if k not in permissions}
+        if any(k != "metadata" or v != "read" for k, v in extras.items()):
+            raise ProvisioningDenied("provider_returned_unrequested_permissions")
+        from datetime import datetime, timezone
+        try:
+            expiry = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ProvisioningDenied("github_response_invalid_expiry") from exc
+        if expiry.tzinfo is None or expiry <= datetime.now(timezone.utc):
+            raise ProvisioningDenied("github_response_expiry_not_in_future")
         return {"token": data["token"], "expires_at": data["expires_at"]}
