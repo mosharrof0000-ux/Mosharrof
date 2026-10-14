@@ -72,6 +72,7 @@ class Approval:
     environment: str
     capability: str
     expires_at: datetime
+    signature: str = ""
 
 
 @dataclass(frozen=True)
