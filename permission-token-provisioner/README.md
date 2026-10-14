@@ -55,4 +55,4 @@ Request -> classify capability -> calculate minimum permissions -> show Bengali 
 
 ## Status
 
-**Non-production implementation in progress.** Policy, signed approval verification, GitHub App token adapter, and Cloudflare token adapter are implemented with unit tests. The real owner approval UI/API, production-grade shared replay store, encrypted Vault connection, durable audit, provider end-to-end tests, and MOSHARROF app integration remain outstanding. Do not connect to Live or promote this PR until these gates pass.
+**Non-production implementation in progress.** Policy, signed approval verification, GitHub App token adapter, and Cloudflare token adapter are implemented with unit tests. The real owner approval UI/API, production-grade shared replay store, encrypted Vault connection, production-grade immutable audit sink, provider end-to-end tests, and MOSHARROF app integration remain outstanding. Do not connect to Live or promote this PR until these gates pass.
