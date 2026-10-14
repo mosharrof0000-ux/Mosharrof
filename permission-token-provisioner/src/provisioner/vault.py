@@ -11,8 +11,10 @@ import os
 import secrets
 import sqlite3
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Mapping, Protocol
+import re
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -99,12 +101,29 @@ class EncryptedSQLiteVault:
             raise ValueError("invalid_vault_secret_name")
         if not isinstance(value, str) or not value:
             raise ValueError("vault_secret_must_be_nonempty")
+        raw_secret = value
         if not isinstance(expires_at, str) or not expires_at.strip():
             raise ValueError("vault_expiry_required")
+        try:
+            expiry = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            if expiry.tzinfo is None:
+                raise ValueError
+        except (TypeError, ValueError):
+            raise ValueError("vault_expiry_must_be_timezone_aware_iso8601") from None
+        if expiry <= datetime.now(timezone.utc):
+            raise ValueError("vault_expiry_must_be_in_future")
         if not isinstance(metadata, Mapping) or any(
             not isinstance(k, str) or not isinstance(v, str) for k, v in metadata.items()
         ):
             raise ValueError("vault_metadata_must_be_string_mapping")
+        sensitive_key = re.compile(
+            r"(?:^|_)(?:secret|password|authorization|credential|api_key|api_token|private_key|access_token|refresh_token|token_value|raw_token|bearer_token)(?:$|_)",
+            re.IGNORECASE,
+        )
+        if any(sensitive_key.search(key) for key in metadata):
+            raise ValueError("vault_metadata_contains_sensitive_field")
+        if any(item == raw_secret for item in metadata.values()):
+            raise ValueError("vault_metadata_must_not_contain_raw_secret")
         safe_metadata = json.dumps(dict(metadata), sort_keys=True, separators=(",", ":"))
         handle = self.put(value.encode("utf-8"))
         entry_id = self._parse_handle(handle)
@@ -129,8 +148,23 @@ class EncryptedSQLiteVault:
             row = connection.execute(
                 "SELECT nonce, ciphertext FROM vault_entries WHERE id = ?", (entry_id,)
             ).fetchone()
+            metadata_row = connection.execute(
+                "SELECT expires_at FROM vault_metadata WHERE entry_id = ?", (entry_id,)
+            ).fetchone()
         if row is None:
             raise KeyError("vault_entry_not_found")
+        if metadata_row is not None:
+            try:
+                expiry = datetime.fromisoformat(metadata_row[0].replace("Z", "+00:00"))
+                if expiry.tzinfo is None:
+                    raise ValueError
+            except (TypeError, ValueError):
+                raise ValueError("vault_expiry_metadata_invalid") from None
+            if expiry <= datetime.now(timezone.utc):
+                try:
+                    self.delete(handle)
+                finally:
+                    raise KeyError("vault_entry_expired") from None
         try:
             return self._cipher.decrypt(row[0], row[1], entry_id.encode("ascii"))
         except Exception:
