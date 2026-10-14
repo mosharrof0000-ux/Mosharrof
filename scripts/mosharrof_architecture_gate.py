@@ -10,10 +10,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = sys.argv[1] if len(sys.argv) > 1 else "origin/main"
-SOURCE_SUFFIXES = {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".css", ".html"}
+SOURCE_SUFFIXES = {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".css", ".html", ".json"}
 LINE_LIMITS = {
     ".js": 250, ".mjs": 250, ".cjs": 250, ".jsx": 250,
-    ".ts": 250, ".tsx": 250, ".css": 350, ".html": 300,
+    ".ts": 250, ".tsx": 250, ".css": 350, ".html": 300, ".json": 200,
 }
 MAX_LINKS_PER_FILE = 20
 # Covers static imports, side-effect imports, re-exports, dynamic imports, and require().
@@ -114,6 +114,19 @@ def main() -> int:
             except (OSError, json.JSONDecodeError) as exc:
                 errors.append(f"{manifest.relative_to(ROOT)} is not valid JSON: {exc}")
 
+    # Audit every existing production source in organs/ and core/, not just changed
+    # files. Otherwise an oversized file could remain forever if nobody edits it.
+    production_paths: set[str] = set()
+    for root_name in ("organs", "core"):
+        root = ROOT / root_name
+        if root.is_dir():
+            for candidate in root.rglob("*"):
+                if candidate.is_file() and candidate.suffix.lower() in SOURCE_SUFFIXES:
+                    rel = candidate.relative_to(ROOT).as_posix()
+                    if not is_policy_or_test(rel):
+                        production_paths.add(rel)
+
+    # Changed production files outside the allowed module roots must also be rejected.
     for path in changed:
         p = Path(path)
         suffix = p.suffix.lower()
@@ -122,10 +135,15 @@ def main() -> int:
         if not p.parts or p.parts[0] not in {"organs", "core"}:
             errors.append(f"{path}: production source must belong to a dedicated organs/<organ>/ or core/ module.")
             continue
+        if (ROOT / p).is_file():
+            production_paths.add(path)
+
+    for path in sorted(production_paths):
+        p = Path(path)
+        suffix = p.suffix.lower()
         full = ROOT / p
         if not full.is_file():
-            errors.append(f"{path}: changed source file is missing from checkout.")
-            continue
+            continue  # Deleted files are not present in the current checkout.
         source_text = full.read_text(encoding="utf-8")
         lines = len(source_text.splitlines())
         limit = LINE_LIMITS[suffix]
