@@ -16,12 +16,12 @@ _SECRET_KEY_PARTS = ("token", "secret", "password", "private_key", "authorizatio
 
 
 def _redact(value: Any) -> Any:
-    """Recursively remove likely secret-bearing fields from provider results."""
+    """Recursively omit likely secret-bearing fields from provider results."""
     if isinstance(value, Mapping):
         return {
-            str(key): ("[REDACTED]" if any(part in str(key).lower() for part in _SECRET_KEY_PARTS)
-                       else _redact(item))
+            str(key): _redact(item)
             for key, item in value.items()
+            if not any(part in str(key).lower() for part in _SECRET_KEY_PARTS)
         }
     if isinstance(value, (list, tuple)):
         return [_redact(item) for item in value]
