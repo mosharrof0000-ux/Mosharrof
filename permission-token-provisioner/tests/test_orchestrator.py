@@ -92,14 +92,18 @@ def test_invalid_or_replayed_approval_does_not_mint():
     assert provisioner.calls == 0
 
 
-def test_approved_privileged_action_returns_only_opaque_handle():
+def test_approved_privileged_action_returns_only_opaque_handle_and_redacted_result():
     request = make_request(Action.CREATE_CREDENTIAL)
-    provisioner = Provisioner({"handle": "vault://credential/new", "access_token": "must-not-leak"})
+    provisioner = Provisioner({"handle": "vault://credential/new",
+        "access_token": "must-not-leak", "metadata": {"api_secret": "nested-secret", "region": "test"}})
     result = build(provisioner=provisioner).run(
         intent=TaskIntent(request, "op-5", {}), approval=make_approval(request))
     assert result.status == "READY"
     assert result.credential_handle == "vault://credential/new"
     assert "access_token" not in result.result
+    assert "api_secret" not in result.result["metadata"]
+    assert result.result["metadata"]["region"] == "test"
+    assert "must-not-leak" not in repr(result)
     assert provisioner.calls == 1
 
 
