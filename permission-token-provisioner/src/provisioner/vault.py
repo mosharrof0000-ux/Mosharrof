@@ -117,7 +117,7 @@ class EncryptedSQLiteVault:
         ):
             raise ValueError("vault_metadata_must_be_string_mapping")
         sensitive_key = re.compile(
-            r"(?:^|_)(?:secret|password|authorization|credential|api_key|private_key|access_token|refresh_token)(?:$|_)",
+            r"(?:^|_)(?:secret|password|authorization|credential|api_key|api_token|private_key|access_token|refresh_token|token_value|raw_token|bearer_token)(?:$|_)",
             re.IGNORECASE,
         )
         if any(sensitive_key.search(key) for key in metadata):
