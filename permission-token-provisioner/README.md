@@ -6,10 +6,11 @@ This is an isolated server-side project for requesting, validating, and provisio
 
 - Deny-by-default policy core with exact action/provider/permission/resource/environment matching, expiry checks, and replay-denial support.
 - Central provider dispatcher that rejects unsupported providers, production, and unexpected provider options before dispatch.
-- HMAC-signed approval verifier with constant-time signature comparison and atomic SQLite replay protection for isolated staging/single-instance deployments.
+- HMAC-signed approval verifier with constant-time signature comparison and atomic SQLite replay protection for isolated staging/single-instance use.
 - GitHub App adapter for short-lived installation tokens, explicit repository IDs, least-privilege permission levels, unexpected-permission rejection, and opaque vault handles.
-- Cloudflare user-token adapter using the documented `POST /user/tokens` endpoint, exact permission-group IDs/resource key, 1–1440 minute expiry, returned-policy validation, and opaque vault handles.
-- Unit tests for approval replay/tampering, denied approvals, production denial, exact scope/TTL, and token redaction from adapter return values.
+- Cloudflare user-token adapter using the documented token API, exact permission-group IDs/resource key, 1–1440 minute expiry, returned-policy validation, and opaque vault handles.
+- AES-GCM encrypted SQLite vault adapter with random nonces, authenticated associated data, opaque UUID handles, restrictive file mode where supported, and tamper/wrong-key rejection tests.
+- Unit tests for approval replay/tampering, denied approvals, production denial, exact scope/TTL, secret redaction, vault round trips, ciphertext tampering, and wrong-key rejection.
 - Two malformed regular expressions in `web/index.html` corrected after the existing image-engine test exposed them.
 
 ## Security contract
@@ -22,8 +23,8 @@ This is an isolated server-side project for requesting, validating, and provisio
 6. **Secrets never leave the vault boundary.** No token values in source control, browser payloads, logs, issue comments, PRs, or audit records.
 7. **Deletion is not autonomous.** Revocation/deletion requires separate explicit owner approval. If a token is created but vault storage fails, do not silently delete it; raise a redacted incident for approved cleanup.
 8. **Auditable decisions.** Record actor, approval reference, provider, capability, scope, environment, credential ID (not value), result, timestamps, and correlation ID.
-9. **Isolated deployment.** Separate service identity, vault namespace, and staging deployment. Production integration is a separate reviewed change.
-10. **No production promotion yet.** The adapters require a trusted owner-approval service and a real vault. Those are not yet connected to MOSHARROF Live.
+9. **Isolated deployment.** Separate service identity, vault namespace, and staging deployment.
+10. **No production promotion yet.** The staging vault adapter is implemented, but a managed KMS/secret-manager key lifecycle, authenticated owner-approval API, shared replay store, and production audit sink are not yet connected.
 
 ## One-time provider bootstrap
 
@@ -33,7 +34,7 @@ An owner must create a GitHub App and install it only on the intended repository
 
 ### Cloudflare
 
-Cloudflare requires an initial authorized token before API token creation can be automated. The owner must create a bootstrap token using Cloudflare's official **Create additional tokens** flow / **API Tokens Write** permission. Cloudflare recommends not combining token-management authority with unrelated permissions. Store the bootstrap credential in the server-side secret manager as `CLOUDFLARE_TOKEN_MINTING_BOOTSTRAP`; never put it in GitHub source, a browser bundle, or chat. The adapter then creates scoped tokens through the API and applies an explicit expiry.
+Cloudflare requires an initial authorized token before API token creation can be automated. The owner must create a bootstrap token using Cloudflare's official token flow with the **API Tokens Write** permission. Store it in a server-side secret manager as `CLOUDFLARE_TOKEN_MINTING_BOOTSTRAP`; never put it in GitHub source, a browser bundle, or chat. The adapter then creates scoped tokens through the API and applies an explicit expiry.
 
 This one-time authorization cannot be skipped by code. After it is securely configured, future supported token creation can be automated after per-action approval.
 
@@ -41,13 +42,15 @@ This one-time authorization cannot be skipped by code. After it is securely conf
 
 `src/provisioner/approval.py` provides HMAC verification and atomic replay protection. The signing secret must exist only in an authenticated owner-approval backend. The SQLite implementation is intended for staging/single-instance use on persistent storage; it is not a multi-instance production database. Production requires a shared transactional store, authenticated owner UI/API, durable audit, and independent security review.
 
-## Vault requirement
+## Vault
 
-Provider adapters accept a vault interface and return only opaque handles. A real encrypted Vault integration must be configured before any provider adapter is enabled. No plaintext-file or environment-variable vault fallback is provided.
+`src/provisioner/vault.py` implements an AES-GCM encrypted SQLite vault for staging/single-instance deployments. The encryption key is injected as bytes by a trusted secret manager; this module deliberately does not load keys from browser inputs, source files, or environment variables. The database file contains ciphertext, not plaintext credentials, and the API returns only opaque `vault://UUID` handles. Wrong keys, tampering, and invalid handles fail closed.
+
+This adapter is not a managed production vault: persistent-disk access controls, key rotation, backups, multi-instance locking, disaster recovery, and managed KMS integration must be designed and verified before production use.
 
 ## Current MOSHARROF integration
 
-MOSHARROF already has a Universal Permission Engine and a Cloudflare Token Router. This provisioner is intended to be a separate provisioning authority, not a replacement. The router selects existing credentials; it does not mint them. Integration must use a narrow server-to-server API and opaque credential references, never raw tokens in the static Pages frontend.
+MOSHARROF already has a Universal Permission Engine and a Cloudflare Token Router. This provisioner is intended to be a separate provisioning authority, not a replacement. The router selects credentials; it does not mint them. Integration must use a narrow authenticated server-to-server API and opaque credential references, never raw tokens in the static Pages frontend.
 
 ## Lifecycle
 
@@ -55,4 +58,4 @@ Request -> classify capability -> calculate minimum permissions -> show Bengali 
 
 ## Status
 
-**Non-production implementation in progress.** Policy, signed approval verification, GitHub App token adapter, and Cloudflare token adapter are implemented with unit tests. The real owner approval UI/API, production-grade shared replay store, encrypted Vault connection, production-grade immutable audit sink, provider end-to-end tests, and MOSHARROF app integration remain outstanding. Do not connect to Live or promote this PR until these gates pass.
+**Staging implementation in progress; not production-ready.** Policy, approval verification, provider adapters, encrypted single-instance vault, and unit tests exist. The authenticated owner approval UI/API, managed production vault/key lifecycle, shared replay store, immutable audit sink, provider end-to-end tests, and MOSHARROF app integration remain outstanding. Do not connect to Live or promote this PR until these gates pass.
