@@ -143,6 +143,13 @@ header.top{
 .generated-image img{display:block;width:100%;max-width:820px;border-radius:16px;border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 28px rgba(0,0,0,.45)}
 .generated-image .image-actions{display:flex;gap:8px;margin-top:8px}
 .generated-image .image-actions a{display:inline-flex;align-items:center;padding:7px 11px;border-radius:12px;background:#222;color:#fff;text-decoration:none;font-size:12px}
+.message.generated-video{max-width:min(94%,820px);width:min(94%,820px)}
+.generated-video video{display:block;width:100%;max-width:820px;max-height:70vh;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:#050505}
+.generated-video .video-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.generated-video .video-actions a{display:inline-flex;align-items:center;padding:8px 12px;border-radius:12px;background:#202020;border:1px solid rgba(255,255,255,.15);color:#fff;text-decoration:none;font-size:12px}
+.video-progress{display:flex;align-items:center;gap:9px;margin-top:8px;color:#39ff78;font-size:12px}
+.video-progress .dot{width:7px;height:7px;border-radius:50%;background:#39ff78;box-shadow:0 0 8px #39ff78;animation:videoPulse 1.2s infinite}
+@keyframes videoPulse{50%{opacity:.35;transform:scale(.75)}}
 .message.typing .dots{display:inline-flex;gap:4px}
 .message.typing .dots span{width:6px;height:6px;border-radius:50%;background:#8e8e93;animation:blink 1.2s infinite}
 .message.typing .dots span:nth-child(2){animation-delay:.2s}
@@ -687,6 +694,8 @@ header.top{
   function untype(){var t=$("#typing");if(t){if(t._elapsedTimer)window.clearInterval(t._elapsedTimer);t.remove();}}
   var CHAT_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat";
   var IMAGE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/generate-image";
+  var VIDEO_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/generate-video";
+  var VIDEO_STATUS_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/video-status";
   var TTS_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts";
   var TTS_PREF_KEY="mosharrof_tts_provider_v1",TTS_VOICE_KEY="mosharrof_tts_voice_v1";
   var ttsProviderSelect=$("#ttsProviderSelect"),ttsVoiceSelect=$("#ttsVoiceSelect");
@@ -958,6 +967,44 @@ header.top{
     return {width:w,height:h,aspect_ratio:ratio,image_size:imageSize,format:format,transparent:transparent,max_bytes:maxBytes,quality:quality||"standard",explicit_dimensions:/(\d{2,5})\s*[x×]\s*(\d{2,5})/i.test(p),explicit_ratio:/(\d{1,2})\s*:\s*(\d{1,2})/.test(p)};
   }
   function simplifyRatio(w,h){var a=w,b=h;while(b){var t=b;b=a%b;a=t;}return (w/a)+":"+(h/a);}
+  function looksLikeVideoPrompt(t){return /(ভিডিও|video|video clip|ক্লিপ বানাও|চলন্ত দৃশ্য|অ্যানিমেশন|animation|animate|motion graphics|চলচ্চিত্রের দৃশ্য|short film|ভিডিও তৈরি|ভিডিও বানাও|video তৈরি)/i.test(String(t||""));}
+  function videoReply(t){
+    var prompt=String(t||"").trim();
+    var aspect=/shorts|reels|vertical|portrait|শর্টস|রিলস|টিকটক|tiktok|লম্বা/i.test(prompt)?"9:16":"16:9";
+    return fetch(VIDEO_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:prompt,aspect_ratio:aspect,duration:10})})
+      .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
+        if(res.status===503&&data.error==="video_provider_not_configured")throw new Error("ভিডিও তৈরির API এখনো সংযুক্ত নয়। সার্ভারে FAL_KEY কনফিগার করতে হবে; টোকেনটি চ্যাটে দেবেন না।");
+        if(!res.ok||!data.request_id)throw new Error(data.message||data.error||("ভিডিও অনুরোধ ব্যর্থ (HTTP "+res.status+")"));
+        return pollVideo(data.request_id,prompt,aspect);
+      });});
+  }
+  function pollVideo(id,prompt,aspect){
+    var started=Date.now(),maxWait=12*60*1000;
+    return new Promise(function(resolve,reject){
+      function check(){
+        if(Date.now()-started>maxWait){reject(new Error("ভিডিও তৈরি এখনো শেষ হয়নি। পরে আবার স্ট্যাটাস দেখুন; নতুন কাজ শুরু করলে নতুন চার্জ হতে পারে।"));return;}
+        fetch(VIDEO_STATUS_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({request_id:id})})
+          .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
+            if(!res.ok||!data.ok)throw new Error(data.message||data.error||("ভিডিও স্ট্যাটাস ব্যর্থ (HTTP "+res.status+")"));
+            if(data.status==="COMPLETED"&&data.video_url){resolve({video_url:data.video_url,content_type:data.content_type||"video/mp4",file_name:data.file_name||"mosharrof-video.mp4",duration:data.duration||10,model:data.model||"fal-ai/wan/v2.7/text-to-video",prompt:prompt,aspect_ratio:aspect});return;}
+            if(data.status==="FAILED"||data.status==="CANCELLED")throw new Error("ভিডিও তৈরি ব্যর্থ হয়েছে। অনুগ্রহ করে prompt বদলে আবার চেষ্টা করুন।");
+            setTimeout(check,4000);
+          });})
+          .catch(function(err){reject(err);});
+      }
+      check();
+    });
+  }
+  function addGeneratedVideo(data){
+    var n=document.createElement("div");n.className="message ai generated-video";
+    var label=document.createElement("span");label.className="label";label.textContent="MOSHARROF AI · video";n.appendChild(label);
+    var video=document.createElement("video");video.controls=true;video.playsInline=true;video.preload="metadata";video.src=data.video_url;video.setAttribute("aria-label","Generated video preview");n.appendChild(video);
+    var meta=document.createElement("div");meta.className="time";meta.textContent=(Number(data.duration)||10)+" সেকেন্ড · "+(data.aspect_ratio||"16:9")+" · "+(data.model||"AI video");n.appendChild(meta);
+    var actions=document.createElement("div");actions.className="video-actions";
+    var open=document.createElement("a");open.href=data.video_url;open.target="_blank";open.rel="noopener noreferrer";open.textContent="ভিডিও খুলুন";actions.appendChild(open);
+    var save=document.createElement("a");save.href=data.video_url;save.target="_blank";save.rel="noopener noreferrer";save.download=data.file_name||"mosharrof-video.mp4";save.textContent="ভিডিও সংরক্ষণ";actions.appendChild(save);n.appendChild(actions);
+    msgEl.appendChild(n);bottom();
+  }
   function looksLikeImagePrompt(t){
     var v=String(t||"").toLowerCase();
     return /(ছবি|ইমেজ|চিত্র|ফটো|পিকচার|image|picture|photo|illustration|poster|wallpaper|thumbnail|থাম্বনেইল|লোগো|logo|ব্যানার|banner|generate|বানাও|তৈরি করো|তৈরি করুন|আঁকো|আঁকুন|দাও.*ছবি|tiktok|tik tok|youtube\s*shorts|reels|রিলস|টিকটক|শর্টস|\b\d{2,5}\s*[x×]\s*\d{2,5}\b|\b\d{1,2}\s*:\s*\d{1,2}\b|\b(?:png|webp|jpe?g|4k|2k|uhd|720p|1080p)\b|transparent|স্বচ্ছ ব্যাকগ্রাউন্ড)/i.test(v);
@@ -1102,9 +1149,10 @@ header.top{
       editTargetIndex=null;
     }
     addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);
-    var imageMode=!attached&&looksLikeImagePrompt(text);
-    var request=imageMode?imageReply(text):coreReply(text,attached);
-    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);busy=false;sendBtn.disabled=false;input.focus();});}
+    var videoMode=!attached&&looksLikeVideoPrompt(text);
+    var imageMode=!videoMode&&!attached&&looksLikeImagePrompt(text);
+    var request=videoMode?videoReply(text):(imageMode?imageReply(text):coreReply(text,attached));
+    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(videoMode){addGeneratedVideo(r);}else if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=videoMode?("ভিডিও তৈরি করতে সমস্যা হয়েছে: "+(err||"unknown error")):(imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
