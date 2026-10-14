@@ -823,7 +823,7 @@ header.top{
   }
   function detectTtsGenre(text){
     var s=String(text||"");
-    if(/(?:^|\n|[#* >])\s*(?:গান(?:ের কথা|টি|:)?|lyrics|song|কোরাস|স্থায়ী|স্থায়ী|অন্তরা|সঞ্চারী|আভোগ|মুখড়া|মুখড়া)\b?/im.test(s))return "song";
+    if(/(?:^|\n|[#* >])\s*(?:গান(?:ের কথা|টি|:)?|lyrics|song|কোরাস|স্থায়ী|স্থায়ী|অন্তরা|সঞ্চারী|আভোগ|মুখড়া|মুখড়া)(?=$|\s|[:：,!?।])/im.test(s))return "song";
     if(/(?:কবিতা|poem|ছন্দোবদ্ধ|পঙ্?ক্তি|গীতিকবিতা)/i.test(s))return "poem";
     return "chat";
   }
