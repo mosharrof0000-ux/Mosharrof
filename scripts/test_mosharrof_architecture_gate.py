@@ -108,6 +108,27 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("251 lines exceeds the 250-line limit", result.stdout)
 
+    def test_existing_oversized_file_is_blocked_even_when_unchanged(self) -> None:
+        # The size gate must audit the whole production tree, not only changed paths.
+        self.add_organ("const ready = true;\\n" * 251)
+        self.base = self.git("rev-parse", "HEAD")
+        (self.repo / "README.md").write_text("unrelated documentation change\\n", encoding="utf-8")
+        self.git("add", "README.md")
+        self.git("commit", "-m", "change unrelated documentation")
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("251 lines exceeds the 250-line limit", result.stdout)
+
+    def test_oversized_json_manifest_is_blocked(self) -> None:
+        self.add_organ("export {};\\n")
+        manifest = self.repo / "organs" / "test-organ" / "organ.json"
+        manifest.write_text(json.dumps({"id": "test-organ", "public_api": [], "notes": ["x"] * 250}, indent=2), encoding="utf-8")
+        self.git("add", ".")
+        self.git("commit", "-m", "add oversized organ manifest")
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("lines exceeds the 200-line limit", result.stdout)
+
     def test_legacy_shell_replacement_is_blocked(self) -> None:
         shell = self.repo / "web" / "index.html"
         shell.parent.mkdir(parents=True)
