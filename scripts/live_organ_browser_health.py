@@ -72,6 +72,24 @@ def main() -> int:
             assert control.first.get_attribute("data-organ-id") == organ_id, (
                 f"{module_id} did not connect to organ {organ_id}"
             )
+        # Verify the requested composer expansion feature, not just organ health.
+        message_input = page.locator("#input")
+        message_input.fill("composer expansion smoke test")
+        expand_button = page.locator("#composerExpandBtn")
+        expand_button.wait_for(state="visible", timeout=10000)
+        expand_button.click()
+        editor = page.locator("#mosharrofExpandEditor")
+        editor.wait_for(state="visible", timeout=5000)
+        expanded_input = editor.locator("textarea")
+        assert expanded_input.input_value() == "composer expansion smoke test", (
+            "composer expansion editor did not copy the full draft"
+        )
+        expanded_input.fill("composer expansion applied")
+        editor.locator("[data-expand-apply]").click()
+        assert message_input.input_value() == "composer expansion applied", (
+            "composer expansion editor failed to apply edited text"
+        )
+        print("COMPOSER EXPANSION BROWSER CHECK: PASS")
         browser.close()
 
     print("LIVE ORGAN RUNTIME BROWSER HEALTH CHECK: PASS")
