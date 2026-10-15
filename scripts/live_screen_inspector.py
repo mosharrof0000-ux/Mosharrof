@@ -198,6 +198,12 @@ async def main():
             await page.locator("#historyBtn").click(timeout=3000)
             history_open = await page.locator("#drawerLeft").evaluate("(el) => el.classList.contains('open')")
             record("history_button_opens_history_drawer", history_open)
+            right_state = await page.locator("#drawerRight").evaluate(
+                "(el) => ({open: el.classList.contains('open'), hidden: el.getAttribute('aria-hidden')})"
+            )
+            record("history_switch_closes_options_drawer",
+                   not right_state["open"] and right_state["hidden"] == "true",
+                   f"right drawer state={right_state}")
             search = page.locator("#historySearch")
             await search.fill("inspector-no-match-expected")
             no_match = await page.locator("#historyList").inner_text()
