@@ -111,6 +111,31 @@ try {
   assert.equal(result.data.provider, "openrouter");
   assert.match(result.data.text, /OpenRouter answer/);
 
+  // Image generation must fall through to another Workers AI model after a false-positive NSFW rejection.
+  globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com")
+    ? response({ error: { message: "free tier image quota is zero" } }, 429)
+    : response({});
+  const imageModels = [];
+  const imageRequest = new Request("https://worker.test/generate-image", {
+    method: "POST",
+    headers: { "Origin": "https://mosharrof0000-ux.github.io", "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: "A simple abstract illustration with a blue circle and a yellow square on a white background.", aspect_ratio: "1:1" })
+  });
+  const imageResponse = await worker.fetch(imageRequest, {
+    GEMINI_API_KEY: "test-key",
+    AI: { run: async (model) => {
+      imageModels.push(model);
+      if (model === "@cf/black-forest-labs/flux-1-schnell") throw new Error("8007: Input prompt contains NSFW content");
+      if (model === "@cf/bytedance/stable-diffusion-xl-lightning") return { image: "aW1hZ2U=" };
+      throw new Error("simulated fallback model outage");
+    } }
+  });
+  const imageData = await imageResponse.json();
+  assert.equal(imageResponse.status, 200);
+  assert.equal(imageData.provider, "cloudflare-workers-ai");
+  assert.equal(imageData.model, "@cf/bytedance/stable-diffusion-xl-lightning");
+  assert.deepEqual(imageModels, ["@cf/black-forest-labs/flux-1-schnell", "@cf/bytedance/stable-diffusion-xl-lightning"]);
+
   // Health must expose configured slots, never credential values.
   globalThis.fetch = originalFetch;
   const health = await worker.fetch(new Request("https://worker.test/health"), {
