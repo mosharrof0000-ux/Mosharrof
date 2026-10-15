@@ -2,6 +2,7 @@ import { EntityRegistry } from "../../web/entities/core/entity-registry.js";
 import { EntityBus } from "../../web/entities/core/entity-bus.js";
 import { EntityState } from "../../web/entities/core/entity-state.js";
 import { icons } from "../../web/entities/shared/entity-icons.js";
+import { initializeComposerEnhancements } from "../../core/composer-enhancements.js";
 
 export const organId = new URL(import.meta.url).pathname.split("/").at(-2);
 export function initialize(runtime) {
@@ -27,8 +28,11 @@ export function initialize(runtime) {
       });
     }
   });
+  initializeComposerEnhancements();
   return Object.freeze({ id: organId, status: "initialized" });
 }
+
+
 export function getHealth(runtime) { return runtime.health(organId); }
 export function reportIssue(runtime, summary = "organ issue reported") {
   return runtime.reportIssue(organId, summary);
