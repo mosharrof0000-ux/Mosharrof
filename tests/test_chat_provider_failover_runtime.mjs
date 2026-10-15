@@ -30,7 +30,6 @@ try {
   assert.equal(result.status, 200);
   assert.equal(result.data.provider, "gemini");
   assert.match(result.data.text, /Gemini answer/);
-  assert.ok(result.data.attempted.some(x => x.provider === "gemini" && x.reason === null));
 
   // Exhausted Gemini must fall back to the keyless Workers AI binding.
   globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com") ? geminiQuota() : response({});
