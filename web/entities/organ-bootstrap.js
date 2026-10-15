@@ -49,6 +49,17 @@ async function startOrganRuntime() {
       if (registry.has(id)) runtime.reportIssue(id, "entity mount failed");
     }
   });
+  // The current shell uses data-module. Connect visible controls without replacing their DOM.
+  const moduleToOrgan = Object.freeze({
+    core: "core", chat: "chat", sidebar: "sidebar", voice: "voice",
+    storage: "storage", tool_factory: "tool-factory", quran_research: "quran-research"
+  });
+  document.querySelectorAll("[data-module]").forEach((element) => {
+    const id = moduleToOrgan[element.dataset.module];
+    if (!id || !registry.has(id)) return;
+    element.dataset.organId = id;
+    element.addEventListener("click", () => runtime.reportSuccess(id, "UI module activated"));
+  });
   EntityBus.on("entity:activated", ({ entity }) => {
     entity.el.dataset.state = "active";
     if (registry.has(entity.id)) runtime.reportSuccess(entity.id, "UI entity activated");
