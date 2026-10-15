@@ -24,7 +24,7 @@ def main() -> int:
         "core/organ-runtime/index.js": "web/runtime/core/organ-runtime/index.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
-        "core/composer-enhancements.js": "web/core/composer-enhancements.js",
+        "core/composer-enhancements.js": "web/composer-enhancements.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
