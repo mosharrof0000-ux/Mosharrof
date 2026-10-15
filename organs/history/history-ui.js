@@ -1,6 +1,5 @@
 const SESSIONS_KEY = "mosharrof_chat_sessions_v1";
 const ACTIVE_SESSION_KEY = "mosharrof_active_session_v1";
-const STORE_KEY = "mosharrof_chat_v1";
 const DELETED_KEY = "mosharrof_deleted_chat_ids_v1";
 function deletedIds() {
   try { const ids = JSON.parse(localStorage.getItem(DELETED_KEY) || "[]"); return new Set(Array.isArray(ids) ? ids : []); }
@@ -163,10 +162,10 @@ export function initializeHistoryUi() {
         let timer = null;
         button.addEventListener("pointerdown", () => {
           button.__historyLongPressed = false;
-          timer = setTimeout(() => { button.__historyLongPressed = true; showActionMenu(byId.get(button.dataset.sessionId) || item, button, undefined, undefined, scheduleRefresh); }, 550);
+          timer = setTimeout(() => { button.__historyLongPressed = true; showActionMenu(readSessions().find((entry) => entry.id === button.dataset.sessionId) || item, button, undefined, undefined, scheduleRefresh); }, 550);
         });
         ["pointerup", "pointerleave", "pointercancel"].forEach((type) => button.addEventListener(type, () => clearTimeout(timer)));
-        button.addEventListener("contextmenu", (event) => { event.preventDefault(); button.__historyLongPressed = true; showActionMenu(byId.get(button.dataset.sessionId) || item, button, event.clientX, event.clientY, scheduleRefresh); });
+        button.addEventListener("contextmenu", (event) => { event.preventDefault(); button.__historyLongPressed = true; showActionMenu(readSessions().find((entry) => entry.id === button.dataset.sessionId) || item, button, event.clientX, event.clientY, scheduleRefresh); });
       }
     });
     const sorted = buttons.filter((button) => !button.hidden).sort((a, b) => {
