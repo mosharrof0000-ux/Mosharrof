@@ -1,22 +1,22 @@
 # MOSHARROF Organ Runtime Rollout
 
 ## Contract
-1. Every organ owns a top-level `organs/<organ-id>/` folder and manifest.
-2. Organ state is namespaced by organ ID; there is no implicit shared memory.
-3. Cross-organ calls require a declared dependency edge and registered public API.
-4. Each operation reports success or issue; the bounded audit log avoids secret-bearing error messages.
-5. Persistence, network access, credentials, paid services, code changes, and deployment are separate capabilities, not granted by the runtime.
-6. A user-approved change must pass tests, review, backup/recovery checks, and deployment health verification before Live promotion.
+1. Every organ owns `organs/<organ-id>/` and a manifest.
+2. Memory is namespaced by organ ID; there is no implicit shared memory.
+3. Cross-organ calls require a declared dependency and registered public API.
+4. Success/issue reporting uses a bounded audit log with redacted error details.
+5. Persistence, network, credentials, paid services, code changes, and deployment are separate capabilities; the runtime does not grant them.
+6. Live promotion requires passing tests, review, recovery checks, and deployment health verification.
 
 ## Migration status
-- **Runtime foundation:** registry, declared links, per-organ in-memory state, guarded calls, health counters, and bounded audit history.
-- **UI entity migration:** home, chat, history, library, project, notes, settings, quran, research, ai, and branch now have separate organ modules and runtime health/memory namespaces.
-- **Underlying feature engines:** this migration moves UI entity adapters only. Chat orchestration, voice/TTS/STT, research/Qur'an logic, storage, provider routing, and project/branch operations still require their own implementation-specific organ contracts and tests before the whole app can be called fully organized.
-- **Live integration:** runtime starts through the existing module bootstrap and loads `web/runtime/organs.registry.json`. The frozen `web/index.html` shell is unchanged.
+- **Runtime foundation:** validated registry, declared links, per-organ in-memory state, guarded calls, health counters, and bounded audit.
+- **UI entity migration:** home, chat, history, library, project, notes, settings, quran, research, ai, and branch have dedicated organ modules and isolated health/memory namespaces.
+- **Feature engines still pending:** chat orchestration, voice/TTS/STT, research/Qur'an logic, storage, provider routing, and project/branch engines need their own contracts and tests. UI wrappers do not prove those engines are isolated.
+- **Live integration:** the current module bootstrap loads `web/runtime/organs.registry.json`; `web/index.html` remains unchanged.
 
-## User smoke checks after deployment
-1. Open MOSHARROF AI and wait for `window.MosharrofEntitySystem.ready` to become `true`.
-2. In the browser console run `window.MosharrofEntitySystem.organRuntime.health()`; confirm each organ has its own row.
+## User smoke checks
+1. Open MOSHARROF AI and wait for `window.MosharrofEntitySystem.ready === true`.
+2. In the browser console run `window.MosharrofEntitySystem.organRuntime.health()`; verify each organ has a row.
 3. Run `window.MosharrofEntitySystem.organRuntime.memory.set("chat", "smoke-check", {ok:true})`, then `window.MosharrofEntitySystem.organRuntime.memory.get("notes", "smoke-check")`; the second command must return `null`.
-4. Run `window.MosharrofEntitySystem.organRuntime.reportIssue("chat", "manual smoke check")`; Chat should become `degraded` while Notes remains unchanged. Refresh resets this in-memory diagnostic.
-5. Confirm chat, navigation, voice, and Gemini remain functional before declaring feature-engine migration complete.
+4. Run `window.MosharrofEntitySystem.organRuntime.reportIssue("chat", "manual smoke check")`; Chat should become `degraded` while Notes stays unchanged. Refresh resets this diagnostic.
+5. Confirm chat, navigation, voice, and Gemini work before declaring feature-engine migration complete.

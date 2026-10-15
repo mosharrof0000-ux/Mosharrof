@@ -31,22 +31,17 @@ jobs:
         run: python3 -m unittest -v scripts/test_mosharrof_architecture_gate.py
       - name: Validate registry and safe organ scaffolding
         run: python3 -m unittest -v scripts/test_mosharrof_registry.py
-      - name: Validate every organ manifest and dependency edge
-        run: python3 scripts/mosharrof_registry.py --validate-only
-      - name: Verify generated browser registry matches all organ manifests
+      - name: Validate manifests and generated browser registry
         run: |
+          python3 scripts/mosharrof_registry.py --validate-only
           python3 scripts/mosharrof_registry.py --output web/runtime/organs.registry.json
           git diff --exit-code -- web/runtime/organs.registry.json
       - name: Setup Node.js for runtime contract tests
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Test runtime registry and link manager
-        run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs
-      - name: Test per-organ memory, permission, health, and audit contracts
-        run: node --experimental-default-type=module --test tests/architecture/organ-runtime-services.test.mjs
-      - name: Test isolated UI organ adapters
-        run: node --experimental-default-type=module --test tests/architecture/ui-organ-migration.test.mjs
+      - name: Test organ runtime and UI contracts
+        run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs tests/architecture/organ-runtime-services.test.mjs tests/architecture/ui-organ-migration.test.mjs
       - name: Fetch target branch
         run: git fetch --no-tags origin main:refs/remotes/origin/main
       - name: Enforce organ isolation, link caps, and file-size limits
