@@ -1,0 +1,45 @@
+name: MOSHARROF Mandatory Architecture Gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: architecture-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  architecture:
+    name: Mandatory Organ Isolation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposed commit and history
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Prove the gate blocks invalid replacements
+        run: python3 -m unittest -v scripts/test_mosharrof_architecture_gate.py
+      - name: Validate registry and safe organ scaffolding
+        run: python3 -m unittest -v scripts/test_mosharrof_registry.py
+      - name: Validate every organ manifest and dependency edge
+        run: python3 scripts/mosharrof_registry.py --validate-only
+      - name: Setup Node.js for runtime contract tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test runtime registry and link manager
+        run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs
+      - name: Fetch target branch
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - name: Enforce organ isolation, link caps, and file-size limits
+        run: python3 scripts/mosharrof_architecture_gate.py origin/main

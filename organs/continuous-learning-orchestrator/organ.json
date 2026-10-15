@@ -1,0 +1,13 @@
+{
+  "id": "continuous-learning-orchestrator",
+  "name": "Continuous Learning Orchestrator",
+  "description": "Plans bounded, source-grounded learning cycles and records gaps without granting autonomous deployment or unrestricted network access.",
+  "public_api": [
+    "createLearningCycle",
+    "recordEvidence",
+    "assessGap",
+    "proposeImprovement",
+    "getCycleReport"
+  ],
+  "dependencies": []
+}

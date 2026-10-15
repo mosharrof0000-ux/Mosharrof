@@ -1,0 +1,34 @@
+name: MOSHARROF Continuous Learning Monitor
+
+on:
+  schedule:
+    - cron: "23 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mosharrof-continuous-learning-monitor
+  cancel-in-progress: false
+
+jobs:
+  scan-public-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout approved branch
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Scan allowlisted public feeds
+        run: python3 scripts/continuous_learning_scan.py
+      - name: Upload learning report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-learning-report
+          path: learning-report.json
+          if-no-files-found: error
+          retention-days: 14

@@ -12,8 +12,24 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify image engine prompt parsing
         run: node scripts/test_image_engine.mjs
+      - name: Setup Node.js for organ contract tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test organ runtime contracts
+        run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs
+      - name: Test user preference intelligence
+        run: node --experimental-default-type=module --test organs/user-preference-intelligence/tests/preference-intelligence.test.mjs
+      - name: Test continuous learning orchestrator
+        run: node --experimental-default-type=module --test organs/continuous-learning-orchestrator/tests/continuous-learning.test.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: python -m pip install -r requirements.txt
+      - name: Validate registry and organ scaffolding
+        run: python3 -m unittest -v scripts/test_mosharrof_registry.py
+      - name: Test architecture gate enforcement
+        run: python3 -m unittest -v scripts/test_mosharrof_architecture_gate.py
+      - name: Test bounded continuous-learning feed scanner
+        run: python3 -m unittest -v tests/test_continuous_learning_scan.py
       - run: python -m pytest -q
