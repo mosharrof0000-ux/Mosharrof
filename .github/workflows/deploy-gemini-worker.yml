@@ -217,6 +217,13 @@ jobs:
             echo "OpenRouter secret not set; provider will be skipped by the Worker."
           fi
 
+      - name: Configure keyless Cloudflare chat model fallback list
+        working-directory: worker
+        run: |
+          set -euo pipefail
+          printf '%s' '@cf/zai-org/glm-4.7-flash,@cf/meta/llama-3.3-70b-instruct-fp8-fast,@cf/google/gemma-4-26b-a4b-it,@cf/meta/llama-4-scout-17b-16e-instruct' | npx --yes wrangler@3 secret put CLOUDFLARE_CHAT_MODELS --config wrangler.toml
+          echo "Configured four keyless Cloudflare chat model fallbacks (model list only; no credentials)."
+
       - name: Verify live TTS end-to-end
         shell: bash
         run: |

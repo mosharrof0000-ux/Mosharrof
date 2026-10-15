@@ -67,3 +67,11 @@ def test_cloudflare_image_engine_has_free_first_model_fallbacks():
     assert "@cf/black-forest-labs/flux-1-schnell" in worker
     assert "@cf/bytedance/stable-diffusion-xl-lightning" in worker
     assert "@cf/lykon/dreamshaper-8-lcm" in worker
+
+
+def test_deploy_workflow_configures_four_keyless_cloudflare_chat_models():
+    workflow = Path(".github/workflows/deploy-gemini-worker.yml").read_text(encoding="utf-8")
+    assert "Configure keyless Cloudflare chat model fallback list" in workflow
+    assert "secret put CLOUDFLARE_CHAT_MODELS" in workflow
+    for model in ("@cf/zai-org/glm-4.7-flash", "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/google/gemma-4-26b-a4b-it", "@cf/meta/llama-4-scout-17b-16e-instruct"):
+        assert model in workflow
