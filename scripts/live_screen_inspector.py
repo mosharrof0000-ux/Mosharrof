@@ -54,6 +54,8 @@ async def main():
         page = await context.new_page()
         page.set_default_timeout(min(args.timeout_ms, 10000))
         page.on("pageerror", lambda exc: report["errors"].append({"type": "pageerror", "detail": str(exc)}))
+        page.on("console", lambda msg: report["errors"].append({"type": "console", "detail": msg.text})
+                if msg.type == "error" else None)
 
         # Never send test prompts to a real provider. Intercept the chat Worker in-browser.
         async def mock_chat(route):
@@ -122,16 +124,21 @@ async def main():
                     small = [c for c in targets if c["width"] < 40 or c["height"] < 40]
                     record(f"{label}_menu_controls_inventoried", True,
                            f"{len(controls)} controls; {len(small)} visible buttons below 40px")
-                # Close via the app's normal scrim instead of activating arbitrary menu actions.
-                scrim = page.locator("#scrim")
-                if await scrim.count() and await scrim.is_visible():
-                    try:
-                        await scrim.click(position={"x": 100, "y": 100}, force=True, timeout=1500)
-                    except Exception:
-                        await page.evaluate("document.querySelector('#scrim')?.click()")
+                # Close through the drawer's own close control, then verify the state.
+                close_button = drawer_loc.locator(".dclose, #cL, #cR").first
+                if await close_button.count() and await close_button.is_visible():
+                    await close_button.click(timeout=2500)
                 else:
                     await page.evaluate("document.querySelector('#scrim')?.click()")
                 await page.wait_for_timeout(250)
+                if await drawer_loc.evaluate("(el) => el.classList.contains('open')"):
+                    await page.evaluate("""selector => {
+                      const drawer = document.querySelector(selector);
+                      const scrim = document.querySelector('#scrim');
+                      if (drawer) { drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); }
+                      if (scrim) scrim.classList.remove('open');
+                    }""", drawer)
+                    await page.wait_for_timeout(100)
             except Exception as exc:
                 record(f"{label}_drawer_opens", False, repr(exc))
 
@@ -198,6 +205,8 @@ async def main():
     }
     (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report["summary"], ensure_ascii=False))
+    print("FAILED_CHECKS=" + json.dumps([c for c in report["checks"] if not c["passed"]], ensure_ascii=False))
+    print("BROWSER_ERRORS=" + json.dumps(report["errors"], ensure_ascii=False))
     if report["summary"]["failed"]:
         raise SystemExit(1)
 
