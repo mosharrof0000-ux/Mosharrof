@@ -1,0 +1,10 @@
+{
+  "id": "research",
+  "name": "Research",
+  "description": "Research navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

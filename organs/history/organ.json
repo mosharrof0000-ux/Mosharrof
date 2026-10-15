@@ -1,0 +1,10 @@
+{
+  "id": "history",
+  "name": "History",
+  "description": "History navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

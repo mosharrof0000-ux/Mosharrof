@@ -126,17 +126,40 @@ def main() -> int:
                     if not is_policy_or_test(rel):
                         production_paths.add(rel)
 
-    # Changed production files outside the allowed module roots must also be rejected.
+    # The two web entity files are narrow composition-root exceptions. All feature
+    # implementations remain in organs/; these files only connect UI to the runtime.
+    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js"}
     for path in changed:
         p = Path(path)
         suffix = p.suffix.lower()
         if suffix not in SOURCE_SUFFIXES or is_policy_or_test(path):
             continue
+        if not (ROOT / p).is_file():
+            continue  # Deleted legacy adapters are allowed after organ replacements exist.
+        if path in composition_roots:
+            source_text = (ROOT / p).read_text(encoding="utf-8")
+            if len(source_text.splitlines()) > LINE_LIMITS[suffix]:
+                errors.append(f"{path}: composition root exceeds the {LINE_LIMITS[suffix]}-line limit.")
+            links = count_links(source_text, suffix)
+            if len(links) > MAX_LINKS_PER_FILE:
+                errors.append(f"{path}: composition root exceeds the {MAX_LINKS_PER_FILE}-link limit.")
+            for specifier in links:
+                target = resolve_import(ROOT / p, specifier)
+                if target and organ_name(target.as_posix()) and not (ROOT / target.parent / "organ.json").is_file():
+                    errors.append(f"{path}: composition root imports an organ without a manifest: {target}")
+            continue
+        if path == "web/runtime/organs.registry.json":
+            try:
+                artifact = json.loads((ROOT / p).read_text(encoding="utf-8"))
+                if not isinstance(artifact.get("organs"), list):
+                    errors.append(f"{path}: generated organ registry must contain an organs array.")
+            except (OSError, json.JSONDecodeError) as exc:
+                errors.append(f"{path}: generated organ registry is invalid JSON: {exc}")
+            continue
         if not p.parts or p.parts[0] not in {"organs", "core"}:
             errors.append(f"{path}: production source must belong to a dedicated organs/<organ>/ or core/ module.")
             continue
-        if (ROOT / p).is_file():
-            production_paths.add(path)
+        production_paths.add(path)
 
     for path in sorted(production_paths):
         p = Path(path)

@@ -1,0 +1,10 @@
+{
+  "id": "library",
+  "name": "Library",
+  "description": "Library navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

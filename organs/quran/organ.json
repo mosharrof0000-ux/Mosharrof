@@ -1,0 +1,10 @@
+{
+  "id": "quran",
+  "name": "Quran",
+  "description": "Qur'an navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

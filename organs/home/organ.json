@@ -1,0 +1,10 @@
+{
+  "id": "home",
+  "name": "Home",
+  "description": "Home navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

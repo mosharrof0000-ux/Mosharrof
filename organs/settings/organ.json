@@ -1,0 +1,10 @@
+{
+  "id": "settings",
+  "name": "Settings",
+  "description": "Settings navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}
