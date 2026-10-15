@@ -16,8 +16,8 @@ def test_deploy_workflow_sets_optional_failover_secrets_and_checks_build():
     assert 'secrets.GEMINI_API_KEY_2' in workflow
     assert 'secrets.GEMINI_API_KEY_5' in workflow
     assert 'secrets.GEMINI_TTS_FALLBACK_MODELS' in workflow
-    assert '2026-10-16-image-fallback-v3' in workflow
+    assert '2026-10-16-img-fb-v4' in workflow
     assert "Waiting for the newly deployed Worker version to propagate..." in workflow
     assert "for i in {1..12}; do" in workflow
-    assert '''grep -q '"worker_build":"2026-10-16-image-fallback-v3"' /tmp/health.json''' in workflow
+    assert '''grep -q '"worker_build":"2026-10-16-img-fb-v4"' /tmp/health.json''' in workflow
     assert "expected healthy build" in workflow
