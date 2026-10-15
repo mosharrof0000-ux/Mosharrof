@@ -150,7 +150,7 @@ export function initializeHistoryUi() {
       }
       if (!item) { button.hidden = true; return; }
       used.add(item.id);
-      const title = button.querySelector("span"); if (title) title.textContent = titleOf(item);
+      const title = button.querySelector("span"), displayTitle = titleOf(item); if (title && title.textContent !== displayTitle) title.textContent = displayTitle;
       button.classList.toggle("history-pinned", !!item.pinned); button.classList.toggle("history-archived", !!item.archived);
       button.hidden = !!item.archived !== showArchived;
       if (!button.dataset.historyActionsReady) {
