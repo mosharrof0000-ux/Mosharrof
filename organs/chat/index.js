@@ -51,7 +51,7 @@ function initializeComposerEnhancements() {
     ".mosharrof-expand-title{flex:1;font-size:15px;font-weight:700}",
     ".mosharrof-expand-btn{min-height:38px;padding:0 12px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:#171717;color:#f5f5f5;font-size:13px}",
     ".mosharrof-expand-apply{background:#f1f1f1;color:#111;border-color:#f1f1f1;font-weight:700}",
-    ".mosharrof-expand-text{flex:1;width:100%;min-height:0;margin:14px 0;padding:14px;border:1px solid rgba(255,255,255,.15);border-radius:14px;outline:none;resize:none;background:#111;color:#f5f5f5;font:16px/1.7 inherit;overflow:auto}",
+    ".mosharrof-expand-text{flex:1;width:100%;min-height:0;margin:14px 0;padding:14px;border:1px solid rgba(255,255,255,.15);border-radius:14px;outline:none;resize:none;background:#111;color:#f5f5f5;font-size:16px;line-height:1.7;font-family:inherit;overflow:auto}",
     ".mosharrof-expand-text:focus{border-color:rgba(255,255,255,.38)}",
     ".mosharrof-expand-hint{font-size:11px;color:#92929a;padding:0 2px 8px}",
     "@media(max-width:480px){#composer{padding:6px 8px}#composer .input{padding-left:4px!important;padding-right:4px!important}#composer .composer-action,#composer .send{width:34px;height:34px}#composerExpandBtn svg{width:16px;height:16px}}"
