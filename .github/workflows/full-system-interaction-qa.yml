@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, "feature/live-screen-chat-inspector-2026-10-16"]
+    branches: [main]
   workflow_dispatch:
     inputs:
       target:
@@ -54,7 +54,7 @@ jobs:
           exit 1
 
       - name: Prepare candidate Pages assets
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main') || inputs.target == 'candidate'
+        if: github.event_name == 'pull_request' || inputs.target == 'candidate'
         run: python3 scripts/prepare_web_organ_runtime.py
 
       - name: Start candidate Pages server
