@@ -152,7 +152,7 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
         self.git("commit", "-m", "attempt legacy shell replacement")
         result = self.run_gate()
         self.assertEqual(result.returncode, 1, result.stdout)
-        self.assertIn("web/index.html is frozen legacy shell", result.stdout)
+        self.assertIn("web/index.html is frozen except for the single verified organ-bootstrap script addition", result.stdout)
 
     def test_cross_organ_private_import_is_blocked(self) -> None:
         self.add_organ('import { privateThing } from "../target-organ/index.js";\nexport {};\n')
