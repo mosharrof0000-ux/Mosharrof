@@ -1,0 +1,12 @@
+{
+  "id": "user-preference-intelligence",
+  "name": "User Preference Intelligence",
+  "description": "Learns user-approved presentation and interaction preferences without claiming to read minds.",
+  "public_api": [
+    "recordPreference",
+    "getPreferences",
+    "correctPreference",
+    "forgetPreference"
+  ],
+  "dependencies": []
+}
