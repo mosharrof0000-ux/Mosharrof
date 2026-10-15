@@ -27,8 +27,7 @@ ALLOWED_HOSTS = {
 }
 
 
-def validate_feed(feed: dict) -> str:
-    url = feed.get("url")
+def validate_url(url: str) -> str:
     if not isinstance(url, str):
         raise ValueError("feed URL must be a string")
     parsed = urlparse(url)
@@ -36,9 +35,23 @@ def validate_feed(feed: dict) -> str:
         raise ValueError("only HTTPS URLs without embedded credentials are allowed")
     if parsed.hostname not in ALLOWED_HOSTS:
         raise ValueError("feed host is not on the exact host allowlist")
+    return url
+
+
+def validate_feed(feed: dict) -> str:
+    url = validate_url(feed.get("url"))
     if not feed.get("id") or not feed.get("domain") or not feed.get("provider"):
         raise ValueError("feed id, domain, and provider are required")
     return url
+
+
+class AllowlistedRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        validate_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+SAFE_OPENER = urllib.request.build_opener(AllowlistedRedirectHandler)
 
 
 def local_name(tag: str) -> str:
@@ -100,7 +113,7 @@ def fetch_feed(feed: dict, now: str) -> dict:
         method="GET",
     )
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+        with SAFE_OPENER.open(request, timeout=TIMEOUT) as response:
             content_type = response.headers.get("Content-Type", "").lower()
             payload = response.read(MAX_BYTES + 1)
         if len(payload) > MAX_BYTES:
