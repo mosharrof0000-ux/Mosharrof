@@ -25,7 +25,33 @@ const shapeRules = {
 const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan, ...extraUiOrgans];
 window.MosharrofEntitySystem = { registry: EntityRegistry, bus: EntityBus, version: "2.0-organ-runtime", ready: false };
 
-async function startOrganRuntime() {
+async function installDrawerStateGuard() {
+  const left = document.querySelector("#drawerLeft");
+  const right = document.querySelector("#drawerRight");
+  const scrim = document.querySelector("#scrim");
+  if (!left || !right || !scrim) return;
+  // Capture phase runs before the legacy shell click handlers. Close the opposite
+  // drawer first so opening History from Options cannot leave both overlays active.
+  document.addEventListener("click", (event) => {
+    const target = event.target?.closest?.("button, #scrim");
+    if (!target) return;
+    if (target.id === "leftBtn" || target.id === "historyBtn") {
+      right.classList.remove("open");
+      right.setAttribute("aria-hidden", "true");
+      left.setAttribute("aria-hidden", "false");
+    } else if (target.id === "rightBtn") {
+      left.classList.remove("open");
+      left.setAttribute("aria-hidden", "true");
+      right.setAttribute("aria-hidden", "false");
+    } else if (["cL", "cR", "scrim", "historyNewChat", "newChat", "clearMsg"].includes(target.id)) {
+      left.setAttribute("aria-hidden", "true");
+      right.setAttribute("aria-hidden", "true");
+    }
+  }, true);
+}
+installDrawerStateGuard();
+
+function startOrganRuntime() {
   const response = await fetch(new URL("../runtime/organs.registry.json", import.meta.url), { cache: "no-store" });
   if (!response.ok) throw new Error("Organ manifest registry unavailable: HTTP " + response.status);
   const manifestData = await response.json();
