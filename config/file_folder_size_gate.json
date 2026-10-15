@@ -15,7 +15,7 @@
     "max_changed_file_growth_percent": 20
   },
   "gate_rules": {
-    "check_entire_repository": true,
+    "measure_entire_repository": true,
     "enforce_changed_files": true,
     "legacy_oversize_must_not_grow": true,
     "folder_budget_is_recursive": true,
