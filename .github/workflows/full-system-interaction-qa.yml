@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: ["feature/live-screen-chat-inspector-2026-10-16"]
+    branches: [main, "feature/live-screen-chat-inspector-2026-10-16"]
   workflow_dispatch:
     inputs:
       target:
