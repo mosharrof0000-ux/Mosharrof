@@ -14,6 +14,12 @@ import * as QuranOrgan from "../organs/quran/index.js";
 import * as ResearchOrgan from "../organs/research/index.js";
 import * as AiOrgan from "../organs/ai/index.js";
 import * as BranchOrgan from "../organs/branch/index.js";
+import * as CoreOrgan from "../organs/core/index.js";
+import * as SidebarOrgan from "../organs/sidebar/index.js";
+import * as VoiceOrgan from "../organs/voice/index.js";
+import * as StorageOrgan from "../organs/storage/index.js";
+import * as ToolFactoryOrgan from "../organs/tool-factory/index.js";
+import * as QuranResearchOrgan from "../organs/quran-research/index.js";
 
 const shapeRules = {
   home: "14px 10px 16px 11px", chat: "10px 16px 12px 16px", history: "50%",
@@ -21,7 +27,7 @@ const shapeRules = {
   notes: "9px 15px 9px 15px", settings: "50%", quran: "12px 18px 9px 17px",
   research: "50% 12px 18px 12px", ai: "50%", branch: "18px 8px 18px 8px"
 };
-const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan];
+const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan, CoreOrgan, SidebarOrgan, VoiceOrgan, StorageOrgan, ToolFactoryOrgan, QuranResearchOrgan];
 window.MosharrofEntitySystem = { registry: EntityRegistry, bus: EntityBus, version: "2.0-organ-runtime", ready: false };
 
 async function startOrganRuntime() {
