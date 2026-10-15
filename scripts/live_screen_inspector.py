@@ -171,6 +171,16 @@ async def main():
         except Exception as exc:
             record("organ_module_controls_discovered", False, repr(exc))
 
+        # Return the shell to its neutral state before testing the composer/chat.
+        await page.evaluate("""() => {
+          for (const selector of ['#drawerLeft', '#drawerRight']) {
+            const el = document.querySelector(selector);
+            if (el) { el.classList.remove('open'); el.setAttribute('aria-hidden', 'true'); }
+          }
+          document.querySelector('#scrim')?.classList.remove('open');
+        }""")
+        await page.wait_for_timeout(150)
+
         # Composer expansion is safe: only a temporary draft in this browser context.
         # Assert draft copy, cancel preservation, and explicit apply; never submit this draft.
         try:
