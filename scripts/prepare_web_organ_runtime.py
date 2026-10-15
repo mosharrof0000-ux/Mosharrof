@@ -31,7 +31,7 @@ def main() -> int:
             raise SystemExit(f"ORGAN ASSET PREP: missing {source}")
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
-    bootstrap = (ROOT / "web/entities/organ-bootstrap.js").read_text(encoding="utf-8")
+    bootstrap = (ROOT / "web/entities/organ-modules.js").read_text(encoding="utf-8")
     ui_ids = []
     for folder in sorted((ROOT / "organs").iterdir()):
         manifest_path = folder / "organ.json"
