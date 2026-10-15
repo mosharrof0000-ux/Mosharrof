@@ -20,7 +20,7 @@ test("accepts only HTTPS URLs without embedded credentials", () => {
   const base = { title: "Model release", summary: "A release note", domain: "ai-models" };
   assert.throws(() => cycle.recordEvidence({ ...base, url: "http://example.com" }), /only HTTPS/);
   assert.throws(() => cycle.recordEvidence({ ...base, url: "https://user:pass@example.com" }), /embedded credentials/);
-  assert.throws(() => cycle.recordEvidence({ ...base, url: "javascript:alert(1)" }), /absolute HTTPS/);
+  assert.throws(() => cycle.recordEvidence({ ...base, url: "javascript:alert(1)" }), /only HTTPS/);
   assert.equal(cycle.recordEvidence({ ...base, url: "https://example.com/release", reliability: "high" }).accepted, true);
 });
 
