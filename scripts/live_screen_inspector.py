@@ -142,6 +142,35 @@ async def main():
             except Exception as exc:
                 record(f"{label}_drawer_opens", False, repr(exc))
 
+        # Activate each declared organ module in the disposable browser context.
+        # This verifies event wiring/registry availability without changing remote data.
+        try:
+            await page.locator("#leftBtn").click(timeout=4000)
+            modules = await page.locator("#drawerLeft [data-module]").evaluate_all(
+                "els => els.map(el => ({module: el.getAttribute('data-module'), label: (el.innerText || '').trim()}))"
+            )
+            record("organ_module_controls_discovered", len(modules) > 0,
+                   f"discovered {len(modules)} declared module controls")
+            for item in modules:
+                module = item["module"]
+                try:
+                    button = page.locator(f'#drawerLeft [data-module="{module}"]').first
+                    if not await button.is_visible():
+                        await page.locator("#leftBtn").click(timeout=3000)
+                    await button.click(timeout=3000)
+                    registered = await page.evaluate(
+                        "id => !!window.MosharrofEntitySystem?.organRegistry?.has(id)",
+                        {"core":"core","chat":"chat","sidebar":"sidebar","voice":"voice",
+                         "storage":"storage","tool_factory":"tool-factory",
+                         "quran_research":"quran-research"}.get(module, module)
+                    )
+                    record(f"organ_module_{module.replace('-', '_')}_activates",
+                           registered, f"label={item['label']}; registry entry={registered}")
+                except Exception as exc:
+                    record(f"organ_module_{module.replace('-', '_')}_activates", False, repr(exc))
+        except Exception as exc:
+            record("organ_module_controls_discovered", False, repr(exc))
+
         # Composer expansion is safe: only a temporary draft in this browser context.
         # Assert draft copy, cancel preservation, and explicit apply; never submit this draft.
         try:
