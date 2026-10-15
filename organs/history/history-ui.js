@@ -127,6 +127,7 @@ function showActionMenu(item, anchor, x, y, onRefresh) {
   }, 0);
 }
 export function initializeHistoryUi() {
+  if (typeof document === "undefined") return;
   const drawer = document.getElementById("drawerLeft");
   if (!drawer || drawer.dataset.historyOrganReady === "true") return;
   drawer.dataset.historyOrganReady = "true"; installDeleteGuard(); addStyles();
