@@ -226,7 +226,7 @@ jobs:
           echo "Waiting for the newly deployed Worker version to propagate..."
           for i in {1..12}; do
             if curl -fsS --connect-timeout 10 --max-time 20 "$HEALTH" > /tmp/tts-health.json \
-              && grep -q '"worker_build":"2026-10-16-chat-resilience-v2"' /tmp/tts-health.json; then
+              && grep -q '"worker_build":"2026-10-16-image-fallback-v3"' /tmp/tts-health.json; then
               echo "New Worker build is visible at the health endpoint."
               break
             fi
@@ -234,7 +234,7 @@ jobs:
             sleep 5
           done
           cat /tmp/tts-health.json
-          grep -q '"worker_build":"2026-10-16-chat-resilience-v2"' /tmp/tts-health.json
+          grep -q '"worker_build":"2026-10-16-image-fallback-v3"' /tmp/tts-health.json
           grep -q '"tts_endpoint":"/tts"' /tmp/tts-health.json
           grep -q '"transcribe_audio_endpoint":"/transcribe-audio"' /tmp/tts-health.json
           grep -q '"cloudflare_chat_configured":true' /tmp/tts-health.json
