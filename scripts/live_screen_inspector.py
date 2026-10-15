@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Permission-safe browser inspection for MOSHARROF AI.
 
-This test inventories visible controls, exercises safe navigation/composer flows,
-and writes screenshots + a JSON report. It deliberately never submits a chat,
-deletes history, changes account settings, or calls provider APIs.
+Inventories visible controls, exercises safe navigation/composer flows, and sends
+one synthetic chat prompt only through a browser-intercepted mock Worker response.
+It does not contact a real provider, delete history, or change account settings.
 """
 from __future__ import annotations
 
@@ -26,9 +26,9 @@ report = {
     "timestamp_utc": datetime.now(timezone.utc).isoformat(),
     "target_url": args.url,
     "policy": {
-        "chat_submission": "not performed",
+        "chat_submission": "synthetic prompt submitted only against browser-intercepted mock Worker",
         "destructive_actions": "not performed",
-        "provider_api_calls": "not intentionally triggered",
+        "provider_api_calls": "blocked by exact chat Worker route interception",
         "scope": "visible UI inventory and safe navigation smoke tests",
     },
     "checks": [],
