@@ -23,6 +23,7 @@ def main() -> int:
         "core/link-manager/index.js": "web/runtime/core/link-manager/index.js",
         "core/organ-runtime/index.js": "web/runtime/core/organ-runtime/index.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
+        "organs/history/history-ui.js": "web/organs/history/history-ui.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
