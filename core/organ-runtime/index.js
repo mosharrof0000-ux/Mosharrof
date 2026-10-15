@@ -1,7 +1,7 @@
 /**
  * Capability-gated runtime services for independent Mosharrof organs.
  * State is namespaced per organ; cross-organ access requires a declared link.
- * This module never persists data, reads secrets, performs network calls, or deploys.
+ * No persistence, network calls, credential access, filesystem, or deployment.
  */
 const ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SECRET_KEY_RE = /(?:secret|token|password|credential|authorization|api[-_]?key|private[-_]?key)/i;
@@ -23,9 +23,12 @@ function safeKey(value) {
   if (SECRET_KEY_RE.test(value)) throw new Error("secret-like keys cannot be stored in organ memory");
   return value;
 }
+function safeSummary(value) {
+  return String(value).slice(0, 240).replace(/(api[-_ ]?key|token|password|secret|authorization)\s*[:=]\s*\S+/gi, "$1=[redacted]");
+}
 
 export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) {
-  if (!registry || typeof registry.get !== "function" || typeof registry.has !== "function") {
+  if (!registry || typeof registry.get !== "function" || typeof registry.has !== "function" || typeof registry.list !== "function") {
     throw new TypeError("a validated organ registry is required");
   }
   if (!linkManager || typeof linkManager.connect !== "function" || typeof linkManager.list !== "function") {
@@ -89,8 +92,7 @@ export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) 
         const safe = safeKey(key);
         const store = memory.get(id);
         if (!store.has(safe) && store.size >= config.maxMemoryEntries) throw new RangeError("organ memory entry limit reached");
-        const copy = cloneJson(value, "stored value", config.maxValueBytes);
-        store.set(safe, copy);
+        store.set(safe, cloneJson(value, "stored value", config.maxValueBytes));
         record(id, "success", { action: "memory.set", key: safe });
         return true;
       },
@@ -113,10 +115,8 @@ export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) 
     async invoke(sourceId, targetId, api, payload = {}) {
       requireOrgan(sourceId);
       requireOrgan(targetId);
-      // connect() refuses unless source manifest explicitly declares targetId:api.
       linkManager.connect(sourceId, targetId, api);
-      const targetHandlers = handlers.get(targetId);
-      const handler = targetHandlers?.get(api);
+      const handler = handlers.get(targetId)?.get(api);
       if (typeof handler !== "function") throw new Error("target API is not registered: " + targetId + ":" + api);
       const safePayload = validatePayload(payload);
       try {
@@ -125,19 +125,17 @@ export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) 
         record(targetId, "success", { action: "invoke", api, caller: sourceId });
         return safeResult;
       } catch (error) {
-        record(targetId, "issue", { action: "invoke", api, caller: sourceId, error: String(error?.message ?? "handler failed").slice(0, 240) });
+        record(targetId, "issue", { action: "invoke", api, caller: sourceId, error: String(error?.name ?? "Error").slice(0, 80) });
         throw error;
       }
     },
     reportSuccess(id, summary = "operation completed") {
       requireOrgan(id);
-      const message = String(summary).slice(0, 240);
-      return record(id, "success", { action: "report", summary: message });
+      return record(id, "success", { action: "report", summary: safeSummary(summary) });
     },
     reportIssue(id, summary = "operation failed") {
       requireOrgan(id);
-      const message = String(summary).slice(0, 240);
-      return record(id, "issue", { action: "report", summary: message });
+      return record(id, "issue", { action: "report", summary: safeSummary(summary) });
     },
     health(id) {
       if (id !== undefined) {
