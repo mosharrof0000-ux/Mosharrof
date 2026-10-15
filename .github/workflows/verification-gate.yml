@@ -28,6 +28,7 @@ jobs:
       - name: Verify Pages entrypoint
         shell: bash
         run: |
+          python3 scripts/prepare_web_organ_runtime.py
           test -f web/index.html
           grep -q 'MOSHARROF AI' web/index.html
           grep -q 'class="top"' web/index.html

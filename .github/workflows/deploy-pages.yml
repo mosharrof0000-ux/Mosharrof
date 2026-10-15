@@ -42,6 +42,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
+      - run: python3 scripts/prepare_web_organ_runtime.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
@@ -55,11 +56,12 @@ jobs:
         shell: bash
         run: |
           python3 - <<'PY'
-          import os, urllib.request
-          url=os.environ["PAGE_URL"]
-          with urllib.request.urlopen(url, timeout=30) as r:
-              body=r.read(200000).decode("utf-8","ignore")
-              assert r.status == 200
-              assert "MOSHARROF AI" in body
-          print("LIVE HEALTH CHECK: PASS")
+          import json, os, urllib.request
+          base=os.environ["PAGE_URL"].rstrip("/") + "/"
+          def read(path): return urllib.request.urlopen(base+path,timeout=30).read().decode("utf-8","ignore")
+          assert "MOSHARROF AI" in read("")
+          ids={x["id"] for x in json.loads(read("runtime/organs.registry.json"))["organs"]}
+          assert {"chat","notes"}.issubset(ids)
+          for p in ("entities/organ-bootstrap.js","runtime/core/organ-runtime/index.js","organs/chat/index.js"): read(p)
+          print("LIVE ORGAN RUNTIME HEALTH CHECK: PASS")
           PY
