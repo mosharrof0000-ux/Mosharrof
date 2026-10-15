@@ -1,5 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-13-chat-live-provider-status-v1";
+const WORKER_BUILD_ID="2026-10-16-chat-resilience-v2";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -286,7 +286,7 @@ async function tts(request,env){
 }
 
 
-const CHAT_PROVIDER_TIMEOUT_MS=7000;
+const CHAT_PROVIDER_TIMEOUT_MS=12000;
 
 async function withChatProviderTimeout(promise,ms,label){
   let timer;

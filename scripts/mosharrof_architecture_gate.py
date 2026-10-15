@@ -16,6 +16,10 @@ LINE_LIMITS = {
     ".ts": 250, ".tsx": 250, ".css": 350, ".html": 300, ".json": 200,
 }
 MAX_LINKS_PER_FILE = 20
+# Cloudflare Worker entrypoint is a separately deployed runtime, not a UI organ.
+# Keep the exception narrow and require the chat failover contract tests when edited.
+RUNTIME_ENTRYPOINTS = {"worker/screenshot-analysis.js"}
+RUNTIME_ENTRYPOINT_MAX_LINES = 1000
 # Covers static imports, side-effect imports, re-exports, dynamic imports, and require().
 IMPORT_RE = re.compile(
     r"""(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']"""
@@ -178,6 +182,13 @@ def main() -> int:
                     errors.append(f"{path}: generated organ registry must contain an organs array.")
             except (OSError, json.JSONDecodeError) as exc:
                 errors.append(f"{path}: generated organ registry is invalid JSON: {exc}")
+            continue
+        if path in RUNTIME_ENTRYPOINTS:
+            source_text = (ROOT / p).read_text(encoding="utf-8")
+            if len(source_text.splitlines()) > RUNTIME_ENTRYPOINT_MAX_LINES:
+                errors.append(f"{path}: runtime entrypoint exceeds the {RUNTIME_ENTRYPOINT_MAX_LINES}-line emergency ceiling.")
+            if not (ROOT / "tests" / "test_chat_provider_failover.py").is_file():
+                errors.append(f"{path}: runtime changes require tests/test_chat_provider_failover.py.")
             continue
         if not p.parts or p.parts[0] not in {"organs", "core"}:
             errors.append(f"{path}: production source must belong to a dedicated organs/<organ>/ or core/ module.")
