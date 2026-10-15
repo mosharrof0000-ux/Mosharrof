@@ -1,5 +1,5 @@
 /* Mosharrof SW — network-first for HTML so UI updates reach users */
-const CACHE = "mosharrof-v6-2026-10-13";
+const CACHE = "mosharrof-v7-2026-10-15-organ-runtime";
 const PRECACHE = ["./manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -34,8 +34,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
+          }
           return res;
         })
         .catch(() => caches.match(req).then((r) => r || caches.match("./index.html")))
@@ -45,8 +47,10 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
+      if (res.ok) {
+        const copy = res.clone();
+        caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
+      }
       return res;
     }))
   );

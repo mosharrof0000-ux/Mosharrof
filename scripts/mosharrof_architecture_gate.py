@@ -128,7 +128,7 @@ def main() -> int:
 
     # The two web entity files are narrow composition-root exceptions. All feature
     # implementations remain in organs/; these files only connect UI to the runtime.
-    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js"}
+    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js", "web/sw.js"}
     for path in changed:
         p = Path(path)
         suffix = p.suffix.lower()
@@ -143,6 +143,8 @@ def main() -> int:
             links = count_links(source_text, suffix)
             if len(links) > MAX_LINKS_PER_FILE:
                 errors.append(f"{path}: composition root exceeds the {MAX_LINKS_PER_FILE}-link limit.")
+            if path == "web/sw.js" and "mosharrof-v7-2026-10-15-organ-runtime" not in source_text:
+                errors.append("web/sw.js: cache-affecting changes must bump the organ-runtime cache version.")
             for specifier in links:
                 target = resolve_import(ROOT / p, specifier)
                 if target and organ_name(target.as_posix()) and not (ROOT / target.parent / "organ.json").is_file():
