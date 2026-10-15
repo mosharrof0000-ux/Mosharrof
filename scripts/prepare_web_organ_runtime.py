@@ -25,6 +25,7 @@ def main() -> int:
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
+        "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination

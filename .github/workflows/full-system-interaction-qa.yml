@@ -1,0 +1,92 @@
+name: MOSHARROF Full-System Interaction QA
+
+on:
+  schedule:
+    - cron: "37 */6 * * *"
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Where to run safe, non-destructive UI checks"
+        type: choice
+        required: true
+        default: live
+        options:
+          - live
+          - candidate
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mosharrof-full-system-qa-${{ github.ref }}
+  # Queue overlapping runs instead of cancelling in-progress verification.
+  cancel-in-progress: false
+
+jobs:
+  interaction-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright with transient-network retries
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if python -m pip install --disable-pip-version-check --retries 5 --timeout 60 playwright &&
+               python -m playwright install --with-deps chromium; then
+              exit 0
+            fi
+            echo "Network/dependency setup attempt $attempt failed; retrying."
+            sleep $((attempt * 15))
+          done
+          echo "Browser dependencies remained unavailable after retries."
+          exit 1
+
+      - name: Prepare candidate Pages assets
+        if: github.event_name == 'pull_request' || inputs.target == 'candidate'
+        run: python3 scripts/prepare_web_organ_runtime.py
+
+      - name: Start candidate Pages server
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main') || inputs.target == 'candidate'
+        run: |
+          python3 -m http.server 4173 --directory web >/tmp/mosharrof-inspector-server.log 2>&1 &
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/mosharrof-inspector-server.log
+          exit 1
+
+      - name: Select safe inspection target
+        id: target
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" || ("${{ github.event_name }}" == "push" && "${{ github.ref }}" != "refs/heads/main") || "${{ inputs.target }}" == "candidate" ]]; then
+            echo "url=http://127.0.0.1:4173/" >> "$GITHUB_OUTPUT"
+          else
+            echo "url=https://mosharrof0000-ux.github.io/Mosharrof/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run safe mobile interaction inspection
+        run: |
+          python3 scripts/live_screen_inspector.py --url "${{ steps.target.outputs.url }}" --output-dir artifacts/live-screen-inspector
+
+      - name: Upload inspection evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-live-screen-inspector-${{ github.run_id }}
+          path: artifacts/live-screen-inspector/
+          if-no-files-found: warn
+          retention-days: 14

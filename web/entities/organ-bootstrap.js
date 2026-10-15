@@ -15,6 +15,7 @@ import * as ResearchOrgan from "../organs/research/index.js";
 import * as AiOrgan from "../organs/ai/index.js";
 import * as BranchOrgan from "../organs/branch/index.js";
 import { extraUiOrgans } from "./ui-organ-modules.js";
+import { installDrawerStateGuard } from "../core/drawer-state-guard.js";
 
 const shapeRules = {
   home: "14px 10px 16px 11px", chat: "10px 16px 12px 16px", history: "50%",
@@ -24,6 +25,8 @@ const shapeRules = {
 };
 const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan, ...extraUiOrgans];
 window.MosharrofEntitySystem = { registry: EntityRegistry, bus: EntityBus, version: "2.0-organ-runtime", ready: false };
+
+installDrawerStateGuard();
 
 async function startOrganRuntime() {
   const response = await fetch(new URL("../runtime/organs.registry.json", import.meta.url), { cache: "no-store" });
