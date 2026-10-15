@@ -32,6 +32,7 @@ export function initialize(runtime) {
 }
 
 function initializeComposerEnhancements() {
+  if (typeof document === "undefined") return;
   if (document.getElementById("composerExpandBtn")) return;
   const input = document.getElementById("input");
   const composer = document.getElementById("composer");
