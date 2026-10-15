@@ -41,7 +41,17 @@ test("each UI entity has a distinct manifest and runtime namespace", async () =>
     assert.equal(runtime.health(organ.organId).status, "ready");
   }
 });
-test("one UI organ issue does not degrade another organ", () => {
+
+test("the live shell loads the organ runtime and maps every visible module", async () => {
+  const html = await readFile(new URL("../../web/index.html", import.meta.url), "utf8");
+  const bootstrap = await readFile(new URL("../../web/entities/organ-bootstrap.js", import.meta.url), "utf8");
+  assert.ok(html.includes('<script type="module" src="./entities/bootstrap.js"></script>'));
+  for (const mapping of [
+    'core: "core"', 'chat: "chat"', 'sidebar: "sidebar"', 'voice: "voice"',
+    'storage: "storage"', 'tool_factory: "tool-factory"', 'quran_research: "quran-research"'
+  ]) assert.ok(bootstrap.includes(mapping), "missing visible UI organ mapping: " + mapping);
+});
+\ntest("one UI organ issue does not degrade another organ", () => {
   const records = uiOrgans.map((organ) => ({ id: organ.organId, public_api: ["getHealth", "reportIssue"], dependencies: [] }));
   const registry = createOrganRegistry(records);
   const runtime = createOrganRuntime({ registry, linkManager: createLinkManager(registry) });
