@@ -39,6 +39,10 @@ jobs:
           python -m pip install --disable-pip-version-check playwright
           python -m playwright install --with-deps chromium
 
+      - name: Prepare candidate Pages assets
+        if: github.event_name == 'pull_request' || inputs.target == 'candidate'
+        run: python3 scripts/prepare_web_organ_runtime.py
+
       - name: Start candidate Pages server
         if: github.event_name == 'pull_request' || inputs.target == 'candidate'
         run: |
