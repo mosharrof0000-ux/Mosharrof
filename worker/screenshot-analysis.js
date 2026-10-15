@@ -1,5 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-13-chat-live-provider-status-v1";
+const WORKER_BUILD_ID="2026-10-16-chat-provider-resilience-v2";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -286,7 +286,7 @@ async function tts(request,env){
 }
 
 
-const CHAT_PROVIDER_TIMEOUT_MS=7000;
+const CHAT_PROVIDER_TIMEOUT_MS=12000;
 
 async function withChatProviderTimeout(promise,ms,label){
   let timer;
@@ -332,7 +332,7 @@ async function generateWithCloudflareChat(text,env,onStatus){
 }
 
 async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={},onStatus){
-  if(!apiKey)return {ok:false,provider,reason:"not_configured"};
+  if(!apiKey){if(onStatus)onStatus({stage:"skipped",provider,reason:"not_configured"});return {ok:false,provider,reason:"not_configured"};}
   if(onStatus)onStatus({stage:"trying",provider,model});
   try{
     const upstream=await fetch(endpoint,{
@@ -555,6 +555,7 @@ async function runChat(body,env,onStatus){
       }
       const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
       if(answer){
+        attempted.push({provider:"gemini",model,credential_slot:slot,reason:null});
         report({stage:"answered",provider:"gemini",model});
         return {status:200,data:{ok:true,provider:"gemini",model,text:answer,attempted}};
       }
