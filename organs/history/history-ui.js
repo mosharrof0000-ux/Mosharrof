@@ -1,11 +1,38 @@
 const SESSIONS_KEY = "mosharrof_chat_sessions_v1";
 const ACTIVE_SESSION_KEY = "mosharrof_active_session_v1";
 const STORE_KEY = "mosharrof_chat_v1";
+const DELETED_KEY = "mosharrof_deleted_chat_ids_v1";
+function deletedIds() {
+  try { const ids = JSON.parse(localStorage.getItem(DELETED_KEY) || "[]"); return new Set(Array.isArray(ids) ? ids : []); }
+  catch { return new Set(); }
+}
+function installDeleteGuard() {
+  if (Storage.prototype.__mosharrofHistoryDeleteGuard) return;
+  const originalSetItem = Storage.prototype.setItem;
+  Storage.prototype.setItem = function(key, value) {
+    if (key === SESSIONS_KEY) {
+      try {
+        const removed = deletedIds();
+        const sessions = JSON.parse(String(value));
+        if (Array.isArray(sessions)) value = JSON.stringify(sessions.filter((item) => !removed.has(item.id)));
+      } catch {}
+    }
+    return originalSetItem.call(this, key, value);
+  };
+  Storage.prototype.__mosharrofHistoryDeleteGuard = true;
+}
+function markDeleted(id) {
+  const removed = deletedIds(); removed.add(id);
+  try { localStorage.setItem(DELETED_KEY, JSON.stringify(Array.from(removed))); } catch {}
+  persist(readSessions().filter((item) => item.id !== id));
+}
+
 
 function readSessions() {
   try {
     const value = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]");
-    return Array.isArray(value) ? value.filter((item) => item && item.id && Array.isArray(item.messages)) : [];
+    const removed = deletedIds();
+    return Array.isArray(value) ? value.filter((item) => item && item.id && Array.isArray(item.messages) && !removed.has(item.id)) : [];
   } catch { return []; }
 }
 function activeId() { try { return localStorage.getItem(ACTIVE_SESSION_KEY); } catch { return null; } }
@@ -79,7 +106,7 @@ function showActionMenu(item, anchor, x, y, onRefresh) {
     { label: "ডিলিট করুন", danger: true, run() {
       if (!window.confirm("এই কথোপকথনটি স্থায়ীভাবে মুছে ফেলবেন?")) return;
       if (item.id === activeId()) document.getElementById("historyNewChat")?.click();
-      persist(readSessions().filter((entry) => entry.id !== item.id));
+      markDeleted(item.id);
       onRefresh(); notify("ইতিহাস মুছে ফেলা হয়েছে");
     }}
   ];
@@ -103,7 +130,7 @@ function showActionMenu(item, anchor, x, y, onRefresh) {
 export function initializeHistoryUi() {
   const drawer = document.getElementById("drawerLeft");
   if (!drawer || drawer.dataset.historyOrganReady === "true") return;
-  drawer.dataset.historyOrganReady = "true"; addStyles();
+  drawer.dataset.historyOrganReady = "true"; installDeleteGuard(); addStyles();
   const tools = drawer.querySelector(".history-tools"), list = drawer.querySelector("#historyList"), search = drawer.querySelector("#historySearch");
   if (!tools || !list || !search) return;
   const heading = tools.querySelector(".history-heading");
