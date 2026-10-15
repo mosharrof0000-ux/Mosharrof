@@ -45,6 +45,8 @@ def main() -> int:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page()
+        page.on("pageerror", lambda error: print(f"BROWSER PAGE ERROR: {error}"))
+        page.on("console", lambda message: print(f"BROWSER CONSOLE ERROR: {message.text}") if message.type == "error" else None)
         page.goto(BASE_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_function(
             "() => window.MosharrofEntitySystem && window.MosharrofEntitySystem.ready === true",
