@@ -1,5 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-16-image-fallback-v3";
+const WORKER_BUILD_ID="2026-10-16-img-fb-v4";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -83,9 +83,7 @@ function concatWavBase64(chunks){
 async function generateWithGeminiTTS(text,body,env,apiKey,model){
   const voice=String(body.gemini_voice||env.GEMINI_TTS_VOICE||"Kore");
   try{
-    // Gemini 3.8 TTS is served by the Interactions API, not the legacy
-    // models/:generateContent endpoint. Keep the legacy route for older TTS models.
-    if(/^gemini-3[.]8-flash(?:-lite)?-tts$/.test(model)){
+            if(/^gemini-3[.]8-flash(?:-lite)?-tts$/.test(model)){
       const r=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
         method:"POST",headers:{"content-type":"application/json","x-goog-api-key":apiKey},
         body:JSON.stringify({
@@ -136,17 +134,14 @@ async function generateWithGeminiTTSWithFailover(text,body,env){
   if(!keys.length)return {ok:false,provider:"gemini",reason:"not_configured"};
   const primary=String(env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts").trim();
   const configured=String(env.GEMINI_TTS_FALLBACK_MODELS||"").split(",").map(x=>x.trim()).filter(Boolean);
-  // Keep a documented Gemini 2.5 TTS fallback available unless explicitly listed already.
-  const models=[...new Set([primary,...configured,"gemini-2.5-flash-preview-tts"])];
+    const models=[...new Set([primary,...configured,"gemini-2.5-flash-preview-tts"])];
   const attempted=[];
   for(const model of models){
     for(const [credential,key] of keys){
       const result=await generateWithGeminiTTS(text,body,env,key,model);
       attempted.push({model,credential,ok:!!result.ok,status:result.status||null,reason:result.ok?null:String(result.reason||"failed").slice(0,240)});
       if(result.ok)return {...result,credential,failover_attempts:attempted.length-1};
-      // Quota/auth/model errors should not block trying the next configured route.
-      // Do not log or return the credential value itself.
-    }
+                }
   }
   const last=attempted[attempted.length-1];
   return {ok:false,provider:"gemini",reason:"all_gemini_tts_routes_failed",status:last?.status||null,attempted};
@@ -458,10 +453,14 @@ async function generateWithGemini(prompt,body,env){
 
 async function generateWithCloudflare(prompt,env){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
-  const models=[...new Set([String(env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell"),"@cf/bytedance/stable-diffusion-xl-lightning","@cf/lykon/dreamshaper-8-lcm"])];
-  let last=null;
-  for(const model of models){try{const result=await env.AI.run(model,{prompt}),imageData=String(result?.image||"");if(imageData)return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/jpeg",image_data:imageData};last={model,reason:"empty_image"};}catch(e){last={model,reason:String(e&&e.message||e)};}}
-  return {ok:false,provider:"cloudflare-workers-ai",model:last?.model||null,reason:last?.reason||"all_models_failed"};
+  const models=[env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell","@cf/bytedance/stable-diffusion-xl-lightning","@cf/lykon/dreamshaper-8-lcm"];
+  let model,reason="failed";
+  for(const m of models){model=m;try{
+    const result=await env.AI.run(model,{prompt}),raw=result instanceof Response?result.body:(result?.output??result);let imageData=String(result?.image||(typeof result?.output==="string"?result.output:""));
+    if(!imageData&&raw){const bytes=await new Response(raw).arrayBuffer(),view=new Uint8Array(bytes);let binary="";for(let i=0;i<view.length;i+=32768)binary+=String.fromCharCode(...view.subarray(i,i+32768));imageData=btoa(binary);}
+    if(imageData)return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:imageData.startsWith("iVBORw0KGgo")?"image/png":"image/jpeg",image_data:imageData};reason="empty";
+  }catch(e){reason=String(e?.message||e);}}
+  return {ok:false,provider:"cloudflare-workers-ai",model,reason};
 }
 async function generateImage(request,env){
   const body=await request.json();
