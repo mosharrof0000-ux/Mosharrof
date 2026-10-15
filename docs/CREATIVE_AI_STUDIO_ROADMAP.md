@@ -23,6 +23,15 @@
 - PR [#597 check summary](https://github.com/mosharrof0000-ux/Mosharrof/commit/0af849bddf7c651fd4f2f173b753d7d8798c7e19/check-runs) showed 15 check runs in total; the observed `Verify before promotion` check succeeded and the deploy job was skipped. This is not proof of a production deployment or a successful real video generation.
 - Existing documentation already describes permission gates and the autonomous system. Reuse those contracts instead of creating a second permission or scheduler system.
 
+## Design continuity contract — mandatory for every phase
+
+- **The existing MOSHARROF AI UI is the product shell.** Extend its current component hierarchy, spacing, typography, blue/violet/cyan palette, paired round controls, navigation, and responsive behavior; do not create a parallel app or a disconnected visual group.
+- Before touching UI, inspect the current implementation and identify the existing component/organ that owns the relevant surface. Add the feature inside that owner or an established child component, using existing shared tokens and controls.
+- Prefer small, reversible changes to the current layout. New video, image, template, memory, automation, and monitor experiences must open within the existing app shell and follow its navigation/action patterns.
+- Do not introduce a new design system, duplicate header/sidebar, standalone floating panel, unrelated color palette, heavy glass effects, or extra always-visible controls unless the user explicitly approves a design change.
+- Add visual regression checks at Android-sized and desktop viewports. Verify no layout overflow, no unexpected header/menu movement, and no changes to existing chat/Gemini behavior.
+- If the correct existing component or design token is unclear, stop and inspect first rather than inventing a new group.
+
 ## Phased implementation
 
 ### Phase 0 — Preserve and baseline (required before feature work)
