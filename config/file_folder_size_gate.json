@@ -1,0 +1,69 @@
+{
+  "name": "mosharrof-file-folder-size-gate",
+  "version": "1.1",
+  "purpose": "Prevent oversized files and folders from growing unnoticed while preserving stricter per-language architecture limits already specified by the mandatory organ-isolation policy.",
+  "source_extensions": [
+    ".py",
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".html",
+    ".css",
+    ".scss",
+    ".yml",
+    ".yaml",
+    ".json",
+    ".md",
+    ".toml",
+    ".sh"
+  ],
+  "excluded_path_parts": [
+    ".git",
+    "node_modules",
+    "vendor",
+    "dist",
+    "build",
+    "coverage",
+    "__pycache__",
+    ".venv"
+  ],
+  "excluded_file_names": [
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock"
+  ],
+  "limits": {
+    "max_file_bytes": 100000,
+    "max_file_lines": 600,
+    "max_folder_source_bytes": 1000000,
+    "max_folder_source_files": 80,
+    "legacy_oversize_growth_bytes": 0,
+    "legacy_oversize_growth_lines": 0,
+    "max_changed_file_growth_percent": 20
+  },
+  "line_limits_by_extension": {
+    ".js": 250,
+    ".mjs": 250,
+    ".cjs": 250,
+    ".jsx": 250,
+    ".ts": 250,
+    ".tsx": 250,
+    ".css": 350,
+    ".scss": 350,
+    ".html": 300,
+    ".json": 200
+  },
+  "gate_rules": {
+    "measure_entire_repository": true,
+    "enforce_changed_files": true,
+    "legacy_oversize_must_not_grow": true,
+    "folder_budget_is_recursive": true,
+    "fail_closed_when_base_missing": true,
+    "report_bytes_lines_and_folder_budget": true,
+    "honor_existing_organ_line_limits": true,
+    "do_not_auto_delete_or_auto_split_files": true
+  }
+}

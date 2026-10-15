@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -36,10 +37,12 @@ def test_provider_adapter_contract_stores_encrypted_secret_and_metadata(tmp_path
     path = tmp_path / "vault.db"
     vault = EncryptedSQLiteVault(path, encryption_key=KEY)
     secret = "provider-token-never-returned"
+    expiry = (datetime.now(timezone.utc) + timedelta(days=30)).replace(microsecond=0)
+    expires_at_value = expiry.isoformat().replace("+00:00", "Z")
     handle = vault.store_secret(
         name="staging-test",
         value=secret,
-        expires_at="2026-10-15T00:00:00Z",
+        expires_at=expires_at_value,
         metadata={"provider": "github", "scope": "repo:read"},
     )
     assert handle.startswith("vault://")
@@ -55,7 +58,7 @@ def test_provider_adapter_contract_stores_encrypted_secret_and_metadata(tmp_path
         ).fetchone()
     assert secret.encode() not in ciphertext
     assert name == "staging-test"
-    assert expires_at == "2026-10-15T00:00:00Z"
+    assert expires_at == expires_at_value
     assert '"provider":"github"' in metadata
 
 
