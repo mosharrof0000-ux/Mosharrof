@@ -223,8 +223,16 @@ jobs:
           set -euo pipefail
           HEALTH="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health"
           TTS="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts"
-          echo "Checking live TTS configuration..."
-          curl -fsS --connect-timeout 10 --max-time 20 "$HEALTH" > /tmp/tts-health.json
+          echo "Waiting for the newly deployed Worker version to propagate..."
+          for i in {1..12}; do
+            if curl -fsS --connect-timeout 10 --max-time 20 "$HEALTH" > /tmp/tts-health.json \
+              && grep -q '"worker_build":"2026-10-16-chat-resilience-v2"' /tmp/tts-health.json; then
+              echo "New Worker build is visible at the health endpoint."
+              break
+            fi
+            echo "New Worker build not visible yet (attempt $i/12); waiting 5s..."
+            sleep 5
+          done
           cat /tmp/tts-health.json
           grep -q '"worker_build":"2026-10-16-chat-resilience-v2"' /tmp/tts-health.json
           grep -q '"tts_endpoint":"/tts"' /tmp/tts-health.json
