@@ -26,9 +26,9 @@ const shapeRules = {
 const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan, ...extraUiOrgans];
 window.MosharrofEntitySystem = { registry: EntityRegistry, bus: EntityBus, version: "2.0-organ-runtime", ready: false };
 
-async installDrawerStateGuard();
+installDrawerStateGuard();
 
-function startOrganRuntime() {
+async function startOrganRuntime() {
   const response = await fetch(new URL("../runtime/organs.registry.json", import.meta.url), { cache: "no-store" });
   if (!response.ok) throw new Error("Organ manifest registry unavailable: HTTP " + response.status);
   const manifestData = await response.json();
