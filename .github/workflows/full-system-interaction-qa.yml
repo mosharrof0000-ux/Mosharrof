@@ -72,7 +72,7 @@ jobs:
         id: target
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" || "${{ inputs.target }}" == "candidate" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" || ("${{ github.event_name }}" == "push" && "${{ github.ref }}" != "refs/heads/main") || "${{ inputs.target }}" == "candidate" ]]; then
             echo "url=http://127.0.0.1:4173/" >> "$GITHUB_OUTPUT"
           else
             echo "url=https://mosharrof0000-ux.github.io/Mosharrof/" >> "$GITHUB_OUTPUT"
