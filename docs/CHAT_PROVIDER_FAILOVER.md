@@ -9,11 +9,11 @@ The chat Worker keeps the current frontend API contract (POST /chat with a JSON 
 
 ## Behavior
 
-- Each provider call has a 7-second timeout; Gemini and OpenAI-compatible calls are aborted on timeout, and Cloudflare Workers AI is bounded by a timeout race. HTTP quota/rate-limit, unsupported-model, upstream-server, empty-response, timeout, and network failures are recorded as a provider attempt and do not stop the remaining fallback chain.
-- A successful response includes provider, model, and a safe attempted list so the client/diagnostics can identify the provider that answered. The frontend can opt into `stream_status: true` to receive server-sent status events as each provider/model is attempted, fails, or answers; requests without this flag keep the original JSON response contract.
+- Each provider call has a 12-second timeout; Gemini and OpenAI-compatible calls are aborted on timeout, and Cloudflare Workers AI is bounded by a timeout race. HTTP quota/rate-limit, unsupported-model, upstream-server, empty-response, timeout, and network failures are recorded as a provider attempt and do not stop the remaining fallback chain.
+- A successful response includes provider, model, and a safe attempted list so the client/diagnostics can identify the provider that answered. Provider attempts now wait up to 12 seconds before timing out, and missing optional providers are explicitly reported as skipped rather than looking like a live provider failure. The frontend can opt into `stream_status: true` to receive server-sent status events as each provider/model is attempted, fails, or answers; requests without this flag keep the original JSON response contract.
 - GET /health reports the provider order and configured/not-configured booleans only. It never returns credential values.
 - Optional Groq/OpenRouter keys are read from GitHub Actions secrets and written to Cloudflare Worker secrets by the existing deployment workflow; they are never sent to the browser or committed to the repository.
-- Cloudflare Workers AI is the keyless fallback already wired into worker/wrangler.toml. Free usage has limits and model availability can change; failover improves resilience but cannot guarantee unlimited free capacity.
+- Cloudflare Workers AI is the keyless fallback already wired into worker/wrangler.toml. Free usage has limits and model availability can change; failover improves resilience but cannot guarantee unlimited free capacity or zero failures.
 - The worker deployment workflow validates the new build ID, chat provider order, and existing audio endpoints before marking deployment healthy.
 
 ## Optional setup
