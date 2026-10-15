@@ -146,7 +146,7 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
 
     def test_legacy_shell_replacement_is_blocked(self) -> None:
         shell = self.repo / "web" / "index.html"
-        shell.parent.mkdir(parents=True)
+        shell.parent.mkdir(parents=True, exist_ok=True)
         shell.write_text("<html>replacement</html>\n", encoding="utf-8")
         self.git("add", ".")
         self.git("commit", "-m", "attempt legacy shell replacement")
