@@ -143,24 +143,35 @@ async def main():
                 record(f"{label}_drawer_opens", False, repr(exc))
 
         # Composer expansion is safe: only a temporary draft in this browser context.
+        # Assert draft copy, cancel preservation, and explicit apply; never submit this draft.
         try:
             input_box = page.locator("#input")
-            await input_box.fill("MOSHARROF inspector temporary draft")
+            original_draft = "MOSHARROF inspector temporary draft"
+            await input_box.fill(original_draft)
             expand = page.locator("#composerExpandBtn")
             await expand.wait_for(state="visible", timeout=8000)
             await expand.click()
             editor = page.locator("#mosharrofExpandEditor")
             await editor.wait_for(state="visible", timeout=5000)
-            draft_text = await editor.input_value() if await editor.evaluate("(el) => 'value' in el") else await editor.inner_text()
-            record("composer_expand_opens", True, f"draft copied={ 'temporary draft' in draft_text }")
+            large_input = editor.locator("textarea")
+            copied_text = await large_input.input_value()
+            record("composer_expand_copies_draft", copied_text == original_draft,
+                   f"expected {len(original_draft)} characters; received {len(copied_text)}")
             await page.screenshot(path=str(out / "composer-expanded.png"), full_page=True)
-            cancel = page.locator("[data-expand-cancel]")
-            if await cancel.count() and await cancel.first.is_visible():
-                await cancel.first.click()
-                record("composer_expand_cancel", True, "cancelled without sending")
-            else:
-                await page.keyboard.press("Escape")
-                record("composer_expand_cancel", True, "closed with Escape")
+            await large_input.fill("MOSHARROF inspector cancelled edit")
+            cancel = editor.locator("[data-expand-cancel]")
+            await cancel.click()
+            await page.wait_for_timeout(100)
+            preserved = await input_box.input_value() == original_draft
+            record("composer_expand_cancel_preserves_draft", preserved,
+                   "cancel must close editor without applying edits")
+            await expand.click()
+            await editor.wait_for(state="visible", timeout=3000)
+            await large_input.fill("MOSHARROF inspector applied edit")
+            await editor.locator("[data-expand-apply]").click()
+            applied = await input_box.input_value() == "MOSHARROF inspector applied edit"
+            record("composer_expand_apply_updates_draft", applied,
+                   "apply must copy edited text back into the composer; draft remains unsent")
         except Exception as exc:
             record("composer_expand_flow", False, repr(exc))
 
