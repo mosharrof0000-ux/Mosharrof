@@ -28,6 +28,8 @@ checks = {
     "verification-gate": (ROOT / ".github" / "workflows" / "verification-gate.yml").exists(),
     "pages-deploy": (ROOT / ".github" / "workflows" / "deploy-pages.yml").exists(),
     "live-health-check": "health" in (ROOT / ".github" / "workflows" / "deploy-pages.yml").read_text(encoding="utf-8").lower(),
+    "file-folder-size-gate": (ROOT / "scripts" / "mosharrof_size_gate.py").exists() and (ROOT / "config" / "file_folder_size_gate.json").exists(),
+    "file-folder-size-gate-enforced": "mosharrof_size_gate.py" in (ROOT / ".github" / "workflows" / "verification-gate.yml").read_text(encoding="utf-8"),
 }
 bad = [name for name, ok in checks.items() if not ok]
 unknown = [name for name in cfg["components"] if name not in checks]
