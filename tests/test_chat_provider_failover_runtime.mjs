@@ -31,6 +31,42 @@ try {
   assert.equal(result.data.provider, "gemini");
   assert.match(result.data.text, /Gemini answer/);
 
+  // Credential rotation: a quota-limited first Gemini key must not block another key.
+  const seenKeys = [];
+  globalThis.fetch = async (url, options) => {
+    if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
+    const key = options.headers["x-goog-api-key"];
+    seenKeys.push(key);
+    return key === "project2"
+      ? response({ candidates: [{ content: { parts: [{ text: "Second Gemini key answer" }] } }] })
+      : geminiQuota();
+  };
+  result = await ask({
+    GEMINI_API_KEY: "primary",
+    GEMINI_API_KEY_2: "project2",
+    GEMINI_API_KEY_3: "project3",
+    GEMINI_API_KEY_4: "project4",
+    GEMINI_API_KEY_5: "project5"
+  });
+  assert.equal(result.status, 200);
+  assert.equal(result.data.provider, "gemini");
+  assert.match(result.data.text, /Second Gemini key answer/);
+  assert.deepEqual(seenKeys.slice(0, 2), ["primary", "project2"]);
+
+  // Model rotation: an unsupported primary model should advance to the next Gemini model.
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (!u.includes("generativelanguage.googleapis.com")) return response({});
+    if (u.includes("gemini-3.8-flash")) return response({ error: { message: "model not found" } }, 404);
+    if (u.includes("gemini-3.7-flash")) return response({ candidates: [{ content: { parts: [{ text: "Fallback Gemini model answer" }] } }] });
+    return geminiQuota();
+  };
+  result = await ask({ GEMINI_API_KEY: "test-key" });
+  assert.equal(result.status, 200);
+  assert.equal(result.data.provider, "gemini");
+  assert.equal(result.data.model, "gemini-3.7-flash");
+  assert.match(result.data.text, /Fallback Gemini model answer/);
+
   // Exhausted Gemini must fall back to the keyless Workers AI binding.
   globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com") ? geminiQuota() : response({});
   result = await ask({
