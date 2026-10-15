@@ -1,5 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-16-chat-resilience-v2";
+const WORKER_BUILD_ID="2026-10-16-image-fallback-v3";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -456,19 +456,12 @@ async function generateWithGemini(prompt,body,env){
   return {ok:false,provider:"gemini",reason:last?.data?.error?.message||last?.error||"no_image_returned",status:last?.upstream?.status||null};
 }
 
-async function generateWithCloudflare(prompt,env,spec){
+async function generateWithCloudflare(prompt,env){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
-  try{
-    const model=env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell";
-    // Keep the user's prompt intact. Exact output ratio is enforced by the frontend
-    // post-processor; adding generic composition text caused false NSFW rejections.
-    const result=await env.AI.run(model,{prompt});
-    const imageData=String(result?.image||"");
-    if(!imageData)return {ok:false,provider:"cloudflare-workers-ai",model,reason:"empty_image"};
-    return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/jpeg",image_data:imageData};
-  }catch(e){
-    return {ok:false,provider:"cloudflare-workers-ai",reason:String(e&&e.message||e)};
-  }
+  const models=[...new Set([String(env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell"),"@cf/bytedance/stable-diffusion-xl-lightning","@cf/lykon/dreamshaper-8-lcm"])];
+  let last=null;
+  for(const model of models){try{const result=await env.AI.run(model,{prompt}),imageData=String(result?.image||"");if(imageData)return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:"image/jpeg",image_data:imageData};last={model,reason:"empty_image"};}catch(e){last={model,reason:String(e&&e.message||e)};}}
+  return {ok:false,provider:"cloudflare-workers-ai",model:last?.model||null,reason:last?.reason||"all_models_failed"};
 }
 async function generateImage(request,env){
   const body=await request.json();
