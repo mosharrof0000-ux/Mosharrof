@@ -171,6 +171,64 @@ async def main():
         except Exception as exc:
             record("organ_module_controls_discovered", False, repr(exc))
 
+        # Exercise history/navigation actions only in this fresh, disposable browser context.
+        # These changes affect isolated localStorage, never the user's personal browser.
+        try:
+            await page.locator("#rightBtn").click(timeout=3000)
+            await page.locator("#historyBtn").click(timeout=3000)
+            history_open = await page.locator("#drawerLeft").evaluate("(el) => el.classList.contains('open')")
+            record("history_button_opens_history_drawer", history_open)
+            search = page.locator("#historySearch")
+            await search.fill("inspector-no-match-expected")
+            no_match = await page.locator("#historyList").inner_text()
+            record("history_search_updates_results",
+                   "কোনো চ্যাট পাওয়া যায়নি" in no_match or "চ্যাট পাওয়া যায়নি" in no_match,
+                   "search query filters the isolated history list")
+            await search.fill("")
+            await page.locator("#historyNewChat").click(timeout=3000)
+            new_chat_visible = await page.locator("#messages").get_by_text(
+                "নতুন কথোপকথন।", exact=True
+            ).is_visible()
+            record("history_new_chat_starts_session", new_chat_visible)
+            await page.locator("#rightBtn").click(timeout=3000)
+            await page.locator("#clearMsg").click(timeout=3000)
+            cleared_visible = await page.locator("#messages").get_by_text(
+                "মেসেজ মুছে ফেলা হয়েছে।", exact=True
+            ).is_visible()
+            record("clear_messages_action_works_in_isolated_context", cleared_visible)
+            # Restore a clean temporary session before continuing tests.
+            await page.locator("#rightBtn").click(timeout=3000)
+            await page.locator("#newChat").click(timeout=3000)
+        except Exception as exc:
+            record("history_and_safe_local_actions", False, repr(exc))
+
+        # Check setting controls without invoking speech/microphone or provider services.
+        try:
+            provider = page.locator("#ttsProviderSelect")
+            voice = page.locator("#ttsVoiceSelect")
+            language = page.locator("#sttLanguageSelect")
+            provider_count = await provider.locator("option").count()
+            voice_count = await voice.locator("option").count()
+            language_count = await language.locator("option").count()
+            record("audio_setting_options_present",
+                   provider_count >= 6 and voice_count >= 2 and language_count >= 3,
+                   f"TTS providers={provider_count}; voices={voice_count}; STT languages={language_count}")
+            original_provider = await provider.input_value()
+            await provider.select_option("browser")
+            await provider.select_option(original_provider)
+            original_voice = await voice.input_value()
+            alternate_voice = "bn-BD-NabanitaNeural" if original_voice != "bn-BD-NabanitaNeural" else "bn-BD-PradeepNeural"
+            await voice.select_option(alternate_voice)
+            await voice.select_option(original_voice)
+            original_language = await language.input_value()
+            alternate_language = "en-US" if original_language != "en-US" else "bn-BD"
+            await language.select_option(alternate_language)
+            await language.select_option(original_language)
+            record("audio_preferences_change_and_restore", True,
+                   "provider, voice and STT language changed and restored; no audio/API call")
+        except Exception as exc:
+            record("audio_setting_options_present", False, repr(exc))
+
         # Return the shell to its neutral state before testing the composer/chat.
         await page.evaluate("""() => {
           for (const selector of ['#drawerLeft', '#drawerRight']) {
