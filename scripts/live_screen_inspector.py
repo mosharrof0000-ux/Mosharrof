@@ -52,7 +52,7 @@ async def main():
             permissions=[],
         )
         page = await context.new_page()
-        page.set_default_timeout(args.timeout_ms)
+        page.set_default_timeout(min(args.timeout_ms, 10000))
         page.on("pageerror", lambda exc: report["errors"].append({"type": "pageerror", "detail": str(exc)}))
 
         # Never send test prompts to a real provider. Intercept the chat Worker in-browser.
@@ -93,7 +93,7 @@ async def main():
             ("#rightBtn", "#drawerRight", "right"),
         ]:
             try:
-                await page.locator(trigger).click()
+                await page.locator(trigger).click(timeout=4000)
                 await page.wait_for_timeout(350)
                 drawer_loc = page.locator(drawer)
                 # The shell opens drawers by class; aria-hidden is not consistently
@@ -125,9 +125,12 @@ async def main():
                 # Close via the app's normal scrim instead of activating arbitrary menu actions.
                 scrim = page.locator("#scrim")
                 if await scrim.count() and await scrim.is_visible():
-                    await scrim.click(position={"x": 4, "y": 4}, force=True)
+                    try:
+                        await scrim.click(position={"x": 100, "y": 100}, force=True, timeout=1500)
+                    except Exception:
+                        await page.evaluate("document.querySelector('#scrim')?.click()")
                 else:
-                    await page.keyboard.press("Escape")
+                    await page.evaluate("document.querySelector('#scrim')?.click()")
                 await page.wait_for_timeout(250)
             except Exception as exc:
                 record(f"{label}_drawer_opens", False, repr(exc))
