@@ -5,7 +5,9 @@ on:
     - cron: "37 */6 * * *"
   pull_request:
     branches: [main]
-  push:
+  workflow_run:
+    workflows: ["Deploy Mosharrof Pages"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
     inputs:
