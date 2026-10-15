@@ -16,6 +16,8 @@ jobs:
         run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs
       - name: Test user preference intelligence
         run: node --experimental-default-type=module --test organs/user-preference-intelligence/tests/preference-intelligence.test.mjs
+      - name: Test continuous learning orchestrator
+        run: node --experimental-default-type=module --test organs/continuous-learning-orchestrator/tests/continuous-learning.test.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
