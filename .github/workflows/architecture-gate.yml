@@ -39,6 +39,8 @@ jobs:
           node-version: "22"
       - name: Test runtime registry and link manager
         run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs
+      - name: Test per-organ memory, permission, health, and audit contracts
+        run: node --experimental-default-type=module --test tests/architecture/organ-runtime-services.test.mjs
       - name: Fetch target branch
         run: git fetch --no-tags origin main:refs/remotes/origin/main
       - name: Enforce organ isolation, link caps, and file-size limits
