@@ -24,7 +24,7 @@ def main() -> int:
         "core/organ-runtime/index.js": "web/runtime/core/organ-runtime/index.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
-        "core/composer-enhancements.js": "web/core/composer-enhancements.js",
+        "core/composer-enhancements.js": "web/composer-enhancements.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
@@ -32,6 +32,11 @@ def main() -> int:
             raise SystemExit(f"ORGAN ASSET PREP: missing {source}")
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
+    # Preserve the organ-relative import path and the live-page fallback path.
+    composer_source = ROOT / "core/composer-enhancements.js"
+    composer_runtime = ROOT / "web/core/composer-enhancements.js"
+    composer_runtime.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(composer_source, composer_runtime)
     bootstrap = (ROOT / "web/entities/organ-bootstrap.js").read_text(encoding="utf-8")
     extra_bootstrap = (ROOT / "web/entities/ui-organ-modules.js").read_text(encoding="utf-8")
     import_contract = bootstrap + "\n" + extra_bootstrap

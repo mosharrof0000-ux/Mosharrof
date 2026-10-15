@@ -8,6 +8,7 @@ import urllib.request
 from urllib.parse import urljoin
 
 from playwright.sync_api import sync_playwright
+from composer_expansion_browser_check import check_composer_expansion
 
 BASE_URL = os.environ["PAGE_URL"].rstrip("/") + "/"
 REQUIRED_ORGANS = {
@@ -72,6 +73,7 @@ def main() -> int:
             assert control.first.get_attribute("data-organ-id") == organ_id, (
                 f"{module_id} did not connect to organ {organ_id}"
             )
+        check_composer_expansion(page)
         browser.close()
 
     print("LIVE ORGAN RUNTIME BROWSER HEALTH CHECK: PASS")
