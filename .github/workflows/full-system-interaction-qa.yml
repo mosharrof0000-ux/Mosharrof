@@ -28,6 +28,9 @@ concurrency:
 
 jobs:
   interaction-qa:
+    # A completed deployment can be a failure or cancellation; inspect live only
+    # after a successful Pages deployment. PR, schedule and manual runs remain enabled.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

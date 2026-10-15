@@ -332,6 +332,12 @@ async def main():
         await context.close()
         await browser.close()
 
+    # Uncaught browser exceptions must fail QA; previously they were only logged,
+    # allowing a green check despite runtime JavaScript errors.
+    page_errors = [e for e in report["errors"] if e.get("type") == "pageerror"]
+    record("browser_uncaught_exceptions_absent", len(page_errors) == 0,
+           f"{len(page_errors)} uncaught browser exception(s)")
+
     report["summary"] = {
         "passed": sum(1 for c in report["checks"] if c["passed"]),
         "failed": sum(1 for c in report["checks"] if not c["passed"]),
