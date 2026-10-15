@@ -24,6 +24,9 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
         self.git("config", "user.email", "architecture-gate-test@example.invalid")
         self.git("config", "user.name", "Architecture Gate Test")
         (self.repo / "README.md").write_text("fixture\n", encoding="utf-8")
+        shell = self.repo / "web" / "index.html"
+        shell.parent.mkdir(parents=True)
+        shell.write_text("<!doctype html>\n<html>\n<body>\n</body>\n</html>\n", encoding="utf-8")
         self.git("add", ".")
         self.git("commit", "-m", "baseline")
         self.base = self.git("rev-parse", "HEAD")
@@ -128,6 +131,18 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
         result = self.run_gate()
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("lines exceeds the 200-line limit", result.stdout)
+
+    def test_single_organ_bootstrap_script_addition_is_allowed(self) -> None:
+        self.add_organ("export {};\n")
+        shell = self.repo / "web" / "index.html"
+        content = shell.read_text(encoding="utf-8")
+        tag = '<script type="module" src="./entities/bootstrap.js"></script>'
+        shell.write_text(content.replace("</body>", tag + "\n</body>"), encoding="utf-8")
+        self.git("add", "web/index.html")
+        self.git("commit", "-m", "add the single approved organ bootstrap entrypoint")
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn('"status": "PASS"', result.stdout)
 
     def test_legacy_shell_replacement_is_blocked(self) -> None:
         shell = self.repo / "web" / "index.html"
