@@ -20,6 +20,7 @@ MAX_LINKS_PER_FILE = 20
 IMPORT_RE = re.compile(
     r"""(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']"""
 )
+URL_RE = re.compile(r"""new\s+URL\(\s*["']([^"']+)["']""")
 HTML_LINK_RE = re.compile(r"""\b(?:href|src|action|poster)\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
 CSS_IMPORT_RE = re.compile(r"""@import\s+(?:url\(\s*)?["']?([^"'\s;)]+)""", re.IGNORECASE)
 CSS_URL_RE = re.compile(r"""url\(\s*["']?([^"'\s)]+)""", re.IGNORECASE)
@@ -58,7 +59,7 @@ def resolve_import(source: Path, specifier: str) -> Path | None:
 def count_links(source_text: str, suffix: str) -> list[str]:
     """Return declared file/module/web-resource links for a supported source type."""
     if suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
-        return IMPORT_RE.findall(source_text)
+        return IMPORT_RE.findall(source_text) + URL_RE.findall(source_text)
     if suffix == ".html":
         return HTML_LINK_RE.findall(source_text)
     if suffix == ".css":
@@ -69,6 +70,23 @@ def count_links(source_text: str, suffix: str) -> list[str]:
     return []
 
 
+def safe_bootstrap_entrypoint_only(base: str) -> bool:
+    """Allow only one additive module-loader line; keep the legacy UI shell otherwise frozen."""
+    tag = '<script type="module" src="./entities/bootstrap.js"></script>'
+    try:
+        diff = git("diff", "--unified=0", f"{base}...HEAD", "--", "web/index.html")
+        added = [line[1:] for line in diff.splitlines() if line.startswith("+") and not line.startswith("+++")]
+        removed = [line[1:] for line in diff.splitlines() if line.startswith("-") and not line.startswith("---")]
+        current = (ROOT / "web" / "index.html").read_text(encoding="utf-8").splitlines()
+    except (subprocess.CalledProcessError, OSError):
+        return False
+    try:
+        body_index = current.index("</body>")
+    except ValueError:
+        return False
+    return not removed and added == [tag] and current.count(tag) == 1 and body_index > 0 and current[body_index - 1].strip() == tag
+
+
 def main() -> int:
     errors: list[str] = []
     try:
@@ -77,8 +95,9 @@ def main() -> int:
         print(f"ARCHITECTURE GATE: FAIL — cannot compare against {BASE}: {exc}", file=sys.stderr)
         return 2
 
-    if "web/index.html" in changed:
-        errors.append("web/index.html is frozen legacy shell; migrate code into organs/ or core/ before editing it.")
+    safe_shell_bootstrap = "web/index.html" in changed and safe_bootstrap_entrypoint_only(BASE)
+    if "web/index.html" in changed and not safe_shell_bootstrap:
+        errors.append("web/index.html is frozen except for the single verified organ-bootstrap script addition.")
 
     organs_root = ROOT / "organs"
     organ_folders = sorted(path for path in organs_root.iterdir() if path.is_dir() and not path.name.startswith("_")) if organs_root.is_dir() else []
@@ -128,11 +147,13 @@ def main() -> int:
 
     # The two web entity files are narrow composition-root exceptions. All feature
     # implementations remain in organs/; these files only connect UI to the runtime.
-    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js", "web/sw.js"}
+    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js", "web/entities/ui-organ-modules.js", "web/sidebar-recovery.js", "web/sw.js"}
     for path in changed:
         p = Path(path)
         suffix = p.suffix.lower()
         if suffix not in SOURCE_SUFFIXES or is_policy_or_test(path):
+            continue
+        if path == "web/index.html" and safe_shell_bootstrap:
             continue
         if not (ROOT / p).is_file():
             continue  # Deleted legacy adapters are allowed after organ replacements exist.

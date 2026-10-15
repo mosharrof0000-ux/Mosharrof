@@ -22,6 +22,7 @@ def main() -> int:
         "core/organ-registry/index.js": "web/runtime/core/organ-registry/index.js",
         "core/link-manager/index.js": "web/runtime/core/link-manager/index.js",
         "core/organ-runtime/index.js": "web/runtime/core/organ-runtime/index.js",
+        "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
@@ -30,6 +31,8 @@ def main() -> int:
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
     bootstrap = (ROOT / "web/entities/organ-bootstrap.js").read_text(encoding="utf-8")
+    extra_bootstrap = (ROOT / "web/entities/ui-organ-modules.js").read_text(encoding="utf-8")
+    import_contract = bootstrap + "\n" + extra_bootstrap
     ui_ids = []
     for folder in sorted((ROOT / "organs").iterdir()):
         manifest_path = folder / "organ.json"
@@ -39,9 +42,9 @@ def main() -> int:
         if not {"getHealth", "reportIssue"}.issubset(set(manifest.get("public_api", []))):
             continue
         organ_id, source = manifest["id"], folder / "index.js"
-        if not source.is_file() or f'"../organs/{organ_id}/index.js"' not in bootstrap:
+        if not source.is_file() or f'"../organs/{organ_id}/index.js"' not in import_contract:
             raise SystemExit(f"ORGAN ASSET PREP: UI organ {organ_id} is not wired in bootstrap")
-        content = source.read_text(encoding="utf-8").replace("../../web/entities/", "../../entities/")
+        content = source.read_text(encoding="utf-8").replace("../../web/entities/", "../../entities/").replace("../../core/ui-module-adapter/", "../../runtime/core/ui-module-adapter/")
         if "../../web/entities/" in content:
             raise SystemExit(f"ORGAN ASSET PREP: invalid import in {source}")
         dst = ROOT / "web/organs" / organ_id / "index.js"

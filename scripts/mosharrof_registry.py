@@ -106,7 +106,7 @@ def main() -> int:
         output = args.output or (args.root / "web" / "runtime" / "organs.registry.json")
         output = output if output.is_absolute() else (args.root / output)
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(registry, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        output.write_text(json.dumps(registry, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
         print(f"ORGAN REGISTRY: PASS — generated {output}")
     else:
         print(f"ORGAN REGISTRY: PASS — validated {len(registry['organs'])} organ(s)")

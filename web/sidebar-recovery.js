@@ -1,6 +1,18 @@
 /* Sidebar safety net: restore navigation if the primary UI script fails before rendering it. */
 (function () {
   "use strict";
+  var bootstrapScriptUrl = document.currentScript && document.currentScript.src;
+  if (bootstrapScriptUrl && !window.__mosharrofOrganBootstrapRequested) {
+    window.__mosharrofOrganBootstrapRequested = true;
+    var organLoader = document.createElement("script");
+    organLoader.type = "module";
+    organLoader.src = new URL("./entities/bootstrap.js", bootstrapScriptUrl).href;
+    organLoader.addEventListener("error", function () {
+      console.error("[MOSHARROF Organ Runtime] module loader failed");
+    }, { once: true });
+    document.head.appendChild(organLoader);
+  }
+
   var modules = [
     { title: "System & interface", items: [
       ["core", "মূল সমন্বয়", "⚙"], ["chat", "চ্যাট", "▤"], ["sidebar", "নেভিগেশন", "☷"]

@@ -1,0 +1,10 @@
+{
+  "id": "voice",
+  "name": "Voice",
+  "description": "Voice interaction and processing status",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

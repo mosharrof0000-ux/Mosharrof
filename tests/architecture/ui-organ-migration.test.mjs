@@ -15,13 +15,19 @@ import * as QuranOrgan from "../../organs/quran/index.js";
 import * as ResearchOrgan from "../../organs/research/index.js";
 import * as AiOrgan from "../../organs/ai/index.js";
 import * as BranchOrgan from "../../organs/branch/index.js";
+import * as CoreOrgan from "../../organs/core/index.js";
+import * as SidebarOrgan from "../../organs/sidebar/index.js";
+import * as VoiceOrgan from "../../organs/voice/index.js";
+import * as StorageOrgan from "../../organs/storage/index.js";
+import * as ToolFactoryOrgan from "../../organs/tool-factory/index.js";
+import * as QuranResearchOrgan from "../../organs/quran-research/index.js";
 
-const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan];
+const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan, CoreOrgan, SidebarOrgan, VoiceOrgan, StorageOrgan, ToolFactoryOrgan, QuranResearchOrgan];
 test("each UI entity has a distinct manifest and runtime namespace", async () => {
   const artifact = JSON.parse(await readFile(new URL("../../web/runtime/organs.registry.json", import.meta.url), "utf8"));
   const registry = createOrganRegistry(artifact.organs);
   const runtime = createOrganRuntime({ registry, linkManager: createLinkManager(registry) });
-  assert.equal(uiOrgans.length, 11);
+  assert.equal(uiOrgans.length, 17);
   assert.equal(new Set(uiOrgans.map((organ) => organ.organId)).size, uiOrgans.length);
   for (const organ of uiOrgans) {
     const manifest = registry.get(organ.organId);
@@ -35,6 +41,7 @@ test("each UI entity has a distinct manifest and runtime namespace", async () =>
     assert.equal(runtime.health(organ.organId).status, "ready");
   }
 });
+
 test("one UI organ issue does not degrade another organ", () => {
   const records = uiOrgans.map((organ) => ({ id: organ.organId, public_api: ["getHealth", "reportIssue"], dependencies: [] }));
   const registry = createOrganRegistry(records);

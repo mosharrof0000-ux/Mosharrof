@@ -1,0 +1,10 @@
+{
+  "id": "core",
+  "name": "Core",
+  "description": "System coordination and governance",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

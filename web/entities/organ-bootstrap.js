@@ -14,6 +14,7 @@ import * as QuranOrgan from "../organs/quran/index.js";
 import * as ResearchOrgan from "../organs/research/index.js";
 import * as AiOrgan from "../organs/ai/index.js";
 import * as BranchOrgan from "../organs/branch/index.js";
+import { extraUiOrgans } from "./ui-organ-modules.js";
 
 const shapeRules = {
   home: "14px 10px 16px 11px", chat: "10px 16px 12px 16px", history: "50%",
@@ -21,7 +22,7 @@ const shapeRules = {
   notes: "9px 15px 9px 15px", settings: "50%", quran: "12px 18px 9px 17px",
   research: "50% 12px 18px 12px", ai: "50%", branch: "18px 8px 18px 8px"
 };
-const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan];
+const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan, ...extraUiOrgans];
 window.MosharrofEntitySystem = { registry: EntityRegistry, bus: EntityBus, version: "2.0-organ-runtime", ready: false };
 
 async function startOrganRuntime() {
@@ -47,6 +48,17 @@ async function startOrganRuntime() {
       console.error("[MOSHARROF Entity Bootstrap]", id, error);
       if (registry.has(id)) runtime.reportIssue(id, "entity mount failed");
     }
+  });
+  // The current shell uses data-module. Connect visible controls without replacing their DOM.
+  const moduleToOrgan = Object.freeze({
+    core: "core", chat: "chat", sidebar: "sidebar", voice: "voice",
+    storage: "storage", tool_factory: "tool-factory", quran_research: "quran-research"
+  });
+  document.querySelectorAll("[data-module]").forEach((element) => {
+    const id = moduleToOrgan[element.dataset.module];
+    if (!id || !registry.has(id)) return;
+    element.dataset.organId = id;
+    element.addEventListener("click", () => runtime.reportSuccess(id, "UI module activated"));
   });
   EntityBus.on("entity:activated", ({ entity }) => {
     entity.el.dataset.state = "active";
