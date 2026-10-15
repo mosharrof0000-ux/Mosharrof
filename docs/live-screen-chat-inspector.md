@@ -2,12 +2,12 @@
 
 ## What it does now
 
-This first, production-safe stage runs a real Chromium browser at a mobile viewport against either the candidate Pages build or the published Pages URL. It checks page loading, the left/right navigation drawers, the composer expand/cancel path, inventories visible interactive controls, and sends one test prompt through the UI while intercepting the chat Worker with a mock response. The mock proves the UI request/response path without contacting Gemini or another provider. Screenshots and a JSON report are saved as a GitHub Actions artifact.
+This first, production-safe stage runs a real Chromium browser at a mobile viewport against either the candidate Pages build or the published Pages URL. It checks page loading, the left/right navigation drawers, each declared organ module, isolated history/search/new-chat/clear actions, audio preference change-and-restore, the composer expand/cancel/apply path, inventories visible interactive controls, and sends one synthetic prompt through the UI while intercepting the chat Worker with a mock response. The mock proves the UI request/response path without contacting Gemini or another provider. Screenshots and a JSON report are saved as a GitHub Actions artifact.
 
 ## Safety boundary
 
 - Uses a synthetic chat prompt only with the chat Worker intercepted in the browser; no real provider API call is made.
-- Never clicks delete/clear/reset/account/security actions.
+- Never performs destructive actions against the user’s real browser data or remote accounts. The clear-messages button is exercised only in a fresh, disposable Playwright browser context with isolated localStorage.
 - Uses a fresh browser context; it does not access your phone's personal browser storage.
 - Does not capture or stream the user's physical Android screen.
 - Does not change source code or deploy anything. It reports findings only.
