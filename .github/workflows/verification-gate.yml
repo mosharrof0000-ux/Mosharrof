@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
 
       - name: Verify Pages entrypoint
         shell: bash
@@ -35,6 +36,11 @@ jobs:
           grep -q 'class="composer"' web/index.html
           grep -q 'class="drawer left"' web/index.html
           grep -q 'class="drawer right"' web/index.html
+
+      - name: Enforce file and folder size budgets
+        env:
+          BASE_REF: origin/${{ github.event.pull_request.base.ref }}
+        run: python3 scripts/mosharrof_size_gate.py --base "$BASE_REF"
 
       - name: Run project tests
         run: |
