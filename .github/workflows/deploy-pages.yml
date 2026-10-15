@@ -61,7 +61,7 @@ jobs:
           def read(path): return urllib.request.urlopen(base+path,timeout=30).read().decode("utf-8","ignore")
           assert "MOSHARROF AI" in read("")
           ids={x["id"] for x in json.loads(read("runtime/organs.registry.json"))["organs"]}
-          assert {"chat","notes"}.issubset(ids)
-          for p in ("entities/organ-bootstrap.js","runtime/core/organ-runtime/index.js","organs/chat/index.js"): read(p)
+          assert {"core","chat","sidebar","voice","storage","tool-factory","quran-research","notes"}.issubset(ids)
+          for p in ("entities/organ-bootstrap.js","entities/ui-organ-modules.js","runtime/core/organ-runtime/index.js","runtime/core/ui-module-adapter/index.js","organs/chat/index.js","organs/core/index.js","organs/voice/index.js","organs/quran-research/index.js"): read(p)
           print("LIVE ORGAN RUNTIME HEALTH CHECK: PASS")
           PY
