@@ -79,7 +79,11 @@ def safe_bootstrap_entrypoint_only(base: str) -> bool:
         current = (ROOT / "web" / "index.html").read_text(encoding="utf-8").splitlines()
     except (subprocess.CalledProcessError, OSError):
         return False
-    return not removed and added == [tag] and current.count(tag) == 1 and current[-2].strip() == tag
+    try:
+        body_index = current.index("</body>")
+    except ValueError:
+        return False
+    return not removed and added == [tag] and current.count(tag) == 1 and body_index > 0 and current[body_index - 1].strip() == tag
 
 
 def main() -> int:
