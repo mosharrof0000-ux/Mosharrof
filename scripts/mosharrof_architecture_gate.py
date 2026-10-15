@@ -20,6 +20,7 @@ MAX_LINKS_PER_FILE = 20
 IMPORT_RE = re.compile(
     r"""(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']"""
 )
+URL_RE = re.compile(r"""new\s+URL\(\s*["']([^"']+)["']""")
 HTML_LINK_RE = re.compile(r"""\b(?:href|src|action|poster)\s*=\s*["']([^"']+)["']""", re.IGNORECASE)
 CSS_IMPORT_RE = re.compile(r"""@import\s+(?:url\(\s*)?["']?([^"'\s;)]+)""", re.IGNORECASE)
 CSS_URL_RE = re.compile(r"""url\(\s*["']?([^"'\s)]+)""", re.IGNORECASE)
