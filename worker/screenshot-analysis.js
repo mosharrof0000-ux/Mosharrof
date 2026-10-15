@@ -1,5 +1,5 @@
 const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-16-img-fb-v4";
+const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
