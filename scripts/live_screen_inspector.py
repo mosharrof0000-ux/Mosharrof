@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""Permission-safe browser inspection for MOSHARROF AI.
+
+This test inventories visible controls, exercises safe navigation/composer flows,
+and writes screenshots + a JSON report. It deliberately never submits a chat,
+deletes history, changes account settings, or calls provider APIs.
+"""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from playwright.async_api import async_playwright
+
+p = argparse.ArgumentParser()
+p.add_argument("--url", required=True)
+p.add_argument("--output-dir", default="artifacts/live-screen-inspector")
+p.add_argument("--timeout-ms", type=int, default=45000)
+args = p.parse_args()
+out = Path(args.output_dir)
+out.mkdir(parents=True, exist_ok=True)
+report = {
+    "agent": "MOSHARROF Live Screen & Chat Inspector",
+    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    "target_url": args.url,
+    "policy": {
+        "chat_submission": "not performed",
+        "destructive_actions": "not performed",
+        "provider_api_calls": "not intentionally triggered",
+        "scope": "visible UI inventory and safe navigation smoke tests",
+    },
+    "checks": [],
+    "controls": [],
+    "errors": [],
+}
+
+def record(name, passed, detail=""):
+    report["checks"].append({"name": name, "passed": bool(passed), "detail": str(detail)})
+    if not passed:
+        report["errors"].append({"check": name, "detail": str(detail)})
+
+async def main():
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch()
+        context = await browser.new_context(
+            viewport={"width": 412, "height": 915},
+            device_scale_factor=1,
+            is_mobile=True,
+            has_touch=True,
+            permissions=[],
+        )
+        page = await context.new_page()
+        page.set_default_timeout(args.timeout_ms)
+        page.on("pageerror", lambda exc: report["errors"].append({"type": "pageerror", "detail": str(exc)}))
+        response = await page.goto(args.url, wait_until="domcontentloaded", timeout=args.timeout_ms)
+        await page.wait_for_timeout(1800)
+        record("page_loaded", bool(response and response.status < 400),
+               f"HTTP {response.status if response else 'no response'}")
+        record("document_title", bool(await page.title()), await page.title())
+        await page.screenshot(path=str(out / "initial-mobile.png"), full_page=True)
+
+        for selector, name in [("#leftBtn", "left menu trigger"), ("#rightBtn", "right menu trigger"),
+                               ("#input", "chat input"), ("#sendBtn", "send button")]:
+            loc = page.locator(selector).first
+            exists = await loc.count() > 0
+            visible = exists and await loc.is_visible()
+            record(f"control_{name.replace(' ', '_')}", visible, f"selector={selector}")
+        
+        # Exercise the two primary navigation drawers and record all visible menu controls.
+        for trigger, drawer, label in [
+            ("#leftBtn", "#drawerLeft", "left"),
+            ("#rightBtn", "#drawerRight", "right"),
+        ]:
+            try:
+                await page.locator(trigger).click()
+                await page.wait_for_timeout(350)
+                drawer_loc = page.locator(drawer)
+                is_open = await drawer_loc.evaluate(
+                    "(el) => el.classList.contains('open') && el.getAttribute('aria-hidden') !== 'true'"
+                )
+                record(f"{label}_drawer_opens", is_open, f"selector={drawer}")
+                await page.screenshot(path=str(out / f"{label}-drawer.png"), full_page=True)
+                if is_open:
+                    controls = await drawer_loc.locator("button, a, input, select, textarea, [role=button]").evaluate_all(
+                        """els => els.map((el, index) => {
+                          const r = el.getBoundingClientRect();
+                          return {
+                            menu: %s, index, tag: el.tagName.toLowerCase(),
+                            id: el.id || null, role: el.getAttribute('role'),
+                            label: (el.getAttribute('aria-label') || el.innerText || el.getAttribute('title') || '').trim().slice(0, 140),
+                            disabled: !!el.disabled, visible: !!(r.width && r.height),
+                            width: Math.round(r.width), height: Math.round(r.height)
+                          };
+                        })""" % json.dumps(label)
+                    )
+                    report["controls"].extend(controls)
+                    # Check touch-target sizes for enabled visible menu buttons; report, don't fail legacy UI.
+                    targets = [c for c in controls if c["tag"] == "button" and c["visible"] and not c["disabled"]]
+                    small = [c for c in targets if c["width"] < 40 or c["height"] < 40]
+                    record(f"{label}_menu_controls_inventoried", True,
+                           f"{len(controls)} controls; {len(small)} visible buttons below 40px")
+                # Close via the app's normal scrim instead of activating arbitrary menu actions.
+                scrim = page.locator("#scrim")
+                if await scrim.count() and await scrim.is_visible():
+                    await scrim.click(position={"x": 4, "y": 4}, force=True)
+                else:
+                    await page.keyboard.press("Escape")
+                await page.wait_for_timeout(250)
+            except Exception as exc:
+                record(f"{label}_drawer_opens", False, repr(exc))
+
+        # Composer expansion is safe: only a temporary draft in this browser context.
+        try:
+            input_box = page.locator("#input")
+            await input_box.fill("MOSHARROF inspector temporary draft")
+            expand = page.locator("#composerExpandBtn")
+            await expand.wait_for(state="visible", timeout=8000)
+            await expand.click()
+            editor = page.locator("#mosharrofExpandEditor")
+            await editor.wait_for(state="visible", timeout=5000)
+            draft_text = await editor.input_value() if await editor.evaluate("(el) => 'value' in el") else await editor.inner_text()
+            record("composer_expand_opens", True, f"draft copied={ 'temporary draft' in draft_text }")
+            await page.screenshot(path=str(out / "composer-expanded.png"), full_page=True)
+            cancel = page.locator("[data-expand-cancel]")
+            if await cancel.count() and await cancel.first.is_visible():
+                await cancel.first.click()
+                record("composer_expand_cancel", True, "cancelled without sending")
+            else:
+                await page.keyboard.press("Escape")
+                record("composer_expand_cancel", True, "closed with Escape")
+        except Exception as exc:
+            record("composer_expand_flow", False, repr(exc))
+
+        # Enumerate remaining visible controls without clicking potentially destructive actions.
+        try:
+            report["visible_controls"] = await page.locator("button, a, input, select, textarea, [role=button]").evaluate_all(
+                """els => els.map((el, index) => {
+                  const r = el.getBoundingClientRect();
+                  return {index, tag:el.tagName.toLowerCase(), id:el.id||null,
+                    label:(el.getAttribute('aria-label')||el.innerText||el.getAttribute('title')||'').trim().slice(0,140),
+                    visible:!!(r.width&&r.height), disabled:!!el.disabled,
+                    width:Math.round(r.width),height:Math.round(r.height)};
+                }).filter(x => x.visible)"""
+            )
+        except Exception as exc:
+            report["errors"].append({"type": "inventory", "detail": repr(exc)})
+        await page.screenshot(path=str(out / "final-mobile.png"), full_page=True)
+        await context.close()
+        await browser.close()
+
+    report["summary"] = {
+        "passed": sum(1 for c in report["checks"] if c["passed"]),
+        "failed": sum(1 for c in report["checks"] if not c["passed"]),
+        "control_count": len(report.get("visible_controls", [])),
+        "menu_control_count": len(report["controls"]),
+    }
+    (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(report["summary"], ensure_ascii=False))
+    if report["summary"]["failed"]:
+        raise SystemExit(1)
+
+asyncio.run(main())
