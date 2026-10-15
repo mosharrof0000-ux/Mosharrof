@@ -116,3 +116,8 @@
     init();
   }
 })();
+
+// The live page uses this fallback script; initialize composer enhancement here.
+import("./core/composer-enhancements.js")
+  .then(({ initializeComposerEnhancements }) => initializeComposerEnhancements())
+  .catch((error) => console.error("Composer enhancement initialization failed:", error));
