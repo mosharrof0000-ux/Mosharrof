@@ -204,6 +204,7 @@ async def main():
 
         # Check setting controls without invoking speech/microphone or provider services.
         try:
+            await page.locator("#rightBtn").click(timeout=3000)
             provider = page.locator("#ttsProviderSelect")
             voice = page.locator("#ttsVoiceSelect")
             language = page.locator("#sttLanguageSelect")
