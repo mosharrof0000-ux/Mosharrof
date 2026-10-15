@@ -23,7 +23,8 @@ permissions:
 
 concurrency:
   group: mosharrof-full-system-qa-${{ github.ref }}
-  cancel-in-progress: true
+  # Queue overlapping runs instead of cancelling in-progress verification.
+  cancel-in-progress: false
 
 jobs:
   interaction-qa:
