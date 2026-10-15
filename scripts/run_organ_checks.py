@@ -12,7 +12,7 @@ COMMANDS = [
     ["python3", "scripts/mosharrof_architecture_gate.py", "origin/main"],
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/organ-runtime.test.mjs"],
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/organ-runtime-services.test.mjs"],
-    ["node", "--experimental-default-type=module", "--test", "tests/architecture/ui-organ-migration.test.mjs"],
+    ["node", "--experimental-default-type=module", "--test", "tests/architecture/ui-organ-migration.test.mjs", "tests/architecture/ui-organ-bootstrap.test.mjs"],
     ["node", "--experimental-default-type=module", "--test", "organs/user-preference-intelligence/tests/preference-intelligence.test.mjs"],
     ["node", "--experimental-default-type=module", "--test", "organs/continuous-learning-orchestrator/tests/continuous-learning.test.mjs"],
     ["python3", "-m", "unittest", "-v", "scripts/test_mosharrof_registry.py"],
