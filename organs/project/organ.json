@@ -1,0 +1,10 @@
+{
+  "id": "project",
+  "name": "Project",
+  "description": "Project navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

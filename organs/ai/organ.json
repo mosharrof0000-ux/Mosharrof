@@ -1,0 +1,10 @@
+{
+  "id": "ai",
+  "name": "AI",
+  "description": "AI navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

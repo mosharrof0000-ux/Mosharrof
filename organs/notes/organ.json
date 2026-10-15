@@ -1,0 +1,10 @@
+{
+  "id": "notes",
+  "name": "Notes",
+  "description": "Notes navigation icon organ adapter.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}
