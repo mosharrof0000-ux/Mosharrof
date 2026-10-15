@@ -58,7 +58,7 @@ jobs:
         run: python3 scripts/prepare_web_organ_runtime.py
 
       - name: Start candidate Pages server
-        if: github.event_name == 'pull_request' || inputs.target == 'candidate'
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main') || inputs.target == 'candidate'
         run: |
           python3 -m http.server 4173 --directory web >/tmp/mosharrof-inspector-server.log 2>&1 &
           for attempt in $(seq 1 20); do
