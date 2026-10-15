@@ -32,7 +32,7 @@ def main() -> int:
         shutil.copyfile(src, dst)
     bootstrap = (ROOT / "web/entities/organ-bootstrap.js").read_text(encoding="utf-8")
     extra_bootstrap = (ROOT / "web/entities/ui-organ-modules.js").read_text(encoding="utf-8")
-    import_contract = bootstrap + "\\n" + extra_bootstrap
+    import_contract = bootstrap + "\n" + extra_bootstrap
     ui_ids = []
     for folder in sorted((ROOT / "organs").iterdir()):
         manifest_path = folder / "organ.json"
