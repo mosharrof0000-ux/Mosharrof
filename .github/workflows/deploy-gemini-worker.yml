@@ -356,16 +356,17 @@ jobs:
           URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health"
           echo "Waiting for Worker edge propagation at $URL ..."
           for i in {1..15}; do
-            if curl -fsS --connect-timeout 5 --max-time 10 "$URL" > /tmp/health.json; then
+            if curl -fsS --connect-timeout 5 --max-time 10 "$URL" > /tmp/health.json \
+              && grep -q '"ok":true' /tmp/health.json \
+              && grep -q '"worker_build":"2026-10-16-image-fallback-v3"' /tmp/health.json; then
               cat /tmp/health.json
-              grep -q '"ok":true' /tmp/health.json
-              echo "Health check passed."
+              echo "Health check passed for the expected Worker build."
               exit 0
             fi
-            echo "Attempt $i failed, retrying in 5s..."
+            echo "Attempt $i did not return the expected healthy build; retrying in 5s..."
             sleep 5
           done
-          echo "ERROR: Worker health endpoint did not become reachable."
+          echo "ERROR: Expected Worker build did not become consistently visible at the health endpoint."
           echo "Trying alternate subdomain mosharrof000 ..."
           curl -sS "https://mosharrof-screenshot-analysis.mosharrof000.workers.dev/health" || true
           exit 1
