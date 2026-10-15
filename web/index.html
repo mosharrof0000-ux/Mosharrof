@@ -703,6 +703,7 @@ header.top{
     var provider=providerShortName(event.provider),model=event.model?String(event.model).split("/").pop():"";
     if(event.stage==="trying")route.textContent="সংযোগ: "+provider+(model?" · "+model:"");
     else if(event.stage==="failed")route.textContent=provider+" ব্যর্থ · বিকল্প খোঁজা হচ্ছে";
+    else if(event.stage==="skipped")route.textContent=provider+" সেট করা নেই · পরের বিকল্প খোঁজা হচ্ছে";
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
   function coreReply(t,image){
