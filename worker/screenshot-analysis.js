@@ -456,16 +456,9 @@ async function generateWithCloudflare(prompt,env){
   const models=[env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell","@cf/bytedance/stable-diffusion-xl-lightning","@cf/lykon/dreamshaper-8-lcm"];
   let model,reason="failed";
   for(const m of models){model=m;try{
-    const result=await env.AI.run(model,{prompt});
-    let imageData=String(result?.image||(typeof result?.output==="string"?result.output:""));
-    const raw=result instanceof Response?result.body:(result?.output??result);
-    if(!imageData&&raw){
-      const bytes=await new Response(raw).arrayBuffer(),view=new Uint8Array(bytes);let binary="";
-      for(let i=0;i<view.length;i+=32768)binary+=String.fromCharCode(...view.subarray(i,i+32768));
-      imageData=btoa(binary);
-    }
-    if(imageData)return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:imageData.startsWith("iVBORw0KGgo")?"image/png":"image/jpeg",image_data:imageData};
-    reason="empty";
+    const result=await env.AI.run(model,{prompt}),raw=result instanceof Response?result.body:(result?.output??result);let imageData=String(result?.image||(typeof result?.output==="string"?result.output:""));
+    if(!imageData&&raw){const bytes=await new Response(raw).arrayBuffer(),view=new Uint8Array(bytes);let binary="";for(let i=0;i<view.length;i+=32768)binary+=String.fromCharCode(...view.subarray(i,i+32768));imageData=btoa(binary);}
+    if(imageData)return {ok:true,provider:"cloudflare-workers-ai",model,mime_type:imageData.startsWith("iVBORw0KGgo")?"image/png":"image/jpeg",image_data:imageData};reason="empty";
   }catch(e){reason=String(e?.message||e);}}
   return {ok:false,provider:"cloudflare-workers-ai",model,reason};
 }
