@@ -2,6 +2,7 @@ import { EntityRegistry } from "../../web/entities/core/entity-registry.js";
 import { EntityBus } from "../../web/entities/core/entity-bus.js";
 import { EntityState } from "../../web/entities/core/entity-state.js";
 import { icons } from "../../web/entities/shared/entity-icons.js";
+import { initializeHistoryUi } from "./history-ui.js";
 
 export const organId = new URL(import.meta.url).pathname.split("/").at(-2);
 export function initialize(runtime) {
@@ -27,6 +28,7 @@ export function initialize(runtime) {
       });
     }
   });
+  initializeHistoryUi();
   return Object.freeze({ id: organId, status: "initialized" });
 }
 export function getHealth(runtime) { return runtime.health(organId); }
