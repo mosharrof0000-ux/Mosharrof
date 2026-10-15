@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "https_only": true,
+    "exact_host_allowlist": true,
+    "max_feed_bytes": 1048576,
+    "max_items_per_feed": 10,
+    "timeout_seconds": 12,
+    "report_only": true,
+    "no_secret_access": true
+  },
+  "feeds": [
+    {
+      "id": "openai-news",
+      "domain": "ai-models",
+      "url": "https://openai.com/news/rss.xml",
+      "provider": "OpenAI",
+      "status": "candidate-feed-verify-on-first-run"
+    },
+    {
+      "id": "google-research",
+      "domain": "research",
+      "url": "https://blog.research.google/feeds/posts/default?alt=rss",
+      "provider": "Google Research",
+      "status": "candidate-feed-verify-on-first-run"
+    },
+    {
+      "id": "github-blog",
+      "domain": "developer-tools",
+      "url": "https://github.blog/feed/",
+      "provider": "GitHub",
+      "status": "candidate-feed-verify-on-first-run"
+    },
+    {
+      "id": "arxiv-ai",
+      "domain": "ai-models",
+      "url": "https://export.arxiv.org/rss/cs.AI",
+      "provider": "arXiv",
+      "status": "candidate-feed-verify-on-first-run"
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "provider": "Google Gemini",
+      "status": "needs-verified-official-feed",
+      "reason": "Do not assume a feed URL without verifying it."
+    },
+    {
+      "provider": "xAI Grok",
+      "status": "needs-verified-official-feed",
+      "reason": "Do not assume a feed URL without verifying it."
+    }
+  ]
+}
