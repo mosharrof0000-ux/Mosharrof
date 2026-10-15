@@ -18,6 +18,8 @@ ASSETS = (
     "entities/organ-bootstrap.js",
     "entities/ui-organ-modules.js",
     "runtime/core/organ-runtime/index.js",
+    "runtime/core/organ-runtime/persistent-memory.js",
+    "runtime/core/organ-runtime/scoped-api.js",
     "runtime/core/ui-module-adapter/index.js",
     "organs/chat/index.js",
     "organs/core/index.js",
