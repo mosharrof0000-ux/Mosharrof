@@ -62,6 +62,6 @@ jobs:
           assert "MOSHARROF AI" in read("")
           ids={x["id"] for x in json.loads(read("runtime/organs.registry.json"))["organs"]}
           assert {"chat","notes"}.issubset(ids)
-          for p in ("entities/organ-bootstrap.js","runtime/core/organ-runtime/index.js","organs/chat/index.js"): read(p)
+          for p in ("entities/organ-bootstrap.js","runtime/core/organ-runtime/index.js","runtime/core/organ-runtime/persistent-memory.js","runtime/core/organ-runtime/scoped-api.js","organs/chat/index.js"): read(p)
           print("LIVE ORGAN RUNTIME HEALTH CHECK: PASS")
           PY

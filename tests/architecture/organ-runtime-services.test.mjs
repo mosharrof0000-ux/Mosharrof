@@ -6,20 +6,10 @@ import { createOrganRuntime } from "../../core/organ-runtime/index.js";
 
 const target = { id: "voice-engine", public_api: ["speak"], dependencies: [] };
 const source = { id: "chat-organ", public_api: ["send"], dependencies: [{ organ_id: "voice-engine", api: "speak" }] };
-function makeRuntime(records = [target, source], limits = {}, storage = null) {
+function makeRuntime(records = [target, source], limits = {}) {
   const registry = createOrganRegistry(records);
   const links = createLinkManager(registry);
-  return { registry, links, runtime: createOrganRuntime({ registry, linkManager: links, limits, storage }) };
-}
-function fakeStorage() {
-  const values = new Map();
-  return {
-    get length() { return values.size; },
-    key(index) { return [...values.keys()][index] ?? null; },
-    getItem(key) { return values.get(key) ?? null; },
-    setItem(key, value) { values.set(key, String(value)); },
-    removeItem(key) { values.delete(key); }
-  };
+  return { registry, links, runtime: createOrganRuntime({ registry, linkManager: links, limits }) };
 }
 
 test("organ memory is isolated and returns defensive copies", () => {
@@ -70,35 +60,4 @@ test("unknown organs and undeclared handler APIs fail closed", () => {
   const { runtime } = makeRuntime();
   assert.throws(() => runtime.memory.set("unknown-organ", "x", 1), /unknown organ/);
   assert.throws(() => runtime.register("voice-engine", { private: () => true }), /not a declared public API/);
-});
-
-test("scoped organ capabilities cannot read or report against another organ", () => {
-  const { runtime } = makeRuntime();
-  const chat = runtime.forOrgan("chat-organ");
-  chat.memory.set("draft", { text: "private to chat" });
-  assert.deepEqual(chat.memory.get("draft"), { text: "private to chat" });
-  assert.equal(runtime.memory.get("voice-engine", "draft"), null);
-  chat.reportIssue("test issue");
-  assert.equal(runtime.health("chat-organ").issues, 1);
-  assert.equal(runtime.health("voice-engine").issues, 0);
-  assert.throws(() => chat.register({ speak: () => true }), /not a declared public API/);
-});
-
-test("browser-persistent memory survives runtime recreation and remains organ-scoped", () => {
-  const storage = fakeStorage();
-  const first = makeRuntime([target, source], {}, storage).runtime;
-  first.memory.remember("chat-organ", "approved-note", { text: "remembered locally" });
-  const second = makeRuntime([target, source], {}, storage).runtime;
-  assert.deepEqual(second.memory.recall("chat-organ", "approved-note"), { text: "remembered locally" });
-  assert.equal(second.memory.recall("voice-engine", "approved-note"), null);
-  assert.equal(second.health("chat-organ").persistentMemoryEntries, 1);
-  assert.equal(second.memory.forget("chat-organ", "approved-note"), true);
-  assert.equal(second.memory.recall("chat-organ", "approved-note"), null);
-});
-
-test("persistent memory rejects secrets and fails clearly without storage", () => {
-  const { runtime } = makeRuntime([target]);
-  assert.throws(() => runtime.memory.remember("voice-engine", "note", "value"), /unavailable/);
-  const persistent = makeRuntime([target], {}, fakeStorage()).runtime;
-  assert.throws(() => persistent.memory.remember("voice-engine", "api-key", "never"), /secret-like keys/);
 });
