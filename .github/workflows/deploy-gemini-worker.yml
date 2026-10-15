@@ -226,7 +226,7 @@ jobs:
           echo "Checking live TTS configuration..."
           curl -fsS --connect-timeout 10 --max-time 20 "$HEALTH" > /tmp/tts-health.json
           cat /tmp/tts-health.json
-          grep -q '"worker_build":"2026-10-13-chat-live-provider-status-v1"' /tmp/tts-health.json
+          grep -q '"worker_build":"2026-10-16-chat-provider-resilience-v2"' /tmp/tts-health.json
           grep -q '"tts_endpoint":"/tts"' /tmp/tts-health.json
           grep -q '"transcribe_audio_endpoint":"/transcribe-audio"' /tmp/tts-health.json
           grep -q '"cloudflare_chat_configured":true' /tmp/tts-health.json
