@@ -41,6 +41,12 @@ def source_file(path: str, policy: dict) -> bool:
     return not excluded(path, policy) and Path(path).suffix.lower() in policy["source_extensions"]
 
 
+def line_limit(path: str, policy: dict) -> int:
+    """Use stricter language-specific caps before falling back to the general limit."""
+    suffix = Path(path).suffix.lower()
+    return policy.get("line_limits_by_extension", {}).get(suffix, policy["limits"]["max_file_lines"])
+
+
 def add_folder_metrics(folders: dict, path: str, size: int) -> None:
     parent = str(Path(path).parent)
     while parent not in (".", ""):
@@ -107,15 +113,16 @@ def main() -> int:
             continue
         size, lines = head_files[path]
         old_size, old_lines = base_files.get(path, (0, 0))
-        was_oversized = old_size > limits["max_file_bytes"] or old_lines > limits["max_file_lines"]
-        is_oversized = size > limits["max_file_bytes"] or lines > limits["max_file_lines"]
+        per_type_line_limit = line_limit(path, policy)
+        was_oversized = old_size > limits["max_file_bytes"] or old_lines > per_type_line_limit
+        is_oversized = size > limits["max_file_bytes"] or lines > per_type_line_limit
         if was_oversized:
             if size > old_size or lines > old_lines:
                 errors.append(f"{path}: legacy oversized file grew ({old_size}B/{old_lines} lines -> {size}B/{lines} lines); split/refactor first")
             elif is_oversized:
                 warnings.append(f"{path}: legacy oversized file did not grow; schedule a safe refactor")
         elif is_oversized:
-            errors.append(f"{path}: file budget exceeded ({size}B/{lines} lines; limits {limits['max_file_bytes']}B/{limits['max_file_lines']} lines)")
+            errors.append(f"{path}: file budget exceeded ({size}B/{lines} lines; limits {limits['max_file_bytes']}B/{per_type_line_limit} lines for {Path(path).suffix.lower() or 'extensionless'} files)")
         elif old_size and size > old_size * (1 + limits["max_changed_file_growth_percent"] / 100):
             errors.append(f"{path}: file grew by more than {limits['max_changed_file_growth_percent']}% ({old_size}B -> {size}B); split/refactor or justify in a reviewed policy change")
 
@@ -144,7 +151,7 @@ def main() -> int:
         "status": "BLOCKED" if errors else "PASS",
         "base": args.base,
         "changed_source_files_checked": sum(1 for p in changed if source_file(p, policy)),
-        "file_budget": {"max_bytes": limits["max_file_bytes"], "max_lines": limits["max_file_lines"]},
+        "file_budget": {"max_bytes": limits["max_file_bytes"], "default_max_lines": limits["max_file_lines"], "per_extension_max_lines": policy.get("line_limits_by_extension", {})},
         "folder_budget": {"max_recursive_source_bytes": limits["max_folder_source_bytes"], "max_recursive_source_files": limits["max_folder_source_files"]},
         "warnings": warnings,
         "errors": errors,
