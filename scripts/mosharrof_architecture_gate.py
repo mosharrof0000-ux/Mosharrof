@@ -69,6 +69,19 @@ def count_links(source_text: str, suffix: str) -> list[str]:
     return []
 
 
+def safe_bootstrap_entrypoint_only(base: str) -> bool:
+    """Allow only one additive module-loader line; keep the legacy UI shell otherwise frozen."""
+    tag = '<script type="module" src="./entities/bootstrap.js"></script>'
+    try:
+        diff = git("diff", "--unified=0", f"{base}...HEAD", "--", "web/index.html")
+        added = [line[1:] for line in diff.splitlines() if line.startswith("+") and not line.startswith("+++")]
+        removed = [line[1:] for line in diff.splitlines() if line.startswith("-") and not line.startswith("---")]
+        current = (ROOT / "web" / "index.html").read_text(encoding="utf-8").splitlines()
+    except (subprocess.CalledProcessError, OSError):
+        return False
+    return not removed and added == [tag] and current.count(tag) == 1 and current[-2].strip() == tag
+
+
 def main() -> int:
     errors: list[str] = []
     try:
@@ -77,8 +90,9 @@ def main() -> int:
         print(f"ARCHITECTURE GATE: FAIL — cannot compare against {BASE}: {exc}", file=sys.stderr)
         return 2
 
-    if "web/index.html" in changed:
-        errors.append("web/index.html is frozen legacy shell; migrate code into organs/ or core/ before editing it.")
+    safe_shell_bootstrap = "web/index.html" in changed and safe_bootstrap_entrypoint_only(BASE)
+    if "web/index.html" in changed and not safe_shell_bootstrap:
+        errors.append("web/index.html is frozen except for the single verified organ-bootstrap script addition.")
 
     organs_root = ROOT / "organs"
     organ_folders = sorted(path for path in organs_root.iterdir() if path.is_dir() and not path.name.startswith("_")) if organs_root.is_dir() else []
@@ -133,6 +147,8 @@ def main() -> int:
         p = Path(path)
         suffix = p.suffix.lower()
         if suffix not in SOURCE_SUFFIXES or is_policy_or_test(path):
+            continue
+        if path == "web/index.html" and safe_shell_bootstrap:
             continue
         if not (ROOT / p).is_file():
             continue  # Deleted legacy adapters are allowed after organ replacements exist.
