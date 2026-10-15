@@ -180,22 +180,7 @@ header.top{
 .image-preview img{width:42px;height:42px;object-fit:cover;border-radius:9px}
 .image-preview span{font-size:11px;color:#d4d4d8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .image-preview button{width:28px;height:28px;border-radius:50%;color:#fff;background:#333;font-size:15px}
-.input{flex:1;min-width:0;min-height:34px;max-height:120px;border:0;outline:0;background:transparent;padding:6px 6px;font-size:16px;line-height:1.4;resize:none;overflow-y:auto;color:var(--text)}
-/* Compact composer with a spacious, distraction-free full-screen editor. */
-.composer .row{gap:6px;align-items:flex-end}
-.composer .input{align-self:flex-end;min-height:34px;padding-top:6px;padding-bottom:6px}
-.composer-expand{display:none}
-.composer-expand.visible{display:inline-grid}
-.expand-editor{position:fixed;inset:0;z-index:20000;display:none;flex-direction:column;background:#050505;padding:calc(14px + var(--safe-t)) 14px calc(14px + var(--safe-b));}
-.expand-editor.open{display:flex}
-.expand-editor-head{display:flex;align-items:center;gap:10px;padding:4px 0 14px;border-bottom:1px solid rgba(255,255,255,.14)}
-.expand-editor-title{font-size:15px;font-weight:700;flex:1}
-.expand-editor-close,.expand-editor-apply{min-height:38px;padding:0 13px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:#171717;color:#f5f5f5;font-size:13px}
-.expand-editor-apply{background:#f1f1f1;color:#111;border-color:#f1f1f1;font-weight:700}
-.expand-editor-text{flex:1;width:100%;min-height:0;margin:14px 0;padding:14px;border:1px solid rgba(255,255,255,.15);border-radius:14px;outline:none;resize:none;background:#111;color:#f5f5f5;font-size:16px;line-height:1.7;overflow:auto}
-.expand-editor-text:focus{border-color:rgba(255,255,255,.38)}
-.expand-editor-hint{font-size:11px;color:#92929a;padding:0 2px 8px}
-@media(max-width:480px){.composer{padding:6px 8px}.composer .input{padding-left:4px;padding-right:4px}.composer-tool-toggle,.composer-action,.send{width:34px;height:34px}.composer-expand svg{width:16px;height:16px}}
+.input{flex:1;min-width:0;min-height:40px;max-height:120px;border:0;outline:0;background:transparent;padding:10px 6px;font-size:16px;line-height:1.4;resize:none;overflow-y:auto;color:var(--text)}
 .input::placeholder{color:#8e8e93}
 .send:disabled{opacity:.35}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;opacity:0;visibility:hidden;transition:.2s}
@@ -272,14 +257,8 @@ header.top{
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
-      <button class="composer-action composer-expand" id="composerExpandBtn" type="button" aria-label="বড় পর্দায় লেখা সম্পাদনা করুন" title="বড় পর্দায় লেখা খুলুন" aria-controls="expandEditor" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8h8v8H8z"/></svg></button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
-  </div>
-  <div class="expand-editor" id="expandEditor" role="dialog" aria-modal="true" aria-labelledby="expandEditorTitle" aria-hidden="true">
-    <div class="expand-editor-head"><div class="expand-editor-title" id="expandEditorTitle">বার্তা সম্পাদনা</div><button class="expand-editor-close" id="expandEditorCancel" type="button">ফিরে যান</button><button class="expand-editor-apply" id="expandEditorApply" type="button">লেখা ব্যবহার করুন</button></div>
-    <textarea class="expand-editor-text" id="expandEditorText" aria-label="সম্পূর্ণ বার্তা সম্পাদনা করুন" placeholder="এখানে আপনার সম্পূর্ণ বার্তা লিখুন..."></textarea>
-    <div class="expand-editor-hint">এখানে সম্পাদিত লেখা মূল মেসেজ বক্সে ফিরিয়ে নিতে “লেখা ব্যবহার করুন” চাপুন।</div>
   </div>
   <div class="voice-bar" id="voiceStatus" role="status" aria-live="polite">Voice ready</div>
   <aside class="drawer left" id="drawerLeft" aria-hidden="true"></aside>
@@ -300,7 +279,6 @@ header.top{
   function $(s){return document.querySelector(s);}
   var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
   var composerToolsMenu=$("#composerToolsMenu"),composerVoiceBtn=$("#composerVoiceBtn");
-  var composerExpandBtn=$("#composerExpandBtn"),expandEditor=$("#expandEditor"),expandEditorText=$("#expandEditorText"),expandEditorCancel=$("#expandEditorCancel"),expandEditorApply=$("#expandEditorApply");
   var imageInput=$("#imageInput"),imagePreview=$("#imagePreview"),previewImage=$("#previewImage"),previewName=$("#previewName"),removeImage=$("#removeImage");
   var pendingImage=null;
   var leftBtn=$("#leftBtn"),rightBtn=$("#rightBtn"),scrim=$("#scrim"),dL=$("#drawerLeft"),dR=$("#drawerRight");
@@ -323,7 +301,7 @@ header.top{
   function toast(m,ms){ms=ms||2000;toastEl.textContent=m;toastEl.classList.add("show");setTimeout(function(){toastEl.classList.remove("show");},ms);}
   function showV(t){vStatus.textContent=t;vStatus.classList.add("show");}
   function hideV(){vStatus.classList.remove("show");}
-  function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";if(composerExpandBtn)composerExpandBtn.classList.toggle("visible",!!String(input.value||"").trim());}
+  function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
   function iconSvg(kind){
     var paths={like:'<path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"/><path d="M7 10 12 3a2 2 0 0 1 2 2l-1 5h5.5a2.5 2.5 0 0 1 2.4 3.2l-1.8 6A2.5 2.5 0 0 1 16.7 21H7"/>',online:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',speak:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',retry:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6"/><path d="M18.4 15A7 7 0 0 1 6 18l-2-6"/>',share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>',download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'};
@@ -1267,18 +1245,12 @@ header.top{
   removeImage.onclick=clearImage;
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
   input.addEventListener("input",resize);
-  function openExpandEditor(){if(!String(input.value||"").trim())return;expandEditorText.value=input.value;expandEditor.classList.add("open");expandEditor.setAttribute("aria-hidden","false");composerExpandBtn.setAttribute("aria-expanded","true");document.body.style.overflow="hidden";requestAnimationFrame(function(){expandEditorText.focus();expandEditorText.setSelectionRange(expandEditorText.value.length,expandEditorText.value.length);});}
-  function closeExpandEditor(applyChanges){if(applyChanges){input.value=expandEditorText.value;resize();}expandEditor.classList.remove("open");expandEditor.setAttribute("aria-hidden","true");composerExpandBtn.setAttribute("aria-expanded","false");document.body.style.overflow="";if(applyChanges)input.focus();}
-  composerExpandBtn.addEventListener("click",openExpandEditor);
-  expandEditorCancel.addEventListener("click",function(){closeExpandEditor(false);});
-  expandEditorApply.addEventListener("click",function(){closeExpandEditor(true);});
-  expandEditor.addEventListener("click",function(event){if(event.target===expandEditor)closeExpandEditor(false);});
   function closeComposerTools(){composerToolsMenu.classList.remove("open");plusBtn.setAttribute("aria-expanded","false");}
   plusBtn.onclick=function(e){e.stopPropagation();var open=composerToolsMenu.classList.toggle("open");plusBtn.setAttribute("aria-expanded",open?"true":"false");};
   composerToolsMenu.addEventListener("click",function(e){e.stopPropagation();});
   composerVoiceBtn.onclick=startV;
   document.addEventListener("click",function(e){if(!e.target.closest||!e.target.closest("#composerTools"))closeComposerTools();});
-  document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeComposerTools();if(expandEditor.classList.contains("open"))closeExpandEditor(false);}});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeComposerTools();});
   leftBtn.onclick=function(){updateMeta();openD("left");};
   rightBtn.onclick=function(){openD("right");};
   scrim.onclick=closeD;
