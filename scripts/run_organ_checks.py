@@ -9,6 +9,7 @@ COMMANDS = [
     ["python3", "scripts/mosharrof_registry.py", "--validate-only"],
     ["python3", "scripts/mosharrof_registry.py", "--output", "web/runtime/organs.registry.json"],
     ["git", "diff", "--exit-code", "--", "web/runtime/organs.registry.json"],
+    ["python3", "scripts/prepare_web_organ_runtime.py"],
     ["python3", "scripts/mosharrof_architecture_gate.py", "origin/main"],
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/organ-runtime.test.mjs"],
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/organ-runtime-services.test.mjs"],
