@@ -58,7 +58,7 @@ def resolve_import(source: Path, specifier: str) -> Path | None:
 def count_links(source_text: str, suffix: str) -> list[str]:
     """Return declared file/module/web-resource links for a supported source type."""
     if suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
-        return IMPORT_RE.findall(source_text)
+        return IMPORT_RE.findall(source_text) + URL_RE.findall(source_text)
     if suffix == ".html":
         return HTML_LINK_RE.findall(source_text)
     if suffix == ".css":
@@ -146,7 +146,7 @@ def main() -> int:
 
     # The two web entity files are narrow composition-root exceptions. All feature
     # implementations remain in organs/; these files only connect UI to the runtime.
-    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js", "web/entities/ui-organ-modules.js", "web/sw.js"}
+    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js", "web/entities/ui-organ-modules.js", "web/sidebar-recovery.js", "web/sw.js"}
     for path in changed:
         p = Path(path)
         suffix = p.suffix.lower()
