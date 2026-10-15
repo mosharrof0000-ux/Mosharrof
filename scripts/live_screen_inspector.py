@@ -171,6 +171,17 @@ async def main():
         except Exception as exc:
             record("organ_module_controls_discovered", False, repr(exc))
 
+        # The organ menu remains open after module activation; dismiss it before
+        # exercising history and settings so the scrim cannot intercept real clicks.
+        await page.evaluate("""() => {
+          for (const selector of ['#drawerLeft', '#drawerRight']) {
+            const el = document.querySelector(selector);
+            if (el) { el.classList.remove('open'); el.setAttribute('aria-hidden', 'true'); }
+          }
+          document.querySelector('#scrim')?.classList.remove('open');
+        }""")
+        await page.wait_for_timeout(150)
+
         # Exercise history/navigation actions only in this fresh, disposable browser context.
         # These changes affect isolated localStorage, never the user's personal browser.
         try:
