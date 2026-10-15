@@ -18,7 +18,7 @@ const result = await worker.fetch(request, {
   AI: { run: async (model) => {
     imageModels.push(model);
     if (model === "@cf/black-forest-labs/flux-1-schnell") throw new Error("8007: Input prompt contains NSFW content");
-    if (model === "@cf/bytedance/stable-diffusion-xl-lightning") return { image: "aW1hZ2U=" };
+    if (model === "@cf/bytedance/stable-diffusion-xl-lightning") return new Uint8Array([255, 216, 255, 0]);
     throw new Error("simulated fallback model outage");
   } }
 });
@@ -26,5 +26,6 @@ const data = await result.json();
 assert.equal(result.status, 200);
 assert.equal(data.provider, "cloudflare-workers-ai");
 assert.equal(data.model, "@cf/bytedance/stable-diffusion-xl-lightning");
+assert.ok(data.image_data.startsWith("/9j/"), data.image_data.slice(0, 12));
 assert.deepEqual(imageModels, ["@cf/black-forest-labs/flux-1-schnell", "@cf/bytedance/stable-diffusion-xl-lightning"]);
 console.log("PASS: image generation falls through from a FLUX moderation false-positive to SDXL Lightning.");
