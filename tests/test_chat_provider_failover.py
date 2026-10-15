@@ -35,7 +35,7 @@ def test_worker_health_reports_provider_configuration_without_secret_values():
     assert 'groq_chat_configured:!!env.GROQ_API_KEY' in worker
     assert 'openrouter_chat_configured:!!env.OPENROUTER_API_KEY' in worker
     assert 'gemini_chat_key_slots:[!!env.GEMINI_API_KEY' in worker
-    assert 'const WORKER_BUILD_ID="2026-10-16-image-fallback-v3";' in worker
+    assert 'const WORKER_BUILD_ID="2026-10-16-img-fb-v4";' in worker
 
 
 def test_chat_providers_have_bounded_timeouts_so_failover_can_continue():
@@ -59,7 +59,7 @@ def test_deploy_workflow_keeps_optional_provider_keys_server_side():
     assert "secret put GROQ_API_KEY" in workflow
     assert "secret put OPENROUTER_API_KEY" in workflow
     assert '"cloudflare_chat_configured":true' in workflow
-    assert "2026-10-16-image-fallback-v3" in workflow
+    assert "2026-10-16-img-fb-v4" in workflow
 
 
 def test_cloudflare_image_engine_has_free_first_model_fallbacks():
