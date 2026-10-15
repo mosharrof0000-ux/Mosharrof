@@ -22,14 +22,14 @@ export function initialize(runtime) {
         if (payload?.target === entity.id) {
           EntityState.set(entity.id, "error");
           entity.el.dataset.state = "error";
-          runtime.reportIssue(organId, "UI entity reported an error");
+          runtime.reportIssue("UI entity reported an error");
         }
       });
     }
   });
   return Object.freeze({ id: organId, status: "initialized" });
 }
-export function getHealth(runtime) { return runtime.health(organId); }
+export function getHealth(runtime) { return runtime.health(); }
 export function reportIssue(runtime, summary = "organ issue reported") {
-  return runtime.reportIssue(organId, summary);
+  return runtime.reportIssue(summary);
 }

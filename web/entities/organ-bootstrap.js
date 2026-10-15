@@ -30,12 +30,20 @@ async function startOrganRuntime() {
   const manifestData = await response.json();
   const registry = createOrganRegistry(manifestData.organs);
   const links = createLinkManager(registry);
-  const runtime = createOrganRuntime({ registry, linkManager: links });
+  let storage = null;
+  try {
+    storage = window.localStorage;
+    const probe = "mosharrof:organ-memory:probe";
+    storage.setItem(probe, "1");
+    storage.removeItem(probe);
+  } catch { storage = null; }
+  const runtime = createOrganRuntime({ registry, linkManager: links, storage });
   for (const organ of uiOrgans) {
-    organ.initialize(runtime);
-    runtime.register(organ.organId, {
-      getHealth: () => organ.getHealth(runtime),
-      reportIssue: (payload = {}) => organ.reportIssue(runtime, payload.summary ?? "issue reported by authorized caller")
+    const scoped = runtime.forOrgan(organ.organId);
+    organ.initialize(scoped);
+    scoped.register({
+      getHealth: () => organ.getHealth(scoped),
+      reportIssue: (payload = {}) => organ.reportIssue(scoped, payload.summary ?? "issue reported by authorized caller")
     });
   }
   document.querySelectorAll("[data-ui-entity]").forEach((element) => {

@@ -27,19 +27,20 @@ test("each UI entity has a distinct manifest and runtime namespace", async () =>
     const manifest = registry.get(organ.organId);
     assert.ok(manifest, "missing manifest for " + organ.organId);
     assert.deepEqual([...manifest.public_api].sort(), ["getHealth", "reportIssue"]);
-    organ.initialize(runtime);
-    runtime.register(organ.organId, {
-      getHealth: () => organ.getHealth(runtime),
-      reportIssue: (payload = {}) => organ.reportIssue(runtime, payload.summary ?? "test issue")
+    const scoped = runtime.forOrgan(organ.organId);
+    organ.initialize(scoped);
+    scoped.register({
+      getHealth: () => organ.getHealth(scoped),
+      reportIssue: (payload = {}) => organ.reportIssue(scoped, payload.summary ?? "test issue")
     });
-    assert.equal(runtime.health(organ.organId).status, "ready");
+    assert.equal(scoped.health().status, "ready");
   }
 });
 test("one UI organ issue does not degrade another organ", () => {
   const records = uiOrgans.map((organ) => ({ id: organ.organId, public_api: ["getHealth", "reportIssue"], dependencies: [] }));
   const registry = createOrganRegistry(records);
   const runtime = createOrganRuntime({ registry, linkManager: createLinkManager(registry) });
-  runtime.reportIssue("chat", "isolated test issue");
+  runtime.forOrgan("chat").reportIssue("isolated test issue");
   assert.equal(runtime.health("chat").status, "degraded");
   assert.equal(runtime.health("notes").status, "registered");
   assert.equal(runtime.health("notes").issues, 0);

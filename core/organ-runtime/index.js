@@ -1,7 +1,7 @@
 /**
  * Capability-gated runtime services for independent Mosharrof organs.
  * State is namespaced per organ; cross-organ access requires a declared link.
- * No persistence, network calls, credential access, filesystem, or deployment.
+ * Optional browser-local storage is for non-secret, user-approved notes only; no network or credentials.
  */
 const ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SECRET_KEY_RE = /(?:secret|token|password|credential|authorization|api[-_]?key|private[-_]?key)/i;
@@ -27,7 +27,7 @@ function safeSummary(value) {
   return String(value).slice(0, 240).replace(/(api[-_ ]?key|token|password|secret|authorization)\s*[:=]\s*\S+/gi, "$1=[redacted]");
 }
 
-export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) {
+export function createOrganRuntime({ registry, linkManager, limits = {}, storage = null } = {}) {
   if (!registry || typeof registry.get !== "function" || typeof registry.has !== "function" || typeof registry.list !== "function") {
     throw new TypeError("a validated organ registry is required");
   }
@@ -42,6 +42,25 @@ export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) 
   const handlers = new Map();
   const health = new Map();
   const audit = [];
+  const STORAGE_PREFIX = "mosharrof:organ-memory:v1:";
+
+  function requireStorage() {
+    if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function" || typeof storage.removeItem !== "function") {
+      throw new Error("persistent organ memory is unavailable in this environment");
+    }
+    return storage;
+  }
+  function persistentKeys(id) {
+    if (!storage || typeof storage.key !== "function" || !Number.isInteger(storage.length)) return [];
+    const prefix = STORAGE_PREFIX + id + ":";
+    const keys = [];
+    for (let i = 0; i < storage.length; i += 1) {
+      const full = storage.key(i);
+      if (typeof full === "string" && full.startsWith(prefix)) keys.push(full.slice(prefix.length));
+    }
+    return keys;
+  }
+  function persistentKey(id, key) { return STORAGE_PREFIX + id + ":" + key; }
 
   function requireOrgan(id) {
     safeId(id, "organ id");
@@ -65,6 +84,31 @@ export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) 
   }
 
   return Object.freeze({
+    forOrgan(id) {
+      requireOrgan(id);
+      const runtime = this;
+      const scopedMemory = Object.freeze({
+        get: (key) => runtime.memory.get(id, key),
+        set: (key, value) => runtime.memory.set(id, key, value),
+        delete: (key) => runtime.memory.delete(id, key),
+        clear: () => runtime.memory.clear(id),
+        keys: () => runtime.memory.keys(id),
+        remember: (key, value) => runtime.memory.remember(id, key, value),
+        recall: (key) => runtime.memory.recall(id, key),
+        forget: (key) => runtime.memory.forget(id, key),
+        forgetAll: () => runtime.memory.forgetAll(id),
+        persistentKeys: () => runtime.memory.persistentKeys(id)
+      });
+      return Object.freeze({
+        id, memory: scopedMemory,
+        register: (organHandlers) => runtime.register(id, organHandlers),
+        invoke: (targetId, api, payload = {}) => runtime.invoke(id, targetId, api, payload),
+        reportSuccess: (summary) => runtime.reportSuccess(id, summary),
+        reportIssue: (summary) => runtime.reportIssue(id, summary),
+        health: () => runtime.health(id),
+        auditLog: () => runtime.auditLog(id)
+      });
+    },
     register(id, organHandlers) {
       const state = requireOrgan(id);
       if (!organHandlers || typeof organHandlers !== "object" || Array.isArray(organHandlers)) {
@@ -110,7 +154,52 @@ export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) 
         record(id, "success", { action: "memory.clear", count });
         return count;
       },
-      keys(id) { requireOrgan(id); return [...memory.get(id).keys()]; }
+      keys(id) { requireOrgan(id); return [...memory.get(id).keys()]; },
+      remember(id, key, value) {
+        requireOrgan(id);
+        const store = requireStorage();
+        const safe = safeKey(key);
+        const full = persistentKey(id, safe);
+        if (store.getItem(full) === null && persistentKeys(id).length >= config.maxMemoryEntries) {
+          throw new RangeError("persistent organ memory entry limit reached");
+        }
+        const copy = cloneJson(value, "stored value", config.maxValueBytes);
+        store.setItem(full, JSON.stringify(copy));
+        record(id, "success", { action: "memory.remember", key: safe });
+        return true;
+      },
+      recall(id, key) {
+        requireOrgan(id);
+        const store = requireStorage();
+        const safe = safeKey(key);
+        const raw = store.getItem(persistentKey(id, safe));
+        if (raw === null) return null;
+        try { return cloneJson(JSON.parse(raw), "stored value", config.maxValueBytes); }
+        catch {
+          store.removeItem(persistentKey(id, safe));
+          record(id, "issue", { action: "memory.recall", key: safe, error: "InvalidStoredValue" });
+          return null;
+        }
+      },
+      forget(id, key) {
+        requireOrgan(id);
+        const store = requireStorage();
+        const safe = safeKey(key);
+        const full = persistentKey(id, safe);
+        const existed = store.getItem(full) !== null;
+        store.removeItem(full);
+        if (existed) record(id, "success", { action: "memory.forget", key: safe });
+        return existed;
+      },
+      forgetAll(id) {
+        requireOrgan(id);
+        const store = requireStorage();
+        const keys = persistentKeys(id);
+        for (const key of keys) store.removeItem(persistentKey(id, key));
+        record(id, "success", { action: "memory.forgetAll", count: keys.length });
+        return keys.length;
+      },
+      persistentKeys(id) { requireOrgan(id); return persistentKeys(id); }
     }),
     async invoke(sourceId, targetId, api, payload = {}) {
       requireOrgan(sourceId);
@@ -140,13 +229,14 @@ export function createOrganRuntime({ registry, linkManager, limits = {} } = {}) 
     health(id) {
       if (id !== undefined) {
         requireOrgan(id);
-        return Object.freeze({ organId: id, ...health.get(id), memoryEntries: memory.get(id).size, registeredApis: [...(handlers.get(id)?.keys() ?? [])] });
+        return Object.freeze({ organId: id, ...health.get(id), memoryEntries: memory.get(id).size, persistentMemoryEntries: persistentKeys(id).length, registeredApis: [...(handlers.get(id)?.keys() ?? [])] });
       }
       return [...registry.list()].map(({ id: organId }) => this.health(organId));
     },
-    auditLog() { return audit.map((entry) => ({ ...entry })); },
+    auditLog(id) { return audit.filter((entry) => id === undefined || entry.organId === id).map((entry) => ({ ...entry })); },
     policy: Object.freeze({
-      persistence: "memory-only",
+      persistence: storage ? "browser-local-storage" : "memory-only",
+      persistenceScope: storage ? "this-browser-origin" : "session",
       crossOrganAccess: "declared-link-and-public-api-only",
       secretStorage: "forbidden",
       networkAccess: "not-provided",
