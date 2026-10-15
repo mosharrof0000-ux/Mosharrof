@@ -128,7 +128,7 @@ def main() -> int:
 
     # The two web entity files are narrow composition-root exceptions. All feature
     # implementations remain in organs/; these files only connect UI to the runtime.
-    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js", "web/sw.js"}
+    composition_roots = {"web/entities/bootstrap.js", "web/entities/organ-bootstrap.js", "web/entities/organ-modules.js", "web/sidebar-recovery.js", "web/sw.js"}
     for path in changed:
         p = Path(path)
         suffix = p.suffix.lower()

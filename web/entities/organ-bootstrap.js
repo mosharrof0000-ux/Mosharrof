@@ -3,25 +3,15 @@ import { EntityBus } from "./core/entity-bus.js";
 import { createOrganRegistry } from "../runtime/core/organ-registry/index.js";
 import { createLinkManager } from "../runtime/core/link-manager/index.js";
 import { createOrganRuntime } from "../runtime/core/organ-runtime/index.js";
-import * as HomeOrgan from "../organs/home/index.js";
-import * as ChatOrgan from "../organs/chat/index.js";
-import * as HistoryOrgan from "../organs/history/index.js";
-import * as LibraryOrgan from "../organs/library/index.js";
-import * as ProjectOrgan from "../organs/project/index.js";
-import * as NotesOrgan from "../organs/notes/index.js";
-import * as SettingsOrgan from "../organs/settings/index.js";
-import * as QuranOrgan from "../organs/quran/index.js";
-import * as ResearchOrgan from "../organs/research/index.js";
-import * as AiOrgan from "../organs/ai/index.js";
-import * as BranchOrgan from "../organs/branch/index.js";
+import { uiOrgans } from "./organ-modules.js";
 
+const moduleAliases = { tool_factory: "tool-factory", quran_research: "quran-research" };
 const shapeRules = {
   home: "14px 10px 16px 11px", chat: "10px 16px 12px 16px", history: "50%",
   library: "8px 16px 10px 16px", project: "15px 8px 15px 8px",
   notes: "9px 15px 9px 15px", settings: "50%", quran: "12px 18px 9px 17px",
   research: "50% 12px 18px 12px", ai: "50%", branch: "18px 8px 18px 8px"
 };
-const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan];
 window.MosharrofEntitySystem = { registry: EntityRegistry, bus: EntityBus, version: "2.0-organ-runtime", ready: false };
 
 async function startOrganRuntime() {
@@ -59,6 +49,15 @@ async function startOrganRuntime() {
   EntityBus.on("entity:activated", ({ entity }) => {
     entity.el.dataset.state = "active";
     if (registry.has(entity.id)) runtime.reportSuccess(entity.id, "UI entity activated");
+  });
+  document.querySelectorAll("[data-module]").forEach((element) => {
+    const id = moduleAliases[element.dataset.module] || element.dataset.module;
+    if (!registry.has(id)) {
+      runtime.reportIssue("core", "unregistered navigation module");
+      return;
+    }
+    element.dataset.organId = id;
+    element.addEventListener("click", () => runtime.reportSuccess(id, "navigation module activated"));
   });
   window.MosharrofEntitySystem = {
     registry: EntityRegistry, bus: EntityBus, organRegistry: registry, links, organRuntime: runtime,

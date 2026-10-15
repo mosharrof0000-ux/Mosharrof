@@ -1,0 +1,10 @@
+{
+  "id": "storage",
+  "name": "Storage",
+  "description": "file indexing and organization",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

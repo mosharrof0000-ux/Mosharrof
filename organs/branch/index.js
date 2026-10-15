@@ -6,7 +6,7 @@ import { icons } from "../../web/entities/shared/entity-icons.js";
 export const organId = new URL(import.meta.url).pathname.split("/").at(-2);
 export function initialize(runtime) {
   EntityRegistry.register({
-    id: organId, icon: icons[organId],
+    id: organId, icon: icons[organId] || icons.chat,
     bind(entity) {
       entity.el.dataset.shape = organId;
       entity.el.addEventListener("click", () => {
@@ -30,6 +30,4 @@ export function initialize(runtime) {
   return Object.freeze({ id: organId, status: "initialized" });
 }
 export function getHealth(runtime) { return runtime.health(); }
-export function reportIssue(runtime, summary = "organ issue reported") {
-  return runtime.reportIssue(summary);
-}
+export function reportIssue(runtime, summary = "organ issue reported") { return runtime.reportIssue(summary); }

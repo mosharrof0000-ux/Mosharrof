@@ -1,0 +1,10 @@
+{
+  "id": "tool-factory",
+  "name": "Tool Factory",
+  "description": "safe tool creation and execution",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

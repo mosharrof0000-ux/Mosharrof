@@ -103,4 +103,7 @@
   } else {
     init();
   }
+  import("./entities/bootstrap.js").catch(function (error) {
+    console.error("[MOSHARROF Organ Runtime] startup blocked", error);
+  });
 })();

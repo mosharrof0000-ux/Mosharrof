@@ -1,0 +1,10 @@
+{
+  "id": "voice",
+  "name": "Voice",
+  "description": "context-aware voice processing",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

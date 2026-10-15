@@ -1,0 +1,20 @@
+import * as CoreOrgan from "../organs/core/index.js";
+import * as HomeOrgan from "../organs/home/index.js";
+import * as ChatOrgan from "../organs/chat/index.js";
+import * as SidebarOrgan from "../organs/sidebar/index.js";
+import * as VoiceOrgan from "../organs/voice/index.js";
+import * as StorageOrgan from "../organs/storage/index.js";
+import * as ToolFactoryOrgan from "../organs/tool-factory/index.js";
+import * as QuranResearchOrgan from "../organs/quran-research/index.js";
+import * as UiOrgan from "../organs/ui/index.js";
+import * as HistoryOrgan from "../organs/history/index.js";
+import * as LibraryOrgan from "../organs/library/index.js";
+import * as ProjectOrgan from "../organs/project/index.js";
+import * as NotesOrgan from "../organs/notes/index.js";
+import * as SettingsOrgan from "../organs/settings/index.js";
+import * as QuranOrgan from "../organs/quran/index.js";
+import * as ResearchOrgan from "../organs/research/index.js";
+import * as AiOrgan from "../organs/ai/index.js";
+import * as BranchOrgan from "../organs/branch/index.js";
+
+export const uiOrgans = [CoreOrgan, HomeOrgan, ChatOrgan, SidebarOrgan, VoiceOrgan, StorageOrgan, ToolFactoryOrgan, QuranResearchOrgan, UiOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan];

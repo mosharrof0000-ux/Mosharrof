@@ -1,0 +1,10 @@
+{
+  "id": "quran-research",
+  "name": "Qur'an Research",
+  "description": "Qur'an language research and evidence-based workflows",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

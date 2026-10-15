@@ -1,0 +1,10 @@
+{
+  "id": "sidebar",
+  "name": "Sidebar",
+  "description": "navigation and entity discovery",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

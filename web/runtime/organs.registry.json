@@ -47,6 +47,16 @@
       "dependencies": []
     },
     {
+      "id": "core",
+      "name": "Core",
+      "description": "coordination and governance",
+      "public_api": [
+        "getHealth",
+        "reportIssue"
+      ],
+      "dependencies": []
+    },
+    {
       "id": "history",
       "name": "History",
       "description": "History navigation icon organ adapter.",
@@ -107,6 +117,16 @@
       "dependencies": []
     },
     {
+      "id": "quran-research",
+      "name": "Qur'an Research",
+      "description": "Qur'an language research and evidence-based workflows",
+      "public_api": [
+        "getHealth",
+        "reportIssue"
+      ],
+      "dependencies": []
+    },
+    {
       "id": "research",
       "name": "Research",
       "description": "Research navigation icon organ adapter.",
@@ -127,6 +147,46 @@
       "dependencies": []
     },
     {
+      "id": "sidebar",
+      "name": "Sidebar",
+      "description": "navigation and entity discovery",
+      "public_api": [
+        "getHealth",
+        "reportIssue"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "storage",
+      "name": "Storage",
+      "description": "file indexing and organization",
+      "public_api": [
+        "getHealth",
+        "reportIssue"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "tool-factory",
+      "name": "Tool Factory",
+      "description": "safe tool creation and execution",
+      "public_api": [
+        "getHealth",
+        "reportIssue"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "ui",
+      "name": "UI",
+      "description": "presentation and adaptive layout",
+      "public_api": [
+        "getHealth",
+        "reportIssue"
+      ],
+      "dependencies": []
+    },
+    {
       "id": "user-preference-intelligence",
       "name": "User Preference Intelligence",
       "description": "Learns user-approved presentation and interaction preferences without claiming to read minds.",
@@ -135,6 +195,16 @@
         "forgetPreference",
         "getPreferences",
         "recordPreference"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "voice",
+      "name": "Voice",
+      "description": "context-aware voice processing",
+      "public_api": [
+        "getHealth",
+        "reportIssue"
       ],
       "dependencies": []
     }

@@ -53,7 +53,7 @@ def main() -> int:
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
         "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js",
-        "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js")]
+        "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/organs/voice/index.js")]
     if not all(p.is_file() for p in required):
         raise SystemExit("ORGAN ASSET PREP: required browser files are missing")
     print(f"ORGAN ASSET PREP: PASS — {len(ui_ids)} UI organs prepared")

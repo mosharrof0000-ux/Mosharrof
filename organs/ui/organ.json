@@ -1,0 +1,10 @@
+{
+  "id": "ui",
+  "name": "UI",
+  "description": "presentation and adaptive layout",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}
