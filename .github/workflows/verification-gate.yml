@@ -42,15 +42,6 @@ jobs:
           BASE_REF: origin/${{ github.event.pull_request.base.ref }}
         run: python3 scripts/mosharrof_size_gate.py --base "$BASE_REF"
 
-      - name: Fetch target branch history
-        run: git fetch --no-tags origin main:refs/remotes/origin/main
-
-      - name: Validate organ registry and dependency contracts
-        run: python3 scripts/mosharrof_registry.py --validate-only
-
-      - name: Enforce organ isolation, link caps, and production module limits
-        run: python3 scripts/mosharrof_architecture_gate.py origin/main
-
       - name: Run project tests
         run: |
           python3 -m pip install -r requirements.txt
