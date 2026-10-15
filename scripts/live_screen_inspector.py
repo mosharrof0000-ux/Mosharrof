@@ -104,6 +104,15 @@ async def main():
                 aria_hidden = await drawer_loc.get_attribute("aria-hidden")
                 record(f"{label}_drawer_opens", is_open,
                        f"selector={drawer}; aria-hidden={aria_hidden}")
+                record(f"{label}_drawer_aria_state", aria_hidden == ("false" if is_open else "true"),
+                       f"open={is_open}; aria-hidden={aria_hidden}")
+                other_drawer = "#drawerRight" if label == "left" else "#drawerLeft"
+                other_state = await page.locator(other_drawer).evaluate(
+                    "(el) => ({open: el.classList.contains('open'), hidden: el.getAttribute('aria-hidden')})"
+                )
+                record(f"{label}_drawer_exclusive",
+                       not other_state["open"] and other_state["hidden"] == "true",
+                       f"other drawer state={other_state}")
                 await page.screenshot(path=str(out / f"{label}-drawer.png"), full_page=True)
                 if is_open:
                     controls = await drawer_loc.locator("button, a, input, select, textarea, [role=button]").evaluate_all(
