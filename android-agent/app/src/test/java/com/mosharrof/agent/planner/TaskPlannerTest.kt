@@ -42,6 +42,10 @@ class TaskPlannerTest {
         )
     }
 
+    @Test fun plansSwipeOnlyForAnExplicitInstalledApp() {
+        assertEquals(TaskPlan.SwipeScreen(AgentAction.Direction.DOWN, apps[0]), planner.plan("scroll down in YouTube", apps))
+    }
+
     @Test fun asksForChoiceWhenNameIsPartial() {
         assertTrue(planner.plan("open You", apps) is TaskPlan.NeedsChoice)
     }
