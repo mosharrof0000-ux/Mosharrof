@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
     private var pendingSettings: TaskPlan? = null
     private var pendingTap: TaskPlan.TapVisibleText? = null
     private var pendingSwipe: TaskPlan.SwipeScreen? = null
+    private var pendingNavigation: AgentAction.NavigationDestination? = null
     private lateinit var status: TextView
     private lateinit var speechStatus: TextView
     private lateinit var screenDetails: TextView
@@ -73,6 +74,7 @@ class MainActivity : ComponentActivity() {
                     pendingSettings != null -> launchConfirmedSettings()
                     pendingTap != null -> launchConfirmedTap()
                     pendingSwipe != null -> launchConfirmedSwipe()
+                    pendingNavigation != null -> launchConfirmedNavigation()
                 }
             }
         }
@@ -107,7 +109,7 @@ class MainActivity : ComponentActivity() {
             addView(planButton)
             addView(confirmButton)
             SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
-            TaskControlButtons.addCancelButton(this@MainActivity, this) { pendingApp = null; pendingSettings = null; pendingTap = null; pendingSwipe = null; MosharrofAccessibilityService.cancelSemanticTap(); MosharrofAccessibilityService.cancelInspection(); confirmButton.isEnabled = false; status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।" }
+            TaskControlButtons.addCancelButton(this@MainActivity, this) { pendingApp = null; pendingSettings = null; pendingTap = null; pendingSwipe = null; pendingNavigation = null; MosharrofAccessibilityService.cancelSemanticTap(); MosharrofAccessibilityService.cancelInspection(); confirmButton.isEnabled = false; status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।" }
             addView(inspectButton)
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
@@ -135,6 +137,17 @@ class MainActivity : ComponentActivity() {
                 status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
                 confirmButton.isEnabled = true
             }
+            is TaskPlan.GlobalNavigation -> {
+                pendingNavigation = plan.destination
+                val label = when (plan.destination) {
+                    AgentAction.NavigationDestination.BACK -> "এক ধাপ পেছনে যাওয়া"
+                    AgentAction.NavigationDestination.HOME -> "হোম স্ক্রিন খোলা"
+                    AgentAction.NavigationDestination.NOTIFICATIONS -> "নোটিফিকেশন প্যানেল খোলা"
+                    AgentAction.NavigationDestination.RECENTS -> "সাম্প্রতিক অ্যাপ দেখানো"
+                }
+                status.text = "পরিকল্পনা: $label হবে। নিশ্চিত করুন।"
+                confirmButton.isEnabled = isServiceEnabled()
+            }
             is TaskPlan.SwipeScreen -> {
                 pendingSwipe = plan
                 status.text = "পরিকল্পনা: ${plan.app.label}-এ ${plan.direction.name.lowercase()} দিকে একবার স্ক্রল হবে। নিশ্চিত করুন।"
@@ -161,6 +174,23 @@ class MainActivity : ComponentActivity() {
         val plan = pendingSettings ?: return
         status.text = settingsLauncher.launch(plan)
         pendingSettings = null
+        confirmButton.isEnabled = false
+    }
+    private fun launchConfirmedNavigation() {
+        val destination = pendingNavigation ?: return
+        if (!isServiceEnabled()) {
+            status.text = "Accessibility বন্ধ; কোনো নেভিগেশন করা হয়নি।"
+            return
+        }
+        val decision = ActionPolicy(installedApps().map { it.packageName }.toSet())
+            .evaluate(AgentAction.GlobalNavigation(destination), 0)
+        if (decision.decision == PolicyDecision.DENY) {
+            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
+            return
+        }
+        val success = MosharrofAccessibilityService.performGlobalNavigation(destination)
+        status.text = if (success) "নেভিগেশন অনুরোধ Android গ্রহণ করেছে।" else "Android নেভিগেশন অনুরোধ গ্রহণ করেনি।"
+        pendingNavigation = null
         confirmButton.isEnabled = false
     }
     private fun launchConfirmedSwipe() {
