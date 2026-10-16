@@ -27,6 +27,6 @@ assert.ok(wrapper.includes("cp core/device-control.js android-web/device-control
 assert.ok(activity.includes("cp native/android/DeviceControlPlugin.java"));
 assert.ok(activity.includes("registerPlugin(DeviceControlPlugin.class)"));
 assert.ok(assets.includes('"core/device-control.js": "web/device-control.js"'));
-assert.ok(workflow.includes("node scripts/test_device_control_contract.mjs"));
+assert.ok(workflow.includes("scripts/android/test-agent-contracts.sh"));
 
 console.log("Device-control safety: PASS");
