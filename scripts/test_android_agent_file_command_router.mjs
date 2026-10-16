@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 const require = createRequire(import.meta.url);
-const { createCommandRouter } = require("../core/android-agent-command-router.js");
+const { createFileCommandRouter } = require("../core/android-agent-file-command-router.js");
+const mainRouter = await import("node:fs/promises").then(fs => fs.readFile("core/android-agent-command-router.js", "utf8"));
+assert.ok(mainRouter.includes("MosharrofAndroidFileCommandRouter"));
 const taskPlanner = require("../core/android-agent-task-planner.js");
 const assets = readFileSync("scripts/android/prepare-agent-web-assets.py", "utf8");
 assert.ok(assets.includes('"android-agent-task-planner.js"'));
@@ -16,7 +18,7 @@ globalThis.MosharrofFiles = {
     { files: [{ name: "a.mp3" }, { name: "copy.mp3" }] }
   ], truncated: false }; }
 };
-const router = createCommandRouter({ taskPlanner, confirm: () => true, report: text => { reported = text; } });
+const router = createFileCommandRouter({ taskPlanner, confirm: () => true, report: text => { reported = text; } });
 let result = router.handle("ফাইলের তালিকা দেখাও");
 assert.equal(result.handled, true);
 await result.promise;
