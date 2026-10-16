@@ -19,6 +19,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 
 - [x] Standalone Kotlin Android app and manifest
 - [x] User-facing Accessibility Settings entry point
+- [x] Capability access hub linking to Android Accessibility, overlay, all-files, usage-access, battery-optimization and app-permission settings (user grants each access explicitly; latest CI/device verification pending)
 - [x] Bounded, read-only accessibility event inspection
 - [x] Explicit current-screen snapshot: package, bounded node count, and up to 40 short visible labels
 - [x] Deterministic Bengali/English text intent parsing
