@@ -52,5 +52,7 @@ assert.equal((await memory.list()).length, 0);
 const prepSource = await (await import("node:fs/promises")).readFile(new URL("../scripts/prepare_web_organ_runtime.py", import.meta.url), "utf8");
 assert.match(prepSource, /"core\/personal-memory-engine\\.js": "web\/personal-memory-engine\\.js"/);
 assert.match(prepSource, /"core\/personal-memory-bridge\\.js": "web\/personal-memory-bridge\\.js"/);
-assert.match(prepSource, /<script type="module" src="\\.\/personal-memory-bridge\\.js"><\\/script>/);
+assert.ok(prepSource.includes('"core/personal-memory-engine.js": "web/personal-memory-engine.js"'));
+assert.ok(prepSource.includes('"core/personal-memory-bridge.js": "web/personal-memory-bridge.js"'));
+assert.ok(prepSource.includes('<script type="module" src="./personal-memory-bridge.js"></script>'));
 console.log("Personal memory engine tests passed.");
