@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const ui = readFileSync("core/device-control.js", "utf8");
+const capabilities = readFileSync("core/android-agent-capabilities.js", "utf8");
+const plan = readFileSync("docs/ANDROID_AGENTIC_AUTOMATION_PLAN.md", "utf8");
 const accessibility = readFileSync("native/android/AgentAccessibilityService.java", "utf8");
 const accessibilityXml = readFileSync("native/android/agent_accessibility_service.xml", "utf8");
 const accessibilityPlugin = readFileSync("native/android/AndroidAccessibilityPlugin.java", "utf8");
