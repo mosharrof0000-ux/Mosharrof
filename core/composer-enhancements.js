@@ -1,10 +1,14 @@
+import { initializeComposerStopControl } from "./composer-stop.js";
+
 export function initializeComposerEnhancements() {
   if (typeof document === "undefined") return;
-  if (document.getElementById("composerExpandBtn")) return;
   const input = document.getElementById("input");
   const composer = document.getElementById("composer");
   const send = document.getElementById("sendBtn");
   if (!input || !composer || !send) return;
+
+  initializeComposerStopControl(send);
+  if (document.getElementById("composerExpandBtn")) return;
 
   const style = document.createElement("style");
   style.id = "chat-composer-expand-styles";

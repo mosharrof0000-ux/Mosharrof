@@ -50,6 +50,8 @@ jobs:
 
       - name: Verify mediated Android device-control contract
         run: node scripts/test_device_control_contract.mjs
+      - name: Verify expanded Android settings hub actions and native contract v2
+        run: node scripts/test_android_settings_hub.mjs
 
       - name: Build debug APK
         working-directory: android
