@@ -12,6 +12,38 @@ class TaskPlannerTest {
         InstalledApp("Settings", "com.android.settings")
     )
 
+    @Test fun plansDialerInsteadOfPlacingCallDirectly() {
+        assertEquals(
+            TaskPlan.SystemIntent(DeviceIntentRequest.Kind.DIAL, target = "01712345678"),
+            planner.plan("call 01712345678", apps)
+        )
+    }
+
+    @Test fun plansSmsDraftInsteadOfSendingDirectly() {
+        assertEquals(
+            TaskPlan.SystemIntent(DeviceIntentRequest.Kind.COMPOSE_SMS, target = "01712345678", text = "আমি আসছি"),
+            planner.plan("sms 01712345678 আমি আসছি", apps)
+        )
+    }
+
+    @Test fun plansAndroidTimerIntent() {
+        assertEquals(
+            TaskPlan.SystemIntent(DeviceIntentRequest.Kind.SET_TIMER, seconds = 600),
+            planner.plan("timer 10 minutes", apps)
+        )
+    }
+
+    @Test fun plansCalendarDraft() {
+        assertEquals(
+            TaskPlan.SystemIntent(DeviceIntentRequest.Kind.CREATE_CALENDAR_EVENT, text = "ডাক্তার দেখানো"),
+            planner.plan("calendar ডাক্তার দেখানো", apps)
+        )
+    }
+
+    @Test fun rejectsMalformedPhoneIntent() {
+        assertTrue(planner.plan("call unknown", apps) is TaskPlan.Rejected)
+    }
+
     @Test fun resolvesExactInstalledApp() {
         assertEquals(TaskPlan.OpenApp(apps[0]), planner.plan("open YouTube", apps))
     }
