@@ -1,7 +1,7 @@
 import { buildChatContext } from "../core/chat-context.js";
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
-import { parseImageSpec } from "../core/image-spec.js"; import { formatRetrievedMemory, formatResponseStyle } from "../core/personal-memory/context.js"; import { buildPersonalizedUserPrompt } from "../core/personal-memory/prompt.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
+import { parseImageSpec } from "../core/image-spec.js"; import { buildPersonalizedUserPrompt } from "../core/personal-memory/prompt.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
@@ -451,7 +451,7 @@ async function runChat(body,env,onStatus){
   const preferred=env.GEMINI_CHAT_MODEL
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
-  const userPrompt=buildPersonalizedUserPrompt(text,targetWords,body,buildReflectiveUserPrompt,formatRetrievedMemory,formatResponseStyle);
+  const userPrompt=buildPersonalizedUserPrompt(text,targetWords,body,buildReflectiveUserPrompt);
   const payload={contents:[{parts:[{text:userPrompt}]}]};
   if(targetWords)payload.generationConfig={temperature:0.3,maxOutputTokens};
   const geminiPlan=[];
