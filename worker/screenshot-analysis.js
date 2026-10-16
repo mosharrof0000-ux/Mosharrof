@@ -107,7 +107,7 @@ async function generateWithGeminiTTS(text,body,env,apiKey,model){
     }
     const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{
       method:"POST",headers:{"content-type":"application/json","x-goog-api-key":apiKey},
-      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Read the following text aloud naturally in Bengali. Preserve its meaning and pronunciation. Do not add commentary.\\n\\n"+text}]}],
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Read the following text aloud naturally in Bengali. Preserve its meaning and pronunciation. Do not add commentary.\n\n"+text}]}],
         generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}})
     });
     const data=await r.json().catch(()=>({}));
@@ -434,7 +434,7 @@ async function transcribeAudio(request,env){
   return reply({error:"audio_transcription_failed",attempted},502);
 }
 async function runChat(body,env,onStatus){
-  const text=buildChatContext(body.text,body.history);
+  const text=buildChatContext(body.text,body.history,body.memory_context);
   if(!text)return {status:400,data:{error:"text_required"}};
   if(text.length>12000)return {status:413,data:{error:"text_too_large"}};
   const targetWords=requestedWordCount(body.text);
@@ -451,9 +451,8 @@ async function runChat(body,env,onStatus){
   const preferred=env.GEMINI_CHAT_MODEL
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
-  const userPrompt=buildReflectiveUserPrompt(targetWords
-    ? text+"\n\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words. Continue the requested story or text in full, with coherent structure and no premature summary. Do not claim the target was met if output is cut off."
-    : text);
+  const userPrompt=buildReflectiveUserPrompt(text,{targetWords});
+  const fallbackText=targetWords?text+"\n\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words; continue fully and do not claim completion if cut off.":text;
   const payload={contents:[{parts:[{text:userPrompt}]}]};
   if(targetWords)payload.generationConfig={temperature:0.3,maxOutputTokens};
   const geminiPlan=[];
@@ -483,7 +482,7 @@ async function runChat(body,env,onStatus){
       report({stage:"failed",provider:"gemini",model});
     }
   }
-  const cloudflare=await generateWithCloudflareChat(text,env,report,targetWords);
+  const cloudflare=await generateWithCloudflareChat(fallbackText,env,report,targetWords);
   attempted.push({provider:cloudflare.provider,model:cloudflare.model||null,status:cloudflare.status||null,reason:cloudflare.ok?null:cloudflare.reason||"failed"});
   if(cloudflare.ok){
     report({stage:"answered",provider:cloudflare.provider,model:cloudflare.model});
@@ -492,7 +491,7 @@ async function runChat(body,env,onStatus){
   const groq=await generateWithOpenAICompatibleChat(
     "groq","https://api.groq.com/openai/v1/chat/completions",
     String(env.GROQ_API_KEY||"").trim(),
-    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text,{},report,targetWords
+    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),fallbackText,{},report,targetWords
   );
   attempted.push({provider:groq.provider,model:groq.model||null,status:groq.status||null,reason:groq.ok?null:groq.reason||"failed"});
   if(groq.ok){
@@ -502,7 +501,7 @@ async function runChat(body,env,onStatus){
   const openrouter=await generateWithOpenAICompatibleChat(
     "openrouter","https://openrouter.ai/api/v1/chat/completions",
     String(env.OPENROUTER_API_KEY||"").trim(),
-    String(env.OPENROUTER_CHAT_MODEL||"meta-llama/llama-3.3-70b-instruct:free").trim(),text,
+    String(env.OPENROUTER_CHAT_MODEL||"meta-llama/llama-3.3-70b-instruct:free").trim(),fallbackText,
     {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"},report,targetWords
   );
   attempted.push({provider:openrouter.provider,model:openrouter.model||null,status:openrouter.status||null,reason:openrouter.ok?null:openrouter.reason||"failed"});
