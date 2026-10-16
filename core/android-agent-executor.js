@@ -5,6 +5,8 @@
 (function (root) {
   "use strict";
 
+  const guardApi = typeof module !== "undefined" && module.exports
+    ? require("./android-agent-executor-guards.js") : root.MosharrofAndroidAgentExecutorGuards;
   const recoveryHandler = options => options.recoveryHandler ||
     (typeof module !== "undefined" && module.exports
       ? require("./android-agent-executor-recovery.js") : root.MosharrofAndroidAgentExecutorRecovery);
@@ -40,15 +42,8 @@
 
     async function run(plan) {
       cancelled = false;
-      if (!plan || plan.status !== "preview" || !Array.isArray(plan.steps) || !plan.steps.length) {
-        return { status: "rejected", reason: "শুধু যাচাইযোগ্য preview plan চালানো যায়।", steps: [] };
-      }
-      if (plan.steps.length > maxSteps) {
-        return { status: "rejected", reason: "নিরাপত্তার জন্য পরিকল্পনায় অতিরিক্ত ধাপ আছে।", steps: [] };
-      }
-      if (!adapter || typeof adapter.execute !== "function" || typeof verify !== "function") {
-        return { status: "unavailable", reason: "Native executor ও postcondition verifier সংযুক্ত নেই; কোনো কাজ চালানো হয়নি।", steps: [] };
-      }
+      const rejected = guardApi.validatePlan(plan, maxSteps, adapter, verify);
+      if (rejected) return rejected;
 
       const results = [];
       for (let i = 0; i < plan.steps.length; i += 1) {
