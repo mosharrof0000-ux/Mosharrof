@@ -27,7 +27,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] Common Bengali app aliases and installed-app discovery
 - [x] Confirmed Back/Home/Notifications/Recent Apps commands; deterministic parser and policy tests added (emulator/physical-device verification pending)
 - [x] User-toggleable draggable Accessibility overlay with edge snapping, long-press expand/collapse, close control, and one-tap launch of the voice-command flow (latest CI and physical-device verification pending)
-- [x] On-demand read-only battery, internal storage, and network diagnostics displayed locally (physical-device verification pending)
+- [x] On-demand read-only battery, internal storage, system RAM/low-memory warning, network transport/connectivity, device model, Android version and uptime diagnostics displayed locally (physical-device verification pending)
 - [x] User-selected folder inventory and bounded SHA-256 duplicate scan; duplicates are only deleted after a separate confirmation (CI/device verification pending)
 - [x] User-triggered screen screenshot capture, in-app preview, and transient UI-label analysis
 - [x] Explicitly opt-in Gemini Vision screenshot analysis; the API key is encrypted at rest with Android Keystore and the image is uploaded only after a separate user tap. Structured next-command suggestions are passed back through the local planner and confirmation gate (CI/live API/device verification pending)
