@@ -30,6 +30,7 @@ def main() -> int:
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
         "core/device-control.js": "web/device-control.js",
+        "core/device-communication-ui.js": "web/device-communication-ui.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
     }
@@ -54,6 +55,12 @@ def main() -> int:
         if anchor_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for device-control asset")
         index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + device_tag, 1)
+
+    communication_tag = '<script src="./device-communication-ui.js"></script>'
+    if communication_tag not in index_html:
+        if device_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: device-control script anchor missing for communication UI")
+        index_html = index_html.replace(device_tag, device_tag + "\n" + communication_tag, 1)
 
     video_tag = '<script src="./video-generation-ui.js"></script>'
     if video_tag not in index_html:
@@ -96,7 +103,7 @@ def main() -> int:
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
-        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js")]
+        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/device-communication-ui.js", "web/video-generation-ui.js")]
     if not all(p.is_file() for p in required):
         raise SystemExit("ORGAN ASSET PREP: required browser files are missing")
     print(f"ORGAN ASSET PREP: PASS — {len(ui_ids)} UI organs prepared")

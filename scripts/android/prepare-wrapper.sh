@@ -10,6 +10,7 @@ cp -a web android-web
 test -s core/android-edge-to-edge.css
 cp core/android-edge-to-edge.css android-web/edge-to-edge.css
 cp core/device-control.js android-web/device-control.js
+cp core/device-communication-ui.js android-web/device-communication-ui.js
 python - <<'PY'
 from pathlib import Path
 page = Path("android-web/index.html")
@@ -17,6 +18,9 @@ html = page.read_text(encoding="utf-8")
 tag = '<script src="./device-control.js"></script>'
 if tag not in html:
     html = html.replace("</body>", tag + "\n</body>", 1)
+communication_tag = '<script src="./device-communication-ui.js"></script>'
+if communication_tag not in html:
+    html = html.replace(tag, tag + "\n" + communication_tag, 1)
 page.write_text(html, encoding="utf-8")
 PY
 python - <<'PY'
