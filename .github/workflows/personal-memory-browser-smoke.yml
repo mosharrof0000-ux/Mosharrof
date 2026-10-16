@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       test_url:
-        description: "MOSHARROF site URL for a manual live smoke test"
+        description: "MOSHARROF site URL; a live run sends two test chat requests"
         required: true
         default: "https://mosharrof0000-ux.github.io/Mosharrof/"
 
