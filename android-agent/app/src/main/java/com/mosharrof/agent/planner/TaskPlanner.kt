@@ -14,16 +14,16 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
         return when (val intent = parser.parse(command)) {
             is ParsedIntent.Unsupported -> TaskPlan.Rejected(intent.reason)
             is ParsedIntent.OpenApp -> {
-                val query = normalize(intent.query)
+                val query = normalizeAppName(intent.query)
                 val matches = installedApps
-                    .filter { normalize(it.label) == query }
+                    .filter { normalizeAppName(it.label) == query }
                     .distinctBy { it.packageName }
                 when (matches.size) {
                     1 -> TaskPlan.OpenApp(matches.single())
                     0 -> {
                         val partial = installedApps.filter {
-                            normalize(it.label).contains(query) ||
-                                query.contains(normalize(it.label))
+                            normalizeAppName(it.label).contains(query) ||
+                                query.contains(normalizeAppName(it.label))
                         }.distinctBy { it.packageName }.take(MAX_CHOICES)
                         if (partial.isEmpty()) TaskPlan.Rejected("ইনস্টল করা অ্যাপে এই নাম পাওয়া যায়নি")
                         else TaskPlan.NeedsChoice(partial)
@@ -34,10 +34,26 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
         }
     }
 
-    private fun normalize(value: String): String =
-        value.trim().lowercase().replace(Regex("[^\\p{L}\\p{N}]"), "")
+    private fun normalizeAppName(value: String): String {
+        val normalized = value.trim().lowercase().replace(Regex("[^\\p{L}\\p{N}]"), "")
+        return BENGALI_ALIASES[normalized] ?: normalized
+    }
 
     companion object {
         const val MAX_CHOICES = 5
+        private val BENGALI_ALIASES = mapOf(
+            "ইউটিউব" to "youtube",
+            "হোয়াটসঅ্যাপ" to "whatsapp",
+            "হোয়াটসঅ্যাপ" to "whatsapp",
+            "ফেসবুক" to "facebook",
+            "মেসেঞ্জার" to "messenger",
+            "ক্রোম" to "chrome",
+            "ক্যামেরা" to "camera",
+            "গ্যালারি" to "gallery",
+            "সেটিংস" to "settings",
+            "টেলিগ্রাম" to "telegram",
+            "জিমেইল" to "gmail",
+            "ইনস্টাগ্রাম" to "instagram"
+        )
     }
 }
