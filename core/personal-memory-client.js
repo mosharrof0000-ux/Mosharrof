@@ -68,7 +68,7 @@ function mountMemoryPanel(memory) {
   const enabled=document.createElement("input"); enabled.type="checkbox"; enabled.id="mosharrof-memory-enabled";
   try {
     const saved=localStorage.getItem("mosharrof-personal-memory-enabled-v1");
-    if(saved===null){localStorage.setItem("mosharrof-personal-memory-enabled-v1","enabled");enabled.checked=true;}
+    if(saved===null){localStorage.setItem("mosharrof-personal-memory-enabled-v1","disabled");enabled.checked=false;}
     else enabled.checked=saved==="enabled";
   } catch { enabled.checked=false; }
   enabled.addEventListener("change",()=>{try{localStorage.setItem("mosharrof-personal-memory-enabled-v1",enabled.checked?"enabled":"disabled");}catch{}});
