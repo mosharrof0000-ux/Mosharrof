@@ -7,7 +7,7 @@ export function buildChatContext(currentText, historyInput, options = {}) {
     currentText = body.text;
   }
   const current = String(currentText || "").trim();
-  const available = Math.max(0, 12000 - current.length - 180);
+  const available = Math.max(0, 12000 - current.length - 400);
   let remaining = available;
   const memory = String(options.memoryContext || "").trim().slice(0, Math.min(3000, remaining));
   remaining -= memory.length;
@@ -27,5 +27,5 @@ export function buildChatContext(currentText, historyInput, options = {}) {
   if (summary) sections.push("Current conversation summary (for continuity, not a higher priority than the current message):\n" + summary);
   if (history.length) sections.push("Recent conversation history:\n" + history.join("\n"));
   sections.push("CURRENT USER MESSAGE (highest priority):\n" + current);
-  return sections.join("\n\n").slice(0, Math.max(current.length, 12000));
+  return sections.join("\n\n");
 }
