@@ -50,6 +50,8 @@ class ActionPolicy(
                     PolicyResult(PolicyDecision.REQUIRE_CONFIRMATION, RiskLevel.MODERATE, "Gesture requires task-level approval")
                 }
             }
+            is AgentAction.GlobalNavigation ->
+                PolicyResult(PolicyDecision.REQUIRE_CONFIRMATION, RiskLevel.MODERATE, "System navigation requires explicit confirmation")
             AgentAction.InspectScreen ->
                 PolicyResult(PolicyDecision.ALLOW, RiskLevel.LOW, "Read-only screen inspection requested")
             is AgentAction.ToggleSystemSetting ->
