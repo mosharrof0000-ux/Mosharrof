@@ -26,7 +26,7 @@ export function createPersonalMemoryEngine({ store, now = nowIso, createId = () 
     const createdAt = input.createdAt || now();
     const item = {
       id: input.id || createId(), kind: input.kind || "message", role: input.role || "note",
-      text: text.slice(0, 24000), folder: classifyMemoryFolder(text, input.folder),
+      text, folder: classifyMemoryFolder(text, input.folder),
       topic: safeText(input.topic || "").slice(0, 120), tags: Array.isArray(input.tags) ? input.tags.slice(0, 12).map(x => safeText(x).slice(0, 40)) : [],
       conversationId: safeText(input.conversationId || "default").slice(0, 100),
       source: input.source || "conversation", confidence: Number.isFinite(input.confidence) ? Math.max(0, Math.min(1, input.confidence)) : 0.65,
