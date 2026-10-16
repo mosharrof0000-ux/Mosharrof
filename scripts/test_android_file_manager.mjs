@@ -21,8 +21,11 @@ assert.match(java, /ACTION_OPEN_DOCUMENT_TREE/);
 assert.match(java, /takePersistableUriPermission/);
 assert.match(java, /confirmed/);
 assert.match(java, /safeName/);
-assert.match(installer, /MosharrofFilesPlugin\.class/);
+assert.match(installer, /AndroidFileManagerPlugin\\.class/);
+assert.doesNotMatch(installer, /MosharrofFilesPlugin\\.class/, "duplicate plugin registration must be removed");
 assert.match(wrapper, /android-file-manager\.js/);
+assert.match(ui, /Plugins\\.AndroidFileManager/, "UI must use the registered native plugin name");
+assert.doesNotMatch(ui, /Plugins\\.FileManager/, "stale plugin name must not remain");
 
 const bytesA = new TextEncoder().encode("same audio bytes").buffer;
 const bytesB = new TextEncoder().encode("same audio bytes").buffer;
