@@ -118,11 +118,20 @@ export function createPersonalMemoryEngine(options = {}) {
       .slice(0, Math.max(1, Math.min(16, Number(limit) || 8)));
   }
   async function buildContext(query) {
-    const memories = await recall(query, 10);
+    const memories = await recall(query, 16);
     if (!memories.length) return "";
-    return "PERSONAL MEMORY (user-provided history, possibly incomplete; use as tentative context, never as proof; the current request overrides it):\n" +
-      memories.sort((a, b) => a.sequence - b.sequence)
-        .map(row => "[" + row.isoTime + " · " + row.kind + "] " + row.text.slice(0, 700)).join("\n");
+    const latestPreferences = new Map();
+    for (const row of memories.slice().sort((a, b) => a.sequence - b.sequence)) {
+      if (row.kind === "preference") {
+        const key = row.preferences?.[0]?.key || row.tags?.[1] || row.id;
+        latestPreferences.set(key, row);
+      }
+    }
+    const selected = memories.filter(row => row.kind !== "preference").slice(-7)
+      .concat(Array.from(latestPreferences.values()))
+      .sort((a, b) => a.sequence - b.sequence);
+    return "PERSONAL MEMORY, OLDEST TO NEWEST (past user-provided context; may be incomplete or stale; current request overrides it):\n" +
+      selected.map(row => "[" + row.isoTime + " · " + row.kind + "] " + row.text.slice(0, 700)).join("\n");
   }
   async function list(limit = 100) {
     const rows = await allRows();
