@@ -78,11 +78,10 @@ async def main() -> int:
             lines.append("persisted_after_reload=true")
             lines.append("result=PASS")
             print("\n".join(lines))
-        except (PlaywrightTimeoutError, Exception) as exc:
+        except Exception as exc:
             lines.extend([f"result=FAIL", f"error={type(exc).__name__}: {exc}"])
             print("\n".join(lines))
             evidence.write_text("\n".join(lines) + "\n", encoding="utf-8")
-            await browser.close()
             return 1
         finally:
             await context.close()
