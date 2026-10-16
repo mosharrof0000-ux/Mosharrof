@@ -272,17 +272,39 @@ async function tts(request,env){
 }
 
 const CHAT_PROVIDER_TIMEOUT_MS=12000;
-async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
+const LONG_CHAT_PROVIDER_TIMEOUT_MS=120000;
+function requestedWordCount(value){
+  const text=String(value||"").replace(/[০-৯]/g,d=>String("০১২৩৪৫৬৭৮৯".indexOf(d))).replace(/,/g,"");
+  const unit="(?:words?|শব্দ|ওয়ার্ড|ওয়ার্ড)";
+  const patterns=[
+    new RegExp("(\\d{1,6})\\s*(?:-|\\s)?"+unit,"i"),
+    new RegExp("(\\d{1,3})\\s*(?:thousand|k)\\s*"+unit,"i"),
+    new RegExp("(\\d{1,3})\\s*হাজার\\s*"+unit,"i"),
+    new RegExp("(\\d{1,6})\\s*[- ]?"+unit+"\\s*(?:long|লম্বা|দীর্ঘ)","i")
+  ];
+  for(const pattern of patterns){
+    const match=text.match(pattern);
+    if(!match)continue;
+    let count=Number(match[1]);
+    if(/thousand|k|হাজার/i.test(match[0]))count*=1000;
+    if(Number.isFinite(count)&&count>0)return Math.min(20000,Math.floor(count));
+  }
+  return 0;
+}
+function outputTokenBudget(words){
+  return words>0?Math.min(65536,Math.max(2048,Math.ceil(words*3.1)+512)):0;
+}
+async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY, timeoutMs=CHAT_PROVIDER_TIMEOUT_MS){
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
     method:"POST",
     headers:{"content-type":"application/json","x-goog-api-key":apiKey},
     body:JSON.stringify(body),
-    signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)
+    signal:AbortSignal.timeout(timeoutMs)
   });
   const data=await upstream.json().catch(()=>({}));
   return {upstream,data,model};
 }
-async function generateWithCloudflareChat(text,env,onStatus){
+async function generateWithCloudflareChat(text,env,onStatus,targetWords=0){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   const configured=String(env.CLOUDFLARE_CHAT_MODELS||env.CLOUDFLARE_CHAT_MODEL||"@cf/zai-org/glm-4.7-flash,@cf/meta/llama-3.3-70b-instruct-fp8-fast");
   const models=[...new Set(configured.split(",").map(x=>x.trim()).filter(Boolean))];
@@ -294,7 +316,7 @@ async function generateWithCloudflareChat(text,env,onStatus){
       const result=await withChatProviderTimeout(env.AI.run(model,{messages:[
         {role:"system",content:buildReflectiveSystemPrompt()},
         {role:"user",content:text}
-      ],max_tokens:1024,temperature:0.3}),CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
+      ],max_tokens:targetWords?Math.min(8192,maxOutputTokens):1024,temperature:0.3}),targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
       const answer=String(result?.response||result?.choices?.[0]?.message?.content||"").trim();
       if(answer)return {ok:true,provider:"cloudflare-workers-ai",model,text:answer};
       last={model,reason:"empty_response"};
@@ -303,7 +325,7 @@ async function generateWithCloudflareChat(text,env,onStatus){
   }
   return {ok:false,provider:"cloudflare-workers-ai",model:last?.model||null,reason:last?.reason||"all_models_failed"};
 }
-async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={},onStatus){
+async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={},onStatus,targetWords=0){
   if(!apiKey)return {ok:false,provider,reason:"not_configured"};
   if(onStatus)onStatus({stage:"trying",provider,model});
   try{
@@ -313,8 +335,8 @@ async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,t
       body:JSON.stringify({model,messages:[
         {role:"system",content:buildReflectiveSystemPrompt()},
         {role:"user",content:text}
-      ],temperature:0.3,max_tokens:1024}),
-      signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)
+      ],temperature:0.3,max_tokens:targetWords?Math.min(8192,outputTokenBudget(targetWords)):1024}),
+      signal:AbortSignal.timeout(targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS)
     });
     const data=await upstream.json().catch(()=>({}));
     if(!upstream.ok){if(onStatus)onStatus({stage:"failed",provider,model});return {ok:false,provider,model,status:upstream.status,reason:data?.error?.message||("HTTP "+upstream.status)};}
@@ -487,6 +509,8 @@ async function runChat(body,env,onStatus){
   const text=buildChatContext(body.text,body.history);
   if(!text)return {status:400,data:{error:"text_required"}};
   if(text.length>12000)return {status:413,data:{error:"text_too_large"}};
+  const targetWords=requestedWordCount(body.text);
+  const maxOutputTokens=outputTokenBudget(targetWords);
   const report=event=>{if(typeof onStatus==="function")onStatus(event);};
   const attempted=[];
   const configuredKeys=[
@@ -499,7 +523,11 @@ async function runChat(body,env,onStatus){
   const preferred=env.GEMINI_CHAT_MODEL
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
-  const payload={contents:[{parts:[{text:buildReflectiveUserPrompt(text)}]}]};
+  const userPrompt=buildReflectiveUserPrompt(targetWords
+    ? text+"\\n\\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words. Continue the requested story or text in full, with coherent structure and no premature summary. Do not claim the target was met if output is cut off."
+    : text);
+  const payload={contents:[{parts:[{text:userPrompt}]}]};
+  if(targetWords)payload.generationConfig={temperature:0.3,maxOutputTokens};
   const geminiPlan=[];
   if(configuredKeys.length){
     for(const [slot,apiKey] of configuredKeys)geminiPlan.push({model:preferred[0],slot,apiKey});
@@ -509,7 +537,7 @@ async function runChat(body,env,onStatus){
     const {model,slot,apiKey}=attempt;
     report({stage:"trying",provider:"gemini",model});
     try{
-      const r=await callGemini(env,model,payload,apiKey);
+      const r=await callGemini(env,model,payload,apiKey,targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS);
       if(!r.upstream.ok){
         attempted.push({provider:"gemini",model,credential_slot:slot,status:r.upstream.status,reason:r.data?.error?.message||("HTTP "+r.upstream.status)});
         report({stage:"failed",provider:"gemini",model});
@@ -518,7 +546,7 @@ async function runChat(body,env,onStatus){
       const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
       if(answer){
         report({stage:"answered",provider:"gemini",model});
-        return {status:200,data:{ok:true,provider:"gemini",model,text:answer,attempted}};
+        return {status:200,data:{ok:true,provider:"gemini",model,text:answer,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}: {})}};
       }
       attempted.push({provider:"gemini",model,credential_slot:slot,reason:"empty_response"});
       report({stage:"failed",provider:"gemini",model});
@@ -527,32 +555,32 @@ async function runChat(body,env,onStatus){
       report({stage:"failed",provider:"gemini",model});
     }
   }
-  const cloudflare=await generateWithCloudflareChat(text,env,report);
+  const cloudflare=await generateWithCloudflareChat(text,env,report,targetWords);
   attempted.push({provider:cloudflare.provider,model:cloudflare.model||null,status:cloudflare.status||null,reason:cloudflare.ok?null:cloudflare.reason||"failed"});
   if(cloudflare.ok){
     report({stage:"answered",provider:cloudflare.provider,model:cloudflare.model});
-    return {status:200,data:{ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted}};
+    return {status:200,data:{ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
   }
   const groq=await generateWithOpenAICompatibleChat(
     "groq","https://api.groq.com/openai/v1/chat/completions",
     String(env.GROQ_API_KEY||"").trim(),
-    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text,{},report
+    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text,{},report,targetWords
   );
   attempted.push({provider:groq.provider,model:groq.model||null,status:groq.status||null,reason:groq.ok?null:groq.reason||"failed"});
   if(groq.ok){
     report({stage:"answered",provider:groq.provider,model:groq.model});
-    return {status:200,data:{ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted}};
+    return {status:200,data:{ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
   }
   const openrouter=await generateWithOpenAICompatibleChat(
     "openrouter","https://openrouter.ai/api/v1/chat/completions",
     String(env.OPENROUTER_API_KEY||"").trim(),
     String(env.OPENROUTER_CHAT_MODEL||"meta-llama/llama-3.3-70b-instruct:free").trim(),text,
-    {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"},report
+    {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"},report,targetWords
   );
   attempted.push({provider:openrouter.provider,model:openrouter.model||null,status:openrouter.status||null,reason:openrouter.ok?null:openrouter.reason||"failed"});
   if(openrouter.ok){
     report({stage:"answered",provider:openrouter.provider,model:openrouter.model});
-    return {status:200,data:{ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted}};
+    return {status:200,data:{ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
   }
   return {status:502,data:{
     error:"chat_provider_failed",
