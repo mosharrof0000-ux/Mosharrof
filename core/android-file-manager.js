@@ -34,6 +34,21 @@
     if (!String(id || "").trim()) throw new Error("ফাইলের পরিচয় পাওয়া যায়নি।");
     return nativePlugin().deleteItem({ documentId: String(id), confirmed: true });
   }
+  function organizerPlugin() {
+    const plugins = root.Capacitor && root.Capacitor.Plugins;
+    const plugin = plugins && plugins.AndroidMediaOrganizer;
+    if (!plugin) throw new Error("Android media organizer bridge unavailable.");
+    return plugin;
+  }
+  async function moveEntry(id, targetDirectoryId, confirmed, sourceParentId) {
+    if (confirmed !== true) throw new Error("ফাইল সরানোর আগে স্পষ্ট নিশ্চিতকরণ দরকার।");
+    if (!String(id || "").trim() || !String(targetDirectoryId || "").trim()) {
+      throw new Error("উৎস ফাইল ও গন্তব্য ফোল্ডারের পরিচয় দরকার।");
+    }
+    const request = { documentId: String(id), targetDirectoryId: String(targetDirectoryId), confirmed: true };
+    if (String(sourceParentId || "").trim()) request.sourceParentId = String(sourceParentId);
+    return organizerPlugin().moveItem(request);
+  }
   async function scanSelectedDirectoryDuplicates() {
     return nativePlugin().scanDuplicates();
   }
@@ -61,7 +76,7 @@
     };
   }
   const api = Object.freeze({ pickDirectory, getSelectedDirectory, listEntries, createFolder,
-    createTextFile, renameEntry, deleteEntry, scanSelectedDirectoryDuplicates, scanExactDuplicates });
+    createTextFile, renameEntry, deleteEntry, moveEntry, scanSelectedDirectoryDuplicates, scanExactDuplicates });
   root.MosharrofFiles = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
