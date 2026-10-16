@@ -204,7 +204,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
   if(!selected.length)return "";
   return [
     "USER PERSONAL MEMORY (local user-provided conversation history and preferences; may be incomplete or outdated):",
-    "Retrieve only memories relevant to the current request. বর্তমান ব্যবহারকারীর কথা পুরোনো স্মৃতির চেয়ে অগ্রাধিকার পাবে; current user instructions override older preferences and plans.",
+    "প্রাসঙ্গিক সংরক্ষিত স্মৃতি বর্তমান অনুরোধে ব্যবহার করুন। বর্তমান ব্যবহারকারীর কথা পুরোনো স্মৃতির চেয়ে অগ্রাধিকার পাবে; current user instructions override older preferences and plans.",
     "Treat pending_confirmation entries as tentative hypotheses, not established facts. Confirm important or high-impact assumptions.",
     "Consider chronological order: distinguish past events, current goals, future plans, and open questions. Use what happened before to understand the present; superseded entries are not current.",
     "Think ahead only as a grounded possibility from stated goals and events; explain uncertainty briefly and do not claim to know private thoughts.",
