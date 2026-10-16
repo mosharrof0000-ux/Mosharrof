@@ -40,7 +40,7 @@ Use semantic Accessibility node IDs/text/content descriptions before image coord
 - Files: use Storage Access Framework / scoped storage; avoid broad file access unless justified.
 - App launch: use package intents and visible status.
 - System settings: use supported Settings intents; do not silently alter secure settings.
-- Root or shell: excluded from baseline. If separately implemented, require explicit opt-in, a fixed command allowlist, no remote arbitrary command execution, and audit logging.
+- Root and in-app shell execution are excluded. An optional Device Admin receiver/ADB Device Owner provisioning path is available for owner-managed test devices; provisioning requires a trusted external ADB host and Android may require a freshly provisioned device. No remote arbitrary shell commands are executed.
 
 ## Self-healing
 
