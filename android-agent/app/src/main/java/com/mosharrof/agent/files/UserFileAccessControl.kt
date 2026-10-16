@@ -39,8 +39,14 @@ object UserFileAccessControl {
                     android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
         } catch (_: SecurityException) {
-            status.text = "ফোল্ডারের স্থায়ী অনুমতি পাওয়া যায়নি; আবার ফোল্ডার নির্বাচন করুন।"
-            return
+            try {
+                activity.contentResolver.takePersistableUriPermission(
+                    uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: SecurityException) {
+                status.text = "ফোল্ডার পড়ার অনুমতি পাওয়া যায়নি; Android picker থেকে অন্য ফোল্ডার নির্বাচন করুন।"
+                return
+            }
         }
         val root = DocumentFile.fromTreeUri(activity, uri)
         if (root == null || !root.isDirectory) {
