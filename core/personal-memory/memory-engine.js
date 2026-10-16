@@ -13,7 +13,6 @@ export const MEMORY_TOPICS = Object.freeze({
   devices: ["অ্যান্ড্রয়েড", "অ্যান্ড্রয়েড", "android", "ফোন", "ডিভাইস", "automation", "অটোমেশন", "permission", "পারমিশন"],
   voice: ["ভয়েস", "ভয়েস", "voice", "tts", "কণ্ঠ", "শুনুন", "উচ্চারণ"]
 });
-const MAX_RECORD_CHARS = 100000;
 const SECRET_PATTERNS = [
   /\b(?:api[_ -]?key|access[_ -]?token|refresh[_ -]?token|password|passwd|secret|authorization)\s*[:=]\s*[^\s,;]+/gi,
   /\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{20,})\b/g
@@ -21,7 +20,7 @@ const SECRET_PATTERNS = [
 function cleanText(value) {
   let text = String(value ?? "").replace(/\u0000/g, "").trim();
   for (const pattern of SECRET_PATTERNS) text = text.replace(pattern, "[secret redacted]");
-  return text.slice(0, MAX_RECORD_CHARS);
+  return text;
 }
 function keywords(text) {
   const stop = new Set(["এবং","কিন্তু","তাহলে","যেন","করে","করুন","করতে","আমার","তোমার","আপনি","একটা","একটি","যেটা","যেখানে","কেন","কীভাবে","হবে","হয়","হয়","the","and","for","with","that","this","from","what","when","how"]);
@@ -50,6 +49,25 @@ function overlap(a, b) {
   const set = new Set(a);
   return b.reduce((n, word) => n + (set.has(word) ? 1 : 0), 0);
 }
+function extractStablePreference(text) {
+  const value = String(text || "");
+  const lower = value.toLowerCase();
+  if (/(বর্তমানকে.{0,30}(ফলো|অগ্রাধিকার)|অতীতকে.{0,30}চাপিয়ে|current.{0,40}(override|priority)|old memories.{0,40}current)/i.test(value)) {
+    return { key: "memory.current-first", value: "Latest user message and current conversation override older memories", scope: "interaction", source: "explicit", confidence: 1 };
+  }
+  if (/(বিষয়ভিত্তিক|বিষয়ভিত্তিক|ফোল্ডার ভিত্তিক|topic[- ]based).{0,50}(ফোল্ডার|folder|স্মৃতি|memory)/i.test(value)) {
+    return { key: "memory.topic-folders", value: "Organize long-term memories by topic and timeline", scope: "interaction", source: "explicit", confidence: 1 };
+  }
+  const durable = /(আমার পছন্দ|আমি চাই তুমি|আমি চাই যে|সবসময়|সবসময়|always|i prefer|i want you to)/i.test(value);
+  if (!durable) return null;
+  if (/(ছোট|সংক্ষিপ্ত|short).{0,30}(উত্তর|লেখা|গল্প|বল|answer|response|story)/i.test(value)) {
+    return { key: "writing.length", value: "Prefer concise responses unless the current request asks for more", scope: "writing", source: "explicit", confidence: 1 };
+  }
+  if (/(বড়|বড়|দীর্ঘ|বিস্তারিত|long|detailed).{0,30}(উত্তর|লেখা|গল্প|বল|answer|response|story)/i.test(value)) {
+    return { key: "writing.length", value: "Prefer detailed responses when appropriate, while following the current request", scope: "writing", source: "explicit", confidence: 1 };
+  }
+  return null;
+}
 function summaryOf(records, maxChars = 1800) {
   const selected = records.slice(-8).map(item => (item.role === "user" ? "ব্যবহারকারী: " : "MOSHARROF AI: ") + item.text.replace(/\s+/g, " "));
   let summary = selected.join("\n");
@@ -66,6 +84,10 @@ export function createMemoryEngine({ store, now = () => new Date(), id = default
     const item = makeRecord({ id, kind: "conversation-turn", role, text, conversationId, topics, now });
     if (!item) return null;
     await store.put(item);
+    if (role === "user") {
+      const preference = extractStablePreference(content);
+      if (preference) await recordPreference(preference).catch(() => {});
+    }
     return clone(item);
   }
   async function recordPreference({ key, value, scope = "global", source = "explicit", confidence = 1 } = {}) {
