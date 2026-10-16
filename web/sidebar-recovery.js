@@ -124,6 +124,6 @@ import("./composer-enhancements.js")
 
 
 // Install the local-first personal memory bridge for chat requests.
-import("../core/personal-memory-bridge.js")
+import("./personal-memory-bridge.js")
   .then(function () { console.info("[MOSHARROF Memory] Local personal memory bridge ready"); })
   .catch(function (error) { console.error("[MOSHARROF Memory] Bridge initialization failed:", error); });
