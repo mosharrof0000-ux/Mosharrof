@@ -4,6 +4,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.junit.Rule
@@ -24,4 +25,16 @@ class MainActivitySmokeTest {
         onView(withText("কণ্ঠ থামান")).check(matches(isDisplayed()))
         onView(withText("কাজ বাতিল করুন")).check(matches(isDisplayed()))
     }
+    @Test
+    fun accessibilityDisclosureAppearsBeforeSettingsCanOpen() {
+        activityRule.scenario.onActivity { activity ->
+            activity.getSharedPreferences("mosharrof_privacy", android.content.Context.MODE_PRIVATE)
+                .edit().clear().commit()
+        }
+        onView(withText("Accessibility সেটিংস খুলুন")).perform(click())
+        onView(withText("স্ক্রিন নিয়ন্ত্রণের অনুমতি")).check(matches(isDisplayed()))
+        onView(withText("বুঝেছি, Settings খুলুন")).check(matches(isDisplayed()))
+        onView(withText("এখন নয়")).check(matches(isDisplayed()))
+    }
+
 }
