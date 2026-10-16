@@ -52,7 +52,7 @@ export function initializePersonalMemory() {
     let body;
     try { body = JSON.parse(typeof init.body === "string" ? init.body : ""); } catch { return originalFetch(input, init); }
     if (!String(body.text || "").trim()) return originalFetch(input, init);
-    await memoryReady;
+    await memoryReady.catch(() => {});
     const userText = String(body.text).trim();
     let retrieved = { text: "" }, intent = { mode: "normal", source: "default", confidence: 0.55 };
     try {
@@ -60,7 +60,8 @@ export function initializePersonalMemory() {
       intent = inferResponseStyle(userText, retrieved.memories);
       body.memory_context = retrieved.text;
       body.memory_response_style = intent;
-      await engine.remember({ text: userText, role: "user", kind: "message", conversationId: SESSION_ID, source: "live-chat" });
+      const explicitPreference = /(?:মনে রাখো|মনে রাখবে|আমার পছন্দ|আমি চাই.*সবসময়|সবসময়.*দাও|আমি সাধারণত|I prefer|I want you to remember|always (?:use|give|keep|write)|from now on)/i.test(userText);
+      await engine.remember({ text: userText, role: "user", kind: explicitPreference ? "preference" : "message", folder: explicitPreference ? "preferences-and-style" : undefined, userApproved: explicitPreference, confidence: explicitPreference ? 0.82 : 0.65, conversationId: SESSION_ID, source: "live-chat" });
       turns.push({ role: "user", text: userText });
       await engine.saveConversationSummary(SESSION_ID, turns);
     } catch (error) { console.warn("[MOSHARROF memory] retrieval failed; continuing without memory", error); }
