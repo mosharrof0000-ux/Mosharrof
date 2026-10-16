@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Permission-safe browser inspection for MOSHARROF AI.
-
-Inventories visible controls, exercises safe navigation/composer flows, and sends
-one synthetic chat prompt only through a browser-intercepted mock Worker response.
-It does not contact a real provider, delete history, or change account settings.
+"""Safe browser inspection with a mocked chat Worker; no real provider calls or destructive actions.
 """
 from __future__ import annotations
 
@@ -158,8 +154,7 @@ async def main():
             except Exception as exc:
                 record(f"{label}_drawer_opens", False, repr(exc))
 
-        # Activate each declared organ module in the disposable browser context.
-        # This verifies event wiring/registry availability without changing remote data.
+        # Exercise declared modules in this disposable browser context.
         try:
             await page.locator("#leftBtn").click(timeout=4000)
             modules = await page.locator("#drawerLeft [data-module]").evaluate_all(
@@ -198,8 +193,7 @@ async def main():
         }""")
         await page.wait_for_timeout(150)
 
-        # Exercise history/navigation actions only in this fresh, disposable browser context.
-        # These changes affect isolated localStorage, never the user's personal browser.
+        # History actions affect only this disposable browser context.
         try:
             await page.locator("#rightBtn").click(timeout=3000)
             await page.locator("#historyBtn").click(timeout=3000)
@@ -235,7 +229,7 @@ async def main():
         except Exception as exc:
             record("history_and_safe_local_actions", False, repr(exc))
 
-        # Check setting controls without invoking speech/microphone or provider services.
+        # Check audio settings without invoking microphone or providers.
         try:
             await page.locator("#rightBtn").click(timeout=3000)
             provider = page.locator("#ttsProviderSelect")
@@ -322,8 +316,7 @@ async def main():
         except Exception as exc:
             record("mocked_chat_round_trip", False, repr(exc))
 
-        # Verify the real local-memory bridge stores both sides of a mocked chat,
-        # survives a reload, and retrieves relevant memory for the next Worker request.
+        # Verify memory save, reload persistence, and retrieval via mocked Worker.
         try:
             await page.wait_for_function(
                 "() => !!window.MosharrofPersonalMemory && typeof window.MosharrofPersonalMemory.list === 'function'",
@@ -388,7 +381,7 @@ async def main():
         except Exception as exc:
             record("memory_persistence_and_recall_round_trip", False, repr(exc))
 
-        # Enumerate remaining visible controls without clicking potentially destructive actions.
+        # Inventory remaining visible controls without destructive clicks.
         try:
             report["visible_controls"] = await page.locator("button, a, input, select, textarea, [role=button]").evaluate_all(
                 """els => els.map((el, index) => {
