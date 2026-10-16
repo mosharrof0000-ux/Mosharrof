@@ -48,6 +48,9 @@ jobs:
       - name: Prepare Android full-screen voice manager
         run: bash scripts/android/prepare-and-install-voice.sh
 
+      - name: Verify mediated Android device-control contract
+        run: node scripts/test_device_control_contract.mjs
+
       - name: Build debug APK
         working-directory: android
         run: |
