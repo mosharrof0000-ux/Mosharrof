@@ -15,6 +15,14 @@ class IntentParserTest {
         assertEquals(ParsedIntent.OpenApp("ইউটিউব"), parser.parse("ইউটিউব খুলুন"))
     }
 
+    @Test fun parsesExplicitEnglishSwipeCommand() {
+        assertEquals(ParsedIntent.Swipe(AgentAction.Direction.DOWN, "YouTube"), parser.parse("scroll down in YouTube"))
+    }
+
+    @Test fun parsesExplicitBengaliSwipeCommand() {
+        assertEquals(ParsedIntent.Swipe(AgentAction.Direction.UP, "ইউটিউবে"), parser.parse("ইউটিউবে উপরে স্ক্রল করুন"))
+    }
+
     @Test fun rejectsUnboundedOrAmbiguousCommand() {
         assertTrue(parser.parse("send a message to everyone").isUnsupported())
         assertTrue(parser.parse("x".repeat(IntentParser.MAX_COMMAND_LENGTH + 1)).isUnsupported())
