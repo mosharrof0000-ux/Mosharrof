@@ -1,5 +1,11 @@
 /** Build bounded context for every provider. Current user request always has priority. */
 export function buildChatContext(currentText, historyInput, options = {}) {
+  if (currentText && typeof currentText === "object") {
+    const body = currentText;
+    options = { memoryContext: body.memory_context, conversationSummary: body.conversation_summary };
+    historyInput = body.history;
+    currentText = body.text;
+  }
   const current = String(currentText || "").trim();
   const available = Math.max(0, 12000 - current.length - 180);
   let remaining = available;
