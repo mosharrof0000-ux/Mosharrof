@@ -20,5 +20,7 @@ class MainActivitySmokeTest {
         onView(withText("মোশাররফ অটোনোমাস এজেন্ট")).check(matches(isDisplayed()))
         onView(withText("কমান্ড যাচাই করুন")).check(matches(isDisplayed()))
         onView(withText("কথা বলে কমান্ড দিন")).check(matches(isDisplayed()))
+        onView(withText("ফলাফল পড়ে শোনান")).check(matches(isDisplayed()))
+        onView(withText("কণ্ঠ থামান")).check(matches(isDisplayed()))
     }
 }
