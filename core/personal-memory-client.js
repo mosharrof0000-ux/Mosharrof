@@ -137,9 +137,7 @@ export function installPersonalMemoryClient() {
           }else{data=JSON.parse(raw);answer=String(data.text||"");}
           if(!answer.trim())return;
           await memory.recordTurn(text,answer,body.conversation_id||"current-chat");
-          for(const candidate of (data&&Array.isArray(data.memory_candidates)?data.memory_candidates:[])){
-            await memory.remember({...candidate,status:"pending_confirmation",source:"ai_suggested",user_confirmed:false});
-          }
+          // recordTurn already deduplicates and stores any candidate inferred from the user's wording.
         }catch(error){console.warn("MOSHARROF memory save skipped.",error);}
       }).catch(()=>{});
     }
