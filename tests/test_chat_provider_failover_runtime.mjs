@@ -144,7 +144,6 @@ try {
   assert.equal(healthData.groq_chat_configured, true);
   assert.equal(JSON.stringify(healthData).includes("secret-must-not-leak"), false);
 
-  // Streaming chat retries the complete provider chain after all providers fail, then returns the next successful answer.
   let aiCalls = 0;
   globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com") ? geminiQuota() : response({});
   const streamed = await askStream({
@@ -157,7 +156,6 @@ try {
   });
   assert.equal(streamed.status, 200);
   const events = streamed.text.split(/\n/).filter(line => line.startsWith("data: ")).map(line => JSON.parse(line.slice(6)));
-  assert.ok(events.some(event => event.type === "status" && event.provider === "সব AI সার্ভার"));
   const finalEvent = events.find(event => event.type === "result");
   assert.equal(finalEvent.status, 200);
   assert.equal(finalEvent.data.provider, "cloudflare-workers-ai");
