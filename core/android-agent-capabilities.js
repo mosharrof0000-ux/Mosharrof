@@ -16,7 +16,7 @@
     ["files.delete", "files", "available_mediated", "storage_access_framework", "Requires a fresh explicit confirmation; SAF provider may permanently delete without undo"],
     ["folders.create", "files", "available_mediated", "storage_access_framework", "Create folders only inside the owner-selected folder"],
     ["media.photos_group", "media", "planned", "storage_access_framework", "Suggest albums/folders; preserve originals until confirmed"],
-    ["media.duplicates.scan", "media", "planned", "storage_access_framework", "Compare hashes and metadata; scan-only by default"],
+    ["media.duplicates.scan", "media", "available_mediated", "storage_access_framework", "Recursively compare SHA-256 hashes in the owner-selected folder with file-count and byte limits; scan-only"],
     ["media.duplicates.delete", "media", "planned", "storage_access_framework", "Never delete solely on similar names; show exact candidates and confirm"],
     ["media.audio_organize", "media", "planned", "storage_access_framework", "Group music by metadata; preview all moves"],
     ["system.diagnose", "diagnostics", "planned", "diagnostic_data_access", "Explain evidence and distinguish observed facts from hypotheses"],
