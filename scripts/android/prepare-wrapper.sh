@@ -47,7 +47,7 @@ agent_scripts = [
 for script in agent_scripts:
     tag = f'<script src="./{script}"></script>'
     if tag not in html:
-        html = html.replace("</body>", tag + "\\n</body>", 1)
+        html = html.replace("</body>", tag + "\n</body>", 1)
 page.write_text(html, encoding="utf-8")
 PY
 python - <<'PY'
