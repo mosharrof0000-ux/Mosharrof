@@ -6,11 +6,12 @@ def test_worker_uses_bounded_conversation_history_for_all_chat_providers():
     helper = Path("core/chat-context.js").read_text(encoding="utf-8")
     chat = worker[worker.index("async function runChat(body,env,onStatus){"):worker.index("async function chat(request,env){")]
     assert 'import { buildChatContext } from "../core/chat-context.js"' in worker
-    assert "buildChatContext(body.text,body.history)" in chat
+    assert "buildChatContext(body)" in chat
     assert "historyInput.slice(-12)" in helper
-    assert "Math.min(6000, 12000 - current.length - 200)" in helper
+    assert "Math.min(6000, 12000 - current.length - memory.length - summary.length - 500)" in helper
     assert "historyInput.slice(-12)" in helper
     assert "Current user message:" in helper
+    assert "Current conversation summary (continuity only; current request takes priority)" in helper
     assert "generateWithCloudflareChat(text,env,report,targetWords)" in chat
     assert '"llama-3.1-8b-instant").trim(),text,{},report,targetWords' in chat
     assert '"meta-llama/llama-3.3-70b-instruct:free").trim(),text,' in chat
