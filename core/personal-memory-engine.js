@@ -10,10 +10,21 @@ function tokens(value) {
 function safeText(value, max = 12000) {
   return String(value || "").trim().slice(0, max);
 }
+function classifyFolder(text) {
+  const value = String(text || "");
+  if (/(কুরআন|কোরআন|কোরান|আয়াত|আয়াত|সূরা|তাফসির|quran|surah|ayah)/i.test(value)) return "research/quran";
+  if (/(অ্যান্ড্রয়েড|অ্যান্ড্রয়েড|android|ফোন নিয়ন্ত্রণ|ডিভাইস নিয়ন্ত্রণ|automation|device control)/i.test(value)) return "projects/android-automation";
+  if (/(গল্প|উপন্যাস|কবিতা|প্রবন্ধ|লেখা|story|novel|poem|essay)/i.test(value)) return "writing/creative";
+  if (/(ভয়েস|ভয়েস|কণ্ঠ|tts|speech|voice|audio)/i.test(value)) return "projects/voice-audio";
+  if (/(মোশাররফ|mosharrof|এআই|ai|রিপোজিটরি|repository|github|প্রজেক্ট|প্রকল্প)/i.test(value)) return "projects/mosharrof-ai";
+  if (/(পছন্দ|সবসময়|সবসময়|ভবিষ্যতে|পরের বার|মনে রাখ|উত্তর ছোট|বিস্তারিত উত্তর)/i.test(value)) return "profile/response-preferences";
+  if (/(পরিকল্পনা|লক্ষ্য|পরে করব|বাকি আছে|পরবর্তী ধাপ|next step|follow.?up)/i.test(value)) return "timeline/open-loops";
+  return "topics/general";
+}
 function score(query, record) {
   const q = new Set(tokens(query));
   if (!q.size) return 0;
-  const haystack = tokens([record.userText, record.assistantExcerpt, record.summary, ...(record.tags || [])].join(" "));
+  const haystack = tokens([record.userText, record.assistantExcerpt, record.summary, record.folder, record.topic, ...(record.tags || [])].join(" "));
   if (!haystack.length) return 0;
   let hits = 0;
   for (const token of q) if (haystack.includes(token)) hits += 1;
@@ -78,7 +89,7 @@ export function createPersonalMemoryEngine({ store, now = () => Date.now(), make
     const user = safeText(userText), answer = safeText(assistantText, 2400);
     if (!user || SECRET_PATTERN.test(user) || SECRET_PATTERN.test(answer)) return { saved: false, reason: "sensitive_or_empty" };
     const tags = [...new Set(tokens(user).slice(0, 16))];
-    const saved = await add({ kind: "conversation", sessionId: safeText(sessionId, 120), userText: user, assistantExcerpt: answer, summary: user.slice(0, 320), tags });
+    const folder = classifyFolder(user);\n    const saved = await add({ kind: "conversation", folder, topic: folder.split("/").pop(), sessionId: safeText(sessionId, 120), userText: user, assistantExcerpt: answer, summary: user.slice(0, 320), tags });
     const preferences = inferPreference(user);
     const profileResults = [];
     for (const preference of preferences) {
@@ -92,7 +103,7 @@ export function createPersonalMemoryEngine({ store, now = () => Date.now(), make
   async function rememberFact({ text, kind = "note", tags = [], source = "user-approved", confidence = "user-stated" } = {}) {
     const value = safeText(text);
     if (!value || SECRET_PATTERN.test(value)) return { saved: false, reason: "sensitive_or_empty" };
-    return add({ kind, summary: value, userText: value, tags: Array.isArray(tags) ? tags.map(String).slice(0, 20) : [], source, confidence });
+    return add({ kind, folder: classifyFolder(value), topic: classifyFolder(value).split("/").pop(), summary: value, userText: value, tags: Array.isArray(tags) ? tags.map(String).slice(0, 20) : [], source, confidence });
   }
   async function retrieve(query, { limit = 8, maxChars = 4200 } = {}) {
     if (!active) return [];
@@ -105,7 +116,7 @@ export function createPersonalMemoryEngine({ store, now = () => Date.now(), make
       .slice(0, Math.max(1, Math.min(Number(limit) || 8, 20)))
       .map(item => ({ ...item.row, relevance: Number(item.relevance.toFixed(3)) }))
       .reduce((result, row) => {
-        const line = JSON.stringify({ date: new Date(row.createdAt).toISOString(), kind: row.kind, status: row.status, summary: row.summary || row.userText, userText: row.userText, assistantExcerpt: row.assistantExcerpt, confidence: row.confidence, relevance: row.relevance });
+        const line = JSON.stringify({ date: new Date(row.createdAt).toISOString(), folder: row.folder || "topics/general", topic: row.topic || "general", kind: row.kind, status: row.status, summary: row.summary || row.userText, userText: row.userText, assistantExcerpt: row.assistantExcerpt, confidence: row.confidence, relevance: row.relevance });
         if (result.length < maxChars && result.join("\n").length + line.length <= maxChars) result.push(line);
         return result;
       }, []);
@@ -131,14 +142,14 @@ export function createPersonalMemoryEngine({ store, now = () => Date.now(), make
   async function profile() {
     const rows = await store.list();
     const activePreferences = rows.filter(row => row.kind === "preference" && row.status === "active");
-    return { enabled: active, totalEntries: rows.length, conversationCount: rows.filter(row => row.kind === "conversation").length, preferenceCount: activePreferences.length, preferences: activePreferences.map(({ key, value, summary, createdAt, confidence }) => ({ key, value, summary, createdAt, confidence })) };
+    const folders = {};\n    for (const row of rows) { const folder = row.folder || "topics/general"; folders[folder] = (folders[folder] || 0) + 1; }\n    return { enabled: active, totalEntries: rows.length, conversationCount: rows.filter(row => row.kind === "conversation").length, preferenceCount: activePreferences.length, folders, preferences: activePreferences.map(({ key, value, summary, createdAt, confidence, folder }) => ({ key, value, summary, createdAt, confidence, folder })) };
   }
-  async function clear() {
+  async function exportAll() { return { schemaVersion: 1, exportedAt: new Date(now()).toISOString(), memories: (await store.list()).sort((a, b) => a.createdAt - b.createdAt) }; }\n  async function clear() {
     if (typeof store.clear !== "function") throw new Error("এই store-এ পরিষ্কার করার সুবিধা নেই।");
     const before = (await store.list()).length;
     await store.clear();
     return { cleared: before };
   }
   function setEnabled(value) { active = value === true; return active; }
-  return Object.freeze({ rememberTurn, rememberFact, retrieve, buildContext, timeline, profile, clear, setEnabled, get enabled() { return active; } });
+  return Object.freeze({ rememberTurn, rememberFact, retrieve, buildContext, timeline, profile, exportAll, clear, setEnabled, get enabled() { return active; } });
 }
