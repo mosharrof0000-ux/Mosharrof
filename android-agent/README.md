@@ -30,7 +30,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] On-demand read-only battery, internal storage, and network diagnostics displayed locally (physical-device verification pending)
 - [x] User-selected folder inventory and bounded SHA-256 duplicate scan; duplicates are only deleted after a separate confirmation (CI/device verification pending)
 - [x] User-triggered screen screenshot capture, in-app preview, and transient UI-label analysis
-- [x] Explicitly opt-in Gemini Vision screenshot analysis; the API key is encrypted at rest with Android Keystore and the image is uploaded only after a separate user tap (CI/live API/device verification pending)
+- [x] Explicitly opt-in Gemini Vision screenshot analysis; the API key is encrypted at rest with Android Keystore and the image is uploaded only after a separate user tap. Structured next-command suggestions are passed back through the local planner and confirmation gate (CI/live API/device verification pending)
 - [x] Initial Android permission center for runtime and special app-access permissions, with grant-status review (latest CI and device/OEM verification pending)
 - [x] HTTPS Gemini Vision API adapter for explicit screenshot analysis; other chat/planner provider integration and failover are not yet connected
 - [x] Voice command input through Android's speech-recognition activity (availability depends on device)
@@ -44,9 +44,9 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 ## Not yet complete
 
 - [x] AI-assisted normalization fallback for unsupported local commands through the existing MOSHARROF chat Worker; every normalized command is revalidated by the local planner and requires confirmation (CI/live endpoint verification pending)
-- [ ] General natural-language task planning across arbitrary apps
+- [ ] General natural-language task planning across arbitrary apps (AI Vision suggestions are constrained single-command proposals, not a general multi-step executor)
 - [ ] General semantic node locator and bounded UI action executor (exact-label tap, one-shot swipe, confirmed global navigation and focused-field text insertion are initial actions; arbitrary UI interaction is not enabled)
-- [ ] Per-task progress, interrupt, cancel, deadlines, postcondition verification and recovery (current cancel only clears pending previews/armed actions)
+- [ ] Per-task progress, interrupt, cancel, deadlines, postcondition verification and recovery (app launch and tap/swipe outcomes now have bounded verification; current cancel still clears pending/armed actions rather than a general running workflow)
 - [ ] Safe Settings command routing and system-setting confirmation (Wi-Fi, Bluetooth, Location, Display, Sound, Battery Saver, Notifications and Application Settings routes are coded; latest CI and OEM/physical-device verification pending)
 - [ ] Appium/UiAutomator2 device tests and real-device acceptance
 - [ ] Speech output and continuous, interruption-aware voice session
