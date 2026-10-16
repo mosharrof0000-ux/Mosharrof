@@ -13,7 +13,7 @@
   }
   function requireName(value) {
     const name = String(value || "").trim();
-    if (!name || name === "." || name === ".." || /[\\/\\0]/.test(name)) {
+    if (!name || name === "." || name === ".." || /[\\/\0]/.test(name)) {
       throw new Error("ফাইল বা ফোল্ডারের নাম বৈধ নয়।");
     }
     return name;
@@ -34,7 +34,9 @@
     if (!String(id || "").trim()) throw new Error("ফাইলের পরিচয় পাওয়া যায়নি।");
     return nativePlugin().deleteItem({ documentId: String(id), confirmed: true });
   }
-
+  async function scanSelectedDirectoryDuplicates() {
+    return nativePlugin().scanDuplicates();
+  }
   async function scanExactDuplicates(files) {
     if (!root.crypto || !root.crypto.subtle) throw new Error("এই পরিবেশে নিরাপদ SHA-256 পরীক্ষা নেই।");
     const rows = [];
@@ -58,9 +60,8 @@
       note: "শুধু একই আকার ও SHA-256 hash-এর ফাইলকে exact duplicate হিসেবে দেখানো হয়েছে; কোনো ফাইল মুছা হয়নি।"
     };
   }
-
   const api = Object.freeze({ pickDirectory, getSelectedDirectory, listEntries, createFolder,
-    createTextFile, renameEntry, deleteEntry, scanExactDuplicates });
+    createTextFile, renameEntry, deleteEntry, scanSelectedDirectoryDuplicates, scanExactDuplicates });
   root.MosharrofFiles = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
