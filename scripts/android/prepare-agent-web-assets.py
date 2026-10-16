@@ -12,6 +12,8 @@ assets = (
     "android-accessibility-ui.js",
     "android-agent-planner.js",
     "android-agent-capabilities.js",
+    "android-agent-executor-guards.js",
+    "android-agent-executor-recovery.js",
     "android-agent-executor.js",
     "android-agent-recovery.js",
     "android-agent-memory.js",
