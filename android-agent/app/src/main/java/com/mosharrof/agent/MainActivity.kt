@@ -15,6 +15,7 @@ import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.execution.InstalledAppCatalog
 import com.mosharrof.agent.execution.SystemSettingsLauncher
+import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.planner.AgentAction
 import com.mosharrof.agent.planner.InstalledApp
 import com.mosharrof.agent.planner.TaskPlan
@@ -98,6 +99,7 @@ class MainActivity : ComponentActivity() {
             addView(planButton)
             addView(confirmButton)
             SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
+            TaskControlButtons.addCancelButton(this@MainActivity, this) { pendingApp = null; pendingSettings = null; pendingTap = null; MosharrofAccessibilityService.cancelSemanticTap(); MosharrofAccessibilityService.cancelInspection(); confirmButton.isEnabled = false; status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।" }
             addView(inspectButton)
             addView(screenDetails)
             addView(accessibilityButton)
@@ -139,11 +141,7 @@ class MainActivity : ComponentActivity() {
             is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
         }
     }
-    private fun prepareSettings(plan: TaskPlan, label: String) {
-        pendingSettings = plan
-        status.text = "পরিকল্পনা: ${label} খোলা হবে। চালানোর আগে নিশ্চিত করুন।"
-        confirmButton.isEnabled = true
-    }
+    private fun prepareSettings(plan: TaskPlan, label: String) { pendingSettings = plan; status.text = "পরিকল্পনা: ${label} খোলা হবে। চালানোর আগে নিশ্চিত করুন।"; confirmButton.isEnabled = true }
     private fun settingLabel(setting: AgentAction.SupportedSetting) = when (setting) { AgentAction.SupportedSetting.WIFI_PANEL -> "Wi-Fi Settings"; AgentAction.SupportedSetting.BLUETOOTH_PANEL -> "Bluetooth Settings"; AgentAction.SupportedSetting.LOCATION_SETTINGS -> "Location Settings" }
     private fun launchConfirmedSettings() {
         val plan = pendingSettings ?: return
