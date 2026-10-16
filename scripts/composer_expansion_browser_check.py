@@ -15,8 +15,16 @@ def check_composer_expansion(page: Page) -> None:
         "composer expansion editor did not copy the full draft"
     )
     expanded_input.fill("composer expansion applied")
+    assert expanded_input.input_value() == "composer expansion applied", (
+        "composer expansion editor did not retain the edited text"
+    )
     editor.locator("[data-expand-apply]").click()
-    assert message_input.input_value() == "composer expansion applied", (
-        "composer expansion editor failed to apply edited text"
+    page.wait_for_function(
+        "document.querySelector('#input') && document.querySelector('#input').value === 'composer expansion applied'",
+        timeout=3000,
+    )
+    actual = message_input.input_value()
+    assert actual == "composer expansion applied", (
+        f"composer expansion editor failed to apply edited text; got {actual!r}"
     )
     print("COMPOSER EXPANSION BROWSER CHECK: PASS")
