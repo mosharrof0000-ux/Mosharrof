@@ -20,11 +20,12 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] Standalone Kotlin Android app and manifest
 - [x] User-facing Accessibility Settings entry point
 - [x] Bounded, read-only accessibility event inspection
+- [x] Explicit current-screen snapshot: package, bounded node count, and up to 40 short visible labels
 - [x] Deterministic Bengali/English text intent parsing
-- [x] Installed-app discovery and exact-label app planning
-- [x] Voice command input through Android's speech recognition activity (availability depends on device)
+- [x] Common Bengali app aliases and installed-app discovery
+- [x] Voice command input through Android's speech-recognition activity (availability depends on device)
 - [x] Confirmation step before launching a selected app
-- [x] Policy gate for allowlisted app launch and tests
+- [x] Policy gate for allowlisted app launch and unit tests
 - [x] CI debug APK build and JVM unit tests
 
 ## Not yet complete
@@ -39,7 +40,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [ ] Encrypted, opt-in local memory/retrieval
 - [ ] Release signing, installation validation and distribution
 
-This milestone is **not** a completed fully autonomous agent. Current executable scope is intentionally narrow: resolve an explicit installed-app name, ask the user to confirm, then request Android to launch it. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service inspects bounded UI structure only; it does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
+This milestone is **not** a completed fully autonomous agent. Current executable scope is intentionally narrow: resolve an explicit installed-app name, ask the user to confirm, then request Android to launch it. Screen inspection is read-only and only runs when the user taps the inspection button; results stay in the UI and are not persisted. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
 
 ## Safety model
 
