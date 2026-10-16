@@ -19,7 +19,7 @@ const parseImageSpec = new Function(
   "; return parseImageSpec;"
 )();
 const looksLikeImagePrompt = new Function(
-  extractFunction("  function looksLikeImagePrompt(t){", "  function imageReply(t){") +
+  extractFunction("  function looksLikeImagePrompt(t){", "  function imageReply(t,signal){") +
   "; return looksLikeImagePrompt;"
 )();
 
