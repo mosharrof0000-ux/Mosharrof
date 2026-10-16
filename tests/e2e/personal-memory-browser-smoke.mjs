@@ -148,8 +148,12 @@ try {
     return rows.some(row => row.kind === "user" && row.text.includes("শনাক্তকারীটি মনে রাখতে"));
   }, null, { timeout: 20000 });
 
+  console.log("CHAT REQUESTS CAPTURED:", JSON.stringify(chatRequests.map(item => ({
+    text: String(item.text || "").slice(0, 100),
+    memory_context: String(item.memory_context || "").slice(0, 300)
+  })), null, 2));
   const followUpRequest = chatRequests.at(-1);
-  if (!followUpRequest) throw new Error("Follow-up chat request was not intercepted");
+  if (chatRequests.length < 2 || !followUpRequest) throw new Error("Expected both initial and follow-up chat requests to be intercepted; saw " + chatRequests.length);
   if (!String(followUpRequest.memory_context || "").includes(marker)) {
     const diagnostic = await page.evaluate(async (query) => {
       const memory = window.MosharrofPersonalMemory;
