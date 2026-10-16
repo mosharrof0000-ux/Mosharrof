@@ -3,6 +3,7 @@ set -euo pipefail
 node scripts/test_device_control_contract.mjs
 node scripts/test_android_settings_hub.mjs
 node scripts/test_android_agent_planner.mjs
+node scripts/test_android_agent_command_router.mjs
 node scripts/test_android_agent_capabilities.mjs
 node scripts/test_android_accessibility_ui.mjs
 node scripts/test_android_file_manager.mjs
