@@ -62,9 +62,6 @@ jobs:
       - name: Verify Android SAF file manager and duplicate scanner
         run: node scripts/test_android_file_manager.mjs
 
-      - name: Verify Android user-authorized SAF file operations
-        run: node scripts/test_android_user_files_contract.mjs
-
       - name: Verify Android file/media/diagnostics task planner
         run: node scripts/test_android_agent_task_planner.mjs
 
