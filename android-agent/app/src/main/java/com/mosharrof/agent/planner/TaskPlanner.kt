@@ -37,7 +37,7 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
             is ParsedIntent.Unsupported -> TaskPlan.Rejected(intent.reason)
             is ParsedIntent.TypeText -> {
                 val targetApp = intent.appQuery?.takeIf { it.isNotBlank() }
-                    ?: return TaskPlan.TypeFocusedText(intent.text)
+                    ?: return TaskPlan.Rejected("লেখাটি কোন অ্যাপে প্রবেশ করাতে হবে তা নির্দিষ্ট করুন।")
                 when (val appPlan = resolveApp(targetApp, installedApps)) {
                     is TaskPlan.OpenApp -> TaskPlan.TypeText(intent.text, appPlan.app)
                     is TaskPlan.NeedsChoice -> appPlan
