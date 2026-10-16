@@ -10,7 +10,12 @@ export function installPersonalMemoryBridge(root = window) {
     setEnabled: engine.setEnabled,
     list: engine.list,
     clear: engine.clear,
-    recall: engine.recall
+    recall: engine.recall,
+    search: engine.search,
+    folders: engine.folders,
+    listFolder: engine.listFolder,
+    exportAll: engine.exportAll,
+    importAll: engine.importAll
   });
   function installMemoryControls() {
     const drawer = root.document.getElementById("drawerRight") || root.document.getElementById("drawer-right");
@@ -93,7 +98,8 @@ export function installPersonalMemoryBridge(root = window) {
   else installMemoryControls();
   const originalFetch = root.fetch.bind(root);
   let sequence = Date.now();
-  let previousId = null;\n  let currentFolder = null;
+  let previousId = null;
+  let currentFolder = null;
   root.fetch = async function(input, init) {
     let outgoing = init;
     let requestBody = null;
@@ -103,12 +109,14 @@ export function installPersonalMemoryBridge(root = window) {
       if (init?.body && /\/chat(?:\?|$)/.test(new URL(target, root.location.href).pathname)) {
         requestBody = JSON.parse(init.body);
         if (requestBody && typeof requestBody.text === "string" && requestBody.text.trim()) {
-          currentFolder = engine.classifyFolder(requestBody.text);\n          const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
+          currentFolder = engine.classifyFolder(requestBody.text);
+          const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
           const saved = await engine.add({
             kind: "user", text: requestBody.text, folder: currentFolder, sessionId: "mosharrof-chat",
             sequence: ++sequence, previousId
           }).catch(() => ({ stored: false }));
-          if (saved.stored) previousId = saved.id;\n          installMemoryControls();
+          if (saved.stored) previousId = saved.id;
+          installMemoryControls();
           outgoing = { ...init, body: JSON.stringify({ ...requestBody, memory_context: memoryContext }) };
         }
       }
