@@ -34,7 +34,7 @@ try {
   for (let i = 0; i < 250; i++) await memory.remember({ id: "scale-" + i, category: "fact", content: "Memory growth record " + i });
   assert.equal((await memory.all()).total, 253);
   assert.equal((await memory.remember({ content: "API_KEY=do-not-save" })).saved, false);
-  assert.match(buildPersonalMemoryContext(await memory.exportAll(), "একটি গল্প লিখো"), /পূর্ণাঙ্গ সমাপ্তি/);
+  assert.match(buildPersonalMemoryContext(await memory.exportAll(), "বিস্তারিত ঘটনা পূর্ণাঙ্গ সমাপ্তি"), /পূর্ণাঙ্গ সমাপ্তি/);
   assert.match(buildPersonalMemoryContext(await memory.exportAll(), "একটি গল্প লিখো"), /পুরোনো স্মৃতি|প্রাসঙ্গিক সংরক্ষিত স্মৃতি/);
   assert.equal(inferMemoryCandidates("ভবিষ্যতে আমার পছন্দ মনে রাখবে").length, 1);
   assert.equal(inferMemoryCandidates("হ্যালো").length, 0);
