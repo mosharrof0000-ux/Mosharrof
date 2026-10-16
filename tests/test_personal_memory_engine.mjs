@@ -18,9 +18,9 @@ const storage = makeStorage();
 const memory = createPersonalMemoryEngine({ storage, now: () => new Date(1700000000000 + tick++ * 1000).toISOString() });
 
 assert.equal((await memory.recall()).total, 0);
-const preference = await await memory.remember({ category: "preference", content: "বাংলায় উত্তর পছন্দ করি", confidence: 0.95, user_confirmed: true });
-memory.remember({ category: "goal", folder: "projects/mosharrof-ai", content: "MOSHARROF AI-তে ব্যক্তিগত স্মৃতি তৈরি করা", confidence: 0.9 });
-memory.remember({ category: "correction", content: "বড় গল্প চাইলে আরও বিস্তারিত লিখবে", relates_to: [preference.entry.id] });
+const preference = await memory.remember({ category: "preference", content: "বাংলায় উত্তর পছন্দ করি", confidence: 0.95, user_confirmed: true });
+await memory.remember({ category: "goal", folder: "projects/mosharrof-ai", content: "MOSHARROF AI-তে ব্যক্তিগত স্মৃতি তৈরি করা", confidence: 0.9 });
+await memory.remember({ category: "correction", content: "বড় গল্প চাইলে আরও বিস্তারিত লিখবে", relates_to: [preference.entry.id] });
 assert.equal((await memory.recall()).total, 3);
 assert.equal((await memory.recall({ category: "preference" })).items[0].content, "বাংলায় উত্তর পছন্দ করি");
 assert.equal((await memory.recall({ folder: "projects/mosharrof-ai" })).items.length, 1);
