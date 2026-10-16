@@ -12,11 +12,8 @@ object NotificationInboxControl {
         layout.addView(Button(activity).apply {
             text = "অনুমোদিত নোটিফিকেশন দেখুন"
             setOnClickListener {
-                val items = MosharrofNotificationListenerService.snapshot()
-                output.text = if (items.isEmpty()) "কোনো সাম্প্রতিক নোটিফিকেশন নেই অথবা Notification access চালু নয়।" else items.joinToString("\n\n") {
-                    "${it.packageName}\n${it.title}\n${it.text}"
-                }
-                status.text = "লোকাল নোটিফিকেশন ইনবক্স আপডেট হয়েছে (${items.size})।"
+                output.text = MosharrofNotificationListenerService.snapshot()
+                status.text = "লোকাল নোটিফিকেশন ইনবক্স আপডেট হয়েছে।"
             }
         })
         layout.addView(Button(activity).apply {
