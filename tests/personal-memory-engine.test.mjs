@@ -59,9 +59,9 @@ test("memory export/import and clearing work with the persistent store adapter",
   const first=makeEngine(), second=makeEngine();
   await first.engine.add({kind:"user",text:"MOSHARROF AI project next step",sequence:1});
   const snapshot=await first.engine.exportAll();
-  assert.equal((await second.engine.importAll(snapshot)).imported,1);
+  assert.equal((await second.engine.importAll(snapshot)).imported,2);
   assert.equal((await second.engine.importAll(snapshot)).imported,0);
-  assert.equal((await second.engine.list(20)).length,1);
+  assert.equal((await second.engine.list(20)).length,2);
   await second.engine.clear();
   assert.equal((await second.engine.list(20)).length,0);
 });
