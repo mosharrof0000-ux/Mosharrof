@@ -122,7 +122,3 @@ import("./composer-enhancements.js")
   .then(function (module) { module.initializeComposerEnhancements(); })
   .catch(function (error) { console.error("Composer enhancement initialization failed:", error); });
 
-// Initialize the local-first, topic-organized personal memory engine.
-import("./personal-memory-ui.js")
-  .then(function (module) { module.initializePersonalMemory(); })
-  .catch(function (error) { console.error("[MOSHARROF Memory] initialization failed", error); });
