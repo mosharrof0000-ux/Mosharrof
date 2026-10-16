@@ -27,6 +27,7 @@ import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
 import com.mosharrof.agent.permissions.PermissionCenterControl
+import com.mosharrof.agent.notifications.NotificationInboxControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
     private lateinit var status: TextView
@@ -110,6 +111,7 @@ class MainActivity : ComponentActivity() {
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             DeviceCapabilityCenter.addTo(this@MainActivity, this, status)
+            NotificationInboxControl.addTo(this@MainActivity, this, status)
             PermissionCenterControl.addTo(this@MainActivity, this, status) {
                 permissionResult.launch(PermissionCenterControl.runtimePermissions)
             }
