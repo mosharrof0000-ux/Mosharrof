@@ -59,6 +59,9 @@ jobs:
       - name: Verify Android capability readiness registry
         run: node scripts/test_android_agent_capabilities.mjs
 
+      - name: Verify Android SAF file manager and duplicate scanner
+        run: node scripts/test_android_file_manager.mjs
+
       - name: Verify Android user-authorized SAF file operations
         run: node scripts/test_android_user_files_contract.mjs
 
