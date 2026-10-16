@@ -135,14 +135,13 @@ class MainActivity : ComponentActivity() {
                 confirmButton.isEnabled = isServiceEnabled()
             }
             TaskPlan.OpenSystemSettings -> prepareSettings(plan, "Android Settings")
-            is TaskPlan.OpenSettingPanel -> prepareSettings(plan, settingLabel(plan.setting))
+            is TaskPlan.OpenSettingPanel -> prepareSettings(plan, settingsLauncher.label(plan.setting))
             is TaskPlan.NeedsChoice -> status.text =
                 "একাধিক/আংশিক মিল: ${plan.candidates.joinToString { it.label }}। সঠিক অ্যাপের পুরো নাম লিখুন।"
             is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
         }
     }
     private fun prepareSettings(plan: TaskPlan, label: String) { pendingSettings = plan; status.text = "পরিকল্পনা: ${label} খোলা হবে। চালানোর আগে নিশ্চিত করুন।"; confirmButton.isEnabled = true }
-    private fun settingLabel(setting: AgentAction.SupportedSetting) = when (setting) { AgentAction.SupportedSetting.WIFI_PANEL -> "Wi-Fi Settings"; AgentAction.SupportedSetting.BLUETOOTH_PANEL -> "Bluetooth Settings"; AgentAction.SupportedSetting.LOCATION_SETTINGS -> "Location Settings" }
     private fun launchConfirmedSettings() {
         val plan = pendingSettings ?: return
         status.text = settingsLauncher.launch(plan)
