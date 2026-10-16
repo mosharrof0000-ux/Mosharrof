@@ -130,6 +130,7 @@ class MainActivity : ComponentActivity() {
         pendingSettings = null
         pendingTap = null
         pendingSwipe = null
+        pendingNavigation = null
         confirmButton.isEnabled = false
         when (val plan = planner.plan(command, installedApps())) {
             is TaskPlan.OpenApp -> {
