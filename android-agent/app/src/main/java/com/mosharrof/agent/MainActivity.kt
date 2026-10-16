@@ -16,6 +16,8 @@ import androidx.core.content.getSystemService
 import com.mosharrof.agent.planner.AgentAction
 import com.mosharrof.agent.planner.InstalledApp
 import com.mosharrof.agent.planner.TaskPlan
+import com.mosharrof.agent.planner.TaskCommandParser
+import com.mosharrof.agent.planner.TaskParsedCommand
 import com.mosharrof.agent.planner.TaskPlanner
 import com.mosharrof.agent.policy.ActionPolicy
 import com.mosharrof.agent.policy.PolicyDecision
@@ -23,6 +25,9 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private val planner = TaskPlanner()
+    private val settingsParser = TaskCommandParser()
+    private var pendingIntent: Intent? = null
+    private var pendingTaskLabel = ""
     private var pendingApp: InstalledApp? = null
     private lateinit var status: TextView
     private lateinit var commandInput: EditText
@@ -51,7 +56,7 @@ class MainActivity : ComponentActivity() {
             singleLine = true
         }
         confirmButton = Button(this).apply {
-            text = "নিশ্চিত করে অ্যাপ খুলুন"
+            text = "নিশ্চিত করে চালান"
             isEnabled = false
             setOnClickListener { launchConfirmedApp() }
         }
@@ -88,11 +93,35 @@ class MainActivity : ComponentActivity() {
 
     private fun prepareTask(command: String) {
         pendingApp = null
+        pendingIntent = null
+        pendingTaskLabel = ""
         confirmButton.isEnabled = false
+
+        when (val settingsCommand = settingsParser.parse(command)) {
+            TaskParsedCommand.OpenSystemSettings -> {
+                queueIntent(Intent(Settings.ACTION_SETTINGS), "Android Settings")
+                return
+            }
+            is TaskParsedCommand.OpenSettingPanel -> {
+                val action = when (settingsCommand.setting) {
+                    AgentAction.SupportedSetting.WIFI_PANEL -> Settings.ACTION_WIFI_SETTINGS
+                    AgentAction.SupportedSetting.BLUETOOTH_PANEL -> Settings.ACTION_BLUETOOTH_SETTINGS
+                    AgentAction.SupportedSetting.LOCATION_SETTINGS -> Settings.ACTION_LOCATION_SOURCE_SETTINGS
+                }
+                queueIntent(Intent(action), "নির্বাচিত Settings প্যানেল")
+                return
+            }
+            TaskParsedCommand.Stop -> {
+                status.text = "কমান্ড বাতিল করা হয়েছে। কোনো নতুন কাজ চালানো হয়নি।"
+                return
+            }
+            is TaskParsedCommand.Unknown -> Unit
+        }
+
         when (val plan = planner.plan(command, installedApps())) {
             is TaskPlan.OpenApp -> {
                 pendingApp = plan.app
-                status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
+                status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন."
                 confirmButton.isEnabled = true
             }
             is TaskPlan.NeedsChoice -> status.text =
@@ -101,8 +130,31 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun queueIntent(intent: Intent, label: String) {
+        pendingIntent = intent
+        pendingTaskLabel = label
+        status.text = "পরিকল্পনা: $label খুলবে। চালানোর আগে নিশ্চিত করুন।"
+        confirmButton.isEnabled = true
+    }
+
     private fun launchConfirmedApp() {
+        val queuedIntent = pendingIntent
+        if (queuedIntent != null) {
+            try {
+                startActivity(queuedIntent)
+                status.text = "$pendingTaskLabel খোলার অনুরোধ পাঠানো হয়েছে।"
+            } catch (_: Exception) {
+                status.text = "এই Settings প্যানেলটি এই ডিভাইসে খোলা যায়নি।"
+            } finally {
+                pendingIntent = null
+                pendingTaskLabel = ""
+                confirmButton.isEnabled = false
+            }
+            return
+        }
+
         val app = pendingApp ?: return
+
         val allowed = installedApps().map { it.packageName }.toSet()
         val decision = ActionPolicy(allowed).evaluate(
             AgentAction.OpenApp(app.packageName, userRequested = true), 0
