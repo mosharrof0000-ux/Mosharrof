@@ -81,7 +81,7 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     const timestamp = safeTime(now());
     const entry = {
       id: clean(input.id, 120) || (typeof makeId === "function" ? makeId() : "mem-" + timestamp.replace(/[^0-9]/g,"").slice(0,14) + "-" + (ledger.revision + 1)),
-      category, folder: clean(input.folder || category,120), content,
+      category, folder: clean(input.folder || FOLDERS[category] || FOLDERS.fact,120), content,
       confidence: Math.max(0, Math.min(1, Number(input.confidence ?? 0.65) || 0)),
       source: clean(input.source || "conversation", 80),
       status: ["active","pending_confirmation","superseded","resolved","archived"].includes(input.status) ? input.status : "active",
@@ -109,7 +109,7 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     ledger.memories.push({
       ...next, id: "mem-" + String(Date.parse(now()) || Date.now()) + "-" + (ledger.revision + 1),
       category: CATEGORIES.has(next.category) ? next.category : "fact",
-      folder: clean(next.folder || (CATEGORIES.has(next.category) ? next.category : "fact"),120),
+      folder: clean(next.folder || FOLDERS[next.category] || FOLDERS.fact,120),
       content: clean(next.content,4000), created_at: safeTime(now()), updated_at: safeTime(now()),
       confidence: Math.max(0,Math.min(1,Number(next.confidence ?? 0.65) || 0)),
       user_confirmed: next.user_confirmed === true
@@ -163,7 +163,7 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     let imported = 0;
     for (const item of snapshot.memories) if (item && typeof item==="object" && item.id && !known.has(item.id) && !SECRET_LIKE.test(String(item.content||""))) {
       const category=CATEGORIES.has(item.category)?item.category:"fact";
-      ledger.memories.push({...item,content:clean(item.content,4000),category,folder:clean(item.folder || category,120)});
+      ledger.memories.push({...item,content:clean(item.content,4000),category,folder:clean(item.folder || FOLDERS[category] || FOLDERS.fact,120)});
       known.add(item.id); imported += 1;
     }
     return { ...await save(ledger), imported };
