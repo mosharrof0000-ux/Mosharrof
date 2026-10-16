@@ -33,6 +33,10 @@ def test_personal_memory_engine_is_shipped_and_retrieved_as_historical_context()
     prompt = Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8")
     assert '"core/personal-memory-engine.js": "web/memory-engine.js"' in prep
     assert '<script src="./memory-engine.js"></script>' in prep
+    assert '<script src="./memory-ui.js"></script>' in prep
+    ui = Path("core/personal-memory-ui.js").read_text(encoding="utf-8")
+    assert "সব মুছুন" in ui
+    assert "এই স্মৃতি মুছুন" in ui
     assert 'createObjectStore(STORE, { keyPath: "id" })' in engine
     assert 'store.createIndex("topic"' in engine
     assert 'async function contextFor(query)' in engine
