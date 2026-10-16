@@ -25,7 +25,6 @@ def main() -> int:
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/personal-memory-engine.js": "web/personal-memory-engine.js",
-        "core/personal-memory-client.js": "web/personal-memory-client.js",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
@@ -72,17 +71,7 @@ def main() -> int:
             raise SystemExit("ORGAN ASSET PREP: chat request shape changed; history injection requires review")
         index_html = index_html.replace(old_chat_request, new_chat_request, 1)
 
-    # Inject the memory bridge first, then its visible controls, into the generated Pages artifact.
-    memory_client_tag = '<script type="module" src="./personal-memory-client.js"></script>'
-    memory_ui_tag = '<script type="module" src="./personal-memory-ui.js"></script>'
-    anchor_tag = '<script src="./sidebar-recovery.js"></script>'
-    if anchor_tag not in index_html:
-        raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for memory assets")
-    for tag in (memory_client_tag, memory_ui_tag):
-        if tag not in index_html:
-            index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + tag, 1)
-            anchor_tag = tag
-
+    # sidebar-recovery.js imports the memory UI at runtime; the engine is copied above.
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
