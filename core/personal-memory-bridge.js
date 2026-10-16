@@ -103,6 +103,24 @@ export function installPersonalMemoryBridge(root = window) {
   let sequence = Date.now();
   let previousId = null;
   let currentFolder = null;
+  function sessionContext(currentText) {
+    try {
+      const sessions = JSON.parse(root.localStorage.getItem("mosharrof_chat_sessions_v1") || "[]");
+      const activeId = root.localStorage.getItem("mosharrof_active_session_v1");
+      const session = sessions.find(item => item && item.id === activeId) || sessions[0];
+      const messages = (session && Array.isArray(session.messages) ? session.messages : [])
+        .filter(item => item && (item.role === "user" || item.role === "ai") && String(item.text || "").trim());
+      if (messages.length && messages[messages.length - 1].role === "user" &&
+          String(messages[messages.length - 1].text || "").trim() === currentText) messages.pop();
+      const history = messages.slice(-12).map(item => ({
+        role: item.role, text: String(item.text || "").replace(/\s+/g, " ").slice(0, 900)
+      }));
+      const summary = messages.slice(-8).map(item =>
+        (item.role === "user" ? "User: " : "MOSHARROF: ") + String(item.text || "").replace(/\s+/g, " ").slice(0, 350)
+      ).join("\n").slice(-1000);
+      return { history, summary };
+    } catch { return { history: [], summary: "" }; }
+  }
   root.fetch = async function(input, init) {
     let outgoing = init;
     let requestBody = null;
@@ -112,6 +130,9 @@ export function installPersonalMemoryBridge(root = window) {
       if (init?.body && /\/chat(?:\?|$)/.test(new URL(target, root.location.href).pathname)) {
         requestBody = JSON.parse(init.body);
         if (requestBody && typeof requestBody.text === "string" && requestBody.text.trim()) {
+          const continuity = sessionContext(requestBody.text);
+          requestBody.history = continuity.history;
+          requestBody.conversation_summary = continuity.summary;
           currentFolder = engine.classifyFolder(requestBody.text);
           const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
           const saved = await engine.add({
