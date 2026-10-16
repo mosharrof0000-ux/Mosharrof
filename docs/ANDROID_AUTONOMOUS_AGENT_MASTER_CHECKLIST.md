@@ -38,7 +38,7 @@ This is the single source of truth for the Android device-control feature set re
 - [ ] Additional Settings routes are coded for display, sound, battery saver, notifications and apps; verify in latest CI and on OEM devices. Accessibility Settings is already available; OEM fallback tests remain.
 - [x] On-demand, read-only device diagnostics for battery percentage/charging state, internal storage, and network transport/connectivity (wired into the Android UI); physical-device validation and broader memory/performance diagnostics remain pending.
 - [ ] Safe performance/storage assistance with before/after measurement and explicit confirmation for changes.
-- [ ] Alarm, timer and calendar intents with preview/confirmation.
+- [x] Code added for confirmed Dialer handoff, SMS draft, Android Clock timer, and Calendar event draft; never auto-calls or auto-sends. CI/device verification pending.
 - [ ] No silent changes to protected settings; never bypass OS permission dialogs or lock screen.
 
 ## D. Files, media, apps and privacy
@@ -64,7 +64,7 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Per-task action budget and package allowlist policy primitive.
 - [x] Initial permission center for Accessibility, overlay, usage access, all-files access, microphone, contacts, calendar, shared media, notification permission, notification-listener access and exact-alarm special access; displays OS grant state and opens Android-owned permission/settings screens.
 - [x] Optional NotificationListenerService with explicit Android notification-access grant; displays a bounded recent-notification snapshot in memory only, with no persistence/upload. Physical-device privacy and lifecycle validation pending.
-- [ ] Complete permission/consent registry for every capability: risk tier, per-action confirmation, result verification, audit outcome, revocation handling and unsupported/OEM-specific fallbacks.
+- [x] Expanded permission inventory for camera, location, Bluetooth, phone/SMS/call-log, notification listener, system-settings access and battery optimization; OS grants remain owner-controlled. Full per-action registry, audit outcomes, revocation handling and OEM fallbacks remain pending.
 - [ ] Clear stop-all control, cancellation on service interruption, bounded deadlines and no hidden background actions.
 - [ ] Protect sensitive UI text; do not persist screenshots or arbitrary screen data by default.
 - [ ] Security review for exported components, Accessibility disclosures, overlay, microphone and file permissions.
