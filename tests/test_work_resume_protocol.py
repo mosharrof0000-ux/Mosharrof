@@ -19,3 +19,16 @@ def test_resume_protocol_distinguishes_real_execution_states():
         assert state in content
     assert "last durable checkpoint" in content
     assert "not from the beginning" in content
+    assert "/mosharrof status" in content
+    assert "/mosharrof resume" in content
+
+
+def test_issue_command_workflow_reports_status_and_avoids_duplicate_runs():
+    workflow = Path(".github/workflows/work-resume-command.yml").read_text(encoding="utf-8")
+    assert "issue_comment:" in workflow
+    assert "listWorkflowRunsForRepo" in workflow
+    assert "listJobsForWorkflowRun" in workflow
+    assert "createWorkflowDispatch" in workflow
+    assert "cancel-in-progress: false" in workflow
+    assert "RUNNING" in workflow
+    assert "NOT RUNNING" in workflow
