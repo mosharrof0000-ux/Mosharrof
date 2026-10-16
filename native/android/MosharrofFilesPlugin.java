@@ -84,8 +84,12 @@ public class MosharrofFilesPlugin extends Plugin {
     public void listItems(PluginCall call) {
         Uri root = requireRoot(call);
         if (root == null) return;
-        Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(
-                root, DocumentsContract.getTreeDocumentId(root));
+        String parentId = call.getString("documentId", DocumentsContract.getTreeDocumentId(root));
+        if (!validDocumentId(root, parentId)) {
+            call.reject("ফোল্ডারের পরিচয় বৈধ নয়।");
+            return;
+        }
+        Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(root, parentId);
         String[] columns = { DocumentsContract.Document.COLUMN_DOCUMENT_ID,
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME,
                 DocumentsContract.Document.COLUMN_MIME_TYPE,
