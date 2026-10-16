@@ -112,6 +112,10 @@ export function installPersonalMemoryClient() {
     try { body=JSON.parse(init.body); } catch { return nativeFetch(input,init); }
     const text=String(body.text||"").trim();
     if (!text) return nativeFetch(input,init);
+    // Do not observe, store, or attach personal memories until the user explicitly opts in.
+    let consentEnabled = false;
+    try { consentEnabled = localStorage.getItem("mosharrof-personal-memory-enabled-v1") === "enabled"; } catch (_) {}
+    if (!consentEnabled) return nativeFetch(input,init);
     try {
       if (isPersonalMemoryCommand(text)) return sseResult(await memory.command(text));
       await memory.observe(text);
@@ -133,8 +137,7 @@ export function installPersonalMemoryClient() {
     } catch {}
     return response;
   };
-  if (document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>mountMemoryPanel(memory),{once:true});
-  else mountMemoryPanel(memory);
+  // The accessible sidebar UI is mounted by personal-memory-ui.js; avoid a duplicate floating panel.
   if (navigator.storage?.persist) navigator.storage.persist().catch(()=>false);
   return memory;
 }
