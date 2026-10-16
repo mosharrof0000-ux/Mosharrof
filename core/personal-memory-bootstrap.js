@@ -122,8 +122,10 @@ import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "./person
     const userText = String(body.text || "").trim();
     if (!userText) return originalFetch(input, init);
     try {
-      const memoryContext = await engine.buildContext(userText, { limit: 8, maxChars: 4200 });
-      if (memoryContext) body.memory_context = memoryContext;
+      const memoryContext = await engine.buildContext(userText, { limit: 8, maxChars: 3600 });
+      const history = Array.isArray(body.history) ? body.history.slice(-8) : [];
+      const currentSummary = history.map(item => (item.role === "ai" ? "AI: " : "User: ") + String(item.text || "").replace(/\s+/g, " ").slice(0, 180)).filter(Boolean).join("\n");
+      body.memory_context = [memoryContext, currentSummary ? "CURRENT CHAT SUMMARY (recent turns, not long-term truth):\n" + currentSummary : ""].filter(Boolean).join("\n\n").slice(0, 6000);
     } catch (error) { console.warn("[MOSHARROF memory] recall skipped:", error); }
     const response = await originalFetch(input, Object.assign({}, init, { body: JSON.stringify(body) }));
     readResponseText(response).then(async function (assistantText) {
