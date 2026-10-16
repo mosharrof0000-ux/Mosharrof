@@ -30,7 +30,7 @@ class TaskCommandParserTest {
 
     @Test
     fun unknownCommandsNeverBecomeExecutableActions() {
-        assertTrue(parser.parse("send all my messages to someone"). isUnknown())
+        assertTrue(parser.parse("send all my messages to someone").isUnknown())
     }
 
     @Test
