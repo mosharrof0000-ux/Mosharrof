@@ -26,6 +26,7 @@ import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
+import com.mosharrof.agent.notifications.NotificationAccessControl
 import com.mosharrof.agent.permissions.PermissionCenterControl
 import com.mosharrof.agent.notifications.NotificationInboxControl
 class MainActivity : ComponentActivity() {
