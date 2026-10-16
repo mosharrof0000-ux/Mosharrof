@@ -1,5 +1,6 @@
 import { buildChatContext } from "../core/chat-context.js";
-import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
+import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
+import { runChatUntilAnswer } from "../core/chat-provider-retry.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
@@ -607,23 +608,11 @@ async function chat(request,env){
       const send=event=>{try{controller.enqueue(encoder.encode("data: "+JSON.stringify(event)+"\n\n"));}catch(e){}};
       (async()=>{
         try{
-          let retry=0,waitMs=1000;
-          while(true){
-            let result;
-            try{
-              result=await runChat(body,env,event=>send({type:"status",...event}));
-            }catch(e){
-              result={status:502,data:{error:"chat_stream_failed",message:"Transient chat failure; retrying."}};
-            }
-            if(result.status<500){
-              send({type:"result",status:result.status,data:result.data});
-              break;
-            }
-            retry++;
-            send({type:"status",stage:"failed",provider:"সব AI সার্ভার",model:"সব ব্যর্থ; পুনরায় চেষ্টা "+retry});
-            await new Promise(resolve=>setTimeout(resolve,waitMs));
-            waitMs=Math.min(30000,waitMs*2);
-          }
+          const result=await runChatUntilAnswer(
+            status=>runChat(body,env,status),
+            event=>send({type:"status",...event})
+          );
+          send({type:"result",status:result.status,data:result.data});
         }catch(e){
           send({type:"result",status:500,data:{error:"chat_stream_failed",message:"Chat request failed."}});
         }finally{try{controller.close();}catch(e){}}
