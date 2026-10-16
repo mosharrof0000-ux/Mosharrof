@@ -1,8 +1,0 @@
-name = "mosharrof-video-generation"
-main = "index.js"
-compatibility_date = "2026-10-16"
-workers_dev = true
-
-[vars]
-# Paid video generation stays disabled until owner approval, FAL_KEY, and a durable edge rate limit exist.
-VIDEO_GENERATION_ENABLED = "false"
