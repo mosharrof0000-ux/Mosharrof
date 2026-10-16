@@ -7,7 +7,6 @@ data class InstalledApp(val label: String, val packageName: String)
 sealed interface TaskPlan {
     data class OpenApp(val app: InstalledApp) : TaskPlan
     data class TapVisibleText(val text: String, val app: InstalledApp) : TaskPlan
-    data class TypeFocusedText(val text: String) : TaskPlan
     data class TypeText(val text: String, val app: InstalledApp) : TaskPlan
     data class SwipeScreen(val direction: AgentAction.Direction, val app: InstalledApp) : TaskPlan
     data class GlobalNavigation(val destination: AgentAction.NavigationDestination) : TaskPlan
