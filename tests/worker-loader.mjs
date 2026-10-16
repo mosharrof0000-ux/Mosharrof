@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 export async function loadWorker() {
-  const paths=["worker/screenshot-analysis.js","core/chat-context.js","core/reflective-chat-prompt.js","core/chat-provider-retry.js","core/image-spec.js","core/personal-memory/context.js"];
-  const [source,context,reflection,retry,imageSpec,personalMemoryContext]=await Promise.all(paths.map(p=>readFile(new URL("../"+p,import.meta.url),"utf8")));
-  const bundled=source.replace('import { buildChatContext } from "../core/chat-context.js";',context).replace('import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";',reflection).replace('import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";',retry).replace('import { parseImageSpec } from "../core/image-spec.js";',imageSpec).replace('import { formatRetrievedMemory, formatResponseStyle } from "../core/personal-memory/context.js";',personalMemoryContext);
+  const paths=["worker/screenshot-analysis.js","core/chat-context.js","core/reflective-chat-prompt.js","core/chat-provider-retry.js","core/image-spec.js","core/personal-memory/context.js","core/personal-memory/prompt.js"];
+  const [source,context,reflection,retry,imageSpec,personalMemoryContext,personalMemoryPrompt]=await Promise.all(paths.map(p=>readFile(new URL("../"+p,import.meta.url),"utf8")));
+  const bundled=source.replace('import { buildChatContext } from "../core/chat-context.js";',context).replace('import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";',reflection).replace('import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";',retry).replace('import { parseImageSpec } from "../core/image-spec.js";',imageSpec).replace('import { formatRetrievedMemory, formatResponseStyle } from "../core/personal-memory/context.js";',personalMemoryContext).replace('import { buildPersonalizedUserPrompt } from "../core/personal-memory/prompt.js";',personalMemoryPrompt);
   if(bundled.includes('from "../core/'))throw new Error("Unbundled worker helper");
   return (await import("data:text/javascript;base64,"+Buffer.from(bundled).toString("base64"))).default;
 }
