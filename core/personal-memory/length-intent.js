@@ -5,7 +5,7 @@ const PATTERNS = [
 ];
 export function inferResponseStyle(message, retrievedPreferences = []) {
   const text = String(message || "");
-  const explicit = text.match(/(?:\b|^)(\d{1,2})\s*(?:k|thousand)\s*words?\b|(?:^|\s)(\d{3,5})\s*(?:words?|শব্দ|ওয়ার্ড)/i);
+  const explicit = text.match(/(?:\b|^)(\d{1,2})\s*(?:k|thousand)\s*words?\b|(?:^|\s)(\d{3,5})\s*(?:words?|শব্দ(?:ের|)?|ওয়ার্ড(?:ের|)?)/i);
   if (explicit) {
     const count = Number(explicit[1] || explicit[2]) * (/k|thousand/i.test(explicit[0]) ? 1000 : 1);
     return { mode: "explicit-length", requestedWords: Math.min(20000, count), source: "current-message", confidence: 0.99 };
