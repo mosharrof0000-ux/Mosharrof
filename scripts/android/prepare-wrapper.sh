@@ -10,6 +10,7 @@ cp -a web android-web
 test -s core/android-edge-to-edge.css
 cp core/android-edge-to-edge.css android-web/edge-to-edge.css
 cp core/device-control.js android-web/device-control.js
+cp core/android-file-manager-ui.js android-web/android-file-manager-ui.js
 cp core/android-file-manager.js android-web/android-file-manager.js
 python - <<'PY'
 from pathlib import Path
