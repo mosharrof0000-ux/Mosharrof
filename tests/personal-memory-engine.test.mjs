@@ -42,7 +42,7 @@ test("secret-like content is not saved and conflicting memories are superseded, 
   assert.equal((await engine.get(next.newId)).text, "Use detailed answers");
 });
 test("natural language size inference respects explicit current request first", () => {
-  assert.deepEqual(inferResponseStyle("বাংলায় ৫০০০ শব্দের গল্প"), { mode: "normal", source: "default", confidence: 0.55 });
+  assert.deepEqual(inferResponseStyle("বাংলায় ৫০০০ শব্দের গল্প"), { mode: "explicit-length", requestedWords: 5000, source: "current-message", confidence: 0.99 });
   assert.equal(inferResponseStyle("Write a short answer").mode, "short");
   assert.equal(classifyMemoryFolder("একটা গল্প লিখো"), "writing-and-stories");
 });
