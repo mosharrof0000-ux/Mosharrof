@@ -1,6 +1,5 @@
 import { buildChatContext } from "../core/chat-context.js";
-import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
-const ORIGIN="https://mosharrof0000-ux.github.io";
+import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
