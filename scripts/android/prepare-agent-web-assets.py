@@ -14,7 +14,7 @@ assets = (
 for name in assets:
     source = core / name
     if not source.is_file() or not source.stat().st_size:
-        raise SystemExit(f"Required Android agent asset missing: {source}")
+        raise SystemExit(f"Missing Android asset: {source}")
     (bundle / name).write_bytes(source.read_bytes())
 
 page = bundle / "index.html"
