@@ -131,12 +131,12 @@ object DeviceCapabilityCenter {
         add(Manifest.permission.WRITE_CONTACTS)
         add(Manifest.permission.READ_CALENDAR)
         add(Manifest.permission.WRITE_CALENDAR)
+        if (Build.VERSION.SDK_INT >= 31) add(Manifest.permission.BLUETOOTH_CONNECT)
         if (Build.VERSION.SDK_INT >= 33) {
             add(Manifest.permission.POST_NOTIFICATIONS)
             add(Manifest.permission.READ_MEDIA_IMAGES)
             add(Manifest.permission.READ_MEDIA_VIDEO)
             add(Manifest.permission.READ_MEDIA_AUDIO)
-            add(Manifest.permission.BLUETOOTH_CONNECT)
         } else {
             add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
