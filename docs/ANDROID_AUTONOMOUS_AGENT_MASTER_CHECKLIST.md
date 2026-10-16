@@ -53,6 +53,7 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Typed action model and deterministic policy gate; arbitrary shell commands are not representable.
 - [x] User-triggered Android Accessibility screenshot capture and in-app preview, with transient visible-label/node analysis; screenshots are not saved or uploaded automatically. Build/device verification pending.
 - [ ] AI vision model/backend adapter for semantic screenshot interpretation with measured memory/latency/accuracy; image coordinates only as a last resort with revalidation.
+- [ ] Connect screenshot semantics to the planner and action loop; current screenshot preview and UI-label report are not AI vision understanding.
 - [ ] Bounded planner that proposes typed actions, not executable shell or unrestricted code.
 - [ ] Optional local retrieval/memory, encrypted and opt-in.
 - [ ] AI provider failover and connection to existing MOSHARROF/Gemini services, with no hard-coded secrets and clear offline fallback.
@@ -61,7 +62,8 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Accessibility is off until the owner explicitly enables it.
 - [x] High-risk visible labels (send/delete/pay/share/post/confirm/install, etc.) are rejected in the current tap planner.
 - [x] Per-task action budget and package allowlist policy primitive.
-- [ ] Central permission/consent registry: purpose, Android permission, risk, confirmation text, result verification and audit outcome for every capability.
+- [x] Initial permission center for Accessibility, overlay, usage access, all-files access, microphone, contacts, calendar, shared media, notifications and exact-alarm special access; displays OS grant state and opens Android-owned permission/settings screens.
+- [ ] Complete permission/consent registry for every capability: risk tier, per-action confirmation, result verification, audit outcome, revocation handling and unsupported/OEM-specific fallbacks.
 - [ ] Clear stop-all control, cancellation on service interruption, bounded deadlines and no hidden background actions.
 - [ ] Protect sensitive UI text; do not persist screenshots or arbitrary screen data by default.
 - [ ] Security review for exported components, Accessibility disclosures, overlay, microphone and file permissions.
