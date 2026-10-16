@@ -62,7 +62,8 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Accessibility is off until the owner explicitly enables it.
 - [x] High-risk visible labels (send/delete/pay/share/post/confirm/install, etc.) are rejected in the current tap planner.
 - [x] Per-task action budget and package allowlist policy primitive.
-- [x] Initial permission center for Accessibility, overlay, usage access, all-files access, microphone, contacts, calendar, shared media, notifications and exact-alarm special access; displays OS grant state and opens Android-owned permission/settings screens.
+- [x] Initial permission center for Accessibility, overlay, usage access, all-files access, microphone, contacts, calendar, shared media, notification permission, notification-listener access and exact-alarm special access; displays OS grant state and opens Android-owned permission/settings screens.
+- [x] Optional NotificationListenerService with explicit Android notification-access grant; displays a bounded recent-notification snapshot in memory only, with no persistence/upload. Physical-device privacy and lifecycle validation pending.
 - [ ] Complete permission/consent registry for every capability: risk tier, per-action confirmation, result verification, audit outcome, revocation handling and unsupported/OEM-specific fallbacks.
 - [ ] Clear stop-all control, cancellation on service interruption, bounded deadlines and no hidden background actions.
 - [ ] Protect sensitive UI text; do not persist screenshots or arbitrary screen data by default.
