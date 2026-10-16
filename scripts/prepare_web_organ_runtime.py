@@ -72,13 +72,13 @@ def main() -> int:
             raise SystemExit("ORGAN ASSET PREP: chat request shape changed; history injection requires review")
         index_html = index_html.replace(old_chat_request, new_chat_request, 1)
 
-    # sidebar-recovery.js imports the memory UI at runtime; the engine is copied above.
+    # Inject the single consent-gated memory client into the generated Pages artifact.
     memory_client_tag = '<script type="module" src="./personal-memory-client.js"></script>'
     if memory_client_tag not in index_html:
         anchor_tag = '<script src="./sidebar-recovery.js"></script>'
         if anchor_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for memory client")
-        index_html = index_html.replace(anchor_tag, anchor_tag + "\\n" + memory_client_tag, 1)
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + memory_client_tag, 1)
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
