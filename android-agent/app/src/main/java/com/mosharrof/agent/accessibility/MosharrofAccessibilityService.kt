@@ -275,7 +275,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
         @Volatile private var latestActionResult: String? = null
 
         fun setFloatingControlEnabled(context: android.content.Context, enabled: Boolean) {
-            context.getSharedPreferences(FloatingAgentControl.PREFS, MODE_PRIVATE)
+            context.getSharedPreferences(FloatingAgentControl.PREFS, android.content.Context.MODE_PRIVATE)
                 .edit().putBoolean(FloatingAgentControl.KEY_ENABLED, enabled).apply()
             activeService?.syncFloatingControl()
         }
