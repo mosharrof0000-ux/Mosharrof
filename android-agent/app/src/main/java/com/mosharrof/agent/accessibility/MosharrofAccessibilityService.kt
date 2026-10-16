@@ -37,6 +37,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
                 ScreenshotAnalysisControl.displayCapturedScreenshot(bitmap, error, eventPackage)
             }
         }
+        AccessibilityTextEntry.onWindowEvent(this, eventPackage)
         pendingTap?.takeIf { it.targetPackage == eventPackage }?.let { processPendingTap(it) }
         pendingSwipe?.takeIf { it.targetPackage == eventPackage }?.let { processPendingSwipe(it) }
         if (!scanArmed) return
@@ -51,11 +52,13 @@ class MosharrofAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {
         screenshotCaptureArmed = false
+        AccessibilityTextEntry.cancel()
         Log.i(TAG, "Accessibility service interrupted by system")
     }
 
     override fun onDestroy() {
         screenshotCaptureArmed = false
+        AccessibilityTextEntry.cancel()
         floatingControl?.hide()
         floatingControl = null
         if (activeService === this) activeService = null
@@ -231,9 +234,13 @@ class MosharrofAccessibilityService : AccessibilityService() {
             return true
         }
 
+        fun armTextEntry(targetPackage: String, text: String): Boolean =
+            AccessibilityTextEntry.arm(activeService, targetPackage, text)
+
         fun cancelSemanticTap() {
             pendingTap = null
             pendingSwipe = null
+            AccessibilityTextEntry.cancel()
         }
 
         fun armSwipe(targetPackage: String, direction: AgentAction.Direction): Boolean {
@@ -243,7 +250,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
             return true
         }
 
-        fun takeActionResult(): String? = latestActionResult.also { latestActionResult = null }
+        fun takeActionResult(): String? = (latestActionResult ?: AccessibilityTextEntry.takeResult()).also { latestActionResult = null }
         fun isInspectionArmed(): Boolean = scanArmed
         fun hasInspectionSnapshot(): Boolean = latestSnapshot != null
     }
