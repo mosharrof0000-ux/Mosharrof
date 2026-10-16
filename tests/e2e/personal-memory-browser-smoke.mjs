@@ -93,7 +93,7 @@ try {
     throw new Error("Could not enable personal memory from the live chat UI");
   }
   // Close the drawer so it cannot intercept the composer click.
-  await page.locator("#rightBtn").click();
+  await page.locator("#cR").click();
 
   const marker = "MOSHARROF_MEMORY_SMOKE_" + Date.now();
   const message = "স্মৃতি ইঞ্জিনের স্বয়ংক্রিয় পরীক্ষা। এই শনাক্তকারীটি মনে রাখুন: " + marker;
@@ -118,7 +118,7 @@ try {
   }
   console.log("PASS: memory survived reload and is searchable in the UI");
   // Close the drawer before submitting the follow-up question.
-  await page.locator("#rightBtn").click();
+  await page.locator("#cR").click();
 
   // Send a follow-up after reload and assert the bridge injects the saved marker.
   await page.locator("#input").fill("আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?");
