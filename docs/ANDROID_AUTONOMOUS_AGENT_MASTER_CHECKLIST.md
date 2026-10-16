@@ -17,7 +17,7 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Bounded command length; reject ambiguous/unsupported commands.
 - [x] Common Bengali app aliases.
 - [ ] Continuous hands-free session, wake/interrupt/stop, visible microphone state and robust cancellation.
-- [ ] **Text-to-speech result readout** — implement as the first incremental feature in this work branch; verify via CI.
+- [ ] **Text-to-speech result readout** — code and speak/stop UI are added in this work branch; verify via CI and a physical device.
 - [ ] Connect the agent to MOSHARROF AI's existing chat/AI engine without replacing or breaking Gemini or provider fallback.
 - [ ] Optional configurable Bengali voice, speed, voice style and speak/stop controls.
 
