@@ -45,7 +45,7 @@ test("revisions preserve chronology and current memory context", async () => {
 
 test("secret-like content is rejected and casual messages are not auto-promoted", async () => {
   const engine = makeEngine();
-  await assert.rejects(() => engine.remember({ content: "API_KEY=do-not-save" }), /Secret-like content/);
+  assert.equal((await engine.remember({ content: "API_KEY=do-not-save" })).saved, false);
   assert.equal(inferMemoryCandidates("আজ বৃষ্টি হচ্ছে").length, 0);
   assert.equal(inferMemoryCandidates("ভবিষ্যতে সবসময় বাংলায় বিস্তারিত উত্তর দেবে")[0].category, "preference");
 });
