@@ -63,6 +63,11 @@ export function initializeComposerStopControl(send) {
         return new Response(stream, { status: response.status, statusText: response.statusText, headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache" } });
       }).catch(error => {
         finishStop(controller);
+        if (controller.signal.aborted) {
+          return new Response(JSON.stringify({ text: "মেসেজ থামানো হয়েছে", provider: "MOSHARROF", model: "stopped", attempted: [] }), {
+            status: 200, headers: { "Content-Type": "application/json" }
+          });
+        }
         throw error;
       });
     };
