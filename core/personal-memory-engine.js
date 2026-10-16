@@ -38,7 +38,7 @@ function inferPreference(text) {
     { pattern: /(মনে রাখ|স্মৃতিতে রাখ|পরের বার|পরবর্তীতে মনে)/i, key: "memory_instruction", value: "remember", note: "ব্যবহারকারী স্মৃতি ব্যবহারের স্পষ্ট নির্দেশ দিয়েছেন" },
     { pattern: /(বাংলায়|বাংলায়|বাংলা ভাষায়|বাংলা ভাষায়)/i, key: "language", value: "bn", note: "ব্যবহারকারী বাংলা ভাষা চেয়েছেন" }
   ];
-  return patterns.filter(item => item.pattern.test(value)).map(item => ({ kind: "preference", key: item.key, value: item.value, summary: item.note }));
+  return patterns.filter(item => item.pattern.test(value)).map(item => ({ kind: "preference", folder: "profile/preferences", topic: "preferences", key: item.key, value: item.value, summary: item.note }));
 }
 export function createIndexedDbMemoryStore(indexedDB, databaseName = "mosharrof-personal-memory-v1") {
   if (!indexedDB) throw new Error("এই ডিভাইসে IndexedDB পাওয়া যায়নি।");
