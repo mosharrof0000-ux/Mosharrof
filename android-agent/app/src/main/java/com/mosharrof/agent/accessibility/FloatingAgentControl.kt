@@ -114,7 +114,7 @@ internal class FloatingAgentControl(
                 if (dragging) {
                     params.x = (startX + dx.toInt()).coerceAtLeast(0)
                     params.y = (startY + dy.toInt()).coerceAtLeast(0)
-                    runCatching { windowManager.updateViewLayout(root, params) }
+                    root?.let { container -> runCatching { windowManager.updateViewLayout(container, params) } }
                     return true
                 }
             }
