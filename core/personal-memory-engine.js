@@ -101,6 +101,21 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     const start=Math.max(0,Number(offset)||0), end=Number.isInteger(limit)&&limit>0?start+limit:items.length;
     return { total:items.length, offset:start, items:clone(items.slice(start,end)) };
   }
+  async function all({ folder, includeSuperseded = true, limit, offset = 0 } = {}) {
+    const ledger = await readLedger();
+    let items = ledger.memories.filter(m => (includeSuperseded || !["superseded","archived"].includes(m.status)) && (!folder || (m.folder || m.category) === folder));
+    items.sort((a,b) => String(b.updated_at).localeCompare(String(a.updated_at)));
+    const start = Math.max(0, Number(offset) || 0), end = Number.isInteger(limit) && limit > 0 ? start + limit : items.length;
+    return { total: items.length, offset: start, items: clone(items.slice(start,end)) };
+  }
+  async function recordTurn(userText, assistantText = "") {
+    const candidates = inferMemoryCandidates(userText);
+    const learned = candidates[0] || null;
+    const turn = await remember({ content: "ব্যবহারকারীর বার্তা: " + clean(userText,1800) + (assistantText ? "\nসহকারীর উত্তর: " + clean(assistantText,1000) : ""), category:"event", source:"conversation_turn", confidence:0.75, status:"active" });
+    if (!turn.saved) return { ...turn, learned:null };
+    if (learned) await remember({ ...learned, status:"pending_confirmation" });
+    return { ...turn, learned };
+  }
   async function exportAll() { return clone(await readLedger()); }
   async function importAll(snapshot) {
     if (!snapshot || snapshot.schema_version !== SCHEMA_VERSION || !Array.isArray(snapshot.memories)) throw new TypeError("Unsupported memory export.");
@@ -116,7 +131,7 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     if (typeof backingStorage.removeItem !== "function") throw new TypeError("Storage adapter does not support deletion.");
     await backingStorage.removeItem(key); return true;
   }
-  return Object.freeze({ remember, revise, recall, timeline, exportAll, importAll, clear });
+  return Object.freeze({ remember, revise, recall, timeline, all, recordTurn, exportAll, importAll, clear });
 }
 
 export function buildPersonalMemoryContext(profile, currentText = "") {
