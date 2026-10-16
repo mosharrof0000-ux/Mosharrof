@@ -87,3 +87,10 @@ These are required workstreams, not completed features. Implement them as small,
 ## Module boundaries and completion criteria
 
 Keep voice, planning, policy, perception, accessibility, execution, verification, file/media, memory, and diagnostics in separate modules with narrow interfaces. The first shippable milestone is scoped SAF file management plus mediated settings and truthful capability reporting. Later milestones may advertise cross-app UI automation, local vision, or self-healing only after their own automated tests and physical-device acceptance checks pass.
+
+## Newly added bounded modules
+
+- `core/android-agent-memory.js` provides an opt-in IndexedDB vector-memory store. It is disabled unless explicitly enabled by the caller, accepts caller-supplied local embeddings, rejects common credential-like text, and exposes remember/search/forget operations. It does not generate embeddings or silently collect chat/screen data; a local embedding provider and user-facing memory controls are still required before enabling it in the product.
+- `core/android-agent-recovery.js` provides a maximum-three-candidate recovery harness. It executes only caller-supplied, allowlisted candidates, permits fallback only when the policy callback approves it, and reports recovery only after a verifier confirms the postcondition. It never rewrites code or expands permissions.
+- `scripts/test_android_agent_memory.mjs` and `scripts/test_android_agent_recovery.mjs` exercise these contracts in CI before APK assembly.
+- These modules are foundation components, not proof of a complete RAG or self-healing product. Local embedding generation, memory UI/retention controls, a native perception pipeline, model-provider integration, and physical-device end-to-end tests remain release gates.
