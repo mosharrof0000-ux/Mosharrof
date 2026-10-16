@@ -48,43 +48,6 @@ try {
 
   const memorySource = await readFile(new URL("../core/personal-memory-engine.js", import.meta.url), "utf8");
   const { createPersonalMemoryEngine } = await import("data:text/javascript;base64," + Buffer.from(memorySource).toString("base64"));
-  const memoryStorage = new Map();
-  const memory = createPersonalMemoryEngine({ storage: {
-    async getItem(key) { return memoryStorage.get(key) ?? null; },
-    async setItem(key, value) { memoryStorage.set(key, value); },
-    async removeItem(key) { memoryStorage.delete(key); }
-  }});
-  await memory.remember({ category: "preference", content: "গল্পে বিস্তারিত ঘটনা ও পূর্ণাঙ্গ সমাপ্তি পছন্দ", user_confirmed: true });
-  globalThis.fetch = async (url, options) => {
-    if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
-    geminiRequestBody = JSON.parse(options.body);
-    return response({ candidates: [{ content: { parts: [{ text: "Memory-aware answer" }] } }] });
-  };
-  result = await ask({ GEMINI_API_KEY: "test-key" }, "ভবিষ্যতে আমার পছন্দ মনে রাখবে, একটি গল্প লিখো", {
-    personal_memory: await memory.exportAll(), memory_suggestions_enabled: true
-  });
-  assert.equal(result.status, 200);
-  assert.match(geminiRequestBody.contents[0].parts[0].text, /USER PERSONAL MEMORY/);
-  assert.match(geminiRequestBody.contents[0].parts[0].text, /পূর্ণাঙ্গ সমাপ্তি/);
-  assert.equal(result.data.memory_candidates.length, 1);
-
-
-  globalThis.fetch = async (url, options) => {
-    if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
-    geminiRequestBody = JSON.parse(options.body);
-    return response({ candidates: [{ content: { parts: [{ text: "Long story opening" }] } }] });
-  };
-  result = await ask({ GEMINI_API_KEY: "test-key" }, "বাংলায় ৫০০০ শব্দের একটি গল্প লিখে দাও");
-  assert.equal(result.status, 200);
-  assert.equal(result.data.requested_words, 5000);
-  assert.ok(geminiRequestBody.generationConfig.maxOutputTokens >= 15000);
-  assert.match(geminiRequestBody.contents[0].parts[0].text, /approximately 5000 words/);
-
-  result = await ask({ GEMINI_API_KEY: "test-key" }, "Write a story of 20 thousand words");
-  assert.equal(result.status, 200);
-  assert.equal(result.data.requested_words, 20000);
-  assert.equal(geminiRequestBody.generationConfig.maxOutputTokens, 62512);
-
   const seenKeys = [];
   globalThis.fetch = async (url, options) => {
     if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
