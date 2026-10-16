@@ -451,7 +451,7 @@ async function runChat(body,env,onStatus){
   const preferred=env.GEMINI_CHAT_MODEL
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
-  const userPrompt=buildReflectiveUserPrompt(text,{memoryContext:body.memory_context,targetWords});
+  const userPrompt=buildReflectiveUserPrompt(text,{targetWords});
   const payload={contents:[{parts:[{text:userPrompt}]}]};
   if(targetWords)payload.generationConfig={temperature:0.3,maxOutputTokens};
   const geminiPlan=[];
