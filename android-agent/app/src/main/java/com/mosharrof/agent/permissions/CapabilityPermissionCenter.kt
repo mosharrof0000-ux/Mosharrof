@@ -10,12 +10,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import android.app.AlertDialog as PlatformAlertDialog
 
@@ -84,12 +82,12 @@ object CapabilityPermissionCenter {
         Capability("Floating control / overlay", "অন্য অ্যাপের উপরে ভাসমান কন্ট্রোল দেখানো.", settingsAction = Settings.ACTION_MANAGE_OVERLAY_PERMISSION, readiness = { Settings.canDrawOverlays(it) }),
         Capability("ব্যবহারের পরিসংখ্যান", "Android অনুমতি দিলে অ্যাপ ব্যবহারের তথ্য.", settingsAction = Settings.ACTION_USAGE_ACCESS_SETTINGS, readiness = ::usageAccessGranted),
         Capability("সম্পূর্ণ ফাইল ব্যবস্থাপনা", "সমর্থিত Android সংস্করণে all-files access; অনুমতি পাওয়া গেলেও protected app data নয়.", settingsAction = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, readiness = { Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager() }),
-        Capability("মাইক্রোফোন", "ভয়েস কমান্ড বা ভবিষ্যৎ hands-free voice session.", listOf(Manifest.permission.RECORD_AUDIO), readiness = ::permissionsGranted),
-        Capability("Contacts", "ব্যবহারকারী অনুমতি দিলে contacts পড়া/লেখা.", listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS), readiness = ::permissionsGranted),
-        Capability("Calendar", "অনুমতি দিলে calendar পড়া/লেখা.", listOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR), readiness = ::permissionsGranted),
-        Capability("ছবি ও ভিডিও", "Android-এর media permission অনুযায়ী নির্বাচিত/অনুমোদিত মিডিয়া.", mediaPermissions(), readiness = ::permissionsGranted),
-        Capability("অডিও ফাইল", "অনুমতি থাকলে shared audio media পড়া.", audioPermissions(), readiness = ::permissionsGranted),
-        Capability("Notifications", "Android 13+ এ notification permission.", notificationPermissions(), readiness = ::permissionsGranted),
+        Capability("মাইক্রোফোন", "ভয়েস কমান্ড বা ভবিষ্যৎ hands-free voice session.", listOf(Manifest.permission.RECORD_AUDIO), readiness = { permissionsGranted(it, listOf(Manifest.permission.RECORD_AUDIO)) }),
+        Capability("Contacts", "ব্যবহারকারী অনুমতি দিলে contacts পড়া/লেখা.", listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) }),
+        Capability("Calendar", "অনুমতি দিলে calendar পড়া/লেখা.", listOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)) }),
+        Capability("ছবি ও ভিডিও", "Android-এর media permission অনুযায়ী নির্বাচিত/অনুমোদিত মিডিয়া.", mediaPermissions(), readiness = { permissionsGranted(it, mediaPermissions()) }),
+        Capability("অডিও ফাইল", "অনুমতি থাকলে shared audio media পড়া.", audioPermissions(), readiness = { permissionsGranted(it, audioPermissions()) }),
+        Capability("Notifications", "Android 13+ এ notification permission.", notificationPermissions(), readiness = { permissionsGranted(it, notificationPermissions()) }),
         Capability("নির্দিষ্ট সময়ে অ্যালার্ম", "Exact alarm special access প্রয়োজন হলে Android সেটিংস খুলুন.", settingsAction = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, readiness = { Build.VERSION.SDK_INT < 31 || activity.getSystemService(android.app.AlarmManager::class.java)?.canScheduleExactAlarms() == true })
     )
 
