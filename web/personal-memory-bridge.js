@@ -3,6 +3,8 @@
   "use strict";
   const api = root.MosharrofMemoryEngine;
   if (!api || !root.fetch) return;
+  const SESSION_KEY = "mosharrof_chat_sessions_v1";
+  const ACTIVE_SESSION_KEY = "mosharrof_active_session_v1";
   function isChatRequest(input) {
     try {
       const url = new URL(typeof input === "string" ? input : input.url, root.location.href);
@@ -25,12 +27,12 @@
   function currentSummary(currentText) {
     const messages = activeSessionMessages().filter(item => item && (item.role === "user" || item.role === "ai") && String(item.text || "").trim());
     if (messages.length && messages[messages.length - 1].role === "user" && String(messages[messages.length - 1].text || "").trim() === currentText) messages.pop();
-    return messages.slice(-8).map(item => (item.role === "user" ? "User: " : "MOSHARROF: ") + String(item.text || "").replace(/\\s+/g, " ").slice(0, 350)).join("\\n").slice(-1200);
+    return messages.slice(-8).map(item => (item.role === "user" ? "User: " : "MOSHARROF: ") + String(item.text || "").replace(/\s+/g, " ").slice(0, 350)).join("\n").slice(-1200);
   }
   function answerFromResponse(raw, contentType) {
     try {
       if (String(contentType || "").includes("text/event-stream")) {
-        const lines = raw.split(/\\r?\\n/).filter(line => line.startsWith("data:"));
+        const lines = raw.split(/\r?\n/).filter(line => line.startsWith("data:"));
         for (let i = lines.length - 1; i >= 0; i--) {
           try {
             const event = JSON.parse(lines[i].slice(5).trim());
@@ -47,7 +49,7 @@
     if (!root.fetch || root.__mosharrofMemoryFetchInstalled) return;
     root.__mosharrofMemoryFetchInstalled = true;
     const originalFetch = root.fetch.bind(root);
-    root.fetch = async function (input, init) {
+    root.fetch = async function(input, init) {
       if (!isChatRequest(input) || !init || typeof init.body !== "string") return originalFetch(input, init);
       let payload;
       try { payload = JSON.parse(init.body); } catch (_) { return originalFetch(input, init); }
@@ -62,27 +64,19 @@
           payload.memory_policy = "Historical context only: current request and corrections override older memories. Treat inferred preferences as tentative; do not force unrelated memories into the answer.";
         }
       } catch (error) {
-        // Memory is an enhancement; a storage failure must never block chat.
         try { console.warn("MOSHARROF memory unavailable:", error); } catch (_) {}
       }
-      const nextInit = Object.assign({}, init, { body: JSON.stringify(payload) });
-      const response = await originalFetch(input, nextInit);
+      const response = await originalFetch(input, Object.assign({}, init, { body: JSON.stringify(payload) }));
       if (api.enabled() && response && response.clone) {
         try {
           response.clone().text().then(async function(raw) {
             const answer = answerFromResponse(raw, response.headers.get("content-type"));
-            if (answer.trim()) await api.remember("User asked: " + userText + "\\nMOSHARROF AI answered: " + answer, "assistant-response");
+            if (answer.trim()) await api.remember("User asked: " + userText + "\nMOSHARROF AI answered: " + answer, "assistant-response");
           }).catch(function(error) { try { console.warn("MOSHARROF memory response capture failed:", error); } catch (_) {} });
         } catch (_) {}
       }
       return response;
     };
-  }
-  const api = Object.freeze({ enabled, setEnabled, remember, retrieve, contextFor, list, remove, clear, mountUi });
-  root.MosharrofMemoryEngine = api;
-  if (root.document) {
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { mountUi(); installFetchBridge(); }, { once: true });
-    else { mountUi(); installFetchBridge(); }
   }
   if (root.document) {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", installFetchBridge, { once: true });
