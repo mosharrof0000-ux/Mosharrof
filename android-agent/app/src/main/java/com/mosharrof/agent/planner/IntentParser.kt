@@ -11,6 +11,8 @@ class IntentParser {
             return ParsedIntent.Unsupported("কমান্ড খালি অথবা অতিরিক্ত বড়")
         }
 
+        parseTapCommand(text)?.let { return it }
+
         val suffix = listOf("খুলে দাও", "খুলুন", "খোলো", "চালু করো", "চালু করুন")
             .firstOrNull { text.endsWith(" $it", ignoreCase = true) }
         if (suffix != null) {
@@ -23,10 +25,30 @@ class IntentParser {
             Regex("^(.+?)\\s+(?:খুলে দাও|খুলুন|চালু করো|চালু করুন)$", RegexOption.IGNORE_CASE)
         )
         val match = patterns.firstNotNullOfOrNull { it.find(text) }
-            ?: return ParsedIntent.Unsupported("এখন শুধু স্পষ্ট অ্যাপ-খোলার কমান্ড সমর্থিত")
+            ?: return ParsedIntent.Unsupported("এখন শুধু স্পষ্ট অ্যাপ-খোলার বা নির্দিষ্ট UI ট্যাপ কমান্ড সমর্থিত")
         val query = match.groupValues[1].trim().trim('"', '\'')
         if (query.isBlank()) return ParsedIntent.Unsupported("অ্যাপের নাম পাওয়া যায়নি")
         return ParsedIntent.OpenApp(query)
+    }
+
+    private fun parseTapCommand(text: String): ParsedIntent.TapText? {
+        val english = Regex(
+            "^(?:tap|click|ট্যাপ(?: করুন| করো)?)\\s+[\\\"]?(.+?)[\\\"]?\\s+(?:in|inside)\\s+(.+)$",
+            RegexOption.IGNORE_CASE
+        ).find(text)
+        if (english != null) {
+            val target = english.groupValues[1].trim().trim('"', '\'')
+            val app = english.groupValues[2].trim().trim('"', '\'')
+            if (target.isNotBlank() && app.isNotBlank()) return ParsedIntent.TapText(target, app)
+        }
+
+        val bengali = Regex(
+            "^(.+?)(?:-এ| এ)\\s+(.+?)\\s+(?:ট্যাপ করুন|ট্যাপ করো|চাপ দিন|চাপুন)$",
+            RegexOption.IGNORE_CASE
+        ).find(text) ?: return null
+        val app = bengali.groupValues[1].trim().trim('"', '\'')
+        val target = bengali.groupValues[2].trim().trim('"', '\'')
+        return if (app.isNotBlank() && target.isNotBlank()) ParsedIntent.TapText(target, app) else null
     }
 
     companion object {
@@ -36,5 +58,6 @@ class IntentParser {
 
 sealed interface ParsedIntent {
     data class OpenApp(val query: String) : ParsedIntent
+    data class TapText(val text: String, val appQuery: String) : ParsedIntent
     data class Unsupported(val reason: String) : ParsedIntent
 }
