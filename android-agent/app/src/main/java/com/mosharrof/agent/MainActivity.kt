@@ -135,7 +135,7 @@ class MainActivity : ComponentActivity() {
             }
             is TaskPlan.SwipeScreen -> {
                 pendingSwipe = plan
-                status.text = "পরিকল্পনা: \${plan.app.label}-এ \${plan.direction.name.lowercase()} দিকে একবার স্ক্রল হবে। নিশ্চিত করুন।"
+                status.text = "পরিকল্পনা: ${plan.app.label}-এ ${plan.direction.name.lowercase()} দিকে একবার স্ক্রল হবে। নিশ্চিত করুন।"
                 confirmButton.isEnabled = isServiceEnabled()
             }
             is TaskPlan.TapVisibleText -> {
@@ -167,7 +167,7 @@ class MainActivity : ComponentActivity() {
         val allowed = installedApps().map { it.packageName }.toSet()
         val action = AgentAction.Swipe(plan.app.packageName, plan.direction)
         val decision = ActionPolicy(allowed).evaluate(action, 0)
-        if (decision.decision == PolicyDecision.DENY) { status.text = "নিরাপত্তা নীতিতে বাধা: \${decision.reason}"; return }
+        if (decision.decision == PolicyDecision.DENY) { status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"; return }
         if (!MosharrofAccessibilityService.armSwipe(plan.app.packageName, plan.direction)) {
             status.text = "Accessibility service প্রস্তুত নয় বা অন্য action চলছে; স্ক্রল করা হয়নি।"; return
         }
