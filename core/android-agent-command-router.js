@@ -28,15 +28,22 @@
       }
     });
 
+    const fileRouterApi = options.fileTaskRouter || root.MosharrofAndroidFileCommandRouter;
+    const fileRouter = fileRouterApi && typeof fileRouterApi.createFileCommandRouter === "function"
+      ? fileRouterApi.createFileCommandRouter({
+        taskPlanner: options.taskPlanner || root.MosharrofAndroidTaskPlanner, confirm, report
+      }) : null;
+
     function handle(command) {
-      if (!planner || typeof planner.planCommand !== "function" ||
-          !executorApi || typeof executorApi.createExecutor !== "function") return { handled: false };
-      const plan = planner.planCommand(command);
-      if (plan.status !== "preview" || !plan.steps.length ||
-          !plan.steps.every(step => Object.prototype.hasOwnProperty.call(ACTION_METHODS, step.action))) {
-        return { handled: false, reason: plan.reason || "এই কমান্ডটি সরাসরি চালানোর জন্য অনুমোদিত নয়।" };
+      if (planner && typeof planner.planCommand === "function" &&
+          executorApi && typeof executorApi.createExecutor === "function") {
+        const plan = planner.planCommand(command);
+        if (plan.status === "preview" && plan.steps.length &&
+            plan.steps.every(step => Object.prototype.hasOwnProperty.call(ACTION_METHODS, step.action))) {
+          return { handled: true, promise: executePlan(plan) };
+        }
       }
-      return { handled: true, promise: executePlan(plan) };
+      return fileRouter ? fileRouter.handle(command) : { handled: false };
     }
 
     async function executePlan(plan) {
