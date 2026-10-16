@@ -112,15 +112,43 @@ import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "./person
     }
   }
 
+  async function memoryCommand(text) {
+    const value = String(text || "").trim();
+    if (/^(?:আমার\\s*)?(?:ব্যক্তিগত\\s*)?স্মৃতি\\s*(?:দেখাও|দেখান|তালিকা|list)$/i.test(value)) {
+      const rows = await engine.timeline({ limit: 30 });
+      const profile = await engine.profile();
+      const folders = Object.entries(profile.folders || {}).map(([name,count]) => name + " (" + count + ")").join(", ");
+      const recent = rows.slice().reverse().map(row => "- [" + (row.folder || "topics/general") + "] " + String(row.summary || row.userText || "").slice(0,160)).join("\\n");
+      return "আপনার মোট " + profile.totalEntries + "টি স্মৃতি-রেকর্ড আছে।\\nফোল্ডার: " + (folders || "এখনও নেই") + "\\nসাম্প্রতিক স্মৃতি:\\n" + (recent || "এখনও কোনো স্মৃতি নেই");
+    }
+    const explicit = value.match(/^(?:মনে রাখো|স্মৃতিতে রাখো|remember)\\s*[:：-]?\\s*(.{3,})$/i);
+    if (explicit) {
+      const saved = await engine.rememberFact({ text: explicit[1].trim(), kind: "explicit_memory", source: "explicit_user_command", confidence: "user-confirmed" });
+      return saved.saved ? "আপনার কথাটি স্মৃতিতে রেখেছি। ফোল্ডার: " + (saved.folder || "বিষয়ভিত্তিক স্মৃতি") : "নিরাপত্তা বা খালি তথ্যের কারণে এই কথাটি সংরক্ষণ করা যায়নি।";
+    }
+    if (/^(?:আমার\\s*)?(?:সব\\s*)?(?:ব্যক্তিগত\\s*)?স্মৃতি\\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)$/i.test(value)) {
+      if (!window.confirm("এই ডিভাইসের সব ব্যক্তিগত স্মৃতি মুছে ফেলবেন? চ্যাট ইতিহাস আলাদা থাকবে।")) return "স্মৃতি মোছা বাতিল করা হয়েছে।";
+      const result = await engine.clear();
+      status.count = 0; updateUI();
+      return result.cleared + "টি স্মৃতি-রেকর্ড মুছে ফেলা হয়েছে।";
+    }
+    return null;
+  }
+
   const originalFetch = window.fetch.bind(window);
   window.fetch = async function (input, init) {
     const url = typeof input === "string" ? input : (input && input.url) || "";
     const isChat = url.indexOf(CHAT_PATH) !== -1 && init && typeof init.body === "string";
-    if (!isChat || !engine || !enabled) return originalFetch(input, init);
+    if (!isChat || !engine) return originalFetch(input, init);
     let body;
     try { body = JSON.parse(init.body); } catch (_) { return originalFetch(input, init); }
     const userText = String(body.text || "").trim();
     if (!userText) return originalFetch(input, init);
+    try {
+      const commandReply = await memoryCommand(userText);
+      if (commandReply !== null) return new Response(JSON.stringify({ ok: true, provider: "local-memory", model: "personal-memory-engine", text: commandReply }), { status: 200, headers: { "content-type": "application/json; charset=utf-8" } });
+    } catch (error) { console.warn("[MOSHARROF memory] command failed:", error); }
+    if (!enabled) return originalFetch(input, init);
     try {
       const memoryContext = await engine.buildContext(userText, { limit: 8, maxChars: 3600 });
       const history = Array.isArray(body.history) ? body.history.slice(-8) : [];
