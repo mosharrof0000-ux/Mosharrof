@@ -158,13 +158,35 @@ class AgentTaskController(
         val plan = pendingSwipe ?: return
         val result = AgentUiActionExecutor.launchSwipe(activity, plan, isServiceEnabled())
         status.text = result.message
-        if (result.started) { pendingSwipe = null; confirmButton.isEnabled = false }
+        if (result.started) {
+            pendingSwipe = null
+            confirmButton.isEnabled = false
+            watchActionResult("স্ক্রল", 0)
+        }
     }
     private fun launchConfirmedTap() {
         val plan = pendingTap ?: return
         val result = AgentUiActionExecutor.launchTap(activity, plan, isServiceEnabled())
         status.text = result.message
-        if (result.started) { pendingTap = null; confirmButton.isEnabled = false }
+        if (result.started) {
+            pendingTap = null
+            confirmButton.isEnabled = false
+            watchActionResult("ট্যাপ", 0)
+        }
+    }
+    private fun watchActionResult(label: String, attempt: Int) {
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (activity.isFinishing || activity.isDestroyed) return@postDelayed
+            val result = MosharrofAccessibilityService.takeActionResult()
+            if (result != null) {
+                status.text = "$label ফলাফল: $result"
+            } else if (attempt < 24) {
+                watchActionResult(label, attempt + 1)
+            } else {
+                MosharrofAccessibilityService.stopAllActions()
+                status.text = "$label-এর ফল ১২ সেকেন্ডেও যাচাই করা যায়নি; action বন্ধ করা হয়েছে।"
+            }
+        }, 500L)
     }
     private fun launchConfirmedText() {
         val plan = pendingText ?: return
