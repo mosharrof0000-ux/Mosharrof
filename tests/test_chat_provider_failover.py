@@ -19,7 +19,7 @@ def test_chat_provider_order_is_gemini_then_workers_ai_then_optional_fallbacks()
     worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
     chat = worker[worker.index("async function runChat(body,env,onStatus){"):worker.index("async function chat(request,env){")]
     gemini_loop = chat.index("const geminiPlan=[]")
-    cloudflare = chat.index("generateWithCloudflareChat(text,env,report)")
+    cloudflare = chat.index("generateWithCloudflareChat(text,env,report,targetWords)")
     groq = chat.index('"groq","https://api.groq.com/openai/v1/chat/completions"')
     openrouter = chat.index('"openrouter","https://openrouter.ai/api/v1/chat/completions"')
     assert gemini_loop < cloudflare < groq < openrouter
