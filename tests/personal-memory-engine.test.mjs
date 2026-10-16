@@ -57,7 +57,7 @@ test("credentials and sensitive personal content are filtered before storage",as
 
 test("memory export/import and clearing work with the persistent store adapter",async()=>{
   const first=makeEngine(), second=makeEngine();
-  await first.engine.add({kind:"user",text:"MOSHARROF AI project next step",sequence:1});
+  await first.engine.add({kind:"user",text:"MOSHARROF AI project details",sequence:1});
   const snapshot=await first.engine.exportAll();
   assert.equal((await second.engine.importAll(snapshot)).imported,snapshot.entries.length);
   assert.equal((await second.engine.importAll(snapshot)).imported,0);
