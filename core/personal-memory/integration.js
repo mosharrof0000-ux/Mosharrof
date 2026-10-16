@@ -62,9 +62,9 @@ export function initializePersonalMemory() {
       intent = inferResponseStyle(userText, retrieved.memories);
       const nextSteps = await engine.suggestNextSteps(userText, { conversationId: SESSION_ID });
       const suggestions = nextSteps.length
-        ? "Tentative follow-up ideas (only offer if useful; do not act without asking):\\n" + nextSteps.map(item => "- " + item.suggestion).join("\\n")
+        ? "Tentative follow-up ideas (only offer if useful; do not act without asking):\n" + nextSteps.map(item => "- " + item.suggestion).join("\n")
         : "";
-      body.memory_context = [retrieved.text, suggestions].filter(Boolean).join("\\n\\n");
+      body.memory_context = [retrieved.text, suggestions].filter(Boolean).join("\n\n");
       body.memory_response_style = intent;
       const explicitPreference = /(?:মনে রাখো|মনে রাখবে|আমার পছন্দ|আমি চাই.*সবসময়|সবসময়.*দাও|আমি সাধারণত|I prefer|I want you to remember|always (?:use|give|keep|write)|from now on)/i.test(userText);
       await engine.remember({ text: userText, role: "user", kind: explicitPreference ? "preference" : "message", folder: explicitPreference ? "preferences-and-style" : undefined, userApproved: explicitPreference, confidence: explicitPreference ? 0.82 : 0.65, conversationId: SESSION_ID, source: "live-chat" });
