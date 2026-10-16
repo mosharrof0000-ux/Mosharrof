@@ -65,11 +65,21 @@ object PermissionCenterControl {
             val granted = ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED
             appendLine("${if (granted) "✓" else "○"} ${permission.substringAfterLast(".")}: ${if (granted) "অনুমোদিত" else "অনুমোদিত নয়"}")
         }
+        appendLine("○ Overlay: ${if (Settings.canDrawOverlays(activity)) "অনুমোদিত" else "অননুমোদিত"}")
+        appendLine("○ Write system settings: ${if (Settings.System.canWrite(activity)) "অনুমোদিত" else "অননুমোদিত"}")
         if (Build.VERSION.SDK_INT >= 30) {
-            appendLine("○ MANAGE_EXTERNAL_STORAGE: ${if (EnvironmentAccess.hasAllFiles(activity)) "অনুমোদিত" else "অনুমোদিত নয়"}")
+            appendLine("○ MANAGE_EXTERNAL_STORAGE: ${if (EnvironmentAccess.hasAllFiles(activity)) "অনুমোদিত" else "অননুমোদিত"}")
             val pm = activity.getSystemService(PowerManager::class.java)
-            appendLine("○ Battery optimization exemption: ${if (pm?.isIgnoringBatteryOptimizations(activity.packageName) == true) "অনুমোদিত" else "অনুমোদিত নয়"}")
+            appendLine("○ Battery optimization exemption: ${if (pm?.isIgnoringBatteryOptimizations(activity.packageName) == true) "অনুমোদিত" else "অননুমোদিত"}")
         }
+        if (Build.VERSION.SDK_INT >= 31) {
+            appendLine("○ Exact alarm: ${if (activity.getSystemService(android.app.AlarmManager::class.java)?.canScheduleExactAlarms() == true) "অনুমোদিত" else "অননুমোদিত"}")
+        }
+        val appOps = activity.getSystemService(android.app.AppOpsManager::class.java)
+        val usage = appOps?.checkOpNoThrow(android.app.AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), activity.packageName) == android.app.AppOpsManager.MODE_ALLOWED
+        appendLine("○ Usage access: ${if (usage) "অনুমোদিত" else "অননুমোদিত"}")
+        val listeners = android.provider.Settings.Secure.getString(activity.contentResolver, "enabled_notification_listeners").orEmpty()
+        appendLine("○ Notification access: ${if (listeners.contains(activity.packageName)) "অনুমোদিত" else "অননুমোদিত"}")
         append("বিশেষ অনুমতিগুলো Settings-এ আলাদাভাবে চালু করতে হয়; Android-এর সম্মতি ছাড়া অ্যাপ সেগুলো নিজে চালু করতে পারে না।")
     }
 
