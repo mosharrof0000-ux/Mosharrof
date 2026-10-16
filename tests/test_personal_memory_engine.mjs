@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createPersonalMemoryEngine } from "../core/personal-memory-engine.js";
+import { buildChatContext } from "../core/chat-context.js";
 
 const rows = [];
 const adapter = {
@@ -24,6 +25,16 @@ assert.match(context, /PERSONAL MEMORY/);
 assert.match(context, /response_length/);
 assert.match(context, /explicit_preference/);
 assert.ok(rows.every((row, index) => index === 0 || row.sequence >= rows[0].sequence), "memory records retain chronology");
+assert.ok(rows.some(row => row.folder?.id === "writing"), "memories are filed into topic folders");
+const folders = await memory.folders();
+assert.ok(folders.some(folder => folder.id === "writing" && folder.count > 0), "topic folder counts are available");
+assert.ok((await memory.listFolder("writing", 20)).length > 0, "folder-based recall works");
+assert.equal(memory.classifyFolder("মেমোরি ইঞ্জিন তৈরি করুন").id, "memory-learning");
+const timeline = await memory.timeline(20);
+assert.ok(timeline.every((row, index) => index === 0 || row.sequence >= timeline[index - 1].sequence), "timeline stays chronological");
+const combined = buildChatContext("বর্তমান প্রশ্ন", [], "পুরোনো প্রাসঙ্গিক স্মৃতি");
+assert.ok(combined.indexOf("পুরোনো প্রাসঙ্গিক স্মৃতি") < combined.indexOf("বর্তমান প্রশ্ন"));
+assert.match(combined, /Current user message/);
 const folders = await memory.folders();
 assert.equal(folders.find(folder => folder.id === "writing")?.count, 2);
 assert.equal((await memory.listFolder("writing")).length, 2);
