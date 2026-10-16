@@ -118,6 +118,6 @@
 })();
 
 // Load the composer enhancement from a prepared root-level asset.
-import("../core/composer-enhancements.js")
+import("./composer-enhancements.js")
   .then(function (module) { module.initializeComposerEnhancements(); })
   .catch(function (error) { console.error("Composer enhancement initialization failed:", error); });
