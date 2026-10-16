@@ -47,7 +47,7 @@ def main() -> int:
         anchor_tag = '<script src="./sidebar-recovery.js"></script>'
         if anchor_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for device-control asset")
-        index_html = index_html.replace(anchor_tag, anchor_tag + "\\n" + device_tag, 1)
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + device_tag, 1)
         index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
@@ -77,7 +77,7 @@ def main() -> int:
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
-        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js")]
+        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js")]
     if not all(p.is_file() for p in required):
         raise SystemExit("ORGAN ASSET PREP: required browser files are missing")
     print(f"ORGAN ASSET PREP: PASS — {len(ui_ids)} UI organs prepared")
