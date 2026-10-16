@@ -58,7 +58,7 @@ import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "./person
     const panel = document.createElement("section");
     panel.id = "mosharrof-memory-panel";
     panel.setAttribute("aria-label", "ব্যক্তিগত স্মৃতি নিয়ন্ত্রণ");
-    panel.innerHTML = '<strong>ব্যক্তিগত স্মৃতি</strong><p>স্মৃতি এই ডিভাইসের ব্রাউজারে থাকে। পুরোনো ও নতুন কথার সময়ক্রম রাখা হয় এবং প্রাসঙ্গিক স্মৃতি উত্তর তৈরিতে ব্যবহার হয়। স্টোরেজ সীমা ডিভাইস/ব্রাউজার নির্ধারণ করে।</p><p id="mosharrof-memory-count">স্থানীয় স্মৃতি চালু হচ্ছে…</p><div class="memory-actions"><button id="mosharrof-memory-enable" type="button">স্মৃতি বন্ধ করুন</button><button id="mosharrof-memory-clear" type="button">সব স্মৃতি মুছুন</button></div>';
+    panel.innerHTML = '<strong>ব্যক্তিগত স্মৃতি</strong><p>বিষয়ভিত্তিক ফোল্ডার ও সময়রেখায় স্মৃতি থাকে। বর্তমান অনুরোধ আগে বিবেচিত হয়; পুরোনো স্মৃতি কেবল প্রাসঙ্গিক হলে সাহায্য করে। এই ডিভাইসের ব্রাউজার-স্টোরেজের সীমা প্রযোজ্য।</p><p id="mosharrof-memory-count">স্থানীয় স্মৃতি চালু হচ্ছে…</p><div class="memory-actions"><button id="mosharrof-memory-enable" type="button">স্মৃতি বন্ধ করুন</button><button id="mosharrof-memory-inspect" type="button">স্মৃতি দেখুন</button><button id="mosharrof-memory-export" type="button">রপ্তানি</button><button id="mosharrof-memory-clear" type="button">সব মুছুন</button></div><pre id="mosharrof-memory-preview" style="white-space:pre-wrap;max-height:180px;overflow:auto;font-size:11px;margin-top:8px"></pre>';
     document.body.appendChild(launch);
     document.body.appendChild(panel);
     launch.addEventListener("click", function () { panel.classList.toggle("open"); });
@@ -68,6 +68,27 @@ import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "./person
       try { localStorage.setItem(PREF_KEY, enabled ? "true" : "false"); } catch (_) {}
       updateUI();
       this.textContent = enabled ? "স্মৃতি বন্ধ করুন" : "স্মৃতি চালু করুন";
+    });
+    document.getElementById("mosharrof-memory-inspect").addEventListener("click", async function () {
+      if (!engine) return;
+      const preview = document.getElementById("mosharrof-memory-preview");
+      try {
+        const rows = await engine.timeline({ limit: 30 });
+        const profile = await engine.profile();
+        const folders = Object.entries(profile.folders || {}).sort((a,b) => b[1]-a[1]).map(([folder,count]) => folder + " (" + count + ")");
+        preview.textContent = "বিষয়ভিত্তিক ফোল্ডার:\\n" + (folders.join("\\n") || "এখনও ফোল্ডার নেই") + "\\n\\nসাম্প্রতিক স্মৃতি:\\n" + rows.slice().reverse().map(row => "[" + new Date(row.createdAt).toLocaleString() + "] " + (row.folder || "topics/general") + "\\n" + String(row.summary || row.userText || row.assistantExcerpt || "").slice(0,180)).join("\\n\\n");
+      } catch (_) { preview.textContent = "স্মৃতি পড়া যায়নি।"; }
+    });
+    document.getElementById("mosharrof-memory-export").addEventListener("click", async function () {
+      if (!engine) return;
+      try {
+        const snapshot = await engine.exportAll();
+        const blob = new Blob([JSON.stringify(snapshot,null,2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url; link.download = "mosharrof-personal-memory.json"; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (_) { window.alert("স্মৃতি রপ্তানি করা যায়নি।"); }
     });
     document.getElementById("mosharrof-memory-clear").addEventListener("click", function () {
       if (!engine || !window.confirm("এই ডিভাইসে সংরক্ষিত সব ব্যক্তিগত স্মৃতি মুছে ফেলবেন? চ্যাট হিস্ট্রি আলাদা থাকবে।")) return;
