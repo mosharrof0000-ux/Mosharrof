@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-const source = await readFile(new URL("../worker/video-generation/index.js", import.meta.url), "utf8");
+const source = await readFile(new URL("../core/video-generation/worker.js", import.meta.url), "utf8");
 const worker = (await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"))).default;
 
 const origin = "https://mosharrof0000-ux.github.io";
