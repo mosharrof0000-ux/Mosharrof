@@ -1,7 +1,4 @@
-import {
-  createIndexedDbMemoryStore, createPersonalMemoryEngine,
-  buildPersonalMemoryContext
-} from "./personal-memory-engine.js";
+import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "./personal-memory-engine.js";
 
 const CONSENT_KEY = "mosharrof-personal-memory-enabled-v1";
 const CHAT_URL = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat";
