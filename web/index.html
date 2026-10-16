@@ -169,6 +169,9 @@ header.top{
 .composer-action.is-transcription-success{width:76px;min-width:76px;background:#123d2a;border-color:#4ade80;color:#4ade80;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
 .composer-action.is-transcription-error{width:76px;min-width:76px;background:#451a1a;border-color:#f87171;color:#f87171;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
 .composer-action:disabled{opacity:.55;cursor:not-allowed}
+.stop-action{background:#252525;border-color:rgba(255,255,255,.22);color:#f87171}
+.stop-action:hover:not(:disabled){background:#451a1a;border-color:#f87171}
+.stop-action:disabled{opacity:.48;cursor:not-allowed}
 .composer-tool-toggle:focus-visible,.composer-action:focus-visible,.send:focus-visible{outline:2px solid #aaa;outline-offset:2px}
 .composer-action svg,.send svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .composer-tools-menu{position:absolute;left:0;bottom:44px;display:none;align-items:center;gap:5px;padding:5px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#050505;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:2}
@@ -257,6 +260,7 @@ header.top{
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
+      <button class="composer-action stop-action" id="stopBtn" type="button" aria-label="চলমান মেসেজ থামান" title="চলমান মেসেজ থামান" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="currentColor"/></svg></button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
   </div>
@@ -277,7 +281,7 @@ header.top{
   var ACTIVE_SESSION_KEY="mosharrof_active_session_v1";
   var chatSessions=[];
   function $(s){return document.querySelector(s);}
-  var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
+  var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),stopBtn=$("#stopBtn"),plusBtn=$("#plusBtn");
   var composerToolsMenu=$("#composerToolsMenu"),composerVoiceBtn=$("#composerVoiceBtn");
   var imageInput=$("#imageInput"),imagePreview=$("#imagePreview"),previewImage=$("#previewImage"),previewName=$("#previewName"),removeImage=$("#removeImage");
   var pendingImage=null;
@@ -705,8 +709,8 @@ header.top{
     else if(event.stage==="failed")route.textContent=provider+" ব্যর্থ · বিকল্প খোঁজা হচ্ছে";
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
-  function coreReply(t,image){
-    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
+  function coreReply(t,image,signal){
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true}),signal:signal})
       .then(function(res){
         function finish(data,status){
           var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
@@ -962,10 +966,10 @@ header.top{
     var v=String(t||"").toLowerCase();
     return /(ছবি|ইমেজ|চিত্র|ফটো|পিকচার|image|picture|photo|illustration|poster|wallpaper|thumbnail|থাম্বনেইল|লোগো|logo|ব্যানার|banner|generate|বানাও|তৈরি করো|তৈরি করুন|আঁকো|আঁকুন|দাও.*ছবি|tiktok|tik tok|youtube\s*shorts|reels|রিলস|টিকটক|শর্টস|\b\d{2,5}\s*[x×]\s*\d{2,5}\b|\b\d{1,2}\s*:\s*\d{1,2}\b|\b(?:png|webp|jpe?g|4k|2k|uhd|720p|1080p)\b|transparent|স্বচ্ছ ব্যাকগ্রাউন্ড)/i.test(v);
   }
-  function imageReply(t){
+  function imageReply(t,signal){
     var spec;
     try{spec=parseImageSpec(t);}catch(e){return Promise.reject(e);}
-    return fetch(IMAGE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:String(t||"").trim(),aspect_ratio:spec.aspect_ratio,image_size:spec.image_size,image_spec:spec})})
+    return fetch(IMAGE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:String(t||"").trim(),aspect_ratio:spec.aspect_ratio,image_size:spec.image_size,image_spec:spec}),signal:signal})
       .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
         if(!res.ok)throw new Error((data.attempted&&data.attempted.map(function(x){return x.provider+":"+x.reason;}).join(", "))||data.provider_message||data.error||("HTTP "+res.status));
         if(!data.image_data)throw new Error("no_image_returned");
@@ -1091,10 +1095,12 @@ header.top{
     msgEl.appendChild(n);bottom();
     session.messages.push({role:"ai",text:"🖼️ ইমেজ তৈরি হয়েছে।",at:at});session.lastActiveAt=at;saveStore(session);updateMeta();
   }
-  var busy=false;
+  var busy=false,activeRequestController=null;
   function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
   function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
-  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
+  function finishRequest(){activeRequestController=null;busy=false;sendBtn.disabled=false;stopBtn.disabled=true;stopBtn.setAttribute("aria-label","চলমান মেসেজ থামান");stopBtn.title="চলমান মেসেজ থামান";input.focus();}
+  function stopCurrentRequest(){if(!busy)return;if(!activeRequestController){toast("এই ব্রাউজারে অনুরোধ থামানো সমর্থিত নয়");return;}stopBtn.disabled=true;stopBtn.setAttribute("aria-label","মেসেজ থামানো হচ্ছে");stopBtn.title="মেসেজ থামানো হচ্ছে";activeRequestController.abort();}
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;stopBtn.disabled=false;stopBtn.setAttribute("aria-label","চলমান মেসেজ থামান");stopBtn.title="চলমান মেসেজ থামান";activeRequestController=window.AbortController?new AbortController():null;var signal=activeRequestController?activeRequestController.signal:undefined;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
     if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
       session.messages=session.messages.slice(0,editTargetIndex);
       msgEl.innerHTML="";
@@ -1103,8 +1109,8 @@ header.top{
     }
     addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);
     var imageMode=!attached&&looksLikeImagePrompt(text);
-    var request=imageMode?imageReply(text):coreReply(text,attached);
-    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);busy=false;sendBtn.disabled=false;input.focus();});}
+    var request=imageMode?imageReply(text,signal):coreReply(text,attached,signal);
+    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}finishRequest();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();if((e&&e.name==="AbortError")||(activeRequestController&&activeRequestController.signal.aborted)){finishRequest();toast("মেসেজ থামানো হয়েছে");return;}var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);finishRequest();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
@@ -1241,6 +1247,7 @@ header.top{
     }catch(error){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();showVoiceMessage(audioErrorMessage(error));}
   }
   sendBtn.onclick=send;
+  stopBtn.onclick=stopCurrentRequest;
   imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);closeComposerTools();});
   removeImage.onclick=clearImage;
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
