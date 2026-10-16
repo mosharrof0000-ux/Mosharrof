@@ -40,7 +40,7 @@ public class DeviceControlPlugin extends Plugin {
     @PluginMethod public void openSoundSettings(PluginCall call) { openSettings(call, Settings.ACTION_SOUND_SETTINGS); }
     @PluginMethod public void openSecuritySettings(PluginCall call) { openSettings(call, Settings.ACTION_SECURITY_SETTINGS); }
     @PluginMethod public void openPrivacySettings(PluginCall call) { openSettings(call, Settings.ACTION_PRIVACY_SETTINGS); }
-    @PluginMethod public void openNotificationSettings(PluginCall call) { openSettings(call, Settings.ACTION_NOTIFICATION_SETTINGS); }
+    @PluginMethod public void openNotificationSettings(PluginCall call) { openSettings(call, Settings.ACTION_APP_NOTIFICATION_SETTINGS); }
     @PluginMethod public void openStorageSettings(PluginCall call) { openSettings(call, Settings.ACTION_INTERNAL_STORAGE_SETTINGS); }
     @PluginMethod public void openDateTimeSettings(PluginCall call) { openSettings(call, Settings.ACTION_DATE_SETTINGS); }
     @PluginMethod public void openLanguageSettings(PluginCall call) { openSettings(call, Settings.ACTION_LOCALE_SETTINGS); }
