@@ -180,7 +180,7 @@ header.top{
 .image-preview img{width:42px;height:42px;object-fit:cover;border-radius:9px}
 .image-preview span{font-size:11px;color:#d4d4d8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .image-preview button{width:28px;height:28px;border-radius:50%;color:#fff;background:#333;font-size:15px}
-.input{flex:1;min-width:0;min-height:40px;max-height:min(44dvh,360px);border:0;outline:0;background:transparent;padding:8px 6px;font-size:16px;line-height:1.5;resize:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;align-self:stretch;color:var(--text)}
+.input{flex:1;min-width:0;min-height:40px;max-height:120px;border:0;outline:0;background:transparent;padding:10px 6px;font-size:16px;line-height:1.4;resize:none;overflow-y:auto;color:var(--text)}
 .input::placeholder{color:#8e8e93}
 .send:disabled{opacity:.35}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;opacity:0;visibility:hidden;transition:.2s}
@@ -301,24 +301,7 @@ header.top{
   function toast(m,ms){ms=ms||2000;toastEl.textContent=m;toastEl.classList.add("show");setTimeout(function(){toastEl.classList.remove("show");},ms);}
   function showV(t){vStatus.textContent=t;vStatus.classList.add("show");}
   function hideV(){vStatus.classList.remove("show");}
-  function resize(){
-    var viewport=window.visualViewport;
-    var visibleHeight=viewport&&viewport.height>0?viewport.height:(window.innerHeight||document.documentElement.clientHeight||640);
-    var maxHeight=Math.max(88,Math.min(visibleHeight*0.44,360));
-    input.style.maxHeight=maxHeight+"px";
-    input.style.height="auto";
-    input.style.height=Math.min(input.scrollHeight,maxHeight)+"px";
-    /* Keep the newest line/caret visible as the composer grows or reaches its cap. */
-    input.scrollTop=input.scrollHeight;
-  }
-  function syncComposerViewport(){
-    var viewport=window.visualViewport;
-    if(viewport){
-      var keyboardGap=Math.max(0,(window.innerHeight||viewport.height)-(viewport.offsetTop+viewport.height));
-      composer.style.bottom=keyboardGap>100?(keyboardGap+8)+"px":"";
-    }
-    resize();
-  }
+  function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
   function iconSvg(kind){
     var paths={like:'<path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"/><path d="M7 10 12 3a2 2 0 0 1 2 2l-1 5h5.5a2.5 2.5 0 0 1 2.4 3.2l-1.8 6A2.5 2.5 0 0 1 16.7 21H7"/>',online:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',speak:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',retry:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6"/><path d="M18.4 15A7 7 0 0 1 6 18l-2-6"/>',share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>',download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'};
@@ -1262,13 +1245,6 @@ header.top{
   removeImage.onclick=clearImage;
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
   input.addEventListener("input",resize);
-  input.addEventListener("focus",syncComposerViewport);
-  window.addEventListener("resize",syncComposerViewport,{passive:true});
-  if(window.visualViewport){
-    window.visualViewport.addEventListener("resize",syncComposerViewport,{passive:true});
-    window.visualViewport.addEventListener("scroll",syncComposerViewport,{passive:true});
-  }
-  syncComposerViewport();
   function closeComposerTools(){composerToolsMenu.classList.remove("open");plusBtn.setAttribute("aria-expanded","false");}
   plusBtn.onclick=function(e){e.stopPropagation();var open=composerToolsMenu.classList.toggle("open");plusBtn.setAttribute("aria-expanded",open?"true":"false");};
   composerToolsMenu.addEventListener("click",function(e){e.stopPropagation();});
