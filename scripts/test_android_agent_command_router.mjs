@@ -13,6 +13,7 @@ const bridge = await fs.readFile(new URL("./android/inject-android-voice-bridge.
 assert.ok(wrapper.includes("prepare-agent-web-assets.py"));
 assert.ok(assets.includes('"android-agent-command-router.js"'));
 assert.ok(bridge.includes("routeAndroidAgentCommand"));
+assert.ok(bridge.includes("attempt < 20"), "native voice bridge must wait briefly for agent scripts on first launch");
 assert.ok(bridge.includes("sendBtn.addEventListener(\"click\""));
 assert.ok(assets.includes('"android-agent-memory.js"'));
 let calls = 0;
