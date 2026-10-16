@@ -25,7 +25,6 @@ def main() -> int:
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/personal-memory-engine.js": "web/personal-memory-engine.js",
-        "core/personal-memory-client.js": "web/personal-memory-client.js",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
@@ -72,7 +71,7 @@ def main() -> int:
             raise SystemExit("ORGAN ASSET PREP: chat request shape changed; history injection requires review")
         index_html = index_html.replace(old_chat_request, new_chat_request, 1)
 
-    memory_tag = '<script type="module">import "./personal-memory-client.js";</script>'
+    memory_tag = '<script type="module">import { initializePersonalMemory } from "./personal-memory-ui.js"; initializePersonalMemory();</script>'
     if memory_tag not in index_html:
         anchor_tag = '<script src="./sidebar-recovery.js"></script>'
         if anchor_tag not in index_html:
