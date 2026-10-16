@@ -41,7 +41,7 @@ function bridge(memory){
       try{
         let answer="";
         if((response.headers.get("content-type")||"").toLowerCase().includes("text/event-stream")){
-          for(const block of raw.split(/\\r?\\n\\r?\\n/))for(const line of block.split(/\\r?\\n/)){
+          for(const block of raw.split(/\r?\n\r?\n/))for(const line of block.split(/\r?\n/)){
             if(!line.startsWith("data:"))continue;
             try{const event=JSON.parse(line.slice(5).trim());if(event.type==="result"&&event.status>=200&&event.status<300)answer=String(event.data&&event.data.text||"");}catch(_){}
           }
@@ -49,11 +49,6 @@ function bridge(memory){
           const data=JSON.parse(raw);if(response.ok&&data.ok!==false)answer=String(data.text||"");
         }
         if(response.ok&&answer.trim())await memory.recordTurn(text,answer,body.conversation_id);
-        if(response.ok&&body.memory_suggestions_enabled===true){
-          try{const data=raw.includes("data:")?JSON.parse(raw.split(/\\r?\\n/).find(line=>line.startsWith("data:")&&line.includes('"type":"result"')).slice(5).trim()).data:JSON.parse(raw);
-            for(const candidate of (data&&data.memory_candidates)||[])if(candidate&&candidate.content)await memory.remember({...candidate,status:"pending_confirmation",user_confirmed:false});
-          }catch(_){}
-        }
       }catch(error){console.warn("MOSHARROF memory turn save skipped.",error);}
     }).catch(()=>{});
     return response;
