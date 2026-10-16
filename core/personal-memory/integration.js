@@ -44,9 +44,9 @@ export function initializePersonalMemory() {
   window.MosharrofPersonalMemory = Object.freeze({
     engine, ready: memoryReady,
     inspect: () => engine.stats(), search: (query, options) => engine.retrieve(query, options),
-    exportAll: () => engine.exportAll(), forgetAll: () => engine.forgetAll()
+    exportAll: () => engine.exportAll(), forgetAll: async () => { turns.length = 0; return engine.forgetAll(); }, suggestNextSteps: (query, options) => engine.suggestNextSteps(query, options)
   });
-  installMemoryControls(engine, { isEnabled: enabledByDefault, setEnabled });
+  installMemoryControls(engine, { isEnabled: enabledByDefault, setEnabled, forgetAll: async () => { turns.length = 0; return engine.forgetAll(); } });
   window.fetch = async function personalMemoryFetch(input, init = {}) {
     if (!isChatRequest(input) || !init.body || !enabledByDefault()) return originalFetch(input, init);
     let body;
