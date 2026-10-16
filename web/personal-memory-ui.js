@@ -3,8 +3,7 @@
   "use strict";
   const api = root.MosharrofMemoryEngine;
   if (!api || !root.document) return;
-  const enabled = api.enabled, setEnabled = api.setEnabled, list = api.list;
-  const remove = api.remove, clear = api.clear, downloadExport = api.downloadExport;
+  let panelOpen = false;
   function el(tag, text) {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
