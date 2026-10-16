@@ -1,0 +1,35 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const files = require("../core/android-file-manager.js");
+const java = await readFile(new URL("../native/android/MosharrofFilesPlugin.java", import.meta.url), "utf8");
+const installer = await readFile(new URL("./android/install-main-activity.sh", import.meta.url), "utf8");
+const wrapper = await readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
+
+assert.equal(typeof files.pickDirectory, "function");
+assert.equal(typeof files.createFolder, "function");
+assert.equal(typeof files.createTextFile, "function");
+assert.equal(typeof files.renameEntry, "function");
+assert.equal(typeof files.deleteEntry, "function");
+assert.equal(typeof files.scanExactDuplicates, "function");
+await assert.rejects(() => files.createFolder("test"), /bridge unavailable/);
+await assert.rejects(() => files.deleteEntry("document-id", false), /নিশ্চিতকরণ/);
+assert.match(java, /ACTION_OPEN_DOCUMENT_TREE/);
+assert.match(java, /takePersistableUriPermission/);
+assert.match(java, /confirmed/);
+assert.match(java, /safeName/);
+assert.match(installer, /MosharrofFilesPlugin\.class/);
+assert.match(wrapper, /android-file-manager\.js/);
+
+const bytesA = new TextEncoder().encode("same audio bytes").buffer;
+const bytesB = new TextEncoder().encode("same audio bytes").buffer;
+const bytesC = new TextEncoder().encode("different bytes").buffer;
+const fake = (name, bytes) => ({ name, size: bytes.byteLength, type: "audio/mpeg", lastModified: 1, arrayBuffer: async () => bytes });
+const scan = await files.scanExactDuplicates([fake("a.mp3", bytesA), fake("copy.mp3", bytesB), fake("other.mp3", bytesC)]);
+assert.equal(scan.scanned, 3);
+assert.equal(scan.exactDuplicateGroups.length, 1);
+assert.deepEqual(scan.exactDuplicateGroups[0].files.map(x => x.name), ["a.mp3", "copy.mp3"]);
+assert.match(scan.note, /কোনো ফাইল মুছা হয়নি/);
+console.log("Android SAF file-manager + exact duplicate scan contract: PASS");
