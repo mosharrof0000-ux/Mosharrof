@@ -1,6 +1,7 @@
 package com.mosharrof.agent.notifications
 
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Intent
 import android.provider.Settings
 import android.view.ViewGroup
@@ -37,6 +38,6 @@ object NotificationAccessControl {
 
     fun isAccessEnabled(activity: Activity): Boolean {
         val enabled = Settings.Secure.getString(activity.contentResolver, "enabled_notification_listeners").orEmpty()
-        return enabled.split(":").any { it.contains(activity.packageName) }
+        return enabled.split(":").any { ComponentName.unflattenFromString(it)?.packageName == activity.packageName }
     }
 }
