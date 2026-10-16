@@ -7,13 +7,15 @@ const { planCommand } = require("../core/android-agent-planner.js");
 const { createExecutor } = require("../core/android-agent-executor.js");
 const fs = await import("node:fs/promises");
 const wrapper = await fs.readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
-const bridge = await fs.readFile(new URL("./android/inject-wrapper-voice-bridge.py", import.meta.url), "utf8");
+const assets = await fs.readFile(new URL("./android/prepare-agent-web-assets.py", import.meta.url), "utf8");
+const bridge = await fs.readFile(new URL("./android/inject-android-voice-bridge.py", import.meta.url), "utf8");
 
-assert.ok(wrapper.includes("cp core/android-agent-command-router.js android-web/android-agent-command-router.js"));
-assert.ok(wrapper.includes("inject-wrapper-voice-bridge.py"));
+assert.ok(wrapper.includes("prepare-agent-web-assets.py"));
+assert.ok(assets.includes('"android-agent-command-router.js"'));
 assert.ok(bridge.includes("routeAndroidAgentCommand"));
+assert.ok(bridge.includes("attempt < 20"), "native voice bridge must wait briefly for agent scripts on first launch");
 assert.ok(bridge.includes("sendBtn.addEventListener(\"click\""));
-assert.ok(wrapper.includes("android-agent-memory.js"));
+assert.ok(assets.includes('"android-agent-memory.js"'));
 let calls = 0;
 let confirmationText = "";
 const router = createCommandRouter({
