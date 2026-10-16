@@ -22,6 +22,9 @@ if tag not in html:
 file_tag = '<script src="./android-file-manager.js"></script>'
 if file_tag not in html:
     html = html.replace("</body>", file_tag + "\n</body>", 1)
+ui_tag = '<script src="./android-file-manager-ui.js"></script>'
+if ui_tag not in html:
+    html = html.replace("</body>", ui_tag + "\n</body>", 1)
 page.write_text(html, encoding="utf-8")
 PY
 python - <<'PY'
