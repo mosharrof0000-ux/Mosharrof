@@ -8,7 +8,7 @@ const SCHEMA_VERSION = 2;
 const CATEGORIES = new Set(["preference","goal","project","correction","decision","fact","open_question","plan","hypothesis","event","commitment","conversation"]);
 const SECRET_LIKE = /(password|passcode|\bpin\b|\botp\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
 const STOP = new Set(["আমি","আমার","তুমি","আপনি","এটা","সেটা","করে","করো","করুন","হবে","হয়","হয়","যে","যা","একটা","একটি","জন্য","থেকে","কিন্তু","তাহলে","আরও","দিয়ে","দিয়ে","this","that","with","from","your","you","the","and","for","please","make","want","need","about"]);
-const clean = (value, limit = 120000) => String(value ?? "").replace(/\u0000/g,"").trim().slice(0,limit);
+const clean = (value, limit = Infinity) => String(value ?? "").replace(/\u0000/g,"").trim().slice(0,limit);
 const clone = value => JSON.parse(JSON.stringify(value));
 const timestamp = value => { const n = Date.parse(value || ""); return Number.isFinite(n) ? new Date(n).toISOString() : new Date().toISOString(); };
 export function tokenize(value) {
@@ -25,7 +25,7 @@ export function classifyMemory(userText, assistantText = "") {
   if (/(আগে|পরে|গতকাল|আজ|আগামী|পরবর্তীতে|তারিখ|ঘটনা|সময়রেখা|সময়|timeline|yesterday|today|tomorrow|later|previously)/i.test(text) && category==="conversation") { folder="সময়রেখা ও ঘটনা"; category="event"; confidence=0.62; }
   return {folder,category,confidence,explicit};
 }
-function makeId() {
+function generatedId() {
   return globalThis.crypto?.randomUUID?.() || "mem-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,12);
 }
 export function createIndexedDbMemoryStore(indexedDB = globalThis.indexedDB, dbName = DB_NAME) {
@@ -67,7 +67,7 @@ export function createIndexedDbMemoryStore(indexedDB = globalThis.indexedDB, dbN
     clear: () => transact("readwrite",store => store.clear())
   });
 }
-export function createPersonalMemoryEngine({store,now=()=>new Date().toISOString(),makeId=makeId} = {}) {
+export function createPersonalMemoryEngine({store,now=()=>new Date().toISOString(),makeId=generatedId} = {}) {
   if (!store || typeof store.put!=="function" || typeof store.list!=="function") throw new TypeError("A persistent memory store is required.");
   async function remember(input = {}) {
     const content = clean(input.content);
