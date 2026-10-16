@@ -7,6 +7,7 @@ data class InstalledApp(val label: String, val packageName: String)
 sealed interface TaskPlan {
     data class OpenApp(val app: InstalledApp) : TaskPlan
     data class TapVisibleText(val text: String, val app: InstalledApp) : TaskPlan
+    data class SwipeScreen(val direction: AgentAction.Direction, val app: InstalledApp) : TaskPlan
     data object OpenSystemSettings : TaskPlan
     data class OpenSettingPanel(val setting: AgentAction.SupportedSetting) : TaskPlan
     data class NeedsChoice(val candidates: List<InstalledApp>) : TaskPlan
@@ -30,6 +31,14 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
         return when (val intent = parser.parse(command)) {
             is ParsedIntent.Unsupported -> TaskPlan.Rejected(intent.reason)
             is ParsedIntent.OpenApp -> resolveApp(intent.query, installedApps)
+            is ParsedIntent.Swipe -> {
+                when (val appPlan = resolveApp(intent.appQuery, installedApps)) {
+                    is TaskPlan.OpenApp -> TaskPlan.SwipeScreen(intent.direction, appPlan.app)
+                    is TaskPlan.NeedsChoice -> appPlan
+                    is TaskPlan.Rejected -> appPlan
+                    else -> TaskPlan.Rejected("এই অ্যাপের স্ক্রল action সমর্থিত নয়।")
+                }
+            }
             is ParsedIntent.TapText -> {
                 if (isHighRiskLabel(intent.text)) {
                     TaskPlan.Rejected("এই উচ্চ-ঝুঁকির বোতাম এখনো স্বয়ংক্রিয়ভাবে চাপা যাবে না; কোনো কাজ করা হয়নি।")
@@ -72,7 +81,7 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
     private fun normalizeAppName(value: String): String {
         val normalized = normalizeAliasKey(value)
         return BENGALI_ALIASES.entries.firstOrNull {
-            normalizeAliasKey(it.key) == normalized
+            normalizeAliasKey(it.key) == normalized || normalizeAliasKey(it.key) == normalized.removeSuffix("ে")
         }?.value ?: normalized
     }
 
