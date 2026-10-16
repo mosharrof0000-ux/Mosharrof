@@ -145,7 +145,8 @@ export function installPersonalMemoryClient() {
     }
     return response;
   };
-  // The accessible sidebar UI is mounted by personal-memory-ui.js; avoid a duplicate floating panel.
+  if (document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>mountMemoryPanel(memory),{once:true});
+  else mountMemoryPanel(memory);
   if (navigator.storage?.persist) navigator.storage.persist().catch(()=>false);
   return memory;
 }
