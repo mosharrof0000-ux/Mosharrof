@@ -26,4 +26,5 @@ export function formatResponseStyle(value) {
     normal: ""
   };
   if (!instructions[mode]) return "";
-  return "\\n\\nResponse-style hint (not a hard rule): " + instructions[mode] + " The current request always overrides this hint.";
+  return "\n\nResponse-style hint (not a hard rule): " + instructions[mode] + " The current request always overrides this hint.";
+}
