@@ -146,11 +146,6 @@ object CapabilityPermissionCenter {
     private fun permissionsGranted(activity: Activity, permissions: List<String>): Boolean =
         permissions.all { ContextCompat.checkSelfPermission(activity, it) == PackageManager.PERMISSION_GRANTED }
 
-    private fun bluetoothPermissions(): List<String> = when {
-        Build.VERSION.SDK_INT >= 31 -> listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
-        else -> emptyList()
-    }
-
     private fun notificationAccessGranted(activity: Activity): Boolean =
         android.provider.Settings.Secure.getString(activity.contentResolver, "enabled_notification_listeners")
             .orEmpty().split(':').any { it.contains(activity.packageName) }
