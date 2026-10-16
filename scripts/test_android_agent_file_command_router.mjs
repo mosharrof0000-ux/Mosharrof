@@ -8,6 +8,7 @@ assert.ok(mainRouter.includes("MosharrofAndroidFileCommandRouter"));
 const taskPlanner = require("../core/android-agent-task-planner.js");
 const assets = readFileSync("scripts/android/prepare-agent-web-assets.py", "utf8");
 assert.ok(assets.includes('"android-agent-task-planner.js"'));
+assert.ok(assets.indexOf("android-agent-file-command-router.js") < assets.indexOf("android-agent-command-router.js"));
 let reported = "";
 globalThis.MosharrofFiles = {
   async getSelectedDirectory() { return { selected: true, documentId: "root" }; },
