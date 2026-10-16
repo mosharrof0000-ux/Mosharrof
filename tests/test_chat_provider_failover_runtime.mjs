@@ -29,7 +29,6 @@ async function askStream(env) {
   return { status: res.status, text: await res.text() };
 }
 try {
-  // Gemini primary success and reflective planning instructions reach the real provider payload.
   let geminiRequestBody = null;
   globalThis.fetch = async (url, options) => {
     if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
@@ -45,7 +44,6 @@ try {
   assert.match(geminiPrompt, /Before sending/);
   assert.match(geminiPrompt, /Do not reveal private chain-of-thought/);
 
-  // Credential rotation: a quota-limited first Gemini key must not block another key.
   const seenKeys = [];
   globalThis.fetch = async (url, options) => {
     if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
@@ -67,7 +65,6 @@ try {
   assert.match(result.data.text, /Second Gemini key answer/);
   assert.deepEqual(seenKeys.slice(0, 2), ["primary", "project2"]);
 
-  // Model rotation: an unsupported primary model should advance to the next Gemini model.
   globalThis.fetch = async (url) => {
     const u = String(url);
     if (!u.includes("generativelanguage.googleapis.com")) return response({});
@@ -81,7 +78,6 @@ try {
   assert.equal(result.data.model, "gemini-3.7-flash");
   assert.match(result.data.text, /Fallback Gemini model answer/);
 
-  // Exhausted Gemini falls back to Workers AI with the same reflective system contract.
   globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com") ? geminiQuota() : response({});
   let workerAiMessages = [];
   result = await ask({
@@ -95,7 +91,6 @@ try {
   assert.match(workerAiMessages[0].content, /possible emotional needs/);
   assert.ok(result.data.attempted.some(x => x.provider === "gemini" && x.status === 429));
 
-  // If Workers AI also fails, Groq must be attempted and can answer.
   globalThis.fetch = async (url) => {
     if (String(url).includes("generativelanguage.googleapis.com")) return geminiQuota();
     if (String(url).includes("api.groq.com")) return response({ choices: [{ message: { content: "Groq answer" } }] });
@@ -110,7 +105,6 @@ try {
   assert.equal(result.data.provider, "groq");
   assert.match(result.data.text, /Groq answer/);
 
-  // If Groq is rate-limited, OpenRouter must be attempted next.
   globalThis.fetch = async (url) => {
     const u = String(url);
     if (u.includes("generativelanguage.googleapis.com")) return geminiQuota();
@@ -128,7 +122,6 @@ try {
   assert.equal(result.data.provider, "openrouter");
   assert.match(result.data.text, /OpenRouter answer/);
 
-  // Health must expose configured slots, never credential values.
   globalThis.fetch = originalFetch;
   const health = await worker.fetch(new Request("https://worker.test/health"), {
     GEMINI_API_KEY: "secret-must-not-leak",
