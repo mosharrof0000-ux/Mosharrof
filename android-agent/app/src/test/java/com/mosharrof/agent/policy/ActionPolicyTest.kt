@@ -35,6 +35,15 @@ class ActionPolicyTest {
     }
 
     @Test
+    fun globalNavigationRequiresConfirmation() {
+        val result = policy.evaluate(
+            AgentAction.GlobalNavigation(AgentAction.NavigationDestination.HOME),
+            0
+        )
+        assertEquals(PolicyDecision.REQUIRE_CONFIRMATION, result.decision)
+    }
+
+    @Test
     fun actionBudgetIsFailClosed() {
         val result = policy.evaluate(AgentAction.OpenApp("com.example.notes", true), 3)
         assertEquals(PolicyDecision.DENY, result.decision)
