@@ -41,6 +41,18 @@ class CommandParserTest {
     }
 
     @Test
+    fun parsesConfirmedNavigationCommands() {
+        listOf(
+            "go back" to AgentAction.NavigationDestination.BACK,
+            "হোমে যান" to AgentAction.NavigationDestination.HOME,
+            "নোটিফিকেশন খুলুন" to AgentAction.NavigationDestination.NOTIFICATIONS,
+            "recent apps" to AgentAction.NavigationDestination.RECENTS
+        ).forEach { (command, destination) ->
+            assertEquals(ParsedCommand.GlobalNavigation(destination), parser.parse(command))
+        }
+    }
+
+    @Test
     fun rejectsAmbiguousAppName() {
         assertEquals(ParsedCommand.Unknown, parser.parse("open app notes"))
     }
