@@ -161,28 +161,9 @@ class AgentTaskController(
     }
     private fun launchConfirmedSwipe() {
         val plan = pendingSwipe ?: return
-        if (!isServiceEnabled()) {
-            status.text = "Accessibility বন্ধ; কোনো স্ক্রল করা হয়নি."
-            return
-        }
-        val allowed = appCatalog.listLauncherApps().map { it.packageName }.toSet()
-        val decision = ActionPolicy(allowed).evaluate(AgentAction.Swipe(plan.app.packageName, plan.direction), 0)
-        if (decision.decision == PolicyDecision.DENY) {
-            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
-            return
-        }
-        if (!MosharrofAccessibilityService.armSwipe(plan.app.packageName, plan.direction)) {
-            status.text = "Accessibility service প্রস্তুত নয় বা অন্য action চলছে; স্ক্রল করা হয়নি।"
-            return
-        }
-        if (!appCatalog.launch(plan.app.packageName)) {
-            MosharrofAccessibilityService.cancelSemanticTap()
-            status.text = "লক্ষ্য অ্যাপ খোলা যায়নি; স্ক্রল করা হয়নি।"
-            return
-        }
-        status.text = "লক্ষ্য অ্যাপ খুলছে; লক্ষ্য স্ক্রিনে পৌঁছালে একবার স্ক্রল হবে।"
-        pendingSwipe = null
-        confirmButton.isEnabled = false
+        val result = AgentUiActionExecutor.launchSwipe(activity, plan, isServiceEnabled())
+        status.text = result.message
+        if (result.started) { pendingSwipe = null; confirmButton.isEnabled = false }
     }
     private fun launchConfirmedTextInput() {
         val plan = pendingTextInput ?: return
@@ -196,30 +177,9 @@ class AgentTaskController(
 
     private fun launchConfirmedTap() {
         val plan = pendingTap ?: return
-        if (!isServiceEnabled()) {
-            status.text = "Accessibility বন্ধ; কোনো ট্যাপ করা হয়নি।"
-            return
-        }
-        val allowed = appCatalog.listLauncherApps().map { it.packageName }.toSet()
-        val decision = ActionPolicy(allowed).evaluate(
-            AgentAction.TapSemanticNode(plan.app.packageName, visibleText = plan.text), 0
-        )
-        if (decision.decision == PolicyDecision.DENY) {
-            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
-            return
-        }
-        if (!MosharrofAccessibilityService.armSemanticTap(plan.app.packageName, plan.text)) {
-            status.text = "Accessibility service প্রস্তুত নয় বা অন্য action চলছে; কোনো ট্যাপ করা হয়নি।"
-            return
-        }
-        if (!appCatalog.launch(plan.app.packageName)) {
-            MosharrofAccessibilityService.cancelSemanticTap()
-            status.text = "লক্ষ্য অ্যাপ খোলা যায়নি; কোনো ট্যাপ করা হয়নি।"
-            return
-        }
-        status.text = "লক্ষ্য অ্যাপ খুলছে। নির্দিষ্ট লেবেল একবারই মিললে ট্যাপ হবে; অস্পষ্ট হলে বাতিল হবে।"
-        pendingTap = null
-        confirmButton.isEnabled = false
+        val result = AgentUiActionExecutor.launchTap(activity, plan, isServiceEnabled())
+        status.text = result.message
+        if (result.started) { pendingTap = null; confirmButton.isEnabled = false }
     }
     private fun launchConfirmedText() {
         val plan = pendingText ?: return
