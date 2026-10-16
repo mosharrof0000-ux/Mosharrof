@@ -23,6 +23,8 @@ sealed interface AgentAction {
         val direction: Direction
     ) : AgentAction
 
+    data class TypeText(override val targetPackage: String, val text: String) : AgentAction
+
     data class GlobalNavigation(val destination: NavigationDestination) : AgentAction {
         override val targetPackage: String? = null
     }
