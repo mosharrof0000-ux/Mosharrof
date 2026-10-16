@@ -12,8 +12,8 @@ def test_worker_uses_bounded_conversation_history_for_all_chat_providers():
     assert "historyInput.slice(-12)" in helper
     assert "Current user message:" in helper
     assert "generateWithCloudflareChat(contextualText,env,report,targetWords)" in chat
-    assert '"llama-3.1-8b-instant").trim(),text,{},report,targetWords' in chat
-    assert '"meta-llama/llama-3.3-70b-instruct:free").trim(),text,' in chat
+    assert '"llama-3.1-8b-instant").trim(),contextualText,{},report,targetWords' in chat
+    assert '"meta-llama/llama-3.3-70b-instruct:free").trim(),contextualText,' in chat
 
 
 def test_prepared_frontend_sends_prior_turns_without_current_message_as_history():
