@@ -7,7 +7,7 @@
   function nativePlugin() {
     const capacitor = root.Capacitor;
     const plugins = capacitor && capacitor.Plugins;
-    const plugin = plugins && plugins.MosharrofFiles;
+    const plugin = plugins && plugins.AndroidFileManager;
     if (!plugin) throw new Error("Android file manager bridge unavailable; install the native APK and select an authorized folder.");
     return plugin;
   }
@@ -18,21 +18,21 @@
     }
     return name;
   }
-  async function pickDirectory() { return nativePlugin().pickDirectory(); }
+  async function pickDirectory() { return nativePlugin().chooseFolder(); }
   async function getSelectedDirectory() { return nativePlugin().getSelectedDirectory(); }
-  async function listEntries() { return nativePlugin().listEntries(); }
+  async function listEntries() { return nativePlugin().listItems(); }
   async function createFolder(name) { return nativePlugin().createFolder({ name: requireName(name) }); }
   async function createTextFile(name, content) {
     return nativePlugin().createTextFile({ name: requireName(name), content: String(content ?? "") });
   }
   async function renameEntry(id, name) {
     if (!String(id || "").trim()) throw new Error("ফাইলের পরিচয় পাওয়া যায়নি।");
-    return nativePlugin().renameEntry({ id: String(id), name: requireName(name) });
+    return nativePlugin().renameItem({ documentId: String(id), name: requireName(name) });
   }
   async function deleteEntry(id, confirmed) {
     if (confirmed !== true) throw new Error("মুছে ফেলার আগে স্পষ্ট নিশ্চিতকরণ দরকার।");
     if (!String(id || "").trim()) throw new Error("ফাইলের পরিচয় পাওয়া যায়নি।");
-    return nativePlugin().deleteEntry({ id: String(id), confirmed: true });
+    return nativePlugin().deleteItem({ documentId: String(id), confirmed: true });
   }
 
   async function scanExactDuplicates(files) {
