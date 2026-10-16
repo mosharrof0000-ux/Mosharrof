@@ -1,5 +1,6 @@
 import { initializeComposerStopControl } from "./composer-stop.js";
 import { initializeComposerAutoGrow } from "./composer-autogrow.js";
+import { initializePersonalMemory } from "./personal-memory/integration.js";
 
 export function initializeComposerEnhancements() {
   if (typeof document === "undefined") return;
@@ -10,6 +11,7 @@ export function initializeComposerEnhancements() {
 
   initializeComposerStopControl(send);
   initializeComposerAutoGrow(input, composer);
+  initializePersonalMemory();
   if (document.getElementById("composerExpandBtn")) return;
 
   const style = document.createElement("style");
