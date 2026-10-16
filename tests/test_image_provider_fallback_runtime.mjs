@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { loadWorker } from "./worker-loader.mjs";
 
-const source = await readFile(new URL("../worker/screenshot-analysis.js", import.meta.url), "utf8");
-const worker = (await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"))).default;
+const worker = await loadWorker();
 const response = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com")
   ? response({ error: { message: "free tier image quota is zero" } }, 429)
