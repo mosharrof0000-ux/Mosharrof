@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout MOSHARROF
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -49,9 +51,7 @@ jobs:
         run: bash scripts/android/prepare-and-install-voice.sh
 
       - name: Enforce file and folder size budgets
-        run: |
-          git fetch origin main --depth=1
-          python3 scripts/mosharrof_size_gate.py --base origin/main
+        run: python3 scripts/mosharrof_size_gate.py --base origin/main
 
       - name: Verify Android agent contract suite
         run: bash scripts/android/test-agent-contracts.sh
