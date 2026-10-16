@@ -32,6 +32,8 @@ def main() -> int:
         "core/composer-autogrow.js": "web/composer-autogrow.js",
         "core/device-control.js": "web/device-control.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
+        "core/personal-memory-engine.js": "web/personal-memory-engine.js",
+        "core/personal-memory-bridge.js": "web/personal-memory-bridge.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
     }
     for source, destination in copies.items():
@@ -61,6 +63,12 @@ def main() -> int:
         if device_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: device-control script anchor missing for video UI")
         index_html = index_html.replace(device_tag, device_tag + "\n" + video_tag, 1)
+
+    memory_tag = '<script type="module" src="./personal-memory-bridge.js"></script>'
+    if memory_tag not in index_html:
+        if video_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: video script anchor missing for memory bridge")
+        index_html = index_html.replace(video_tag, video_tag + "\n" + memory_tag, 1)
 
     old_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
     new_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),history:(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};}),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
