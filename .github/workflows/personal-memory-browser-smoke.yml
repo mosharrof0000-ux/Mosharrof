@@ -29,11 +29,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Prepare candidate Pages runtime for pull requests
+      - name: Prepare candidate Pages runtime
         if: github.event_name != 'workflow_dispatch'
         run: python3 scripts/prepare_web_organ_runtime.py
       - name: Start candidate Pages server
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'workflow_dispatch'
         shell: bash
         run: |
           nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-memory-pages.log 2>&1 &
