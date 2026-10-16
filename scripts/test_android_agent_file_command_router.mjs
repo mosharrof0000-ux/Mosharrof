@@ -26,6 +26,6 @@ result = router.handle("ডুপ্লিকেট গান খুঁজে �
 assert.equal(result.handled, true);
 await result.promise;
 assert.match(reported, /1টি ডুপ্লিকেট গ্রুপ/);
-assert.match(reported, /কোনো ফাইল মুছবে না/);
+assert.match(reported, /কোনো ফাইল মুছেনি/);
 delete globalThis.MosharrofFiles;
 console.log("Android agent file command router: PASS");
