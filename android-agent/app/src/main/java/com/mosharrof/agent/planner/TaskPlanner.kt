@@ -7,6 +7,7 @@ data class InstalledApp(val label: String, val packageName: String)
 sealed interface TaskPlan {
     data class OpenApp(val app: InstalledApp) : TaskPlan
     data class TapVisibleText(val text: String, val app: InstalledApp) : TaskPlan
+    data class TypeFocusedText(val text: String) : TaskPlan
     data class TypeText(val text: String, val app: InstalledApp) : TaskPlan
     data class TypeText(val text: String, val app: InstalledApp) : TaskPlan
     data class SwipeScreen(val direction: AgentAction.Direction, val app: InstalledApp) : TaskPlan
@@ -36,6 +37,7 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
 
         return when (val intent = parser.parse(command)) {
             is ParsedIntent.Unsupported -> TaskPlan.Rejected(intent.reason)
+            is ParsedIntent.TypeText -> TaskPlan.TypeFocusedText(intent.text)
             is ParsedIntent.OpenApp -> resolveApp(intent.query, installedApps)
             is ParsedIntent.Swipe -> {
                 when (val appPlan = resolveApp(intent.appQuery, installedApps)) {
