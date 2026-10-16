@@ -10,11 +10,11 @@ function response(body, status = 200) {
 function geminiQuota() {
   return response({ error: { message: "quota exceeded" } }, 429);
 }
-async function ask(env, text = "বাংলায় একটি সংক্ষিপ্ত উত্তর দিন") {
+async function ask(env, text = "বাংলায় একটি সংক্ষিপ্ত উত্তর দিন", extraBody = {}) {
   const request = new Request("https://worker.test/chat", {
     method: "POST",
     headers: { "Origin": "https://mosharrof0000-ux.github.io", "Content-Type": "application/json" },
-    body: JSON.stringify({ text, stream_status: false })
+    body: JSON.stringify({ text, stream_status: false, ...extraBody })
   });
   const res = await worker.fetch(request, env);
   return { status: res.status, data: await res.json() };
@@ -44,6 +44,16 @@ try {
   assert.match(geminiPrompt, /Before sending/);
   assert.match(geminiPrompt, /Do not reveal private chain-of-thought/);
   assert.equal(geminiRequestBody.generationConfig, undefined, "normal replies keep the default output budget");
+
+  result = await ask({ GEMINI_API_KEY: "test-key" }, "Explain the MOSHARROF memory engine", {
+    memory_context: "MOSHARROF project memory: use reviewed pull requests and do not edit main directly.",
+    memory_response_style: { mode: "detailed", source: "current-message", confidence: 0.9 }
+  });
+  assert.equal(result.status, 200);
+  const memoryPrompt = geminiRequestBody.contents[0].parts[0].text;
+  assert.match(memoryPrompt, /Retrieved personal memory/);
+  assert.match(memoryPrompt, /current user request takes priority/i);
+  assert.match(memoryPrompt, /detailed explanation/i);
 
   globalThis.fetch = async (url, options) => {
     if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
