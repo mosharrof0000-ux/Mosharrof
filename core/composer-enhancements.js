@@ -39,17 +39,35 @@ export function initializeComposerEnhancements() {
       stop.disabled = false;
       const options = { ...(init || {}), signal: controller.signal };
       return nativeFetch(resource, options).then(response => {
-        response.clone().text().catch(() => {}).finally(() => finishStop(controller));
-        return response;
-      }).catch(error => {
-        if (!controller.signal.aborted) {
+        if (!(response.headers.get("content-type") || "").toLowerCase().includes("text/event-stream") || !response.body) {
           finishStop(controller);
-          throw error;
+          return response;
         }
-        finishStop(controller);
-        return new Response(JSON.stringify({ text: "মেসেজ থামানো হয়েছে", provider: "MOSHARROF", model: "stopped", attempted: [] }), {
-          status: 200, headers: { "Content-Type": "application/json" }
+        const reader = response.body.getReader();
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          start(target) {
+            function pump() {
+              reader.read().then(part => {
+                if (part.done) { target.close(); finishStop(controller); return; }
+                target.enqueue(part.value);
+                pump();
+              }).catch(error => {
+                if (controller.signal.aborted) {
+                  target.enqueue(encoder.encode('data: {"type":"result","status":200,"data":{"text":"মেসেজ থামানো হয়েছে","provider":"MOSHARROF","model":"stopped","attempted":[]}}\n\n'));
+                  target.close();
+                } else target.error(error);
+                finishStop(controller);
+              });
+            }
+            pump();
+          },
+          cancel(reason) { controller.abort(); return reader.cancel(reason).catch(() => {}); }
         });
+        return new Response(stream, { status: response.status, statusText: response.statusText, headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache" } });
+      }).catch(error => {
+        finishStop(controller);
+        throw error;
       });
     };
     stop.addEventListener("click", () => {
