@@ -62,9 +62,13 @@ export function createIndexedDbMemoryStore(indexedDB, databaseName = "mosharrof-
   function transact(mode, callback) {
     return db().then(database => new Promise((resolve, reject) => {
       const tx = database.transaction("timeline", mode);
-      const request = callback(tx.objectStore("timeline"));
-      request.onsuccess = () => resolve(request.result);
+      let request, result;
+      try { request = callback(tx.objectStore("timeline")); }
+      catch (error) { reject(error); return; }
+      request.onsuccess = () => { result = request.result; };
       request.onerror = () => reject(request.error || new Error("স্মৃতি সংরক্ষণ ব্যর্থ হয়েছে।"));
+      tx.oncomplete = () => resolve(result);
+      tx.onerror = () => reject(tx.error || new Error("স্মৃতি অপারেশন ব্যর্থ হয়েছে।"));
       tx.onabort = () => reject(tx.error || new Error("স্মৃতি অপারেশন বাতিল হয়েছে।"));
     }));
   }
@@ -82,7 +86,7 @@ export function createPersonalMemoryEngine({ store, now = () => Date.now(), make
     if (!active) return { saved: false, reason: "paused" };
     const record = { id: makeId(), createdAt: now(), schemaVersion: 1, status: "active", ...entry };
     await store.put(record);
-    return { saved: true, id: record.id, createdAt: record.createdAt };
+    return { saved: true, id: record.id, createdAt: record.createdAt, folder: record.folder || null };
   }
   async function rememberTurn({ userText, assistantText = "", sessionId = "" } = {}) {
     if (!active) return { saved: false, reason: "paused" };
