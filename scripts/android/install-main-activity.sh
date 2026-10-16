@@ -2,6 +2,7 @@
 set -euo pipefail
 
 cp native/android/DeviceControlPlugin.java android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
+cp native/android/DeviceCommunicationPlugin.java android/app/src/main/java/com/mosharrof/ai/DeviceCommunicationPlugin.java
 
 cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
 package com.mosharrof.ai;
@@ -37,6 +38,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(DeviceControlPlugin.class);
+        registerPlugin(DeviceCommunicationPlugin.class);
         super.onCreate(savedInstanceState);
         Window window = getWindow();
         WindowCompat.setDecorFitsSystemWindows(window, false);
