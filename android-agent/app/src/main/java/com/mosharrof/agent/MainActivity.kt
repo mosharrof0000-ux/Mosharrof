@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.execution.InstalledAppCatalog
+import com.mosharrof.agent.execution.SystemSettingsLauncher
 import com.mosharrof.agent.planner.AgentAction
 import com.mosharrof.agent.planner.InstalledApp
 import com.mosharrof.agent.planner.TaskPlan
@@ -25,7 +26,9 @@ import com.mosharrof.agent.policy.PolicyDecision
 class MainActivity : ComponentActivity() {
     private val planner = TaskPlanner()
     private val appCatalog by lazy { InstalledAppCatalog(this) }
+    private val settingsLauncher by lazy { SystemSettingsLauncher(this) }
     private var pendingApp: InstalledApp? = null
+    private var pendingSettings: TaskPlan? = null
     private lateinit var status: TextView
     private lateinit var screenDetails: TextView
     private lateinit var commandInput: EditText
@@ -55,9 +58,11 @@ class MainActivity : ComponentActivity() {
             setSingleLine(true)
         }
         confirmButton = Button(this).apply {
-            text = "নিশ্চিত করে অ্যাপ খুলুন"
+            text = "নিশ্চিত করে চালান"
             isEnabled = false
-            setOnClickListener { launchConfirmedApp() }
+            setOnClickListener {
+                if (pendingApp != null) launchConfirmedApp() else launchConfirmedSettings()
+            }
         }
         val planButton = Button(this).apply {
             text = "কমান্ড যাচাই করুন"
@@ -98,6 +103,7 @@ class MainActivity : ComponentActivity() {
 
     private fun prepareTask(command: String) {
         pendingApp = null
+        pendingSettings = null
         confirmButton.isEnabled = false
         when (val plan = planner.plan(command, installedApps())) {
             is TaskPlan.OpenApp -> {
@@ -105,10 +111,31 @@ class MainActivity : ComponentActivity() {
                 status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
                 confirmButton.isEnabled = true
             }
+            TaskPlan.OpenSystemSettings -> prepareSettings(plan, "Android Settings")
+            is TaskPlan.OpenSettingPanel -> prepareSettings(plan, settingLabel(plan.setting))
             is TaskPlan.NeedsChoice -> status.text =
                 "একাধিক/আংশিক মিল: ${plan.candidates.joinToString { it.label }}। সঠিক অ্যাপের পুরো নাম লিখুন।"
             is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
         }
+    }
+
+    private fun prepareSettings(plan: TaskPlan, label: String) {
+        pendingSettings = plan
+        status.text = "পরিকল্পনা: ${label} খোলা হবে। চালানোর আগে নিশ্চিত করুন।"
+        confirmButton.isEnabled = true
+    }
+
+    private fun settingLabel(setting: AgentAction.SupportedSetting): String = when (setting) {
+        AgentAction.SupportedSetting.WIFI_PANEL -> "Wi-Fi Settings"
+        AgentAction.SupportedSetting.BLUETOOTH_PANEL -> "Bluetooth Settings"
+        AgentAction.SupportedSetting.LOCATION_SETTINGS -> "Location Settings"
+    }
+
+    private fun launchConfirmedSettings() {
+        val plan = pendingSettings ?: return
+        status.text = settingsLauncher.launch(plan)
+        pendingSettings = null
+        confirmButton.isEnabled = false
     }
 
     private fun launchConfirmedApp() {
@@ -155,7 +182,7 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD")
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "কী অ্যাপ খুলতে চান বলুন")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "কী অ্যাপ খুলতে চান বা কোন Settings খুলবেন বলুন")
         }
         try {
             speechResult.launch(intent)
@@ -173,7 +200,7 @@ class MainActivity : ComponentActivity() {
                 "স্ক্যানের ফল প্রস্তুত। ফল দেখতে আবার ‘বর্তমান স্ক্রিন পরীক্ষা করুন’ চাপুন।"
             MosharrofAccessibilityService.isInspectionArmed() ->
                 "স্ক্যান চলছে। লক্ষ্য অ্যাপ খুলে এখানে ফিরে আসুন।"
-            else -> "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ খোলা যাবে।"
+            else -> "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ/Settings খোলা যাবে।"
         }
     }
 
