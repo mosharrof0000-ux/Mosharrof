@@ -24,7 +24,8 @@ object PermissionCenterControl {
             Manifest.permission.ANSWER_PHONE_CALLS, Manifest.permission.READ_CALL_LOG,
             Manifest.permission.WRITE_CALL_LOG, Manifest.permission.SEND_SMS,
             Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS,
-            Manifest.permission.POST_NOTIFICATIONS))
+            ))
+        if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
         if (Build.VERSION.SDK_INT >= 31) addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
         if (Build.VERSION.SDK_INT >= 33) addAll(listOf(Manifest.permission.NEARBY_WIFI_DEVICES,
             Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO))
