@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { createPersonalMemoryEngine, buildPersonalMemoryContext, inferMemoryCandidates } from "../core/personal-memory-engine.js";
+import { readFile } from "node:fs/promises";
+const memorySource = await readFile(new URL("../core/personal-memory-engine.js", import.meta.url), "utf8");
+const { createPersonalMemoryEngine, buildPersonalMemoryContext, inferMemoryCandidates } =
+  await import("data:text/javascript;base64," + Buffer.from(memorySource).toString("base64"));
 
 function makeStorage() {
   const values = new Map();
@@ -16,10 +19,11 @@ const memory = createPersonalMemoryEngine({ storage, now: () => new Date(1700000
 
 assert.equal(memory.recall().total, 0);
 const preference = memory.remember({ category: "preference", content: "বাংলায় উত্তর পছন্দ করি", confidence: 0.95, user_confirmed: true });
-memory.remember({ category: "goal", content: "MOSHARROF AI-তে ব্যক্তিগত স্মৃতি তৈরি করা", confidence: 0.9 });
+memory.remember({ category: "goal", folder: "projects/mosharrof-ai", content: "MOSHARROF AI-তে ব্যক্তিগত স্মৃতি তৈরি করা", confidence: 0.9 });
 memory.remember({ category: "correction", content: "বড় গল্প চাইলে আরও বিস্তারিত লিখবে", relates_to: [preference.entry.id] });
 assert.equal(memory.recall().total, 3);
 assert.equal(memory.recall({ category: "preference" }).items[0].content, "বাংলায় উত্তর পছন্দ করি");
+assert.equal(memory.recall({ folder: "projects/mosharrof-ai" }).items.length, 1);
 assert.equal(memory.recall({ query: "গল্প" }).items[0].category, "correction");
 assert.equal(memory.exportAll().memories.length, 3);
 const revised = memory.revise(preference.entry.id, { content: "বাংলায় বিস্তারিত উত্তর পছন্দ করি", confidence: 0.98 });
