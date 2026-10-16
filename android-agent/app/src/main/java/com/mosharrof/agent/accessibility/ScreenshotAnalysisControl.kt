@@ -167,6 +167,8 @@ object ScreenshotAnalysisControl {
                         analysis.append("\n\nAI Vision ফলাফল")
                         if (!result.provider.isNullOrBlank()) analysis.append("\nইঞ্জিন: ${result.provider}${result.model?.let { " • $it" } ?: ""}")
                         analysis.append("\n${result.text}")
+                        suggestedCommand = result.suggestedCommand
+                        suggestionButton?.visibility = if (suggestedCommand.isNullOrBlank()) View.GONE else View.VISIBLE
                         statusView?.text = "AI Vision বিশ্লেষণ সম্পন্ন হয়েছে। কাজের পরবর্তী ধাপের আগে ফল যাচাই করুন।"
                     }
                 }
