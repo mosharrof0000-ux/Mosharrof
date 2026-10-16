@@ -48,7 +48,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
     }
     override fun onDestroy() {
         screenshotCaptureArmed = false
-        AccessibilityTextEntry.cancel()
+        FocusedTextEntry.cancel()
         floatingControl?.hide()
         floatingControl = null
         if (activeService === this) activeService = null
