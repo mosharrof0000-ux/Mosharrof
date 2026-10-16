@@ -93,6 +93,8 @@ try {
   if (!(await toggle.innerText()).includes("চালু")) {
     throw new Error("Could not enable personal memory from the chat UI");
   }
+  // Close the drawer overlay before clicking the composer.
+  await page.locator("#scrim").click({ position: { x: 5, y: 120 } });
 
   const marker = "MOSHARROF_MEMORY_SMOKE_" + Date.now();
   const message = "স্মৃতি ইঞ্জিনের স্বয়ংক্রিয় পরীক্ষা। এই শনাক্তকারীটি মনে রাখুন: " + marker;
@@ -116,6 +118,8 @@ try {
     throw new Error("Memory marker was not present after reload");
   }
   console.log("PASS: memory survived reload and is searchable in the UI");
+  // The search drawer also overlays the composer after reload.
+  await page.locator("#scrim").click({ position: { x: 5, y: 120 } });
 
   await page.locator("#input").fill("আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?");
   await page.locator("#sendBtn").click();
