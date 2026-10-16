@@ -1,0 +1,38 @@
+name: Personal Memory Browser Smoke Test
+
+on:
+  pull_request:
+    branches: ["main"]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      test_url:
+        description: "MOSHARROF site or deploy-preview URL"
+        required: true
+        default: "https://deploy-preview-678--bucolic-mooncake-c83372.netlify.app/"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memory-browser-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-memory-roundtrip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Chromium browser test runner
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Test send, persistent storage, and recall after reload
+        env:
+          MOSHARROF_TEST_URL: ${{ inputs.test_url || 'https://deploy-preview-678--bucolic-mooncake-c83372.netlify.app/' }}
+          MOSHARROF_TEST_TIMEOUT_MS: "45000"
+        run: node tests/e2e/personal-memory-browser-smoke.mjs
