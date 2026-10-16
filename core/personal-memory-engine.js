@@ -7,6 +7,7 @@ const SCHEMA_VERSION = 1;
 const DEFAULT_NAMESPACE = "mosharrof.personal-memory.v1";
 const MAX_CONTEXT_CHARS = 9000;
 const CATEGORIES = new Set(["preference","goal","project","correction","decision","fact","open_question","plan","hypothesis","event","commitment"]);
+const FOLDERS = { preference:"পছন্দ ও নির্দেশনা", goal:"লক্ষ্য ও পরিকল্পনা", project:"প্রকল্প ও প্রযুক্তি", correction:"সংশোধন ও শেখা", decision:"সিদ্ধান্ত", fact:"তথ্য ও অভিজ্ঞতা", open_question:"অসমাপ্ত প্রশ্ন", plan:"লক্ষ্য ও পরিকল্পনা", hypothesis:"অনুমান", event:"ঘটনা ও কথোপকথন", commitment:"প্রতিশ্রুতি ও পরবর্তী কাজ" };
 const SECRET_LIKE = /(password|passcode|\bpin\b|\botp\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
 const clean = (value, limit = 2000) => String(value ?? "").replace(/\u0000/g, "").trim().slice(0, limit);
 const safeTime = value => { const parsed = Date.parse(value || ""); return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date(0).toISOString(); };
@@ -124,12 +125,13 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
   async function importAll(snapshot) {
     if (!snapshot || snapshot.schema_version !== SCHEMA_VERSION || !Array.isArray(snapshot.memories)) throw new TypeError("Unsupported memory export.");
     const ledger=await readLedger(), known=new Set(ledger.memories.map(m=>m.id));
+    let imported = 0;
     for (const item of snapshot.memories) if (item && typeof item==="object" && item.id && !known.has(item.id) && !SECRET_LIKE.test(String(item.content||""))) {
       const category=CATEGORIES.has(item.category)?item.category:"fact";
       ledger.memories.push({...item,content:clean(item.content,4000),category,folder:clean(item.folder || category,120)});
-      known.add(item.id);
+      known.add(item.id); imported += 1;
     }
-    return save(ledger);
+    return { ...await save(ledger), imported };
   }
   async function clear() {
     if (typeof backingStorage.removeItem !== "function") throw new TypeError("Storage adapter does not support deletion.");
