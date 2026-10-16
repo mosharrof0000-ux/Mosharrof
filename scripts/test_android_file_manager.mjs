@@ -7,7 +7,7 @@ const files = require("../core/android-file-manager.js");
 const java = await readFile(new URL("../native/android/AndroidFileManagerPlugin.java", import.meta.url), "utf8");
 const installer = await readFile(new URL("./android/install-main-activity.sh", import.meta.url), "utf8");
 const wrapper = await readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
-const ui = await readFile(new URL("../core/android-file-manager-ui.js", import.meta.url), "utf8");
+const ui = await readFile(new URL("../core/device-control.js", import.meta.url), "utf8");
 
 assert.equal(typeof files.pickDirectory, "function");
 assert.equal(typeof files.createFolder, "function");
@@ -24,7 +24,7 @@ assert.match(java, /safeName/);
 assert.match(java, /scanDuplicates/);
 assert.match(java, /SHA-256/);
 assert.match(java, /maxFiles/);
-assert.match(wrapper, /android-file-manager-ui\\.js/);
+assert.match(wrapper, /device-control\\.js/);
 assert.match(ui, /scanDuplicates/);
 assert.match(ui, /কোনো ফাইল মুছবে না/);
 assert.match(installer, /AndroidFileManagerPlugin\\.class/);
