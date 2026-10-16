@@ -17,6 +17,8 @@ private data class PendingSemanticTap(
     var targetEventsRemaining: Int = 20
 )
 
+private class NodeBudget(var remaining: Int)
+
 /** Bounded screen inspection and exact-label taps run only after explicit user action. */
 class MosharrofAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
@@ -57,10 +59,10 @@ class MosharrofAccessibilityService : AccessibilityService() {
         }
         try {
             if (root.packageName?.toString() != tap.targetPackage) return
-            when (countMatches(root, tap.visibleText, MAX_NODES)) {
+            when (countMatches(root, tap.visibleText, NodeBudget(MAX_NODES))) {
                 0 -> failAfterBudget(tap, "লক্ষ্য লেবেল এখনো পাওয়া যায়নি।")
                 1 -> {
-                    val success = clickMatchingNode(root, tap.visibleText, MAX_NODES)
+                    val success = clickMatchingNode(root, tap.visibleText, NodeBudget(MAX_NODES))
                     finishTap(if (success) {
                         "নির্দিষ্ট UI লেবেলে একবার ট্যাপ করা হয়েছে।"
                     } else {
@@ -84,14 +86,19 @@ class MosharrofAccessibilityService : AccessibilityService() {
         pendingTap = null
     }
 
-    private fun countMatches(node: AccessibilityNodeInfo, target: String, budget: Int): Int {
-        if (budget <= 0) return 0
+    private fun countMatches(
+        node: AccessibilityNodeInfo,
+        target: String,
+        budget: NodeBudget
+    ): Int {
+        if (budget.remaining <= 0) return 0
+        budget.remaining -= 1
         var count = if (matchesTarget(node, target)) 1 else 0
         for (index in 0 until node.childCount) {
-            if (count > 1) break
+            if (count > 1 || budget.remaining <= 0) break
             val child = node.getChild(index) ?: continue
             try {
-                count += countMatches(child, target, budget - count)
+                count += countMatches(child, target, budget)
             } finally {
                 child.recycleCompat()
             }
@@ -102,14 +109,16 @@ class MosharrofAccessibilityService : AccessibilityService() {
     private fun clickMatchingNode(
         node: AccessibilityNodeInfo,
         target: String,
-        budget: Int
+        budget: NodeBudget
     ): Boolean {
-        if (budget <= 0) return false
+        if (budget.remaining <= 0) return false
+        budget.remaining -= 1
         if (matchesTarget(node, target)) return clickSelfOrClickableParent(node)
         for (index in 0 until node.childCount) {
+            if (budget.remaining <= 0) break
             val child = node.getChild(index) ?: continue
             try {
-                if (clickMatchingNode(child, target, budget - 1)) return true
+                if (clickMatchingNode(child, target, budget)) return true
             } finally {
                 child.recycleCompat()
             }
