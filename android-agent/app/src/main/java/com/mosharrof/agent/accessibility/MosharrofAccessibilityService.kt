@@ -1,5 +1,4 @@
 package com.mosharrof.agent.accessibility
-
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
@@ -11,9 +10,7 @@ private data class PendingSemanticTap(
     val visibleText: String,
     var targetEventsRemaining: Int = 20
 )
-
 private data class PendingSwipe(val targetPackage: String, val direction: AgentAction.Direction, var targetEventsRemaining: Int = 20)
-
 /** Bounded screen inspection and exact-label taps run only after explicit user action. */
 class MosharrofAccessibilityService : AccessibilityService() {
     private var floatingControl: FloatingAgentControl? = null
@@ -22,13 +19,11 @@ class MosharrofAccessibilityService : AccessibilityService() {
         activeService = this
         syncFloatingControl()
     }
-
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
         val eventPackage = event.packageName?.toString().orEmpty()
         FocusedTextEntry.onWindowChanged(this, eventPackage, packageName)?.let { latestActionResult = it }
         if (eventPackage == packageName) return
-
         if (screenshotCaptureArmed && event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             AccessibilityScreenshotCapture.isTargetPackage(eventPackage)) {
             screenshotCaptureArmed = false
@@ -40,7 +35,6 @@ class MosharrofAccessibilityService : AccessibilityService() {
         pendingTap?.takeIf { it.targetPackage == eventPackage }?.let { processPendingTap(it) }
         pendingSwipe?.takeIf { it.targetPackage == eventPackage }?.let { processPendingSwipe(it) }
         if (!scanArmed) return
-
         val snapshot = inspectWindow() ?: return
         if (snapshot.packageName.isNotBlank() && snapshot.packageName != packageName) {
             latestSnapshot = snapshot
@@ -48,13 +42,11 @@ class MosharrofAccessibilityService : AccessibilityService() {
                 ", nodes=" + snapshot.nodeCount)
         }
     }
-
     override fun onInterrupt() {
         screenshotCaptureArmed = false
         AccessibilityTextEntry.cancel()
         Log.i(TAG, "Accessibility service interrupted by system")
     }
-
     override fun onDestroy() {
         screenshotCaptureArmed = false
         AccessibilityTextEntry.cancel()
@@ -63,7 +55,6 @@ class MosharrofAccessibilityService : AccessibilityService() {
         if (activeService === this) activeService = null
         super.onDestroy()
     }
-
     private fun syncFloatingControl() {
         if (FloatingAgentControl.isEnabled(this)) {
             if (floatingControl == null) {
@@ -77,7 +68,6 @@ class MosharrofAccessibilityService : AccessibilityService() {
             floatingControl = null
         }
     }
-
     private fun processPendingSwipe(swipe: PendingSwipe) {
         val root = rootInActiveWindow
         if (root == null) {
@@ -118,12 +108,10 @@ class MosharrofAccessibilityService : AccessibilityService() {
             AccessibilityScreenInspector.recycle(root)
         }
     }
-
     private fun finishSwipe(message: String) {
         latestActionResult = message
         pendingSwipe = null
     }
-
     private fun processPendingTap(tap: PendingSemanticTap) {
         val root = rootInActiveWindow
         if (root == null) {
@@ -142,17 +130,14 @@ class MosharrofAccessibilityService : AccessibilityService() {
             AccessibilityScreenInspector.recycle(root)
         }
     }
-
     private fun failAfterBudget(tap: PendingSemanticTap, message: String) {
         tap.targetEventsRemaining -= 1
         if (tap.targetEventsRemaining <= 0) finishTap(message)
     }
-
     private fun finishTap(message: String) {
         latestActionResult = message
         pendingTap = null
     }
-
     private fun inspectWindow(): ScreenSnapshot? {
         val root = rootInActiveWindow ?: return null
         return try {
@@ -161,7 +146,6 @@ class MosharrofAccessibilityService : AccessibilityService() {
             AccessibilityScreenInspector.recycle(root)
         }
     }
-
     companion object {
         private const val TAG = "MosharrofAgent"
         private const val MAX_LABEL_LENGTH = 80
@@ -172,20 +156,16 @@ class MosharrofAccessibilityService : AccessibilityService() {
         @Volatile private var pendingTap: PendingSemanticTap? = null
         @Volatile private var pendingSwipe: PendingSwipe? = null
         @Volatile private var latestActionResult: String? = null
-
         fun setFloatingControlEnabled(context: android.content.Context, enabled: Boolean) {
             context.getSharedPreferences(FloatingAgentControl.PREFS, android.content.Context.MODE_PRIVATE)
                 .edit().putBoolean(FloatingAgentControl.KEY_ENABLED, enabled).apply()
             activeService?.syncFloatingControl()
         }
-
         fun isFloatingControlEnabled(context: android.content.Context): Boolean =
             FloatingAgentControl.isEnabled(context)
-
         fun refreshFloatingControl() {
             activeService?.syncFloatingControl()
         }
-
         fun performGlobalNavigation(destination: AgentAction.NavigationDestination): Boolean {
             val service = activeService ?: return false
             val action = when (destination) {
@@ -196,33 +176,26 @@ class MosharrofAccessibilityService : AccessibilityService() {
             }
             return service.performGlobalAction(action)
         }
-
         fun cancelInspection() {
             scanArmed = false
             latestSnapshot = null
         }
-
         fun startInspection() {
             latestSnapshot = null
             scanArmed = true
         }
-
         fun armScreenshotCapture(): Boolean {
             if (activeService == null) return false
             screenshotCaptureArmed = true
             return true
         }
-
         fun inspectCurrentScreenNow(): ScreenSnapshot? = activeService?.inspectWindow()
-
         fun takeInspectionSnapshot(): ScreenSnapshot? {
             scanArmed = false
             return latestSnapshot.also { latestSnapshot = null }
         }
-
         fun armTextEntry(targetPackage: String, text: String): Boolean =
             activeService != null && FocusedTextEntry.arm(targetPackage, text)
-
         fun armSemanticTap(targetPackage: String, visibleText: String): Boolean {
             if (activeService == null || targetPackage.isBlank() || visibleText.isBlank() ||
                 visibleText.length > MAX_LABEL_LENGTH || pendingTap != null
@@ -231,10 +204,8 @@ class MosharrofAccessibilityService : AccessibilityService() {
             pendingTap = PendingSemanticTap(targetPackage, visibleText)
             return true
         }
-
         fun armTextEntry(targetPackage: String, text: String): Boolean =
             AccessibilityTextEntry.arm(activeService, targetPackage, text)
-
         fun cancelSemanticTap() {
             pendingTap = null
             pendingSwipe = null
