@@ -293,11 +293,6 @@ header.top{
   function loadSessionData(){try{var raw=localStorage.getItem(SESSIONS_KEY);if(raw){var parsed=JSON.parse(raw);if(Array.isArray(parsed))chatSessions=parsed.filter(function(x){return x&&Array.isArray(x.messages);});}}catch(e){chatSessions=[];}var legacy=null;try{legacy=JSON.parse(localStorage.getItem(STORE_KEY)||"null");}catch(e){}if(!chatSessions.length&&legacy&&Array.isArray(legacy.messages)){legacy.id=legacy.id||("chat-migrated-"+Date.now().toString(36));chatSessions=[legacy];}var activeId=null;try{activeId=localStorage.getItem(ACTIVE_SESSION_KEY);}catch(e){}var active=null;for(var i=0;i<chatSessions.length;i++){if(!chatSessions[i].id)chatSessions[i].id="chat-"+Date.now().toString(36)+"-"+i;if(chatSessions[i].id===activeId)active=chatSessions[i];}if(!active&&chatSessions.length)active=chatSessions[0];if(!active){active=makeSession();chatSessions.push(active);}active.openedAt=active.openedAt||nowISO();active.lastActiveAt=active.lastActiveAt||nowISO();active.closedAt=null;return active;}
   function saveStore(data){try{if(!data.id)data.id="chat-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);var index=-1;for(var i=0;i<chatSessions.length;i++){if(chatSessions[i].id===data.id){index=i;break;}}if(index<0)chatSessions.push(data);else chatSessions[index]=data;chatSessions.sort(function(a,b){return String(b.lastActiveAt||b.openedAt||"").localeCompare(String(a.lastActiveAt||a.openedAt||""));});localStorage.setItem(SESSIONS_KEY,JSON.stringify(chatSessions));localStorage.setItem(ACTIVE_SESSION_KEY,data.id);localStorage.setItem(STORE_KEY,JSON.stringify(data));}catch(e){toast("চ্যাট সংরক্ষণে স্টোরেজ সমস্যা হয়েছে");}updateHistoryList();}
   var session=loadSessionData();
-  var personalMemoryClient=null;
-  var personalMemoryReady=import("./personal-memory-client.js").then(function(mod){personalMemoryClient=mod.createBrowserPersonalMemory(localStorage);return personalMemoryClient;}).catch(function(error){console.warn("Personal memory unavailable:",error);return null;});
-  function memorySignals(text){return personalMemoryReady.then(function(memory){return memory?memory.observe(text):null;}).catch(function(error){console.warn("Memory signal could not be saved:",error);});}
-  function personalMemoryContext(text){return personalMemoryReady.then(function(memory){return memory?memory.context(text):"";}).catch(function(error){console.warn("Memory retrieval failed:",error);return "";});}
-  function memoryCommand(text){if(!/^(?:(?:আমার\\s*)?(?:ব্যক্তিগত\\s*)?স্মৃতি\\s*(?:দেখাও|দেখান|তালিকা|list)|(?:আমার\\s*)?(?:সব\\s*)?(?:ব্যক্তিগত\\s*)?স্মৃতি\\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)|(?:মনে রাখো|স্মৃতিতে রাখো|remember)\\s*[:：-]?\\s*.+)$/i.test(String(text||"").trim()))return null;return personalMemoryReady.then(function(memory){return memory?memory.command(text):"স্মৃতি-সংরক্ষণ সুবিধা এখন পাওয়া যাচ্ছে না।";});}
   saveStore(session);
   window.addEventListener("beforeunload",function(){session.closedAt=nowISO();session.lastActiveAt=nowISO();saveStore(session);});
   document.addEventListener("visibilitychange",function(){if(document.hidden){session.closedAt=nowISO();session.lastActiveAt=nowISO();saveStore(session);}else{session.openedAt=session.openedAt||nowISO();session.lastActiveAt=nowISO();session.closedAt=null;saveStore(session);updateMeta();}});
@@ -711,11 +706,8 @@ header.top{
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
   function coreReply(t,image){
-    var currentText=String(t||"").trim();
-    return Promise.resolve(memorySignals(currentText)).then(function(){return personalMemoryContext(currentText);}).then(function(memoryContext){
-      var priorHistory=session.messages.slice(0,-1).slice(-12).map(function(item){return {role:item.role,text:item.text};});
-      return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:currentText,history:priorHistory,memory_context:memoryContext,image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})});
-    }).then(function(res){
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
+      .then(function(res){
         function finish(data,status){
           var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
           if(status<200||status>=300){var failure=new Error(data.provider_message||data.message||data.error||("HTTP "+status));failure.responseMeta={provider:null,model:null,attempted:responseMeta.attempted,failed:true};throw failure;}
@@ -1102,7 +1094,7 @@ header.top{
   var busy=false;
   function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
   function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
-  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;var memoryAction=memoryCommand(raw);if(memoryAction){busy=true;sendBtn.disabled=true;input.value="";resize();addMsg("user",raw);Promise.resolve(memoryAction).then(function(answer){addMsg("ai",String(answer||"স্মৃতি-ব্যবস্থার কাজ শেষ হয়েছে।"));}).catch(function(error){addMsg("ai","স্মৃতি-ব্যবস্থায় সমস্যা হয়েছে: "+String(error&&error.message||error));}).finally(function(){busy=false;sendBtn.disabled=false;input.focus();});return;}busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
     if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
       session.messages=session.messages.slice(0,editTargetIndex);
       msgEl.innerHTML="";
