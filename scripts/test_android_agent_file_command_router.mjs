@@ -22,7 +22,7 @@ assert.match(reported, /নথি/);
 result = router.handle("ডুপ্লিকেট গান খুঁজে দেখাও");
 assert.equal(result.handled, true);
 await result.promise;
-assert.match(reported, /১টি ডুপ্লিকেট গ্রুপ/);
+assert.match(reported, /1টি ডুপ্লিকেট গ্রুপ/);
 assert.match(reported, /কোনো ফাইল মুছবে না/);
 delete globalThis.MosharrofFiles;
 console.log("Android agent file command router: PASS");
