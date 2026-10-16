@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Engine regression checks
+      - name: Tests
         run: node scripts/test_image_engine.mjs && node tests/test_personal_memory_engine.mjs && node --test tests/personal-memory-engine.test.mjs && node --check core/personal-memory-bridge.js
       - uses: actions/setup-python@v5
         with:
