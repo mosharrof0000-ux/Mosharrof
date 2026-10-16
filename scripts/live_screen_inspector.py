@@ -75,6 +75,7 @@ async def main():
                 await route.fulfill(status=200, content_type="application/json", headers={
                     "access-control-allow-origin": "*",
                 }, body=json.dumps({
+                    "ok": True,
                     "text": "MOSHARROF inspector mock response: chat pipeline passed",
                     "provider": "mock",
                     "model": "playwright-safe-test",
@@ -365,13 +366,19 @@ async def main():
                 f"reloaded browser found {len(rows_after_reload)} stored rows",
             )
 
+            previous_answer_count = await page.locator("#messages .message.ai").count()
             await page.locator("#input").fill("Continue from memory: MOSHARROF inspector safe chat test")
             await page.locator("#sendBtn").click()
-            followup_answer = page.locator("#messages .message.ai").filter(
-                has_text="MOSHARROF inspector mock response: chat pipeline passed"
-            ).last
-            await followup_answer.wait_for(state="visible", timeout=12000)
-            followup_request = mock_requests[-1] if mock_requests else {}
+            await page.wait_for_function(
+                "count => document.querySelectorAll('#messages .message.ai').length > count",
+                arg=previous_answer_count,
+                timeout=12000,
+            )
+            for _ in range(100):
+                if len(mock_requests) >= 2:
+                    break
+                await page.wait_for_timeout(100)
+            followup_request = mock_requests[-1] if len(mock_requests) >= 2 else {}
             memory_context = str(followup_request.get("memory_context") or "")
             record(
                 "retrieved_memory_is_sent_to_chat_worker",
