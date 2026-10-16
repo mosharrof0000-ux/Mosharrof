@@ -11,12 +11,15 @@ class BengaliIntentParser(private val appAliases: Map<String, String>) {
         if (containsAny(command, listOf("অ্যাক্সেসিবিলিটি সেটিং", "accessibility settings", "অনুমতি সেটিং"))) {
             return BengaliParsedIntent.OpenAccessibilitySettings
         }
-        val prefix = listOf("খুলে দাও", "খুলুন", "খোলো", "চালু কর", "open ", "launch ")
-            .firstOrNull(command::startsWith)
+
+        val prefixes = listOf("open ", "launch ", "খুলে দাও ", "খুলুন ", "খোলো ", "চালু কর ", "চালু করুন ", "ওপেন ")
+        val suffixes = listOf(" খুলে দাও", " খুলুন", " খোলো", " চালু করো", " চালু করুন")
+        val name = prefixes.firstOrNull(command::startsWith)?.let(command::removePrefix)
+            ?: suffixes.firstOrNull(command::endsWith)?.let(command::removeSuffix)
             ?: return BengaliParsedIntent.NeedsClarification("কমান্ডটি সমর্থিত নয়; স্পষ্ট করে বলুন।")
-        val name = command.removePrefix(prefix).trim()
-        if (name.isBlank()) return BengaliParsedIntent.NeedsClarification("কোন অ্যাপ খুলতে হবে বলুন।")
-        val packageName = appAliases.entries.firstOrNull { normalize(it.key) == name }?.value
+        val query = name.trim()
+        if (query.isBlank()) return BengaliParsedIntent.NeedsClarification("কোন অ্যাপ খুলতে হবে বলুন।")
+        val packageName = appAliases.entries.firstOrNull { normalize(it.key) == query }?.value
         return if (packageName.isNullOrBlank()) {
             BengaliParsedIntent.NeedsClarification("অ্যাপটি অনুমোদিত তালিকায় নেই; খোলা হয়নি।")
         } else BengaliParsedIntent.OpenApp(packageName)
