@@ -1,9 +1,6 @@
 package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.os.Environment
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
@@ -11,6 +8,7 @@ import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +16,6 @@ import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.accessibility.FloatingControlToggle
 import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
-import com.mosharrof.agent.permissions.DeviceCapabilityCenter
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
@@ -29,7 +26,6 @@ import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
 import com.mosharrof.agent.notifications.NotificationAccessControl
 import com.mosharrof.agent.permissions.PermissionCenterControl
-import com.mosharrof.agent.notifications.NotificationInboxControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
     private lateinit var status: TextView
@@ -98,7 +94,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        setContentView(LinearLayout(this).apply {
+        setContentView(ScrollView(this).apply {
+            addView(LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(32, 48, 32, 32)
             addView(title)
@@ -115,13 +112,14 @@ class MainActivity : ComponentActivity() {
             ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled)
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
-            DeviceCapabilityCenter.addTo(this@MainActivity, this, status)
-            NotificationInboxControl.addTo(this@MainActivity, this, status)
-            PermissionCenterControl.addTo(this@MainActivity, this, status) {
-                permissionResult.launch(PermissionCenterControl.runtimePermissions)
-            }
+            addView(Button(this@MainActivity).apply {
+                text = "সমস্ত runtime permission চাইুন"
+                setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
+            })
+            CapabilityPermissionCenter.addButton(this@MainActivity, this)
+            NotificationAccessControl.addTo(this@MainActivity, this)
             addView(accessibilityButton)
-            addCapabilitySettings(this)
+        })
         })
         refreshServiceStatus()
         if (intent.getBooleanExtra(EXTRA_START_VOICE, false)) {
@@ -144,29 +142,6 @@ class MainActivity : ComponentActivity() {
             val actionResult = MosharrofAccessibilityService.takeActionResult()
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
         }
-    }
-    private fun addCapabilitySettings(layout: LinearLayout) {
-        layout.addView(TextView(this).apply { text = "পূর্ণ ডিভাইস সক্ষমতা — Android অনুমতি"; textSize = 20f })
-        val routes = listOf(
-            "Accessibility: স্ক্রিন বোঝা ও UI নিয়ন্ত্রণ" to (Settings.ACTION_ACCESSIBILITY_SETTINGS to null),
-            "ভাসমান নিয়ন্ত্রণের অনুমতি" to (Settings.ACTION_MANAGE_OVERLAY_PERMISSION to ("package:" + packageName)),
-            "সব ফাইল অ্যাক্সেস" to (Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION to ("package:" + packageName)),
-            "অ্যাপ ব্যবহার-ইতিহাস অ্যাক্সেস" to (Settings.ACTION_USAGE_ACCESS_SETTINGS to null),
-            "ব্যাটারি অপ্টিমাইজেশন সেটিংস" to (Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS to null),
-            "MOSHARROF অ্যাপ অনুমতি" to (Settings.ACTION_APPLICATION_DETAILS_SETTINGS to ("package:" + packageName))
-        )
-        routes.forEach { (label, route) ->
-            layout.addView(Button(this).apply {
-                text = label
-                setOnClickListener {
-                    val target = Intent(route.first)
-                    route.second?.let { target.data = Uri.parse(it) }
-                    try { startActivity(target) } catch (_: Exception) { startActivity(Intent(Settings.ACTION_SETTINGS)) }
-                }
-            })
-        }
-        status.append("\\nOverlay: " + Settings.canDrawOverlays(this) +
-            " • All files: " + (Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager()))
     }
     private fun inspectCurrentScreen() {
         if (!isServiceEnabled()) {
