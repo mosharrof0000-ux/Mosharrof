@@ -51,7 +51,7 @@ This is the single source of truth for the Android device-control feature set re
 
 ## E. Vision, memory and AI planning
 - [x] Typed action model and deterministic policy gate; arbitrary shell commands are not representable.
-- [x] User-triggered Android Accessibility screenshot capture and in-app preview, with transient visible-label/node analysis; screenshots are not saved or uploaded automatically. Build/device verification pending.
+- [x] User-triggered Android Accessibility screenshot capture and in-app preview, with transient visible-label/node analysis; screenshots are not saved automatically. Build/device verification pending.
 - [x] Explicit opt-in screenshot upload to the MOSHARROF screenshot-analysis Worker for Gemini vision analysis; bounded JPEG size, API key remains server-side, and the image is not uploaded until the user taps the AI-analysis button. CI/live endpoint/device verification pending.
 - [ ] Measure vision latency/accuracy and connect semantic screenshot results to the planner/action loop; image coordinates only as a last resort with revalidation.
 - [ ] Connect screenshot semantics to the planner and action loop; current screenshot preview and UI-label report are not AI vision understanding.
