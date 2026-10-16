@@ -10,10 +10,11 @@ const wrapper = await fs.readFile(new URL("./android/prepare-wrapper.sh", import
 const assets = await fs.readFile(new URL("./android/prepare-agent-web-assets.py", import.meta.url), "utf8");
 const bridge = await fs.readFile(new URL("./android/inject-android-voice-bridge.py", import.meta.url), "utf8");
 
-assert.ok(assets.includes("cp core/android-agent-command-router.js android-web/android-agent-command-router.js"));
+assert.ok(wrapper.includes("prepare-agent-web-assets.py"));
+assert.ok(assets.includes('"android-agent-command-router.js"'));
 assert.ok(bridge.includes("routeAndroidAgentCommand"));
 assert.ok(wrapper.includes("sendBtn.addEventListener(\"click\""));
-assert.ok(assets.includes("android-agent-memory.js"));
+assert.ok(assets.includes('"android-agent-memory.js"'));
 let calls = 0;
 let confirmationText = "";
 const router = createCommandRouter({
