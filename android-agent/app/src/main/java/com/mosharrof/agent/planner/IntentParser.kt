@@ -37,7 +37,7 @@ class IntentParser {
     private fun parseTextCommand(text: String): ParsedIntent.TypeText? {
         val match = Regex("^(?:type|লিখুন|লেখো)\\s+[\\\"](.{1,200})[\\\"]$", RegexOption.IGNORE_CASE).find(text)
             ?: return null
-        return ParsedIntent.TypeText(match.groupValues[1])
+        return ParsedIntent.TypeText(match.groupValues[1], null)
     }
 
     private fun parseTypeTextCommand(text: String): ParsedIntent.TypeText? {
@@ -106,8 +106,7 @@ class IntentParser {
 sealed interface ParsedIntent {
     data class OpenApp(val query: String) : ParsedIntent
     data class TapText(val text: String, val appQuery: String) : ParsedIntent
-    data class TypeText(val text: String, val appQuery: String) : ParsedIntent
-    data class TypeText(val text: String) : ParsedIntent
+    data class TypeText(val text: String, val appQuery: String? = null) : ParsedIntent
     data class Swipe(val direction: AgentAction.Direction, val appQuery: String) : ParsedIntent
     data class Unsupported(val reason: String) : ParsedIntent
 }
