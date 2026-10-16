@@ -1,6 +1,6 @@
 import {
   createIndexedDbMemoryStore, createPersonalMemoryEngine,
-  buildPersonalMemoryContext, inferMemoryCandidates
+  buildPersonalMemoryContext
 } from "../core/personal-memory-engine.js";
 
 const CONSENT_KEY = "mosharrof-personal-memory-enabled-v1";
@@ -130,9 +130,6 @@ export function initializePersonalMemory() {
           }
           if (answer.trim() && enabled) {
             await engine.recordTurn(userText, answer, { conversation_id: "local-chat" });
-            for (const candidate of inferMemoryCandidates(userText)) {
-              await engine.remember({ ...candidate, source: "explicit_user_signal", user_confirmed: candidate.explicit });
-            }
             refresh().catch(() => {});
           }
         } catch (error) { console.warn("[MOSHARROF Memory] save skipped", error); }
