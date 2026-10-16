@@ -24,6 +24,7 @@ def main() -> int:
         "core/organ-runtime/index.js": "web/runtime/core/organ-runtime/index.js",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
+        "core/personal-memory-engine.js": "web/personal-memory-engine.js",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
@@ -62,12 +63,48 @@ def main() -> int:
             raise SystemExit("ORGAN ASSET PREP: device-control script anchor missing for video UI")
         index_html = index_html.replace(device_tag, device_tag + "\n" + video_tag, 1)
 
-    old_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
-    new_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),history:(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};}),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
-    if new_chat_request not in index_html:
+    # Add personal memory to the generated Pages artifact only; keep the tracked legacy entrypoint frozen.
+    session_anchor = "  var session=loadSessionData();"
+    session_memory = """  var personalMemoryClient=null;
+  var personalMemoryReady=import("./personal-memory-client.js").then(function(mod){personalMemoryClient=mod.createBrowserPersonalMemory(localStorage);return personalMemoryClient;}).catch(function(error){console.warn("Personal memory unavailable:",error);return null;});
+  function memorySignals(text){return personalMemoryReady.then(function(memory){return memory?memory.observe(text):null;}).catch(function(error){console.warn("Memory signal could not be saved:",error);});}
+  function personalMemoryContext(text){return personalMemoryReady.then(function(memory){return memory?memory.context(text):"";}).catch(function(error){console.warn("Memory retrieval failed:",error);return "";});}
+  function memoryCommand(text){if(!/^(?:(?:আমার\\\\s*)?(?:ব্যক্তিগত\\\\s*)?স্মৃতি\\\\s*(?:দেখাও|দেখান|তালিকা|list)|(?:আমার\\\\s*)?(?:সব\\\\s*)?(?:ব্যক্তিগত\\\\s*)?স্মৃতি\\\\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)|(?:মনে রাখো|স্মৃতিতে রাখো|remember)\\\\s*[:：-]?\\\\s*.+)$/i.test(String(text||"").trim()))return null;return personalMemoryReady.then(function(memory){return memory?memory.command(text):"স্মৃতি-সংরক্ষণ সুবিধা এখন পাওয়া যাচ্ছে না।";});}"""
+    if "var personalMemoryReady=import(" not in index_html:
+        if session_anchor not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: session anchor missing for personal memory")
+        index_html = index_html.replace(session_anchor, session_anchor + "\n" + session_memory, 1)
+
+    old_chat_request = '    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})'
+    new_chat_request = """    var currentText=String(t||"").trim();
+    return Promise.resolve(memorySignals(currentText)).then(function(){return personalMemoryContext(currentText);}).then(function(memoryContext){
+      var priorHistory=(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};});
+      return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:currentText,history:priorHistory,memory_context:memoryContext,image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})});
+    })"""
+    if "var currentText=String(t||\\\"\\\").trim();" not in index_html:
         if old_chat_request not in index_html:
-            raise SystemExit("ORGAN ASSET PREP: chat request shape changed; history injection requires review")
+            raise SystemExit("ORGAN ASSET PREP: chat request shape changed; memory integration requires review")
         index_html = index_html.replace(old_chat_request, new_chat_request, 1)
+    # Store a compact chronological memory record after the successful answer; the full transcript remains in chat history.
+    old_chain_end = "      });\n  }\n  function setSpeakButton(button,label){"
+    new_chain_end = """      }).then(function(result){
+        return personalMemoryReady.then(function(memory){return memory?memory.recordTurn(currentText,result.text,{conversation_id:session.id}):null;})
+          .catch(function(error){console.warn("Memory turn could not be saved:",error);})
+          .then(function(){return result;});
+      });
+  }
+  function setSpeakButton(button,label){"""
+    if "Memory turn could not be saved" not in index_html:
+        if old_chain_end not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: chat response completion anchor missing for memory recording")
+        index_html = index_html.replace(old_chain_end, new_chain_end, 1)
+
+    old_send_prefix = '  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;'
+    new_send_prefix = """  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;var memoryAction=memoryCommand(raw);if(memoryAction){busy=true;sendBtn.disabled=true;input.value="";resize();addMsg("user",raw);Promise.resolve(memoryAction).then(function(answer){addMsg("ai",String(answer||"স্মৃতি-ব্যবস্থার কাজ শেষ হয়েছে।"));}).catch(function(error){addMsg("ai","স্মৃতি-ব্যবস্থায় সমস্যা হয়েছে: "+String(error&&error.message||error));}).finally(function(){busy=false;sendBtn.disabled=false;input.focus();});return;}busy=true;sendBtn.disabled=true;"""
+    if "var memoryAction=memoryCommand(raw);" not in index_html:
+        if old_send_prefix not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: send handler anchor missing for memory commands")
+        index_html = index_html.replace(old_send_prefix, new_send_prefix, 1)
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
