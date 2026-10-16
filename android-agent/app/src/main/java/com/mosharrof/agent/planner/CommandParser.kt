@@ -17,6 +17,16 @@ class CommandParser {
                 ParsedCommand.OpenSettingPanel(AgentAction.SupportedSetting.BLUETOOTH_PANEL)
             "open location settings", "লোকেশন সেটিংস খুলুন" ->
                 ParsedCommand.OpenSettingPanel(AgentAction.SupportedSetting.LOCATION_SETTINGS)
+            "open display settings", "ডিসপ্লে সেটিংস খুলুন", "পর্দার সেটিংস খুলুন" ->
+                ParsedCommand.OpenSettingPanel(AgentAction.SupportedSetting.DISPLAY_SETTINGS)
+            "open sound settings", "সাউন্ড সেটিংস খুলুন", "শব্দ সেটিংস খুলুন" ->
+                ParsedCommand.OpenSettingPanel(AgentAction.SupportedSetting.SOUND_SETTINGS)
+            "open battery saver settings", "ব্যাটারি সেভার সেটিংস খুলুন" ->
+                ParsedCommand.OpenSettingPanel(AgentAction.SupportedSetting.BATTERY_SAVER_SETTINGS)
+            "open notification settings", "নোটিফিকেশন সেটিংস খুলুন" ->
+                ParsedCommand.OpenSettingPanel(AgentAction.SupportedSetting.NOTIFICATION_SETTINGS)
+            "open app settings", "অ্যাপ সেটিংস খুলুন" ->
+                ParsedCommand.OpenSettingPanel(AgentAction.SupportedSetting.APPLICATION_SETTINGS)
             else -> parseExplicitApp(command)
         }
     }
