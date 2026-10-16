@@ -26,7 +26,7 @@
     var status = section.querySelector("#mosFileManagerStatus");
     var results = section.querySelector("#mosFileManagerResults");
     function api() {
-      var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FileManager;
+      var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AndroidFileManager;
       if (!p) { notify("এই সুবিধা শুধু সমর্থিত Android APK-তে উপলভ্য।"); return null; }
       return p;
     }
