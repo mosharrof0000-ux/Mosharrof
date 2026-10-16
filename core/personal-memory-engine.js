@@ -126,15 +126,20 @@ export function createPersonalMemoryEngine(options = {}) {
     if (!enabled()) return [];
     const q = new Set(tokenize(query));
     const queryFolder = inferFolder(query);
+    const followup = /(এটা|সেটা|ওটা|আগের|চালিয়ে|চালিয়ে|আরও|তারপর|ওই|continue|that|it|previous|earlier|next|same)/i.test(query) || q.size < 2;
     const rows = await allRows();
     return rows.map(row => {
-      const words = tokenize([row.text, row.folder, ...(row.tags || [])].join(" "));
+      const words = tokenize([row.text, row.folder?.label || row.folder, ...(row.tags || [])].join(" "));
       let overlap = 0;
       for (const word of words) if (q.has(word)) overlap += 1;
       const recency = Math.max(0, 1 - (now() - row.createdAt) / (365 * 86400000));
-      const preferenceBoost = row.kind === "preference" ? 0.45 : 0;
-      return { ...row, score: overlap / Math.max(1, q.size) + recency * 0.08 + preferenceBoost + (row.folder?.id === queryFolder.id ? 0.22 : 0) };
-    }).filter(row => row.kind === "preference" || row.score > 0.05)
+      const key = row.preferences?.[0]?.key || row.tags?.[1] || "";
+      const globalPreference = row.kind === "preference" && ["response_length","explicit_preference","memory_organization","context_priority","future_planning"].includes(key);
+      const topicPreference = row.kind === "preference" && ["story_style"].includes(key) && queryFolder.id === "writing";
+      const preferenceBoost = row.kind === "preference" && (globalPreference || topicPreference) ? 0.45 : 0;
+      const score = overlap / Math.max(1, q.size) + recency * 0.08 + preferenceBoost + (row.folder?.id === queryFolder.id ? 0.22 : 0);
+      return { ...row, score, overlap, relevantPreference: globalPreference || topicPreference };
+    }).filter(row => row.overlap > 0 || row.relevantPreference || (followup && row.score > 0.05))
       .sort((a, b) => b.score - a.score || a.sequence - b.sequence)
       .slice(0, Math.max(1, Math.min(16, Number(limit) || 8)));
   }
