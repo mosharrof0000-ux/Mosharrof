@@ -41,8 +41,8 @@ const summarized = buildChatContext({
   conversation_summary: "আগের কথোপকথনে গল্পের দৈর্ঘ্য নিয়ে আলোচনা হয়েছিল",
   history: [{ role: "user", text: "গল্পটা বড় করো" }, { role: "ai", text: "গল্পটি বাড়ানো হলো" }]
 });
-assert.ok(summarized.indexOf("PERSONAL MEMORY") < summarized.indexOf("Current conversation summary"));
-assert.ok(summarized.indexOf("Current conversation summary") < summarized.indexOf("Recent conversation context"));
+assert.ok(summarized.indexOf("Relevant personal memory") < summarized.indexOf("Current chat summary"));
+assert.ok(summarized.indexOf("Current chat summary") < summarized.indexOf("Recent conversation history"));
 assert.ok(summarized.indexOf("Current user message") < summarized.indexOf("এখন সংক্ষেপে উত্তর দাও"));
 const refreshedFolders = await memory.folders();
 assert.equal(refreshedFolders.find(folder => folder.id === "writing")?.count, 2);
