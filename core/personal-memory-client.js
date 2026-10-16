@@ -17,7 +17,16 @@ export function createBrowserPersonalMemory() {
       if (!duplicate) await engine.remember({ ...candidate, status: "pending_confirmation", source: "conversation_candidate", user_confirmed: false });
     }
   }
-  async function context(text) { const result = await engine.recall({ query: String(text || ""), limit: 8 }); return buildPersonalMemoryContext(result.items, String(text || "")); }
+  async function context(text, history = []) {
+    const current = String(text || "");
+    const isFollowup = /(এটা|সেটা|ওটা|আগের|চালিয়ে|চালিয়ে|আরও|তারপর|ওই|continue|that|it|previous|earlier|next|same|কেন\??$)/i.test(current);
+    const historyText = isFollowup && Array.isArray(history)
+      ? history.slice(-6).map(item => String(item && item.text || "").slice(0,500)).join("\\n")
+      : "";
+    const query = historyText ? historyText + "\\n" + current : current;
+    const result = await engine.recall({ query, limit: 8 });
+    return buildPersonalMemoryContext(result.items, query);
+  }
   async function command(text) {
     const value = String(text || "").trim();
     if (/^(?:আমার\s*)?(?:ব্যক্তিগত\s*)?স্মৃতি\s*(?:দেখাও|দেখান|তালিকা|list)$/i.test(value)) {
@@ -57,7 +66,11 @@ function mountMemoryPanel(memory) {
   Object.assign(panel.style, { display:"none", position:"fixed", right:"10px", bottom:"136px", zIndex:"9999", width:"min(92vw,380px)", maxHeight:"65vh", overflow:"auto", padding:"14px", borderRadius:"14px", background:"#171717", color:"#f5f5f5", border:"1px solid #555", boxShadow:"0 8px 28px #000a", font:"14px system-ui,sans-serif" });
   const enabledLabel=document.createElement("label"); enabledLabel.style.cssText="display:flex;align-items:center;gap:8px;margin:8px 0";
   const enabled=document.createElement("input"); enabled.type="checkbox"; enabled.id="mosharrof-memory-enabled";
-  try { enabled.checked=localStorage.getItem("mosharrof-personal-memory-enabled-v1")==="enabled"; } catch { enabled.checked=false; }
+  try {
+    const saved=localStorage.getItem("mosharrof-personal-memory-enabled-v1");
+    if(saved===null){localStorage.setItem("mosharrof-personal-memory-enabled-v1","enabled");enabled.checked=true;}
+    else enabled.checked=saved==="enabled";
+  } catch { enabled.checked=false; }
   enabled.addEventListener("change",()=>{try{localStorage.setItem("mosharrof-personal-memory-enabled-v1",enabled.checked?"enabled":"disabled");}catch{}});
   enabledLabel.append(enabled,safeText(document.createElement("span"),"প্রাসঙ্গিক স্মৃতি AI উত্তরে ব্যবহার করুন"));
   const heading = safeText(document.createElement("h3"), "ব্যক্তিগত স্মৃতি");
@@ -120,8 +133,7 @@ export function installPersonalMemoryClient() {
     try { consentEnabled = localStorage.getItem("mosharrof-personal-memory-enabled-v1") === "enabled"; } catch (_) {}
     if (!consentEnabled) return nativeFetch(input,init);
     try {
-      await memory.observe(text);
-      body.memory_context=await memory.context(text);
+      body.memory_context=await memory.context(text,body.history);
       body.memory_suggestions_enabled=true;
     } catch (error) {
       // Memory failure must never block ordinary chat; the app continues without memory.
