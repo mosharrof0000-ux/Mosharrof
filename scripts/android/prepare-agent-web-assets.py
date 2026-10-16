@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Package small Android agent modules and inject their script tags."""
 from pathlib import Path
 
 core = Path("core")
