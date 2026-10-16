@@ -1,5 +1,5 @@
 /* MOSHARROF user-mediated Accessibility controls.
- * Every tap is initiated from this visible UI and confirmed immediately beforehand.
+ * Every tap or coordinate swipe is initiated from this visible UI and confirmed immediately beforehand.
  * Screen labels stay on-device; this module does not send them to a model or server.
  */
 (function () {
@@ -19,6 +19,7 @@
       '<button type="button" data-access="scroll-up">উপরে স্ক্রল</button>' +
       '<button type="button" data-access="scroll-down">নিচে স্ক্রল</button>' +
       '<button type="button" data-access="tap">লেবেল দিয়ে ট্যাপ</button>' +
+      '<button type="button" data-access="swipe">স্থানাঙ্ক দিয়ে সোয়াইপ</button>' +
       '<div id="mosAccessibilityStatus" role="status" aria-live="polite">কোনো স্ক্রিন ডেটা পড়া হয়নি।</div>' +
       '<div id="mosAccessibilityLabels"></div></div>';
     nav.appendChild(section);
@@ -60,6 +61,21 @@
           if (!window.confirm("বর্তমান অ্যাপের স্ক্রিন স্ক্রল করবেন?")) return;
           await p.scrollVisibleUi({ forward: action === "scroll-down" });
           status.textContent = "স্ক্রল অ্যাকশন পাঠানো হয়েছে; দৃশ্যমান ফলাফল আবার পরীক্ষা করুন।";
+        } else if (action === "swipe") {
+          var coords = [];
+          for (var promptIndex = 0; promptIndex < 4; promptIndex += 1) {
+            var names = ["শুরুর X", "শুরুর Y", "শেষের X", "শেষের Y"];
+            var raw = window.prompt(names[promptIndex] + " স্থানাঙ্ক (পিক্সেল)");
+            if (raw === null || !raw.trim() || !/^\\d+$/.test(raw.trim())) return;
+            coords.push(Number(raw.trim()));
+          }
+          if (!window.confirm("এই স্থানাঙ্কে ৫০০ ms সোয়াইপ করবেন? সংবেদনশীল স্ক্রিনে এটি বাতিল হবে।")) return;
+          var swipe = await p.swipeVisibleUi({
+            startX: coords[0], startY: coords[1], endX: coords[2], endY: coords[3], durationMs: 500
+          });
+          status.textContent = swipe.dispatched
+            ? "সোয়াইপ পাঠানো হয়েছে; স্ক্রিনের ফলাফল আলাদাভাবে যাচাই করতে হবে।"
+            : "সোয়াইপ সম্পন্ন হয়নি।";
         } else if (action === "tap") {
           var label = window.prompt("স্ক্রিনে দেখা সঠিক বাটন/লেবেল লিখুন");
           if (!label || !label.trim()) return;
