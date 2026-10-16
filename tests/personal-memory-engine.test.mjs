@@ -44,6 +44,8 @@ test("secret-like content is not saved and conflicting memories are superseded, 
 test("natural language size inference respects explicit current request first", () => {
   assert.deepEqual(inferResponseStyle("বাংলায় ৫০০০ শব্দের গল্প"), { mode: "explicit-length", requestedWords: 5000, source: "current-message", confidence: 0.99 });
   assert.equal(inferResponseStyle("Write a short answer").mode, "short");
+  assert.equal(inferResponseStyle("বাংলায় ৫০০০ শব্দের গল্প").requestedWords, 5000);
+  assert.equal(inferResponseStyle("ছোট করে বলো", [{ folder: "preferences-and-style", userApproved: true, confidence: 0.8 }]).mode, "short");
   assert.equal(classifyMemoryFolder("একটা গল্প লিখো"), "writing-and-stories");
 });
 test("conversation summaries are timestamped and exportable", async () => {
