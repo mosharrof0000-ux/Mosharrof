@@ -404,7 +404,7 @@ jobs:
       - name: Set optional FAL video secret
         working-directory: worker/video-generation
         env:
-          RAW_FAL_KEY: \${{ secrets.FAL_KEY }}
+          RAW_FAL_KEY: ${{ secrets.FAL_KEY }}
         run: |
           set -euo pipefail
           FAL_KEY="$(printf '%s' "$RAW_FAL_KEY" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
