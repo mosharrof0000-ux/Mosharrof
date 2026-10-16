@@ -8,6 +8,7 @@ sealed interface TaskPlan {
     data class OpenApp(val app: InstalledApp) : TaskPlan
     data class TapVisibleText(val text: String, val app: InstalledApp) : TaskPlan
     data class TypeText(val text: String, val app: InstalledApp) : TaskPlan
+    data class TypeText(val text: String, val app: InstalledApp) : TaskPlan
     data class SwipeScreen(val direction: AgentAction.Direction, val app: InstalledApp) : TaskPlan
     data class GlobalNavigation(val destination: AgentAction.NavigationDestination) : TaskPlan
     data object OpenSystemSettings : TaskPlan
@@ -46,6 +47,16 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
             }
             is ParsedIntent.TypeText -> {
                 when (val appPlan = resolveApp(intent.appQuery, installedApps)) {
+                    is TaskPlan.OpenApp -> TaskPlan.TypeText(intent.text, appPlan.app)
+                    is TaskPlan.NeedsChoice -> appPlan
+                    is TaskPlan.Rejected -> appPlan
+                    else -> TaskPlan.Rejected("এই অ্যাপে টেক্সট ইনপুট সমর্থিত নয়।")
+                }
+            }
+            is ParsedIntent.TypeText -> {
+                val appQuery = intent.appQuery
+                    ?: return TaskPlan.Rejected("যে অ্যাপে লিখতে হবে তার নাম দিন; কোনো লেখা প্রবেশ করানো হয়নি।")
+                when (val appPlan = resolveApp(appQuery, installedApps)) {
                     is TaskPlan.OpenApp -> TaskPlan.TypeText(intent.text, appPlan.app)
                     is TaskPlan.NeedsChoice -> appPlan
                     is TaskPlan.Rejected -> appPlan
