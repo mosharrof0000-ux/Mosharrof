@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
+import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.InstalledAppCatalog
 import com.mosharrof.agent.execution.SystemSettingsLauncher
@@ -109,6 +110,7 @@ class MainActivity : ComponentActivity() {
             TaskControlButtons.addCancelButton(this@MainActivity, this) { pendingApp = null; pendingSettings = null; pendingTap = null; pendingSwipe = null; MosharrofAccessibilityService.cancelSemanticTap(); MosharrofAccessibilityService.cancelInspection(); confirmButton.isEnabled = false; status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।" }
             addView(inspectButton)
             addView(screenDetails)
+            DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             addView(accessibilityButton)
         })
         refreshServiceStatus()
