@@ -24,6 +24,7 @@ class AgentTaskController(
     private var pendingSettings: TaskPlan? = null
     private var pendingTap: TaskPlan.TapVisibleText? = null
     private var pendingSwipe: TaskPlan.SwipeScreen? = null
+    private var pendingText: TaskPlan.TypeText? = null
     private var pendingNavigation: AgentAction.NavigationDestination? = null
     private var pendingSystemIntent: TaskPlan.SystemIntent? = null
 
@@ -66,6 +67,11 @@ class AgentTaskController(
                 status.text = "পরিকল্পনা: ${plan.app.label}-এ ${plan.direction.name.lowercase()} দিকে একবার স্ক্রল হবে। নিশ্চিত করুন।"
                 confirmButton.isEnabled = isServiceEnabled()
             }
+            is TaskPlan.TypeText -> {
+                pendingText = plan
+                status.text = "পরিকল্পনা: ${plan.app.label}-এ “${plan.text}” লেখা হবে। নিশ্চিত করলে অ্যাপ খুলবে; ৩০ সেকেন্ডে আপনি ইনপুট ঘরে ট্যাপ করলে লেখা বসবে, পাঠানো হবে না।"
+                confirmButton.isEnabled = isServiceEnabled()
+            }
             is TaskPlan.TapVisibleText -> {
                 pendingTap = plan
                 status.text = if (isServiceEnabled()) {
@@ -88,6 +94,7 @@ class AgentTaskController(
             pendingApp != null -> launchConfirmedApp()
             pendingSettings != null -> launchConfirmedSettings()
             pendingTap != null -> launchConfirmedTap()
+            pendingText != null -> launchConfirmedText()
             pendingSwipe != null -> launchConfirmedSwipe()
             pendingNavigation != null -> launchConfirmedNavigation()
             pendingSystemIntent != null -> launchConfirmedSystemIntent()
@@ -107,6 +114,7 @@ class AgentTaskController(
         pendingSettings = null
         pendingTap = null
         pendingSwipe = null
+        pendingText = null
         pendingNavigation = null
         pendingSystemIntent = null
     }
@@ -200,6 +208,34 @@ class AgentTaskController(
         }
         status.text = "লক্ষ্য অ্যাপ খুলছে। নির্দিষ্ট লেবেল একবারই মিললে ট্যাপ হবে; অস্পষ্ট হলে বাতিল হবে।"
         pendingTap = null
+        confirmButton.isEnabled = false
+    }
+
+    private fun launchConfirmedText() {
+        val plan = pendingText ?: return
+        if (!isServiceEnabled()) {
+            status.text = "Accessibility বন্ধ; লেখা প্রবেশ করানো হয়নি।"
+            return
+        }
+        val allowed = appCatalog.listLauncherApps().map { it.packageName }.toSet()
+        val decision = ActionPolicy(allowed).evaluate(
+            AgentAction.TypeText(plan.app.packageName, plan.text), 0
+        )
+        if (decision.decision != PolicyDecision.REQUIRE_CONFIRMATION) {
+            status.text = "নিরাপত্তা নীতিতে লেখা প্রবেশ অনুমোদিত নয়: ${decision.reason}"
+            return
+        }
+        if (!MosharrofAccessibilityService.armTextEntry(plan.app.packageName, plan.text)) {
+            status.text = "Accessibility service প্রস্তুত নয়; লেখা প্রবেশ করানো হয়নি।"
+            return
+        }
+        if (!appCatalog.launch(plan.app.packageName)) {
+            MosharrofAccessibilityService.cancelSemanticTap()
+            status.text = "লক্ষ্য অ্যাপ খোলা যায়নি; লেখা প্রবেশ করানো হয়নি।"
+            return
+        }
+        status.text = "অ্যাপ খুলছে। ৩০ সেকেন্ডের মধ্যে কাঙ্ক্ষিত ইনপুট ঘরে ট্যাপ করুন; লেখা বসবে, স্বয়ংক্রিয়ভাবে পাঠানো হবে না।"
+        pendingText = null
         confirmButton.isEnabled = false
     }
 
