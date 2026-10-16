@@ -84,7 +84,7 @@ def main() -> int:
     if memory_ui_tag not in index_html:
         if memory_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: memory client tag missing before memory UI")
-        index_html = index_html.replace(memory_tag, memory_tag + "\\n" + memory_ui_tag, 1)
+        index_html = index_html.replace(memory_tag, memory_tag + "\n" + memory_ui_tag, 1)
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
