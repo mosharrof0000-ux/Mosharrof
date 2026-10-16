@@ -123,15 +123,16 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
   const entries=Array.isArray(profile.memories)?profile.memories:Array.isArray(profile.items)?profile.items:[];
   const current=clean(currentText,1500).toLowerCase();
   const terms=current.split(/[^\p{L}\p{N}]+/u).filter(t=>t.length>2);
+  const followup=/(এটা|সেটা|ওটা|আগের|চালিয়ে|চালিয়ে|আরও|তারপর|ওই|continue|that|it|previous|earlier|next|same)/i.test(currentText)||terms.length<2;
   const ranked=entries.filter(m=>m&&typeof m==="object"&&!["superseded","archived","resolved"].includes(m.status))
     .map((m,index)=>{
       const content=clean(m.content,1000), lower=content.toLowerCase();
       const overlap=terms.reduce((n,term)=>n+(lower.includes(term)?1:0),0);
       const recency=Number.isFinite(Date.parse(m.updated_at||m.created_at))?Date.parse(m.updated_at||m.created_at)/1e13:0;
       const pending=m.status==="pending_confirmation";
-      const score=(m.user_confirmed?8:0)+overlap*3+(m.category==="preference"?2:0)+(pending?-5:0)+recency;
-      return {m,content,score,index};
-    }).filter(x=>x.content).sort((a,b)=>b.score-a.score||b.index-a.index);
+      const score=(m.user_confirmed?8:0)+overlap*3+(m.category==="preference"&&overlap>0?2:0)+(pending?-5:0)+recency;
+      return {m,content,score,index,overlap};
+    }).filter(x=>x.content&&(followup||x.overlap>0)).sort((a,b)=>b.score-a.score||b.index-a.index);
   const selected=[]; let used=0;
   for(const item of ranked){
     const line="- ["+clean(item.m.folder||item.m.category||"fact",40)+"; status "+clean(item.m.status||"active",32)+"; confidence "+Math.max(0,Math.min(1,Number(item.m.confidence??0.6)))+"; date "+String(item.m.created_at||"").slice(0,10)+"] "+item.content;
