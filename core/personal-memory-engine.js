@@ -43,6 +43,7 @@ function inferPreferences(text) {
 export function createPersonalMemoryEngine(options = {}) {
   const root = options.root || globalThis;
   const indexedDB = options.indexedDB || root.indexedDB;
+  const adapter = options.adapter || null;
   const now = options.now || (() => Date.now());
   const makeId = options.makeId || (() => root.crypto?.randomUUID?.() || "memory-" + now().toString(36) + "-" + Math.random().toString(36).slice(2, 9));
   let databasePromise;
@@ -83,9 +84,9 @@ export function createPersonalMemoryEngine(options = {}) {
       previousId: input.previousId || null,
       preferences: input.kind === "user" ? inferPreferences(text) : []
     };
-    await transaction("readwrite", s => s.add(row));
+    if (adapter) await adapter.add(row); else await transaction("readwrite", s => s.add(row));
     for (const pref of row.preferences) {
-      await transaction("readwrite", s => s.add({
+      const learned = {
         id: makeId(), kind: "preference", text: pref.key + ": " + pref.value,
         createdAt, isoTime: row.isoTime, sessionId: row.sessionId, sequence: row.sequence,
         tags: ["learned-preference", pref.key], previousId: row.id, preferences: [pref]
