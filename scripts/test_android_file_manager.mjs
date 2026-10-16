@@ -18,8 +18,11 @@ for (const method of ["pickDirectory", "getSelectedDirectory", "listEntries", "c
 await assert.rejects(() => files.createFolder("test"), /bridge unavailable/);
 await assert.rejects(() => files.deleteEntry("document-id", false), /নিশ্চিতকরণ/);
 for (const marker of ["ACTION_OPEN_DOCUMENT_TREE", "takePersistableUriPermission",
-  "getSelectedDirectory(PluginCall call)", "confirmed", "safeName", "scanDuplicates", "SHA-256", "maxFiles"]) {
+  "getSelectedDirectory(PluginCall call)", "confirmed", "safeName"]) {
   assert.ok(java.includes(marker), "native SAF contract missing: " + marker);
+}
+for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES", "MAX_BYTES"]) {
+  assert.ok(scanner.includes(marker), "bounded duplicate scanner contract missing: " + marker);
 }
 assert.ok(wrapper.includes("cp core/device-control.js android-web/device-control.js"));
 assert.ok(wrapper.includes("cp core/android-file-manager.js android-web/android-file-manager.js"));
