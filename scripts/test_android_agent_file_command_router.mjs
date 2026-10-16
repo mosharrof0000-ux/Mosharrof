@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 const require = createRequire(import.meta.url);
 const { createFileCommandRouter } = require("../core/android-agent-file-command-router.js");
-const mainRouter = await import("node:fs/promises").then(fs => fs.readFile("core/android-agent-command-router.js", "utf8"));
+const mainRouter = readFileSync("core/android-agent-command-router.js", "utf8");
 assert.ok(mainRouter.includes("MosharrofAndroidFileCommandRouter"));
 const taskPlanner = require("../core/android-agent-task-planner.js");
 const assets = readFileSync("scripts/android/prepare-agent-web-assets.py", "utf8");
