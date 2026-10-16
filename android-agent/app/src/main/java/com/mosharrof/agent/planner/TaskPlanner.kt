@@ -36,7 +36,16 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
 
         return when (val intent = parser.parse(command)) {
             is ParsedIntent.Unsupported -> TaskPlan.Rejected(intent.reason)
-            is ParsedIntent.TypeText -> TaskPlan.TypeFocusedText(intent.text)
+            is ParsedIntent.TypeText -> {
+                val targetApp = intent.appQuery?.takeIf { it.isNotBlank() }
+                    ?: return TaskPlan.TypeFocusedText(intent.text)
+                when (val appPlan = resolveApp(targetApp, installedApps)) {
+                    is TaskPlan.OpenApp -> TaskPlan.TypeText(intent.text, appPlan.app)
+                    is TaskPlan.NeedsChoice -> appPlan
+                    is TaskPlan.Rejected -> appPlan
+                    else -> TaskPlan.Rejected("এই অ্যাপে টেক্সট ইনপুট সমর্থিত নয়।")
+                }
+            }
             is ParsedIntent.OpenApp -> resolveApp(intent.query, installedApps)
             is ParsedIntent.Swipe -> {
                 when (val appPlan = resolveApp(intent.appQuery, installedApps)) {
@@ -44,16 +53,6 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
                     is TaskPlan.NeedsChoice -> appPlan
                     is TaskPlan.Rejected -> appPlan
                     else -> TaskPlan.Rejected("এই অ্যাপের স্ক্রল action সমর্থিত নয়।")
-                }
-            }
-            is ParsedIntent.TypeText -> {
-                val targetApp = intent.appQuery?.takeIf { it.isNotBlank() }
-                    ?: return TaskPlan.Rejected("লেখাটি কোন অ্যাপে প্রবেশ করাতে হবে তা নির্দিষ্ট করুন।")
-                when (val appPlan = resolveApp(targetApp, installedApps)) {
-                    is TaskPlan.OpenApp -> TaskPlan.TypeText(intent.text, appPlan.app)
-                    is TaskPlan.NeedsChoice -> appPlan
-                    is TaskPlan.Rejected -> appPlan
-                    else -> TaskPlan.Rejected("এই অ্যাপে টেক্সট ইনপুট সমর্থিত নয়।")
                 }
             }
             is ParsedIntent.TapText -> {
