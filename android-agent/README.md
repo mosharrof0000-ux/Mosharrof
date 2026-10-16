@@ -28,12 +28,13 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] Visible cancel button clears pending app/settings/tap plans and cancels an armed screen inspection (not a general multi-step executor cancel)
 - [x] Confirmation step before launching a selected app
 - [x] Policy gate for allowlisted app launch and unit tests
+- [ ] Explicit one-shot swipe/scroll (up/down/left/right) in a named installed app; code and parser tests added, latest CI and physical-device verification pending
 - [x] CI debug APK build and JVM unit tests
 
 ## Not yet complete
 
 - [ ] General natural-language task planning across arbitrary apps
-- [ ] Semantic node locator and bounded UI action executor
+- [ ] General semantic node locator and bounded UI action executor (exact-label tap and one-shot swipe are limited initial actions; arbitrary UI interaction is not enabled)
 - [ ] Per-task progress, interrupt, cancel, postcondition verification and recovery
 - [ ] Safe Settings command routing and system-setting confirmation (Wi-Fi, Bluetooth, Location, Display, Sound, Battery Saver, Notifications and Application Settings routes are coded; latest CI and OEM/physical-device verification pending)
 - [ ] Appium/UiAutomator2 device tests and real-device acceptance
@@ -42,7 +43,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [ ] Encrypted, opt-in local memory/retrieval
 - [ ] Release signing, installation validation and distribution
 
-This milestone is **not** a completed fully autonomous agent. Current executable scope is intentionally narrow: resolve an explicit installed-app name, ask the user to confirm, then request Android to launch it. Screen inspection is read-only and only runs when the user taps the inspection button; results stay in the UI and are not persisted. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
+This milestone is **not** a completed fully autonomous agent. Current executable scope is intentionally narrow: resolve an explicit installed-app name, ask the user to confirm, then request Android to launch it; a single exact-label tap or directional swipe can be proposed for a named app and requires confirmation. These UI actions are bounded and still require CI and physical-device verification. Screen inspection is read-only and only runs when the user taps the inspection button; results stay in the UI and are not persisted. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
 
 ## Safety model
 
