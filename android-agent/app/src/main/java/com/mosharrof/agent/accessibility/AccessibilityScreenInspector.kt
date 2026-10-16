@@ -1,5 +1,6 @@
 package com.mosharrof.agent.accessibility
 
+import android.os.Bundle
 import android.view.accessibility.AccessibilityNodeInfo
 
 data class ScreenSnapshot(
@@ -27,6 +28,27 @@ internal object AccessibilityScreenInspector {
             count,
             labels.distinct().take(MAX_LABELS)
         )
+    }
+
+    fun setTextInFocusedField(root: AccessibilityNodeInfo, text: String): Boolean {
+        if (text.isBlank() || text.length > 200) return false
+        return setFocusedText(root, text, NodeBudget(MAX_NODES))
+    }
+
+    private fun setFocusedText(node: AccessibilityNodeInfo, text: String, budget: NodeBudget): Boolean {
+        if (budget.remaining-- <= 0) return false
+        if (node.isFocused && node.isEditable) {
+            return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+            })
+        }
+        for (index in 0 until node.childCount) {
+            if (budget.remaining <= 0) break
+            val child = node.getChild(index) ?: continue
+            try { if (setFocusedText(child, text, budget)) return true }
+            finally { recycle(child) }
+        }
+        return false
     }
 
     fun tapExact(root: AccessibilityNodeInfo, target: String): ExactTapResult =
