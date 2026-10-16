@@ -28,4 +28,4 @@ def test_video_ui_is_disabled_until_owner_enables_provider():
     assert "secrets.FAL_KEY" not in ui
     assert '"core/video-generation-ui.js": "web/video-generation-ui.js"' in prep
     assert "mosharrof-video-generation" in deploy
-    assert "node --check core/video-generation/worker.js" in deploy
+    assert "node --input-type=module --check < core/video-generation/worker.js" in deploy
