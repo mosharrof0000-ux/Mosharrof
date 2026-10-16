@@ -40,23 +40,15 @@ jobs:
       - name: Start candidate Pages server
         shell: bash
         run: |
-          set -euo pipefail
           nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
-          server_pid=$!
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then
-              echo "Candidate Pages server ready."
-              exit 0
-            fi
-            if ! kill -0 "$server_pid" 2>/dev/null; then
-              cat /tmp/mosharrof-pages.log
-              echo "Candidate Pages server exited before becoming ready."
-              exit 1
-            fi
+          pid=$!
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0
+            kill -0 "$pid" 2>/dev/null || { cat /tmp/mosharrof-pages.log; exit 1; }
             sleep 1
           done
           cat /tmp/mosharrof-pages.log
-          echo "Candidate Pages server readiness timed out."
+          echo "Server readiness timed out."
           exit 1
       - name: Test candidate organ runtime in Chromium
         env:
