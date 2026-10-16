@@ -194,7 +194,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
       const pending=m.status==="pending_confirmation";
       const score=(m.user_confirmed?8:0)+overlap*3+(m.category==="preference"&&overlap>0?2:0)+(pending?-5:0)+recency;
       return {m,content,score,index,overlap};
-    }).filter(x=>x.content&&(followup||x.overlap>0)).sort((a,b)=>b.score-a.score||b.index-a.index);
+    }).filter(x=>x.content&&x.overlap>0).sort((a,b)=>b.score-a.score||b.index-a.index);
   const selected=[]; let used=0;
   for(const item of ranked){
     const line="- ["+clean(item.m.folder||item.m.category||"fact",40)+"; status "+clean(item.m.status||"active",32)+"; confidence "+Math.max(0,Math.min(1,Number(item.m.confidence??0.6)))+"; date "+String(item.m.created_at||"").slice(0,10)+"] "+item.content;
@@ -225,7 +225,7 @@ export function inferMemoryCandidates(userText) {
   const question=/(কীভাবে সম্ভব|কী হতে পারে|কেন এমন|what if|how can i|কিভাবে করব)/i.test(text);
   if(!explicitPreference&&!correction&&!goal&&!project&&!commitment&&!decision&&!question)return [];
   const category=correction?"correction":explicitPreference?"preference":project?"project":commitment?"commitment":decision?"decision":question?"open_question":"goal";
-  return [{category,folder:category,content:text,confidence:explicitPreference?0.9:correction?0.82:project?0.78:0.7,source:"conversation_candidate",status:"active",user_confirmed:false,rationale:"Tentative memory candidate extracted from explicit wording; may be reviewed or corrected."}];
+  return [{category,folder:FOLDERS[category]||FOLDERS.fact,content:text,confidence:explicitPreference?0.9:correction?0.82:project?0.78:0.7,source:"conversation_candidate",status:"active",user_confirmed:false,rationale:"Tentative memory candidate extracted from explicit wording; may be reviewed or corrected."}];
 }
 
 export function classifyMemory(text) {
