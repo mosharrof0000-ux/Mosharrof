@@ -16,6 +16,14 @@ class TaskPlannerTest {
         assertEquals(TaskPlan.OpenApp(apps[0]), planner.plan("open YouTube", apps))
     }
 
+    @Test fun resolvesCommonBengaliAppAlias() {
+        assertEquals(TaskPlan.OpenApp(apps[0]), planner.plan("ইউটিউব খুলুন", apps))
+    }
+
+    @Test fun resolvesBengaliSettingsAlias() {
+        assertEquals(TaskPlan.OpenApp(apps[2]), planner.plan("সেটিংস খুলুন", apps))
+    }
+
     @Test fun asksForChoiceWhenNameIsPartial() {
         assertTrue(planner.plan("open You", apps) is TaskPlan.NeedsChoice)
     }
