@@ -90,11 +90,13 @@ export function createPersonalMemoryEngine(options = {}) {
         id: makeId(), kind: "preference", text: pref.key + ": " + pref.value,
         createdAt, isoTime: row.isoTime, sessionId: row.sessionId, sequence: row.sequence,
         tags: ["learned-preference", pref.key], previousId: row.id, preferences: [pref]
-      }));
+      };
+      if (adapter) await adapter.add(learned); else await transaction("readwrite", s => s.add(learned));
     }
     return { stored: true, id: row.id, createdAt };
   }
   async function allRows() {
+    if (adapter) return await adapter.list();
     const db = await store();
     return new Promise((resolve, reject) => {
       const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll();
@@ -141,6 +143,7 @@ export function createPersonalMemoryEngine(options = {}) {
         ({ id, kind, text, createdAt, isoTime, sessionId, sequence, tags, previousId }));
   }
   async function clear() {
+    if (adapter) { await adapter.clear(); return { cleared: true }; }
     const db = await store();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readwrite");
