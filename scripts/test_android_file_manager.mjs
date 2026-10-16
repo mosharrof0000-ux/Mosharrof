@@ -1,40 +1,49 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+
 const require = createRequire(import.meta.url);
 const files = require("../core/android-file-manager.js");
 const java = await readFile(new URL("../native/android/AndroidFileManagerPlugin.java", import.meta.url), "utf8");
 const installer = await readFile(new URL("./android/install-main-activity.sh", import.meta.url), "utf8");
 const wrapper = await readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
 const ui = await readFile(new URL("../core/android-file-manager-ui.js", import.meta.url), "utf8");
-for (const method of ["pickDirectory","getSelectedDirectory","listEntries","createFolder","createTextFile","renameEntry","deleteEntry","scanSelectedDirectoryDuplicates","scanExactDuplicates"]) {
-  assert.equal(typeof files[method], "function", method + " facade method is required");
+const facade = await readFile(new URL("../core/android-file-manager.js", import.meta.url), "utf8");
+
+for (const method of ["pickDirectory", "getSelectedDirectory", "listEntries", "createFolder",
+  "createTextFile", "renameEntry", "deleteEntry", "scanSelectedDirectoryDuplicates", "scanExactDuplicates"]) {
+  assert.equal(typeof files[method], "function", "facade method missing: " + method);
 }
 await assert.rejects(() => files.createFolder("test"), /bridge unavailable/);
 await assert.rejects(() => files.deleteEntry("document-id", false), /নিশ্চিতকরণ/);
-assert.match(java, /ACTION_OPEN_DOCUMENT_TREE/);
-assert.match(java, /takePersistableUriPermission/);
-assert.match(java, /confirmed/);
-assert.match(java, /safeName/);
-assert.match(java, /scanDuplicates/);
-assert.match(java, /SHA-256/);
-assert.match(java, /maxFiles/);
-assert.match(wrapper, /device-control\.js/);
-assert.match(wrapper, /android-file-manager\.js/);
-assert.match(wrapper, /android-file-manager-ui\.js/);
-assert.match(ui, /scanSelectedDirectoryDuplicates/);
-assert.match(ui, /কোনো ফাইল মুছবে না/);
-assert.match(ui, /MosharrofFiles/);
-assert.doesNotMatch(ui, /Plugins\.FileManager/, "stale plugin name must not remain");
-assert.match(installer, /AndroidFileManagerPlugin\.class/);
-assert.doesNotMatch(installer, /MosharrofFilesPlugin\.class/, "duplicate plugin registration must be removed");
+for (const marker of ["ACTION_OPEN_DOCUMENT_TREE", "takePersistableUriPermission",
+  "getSelectedDirectory(PluginCall call)", "confirmed", "safeName", "scanDuplicates", "SHA-256", "maxFiles"]) {
+  assert.ok(java.includes(marker), "native SAF contract missing: " + marker);
+}
+assert.ok(wrapper.includes("cp core/device-control.js android-web/device-control.js"));
+assert.ok(wrapper.includes("cp core/android-file-manager.js android-web/android-file-manager.js"));
+assert.ok(wrapper.includes("cp core/android-file-manager-ui.js android-web/android-file-manager-ui.js"));
+assert.ok(wrapper.includes('ui_tag = \'<script src="./android-file-manager-ui.js"></script>\''),
+  "Android file-manager UI must be injected into the APK web entrypoint");
+assert.ok(installer.includes("registerPlugin(AndroidFileManagerPlugin.class)"));
+assert.ok(!installer.includes("registerPlugin(MosharrofFilesPlugin.class)"),
+  "duplicate plugin registration must be removed");
+assert.ok(ui.includes("scanSelectedDirectoryDuplicates"));
+assert.ok(ui.includes("কোনো ফাইল মুছবে না"));
+assert.ok(ui.includes("window.MosharrofFiles"), "UI must use the file-manager facade");
+assert.ok(!ui.includes("Plugins.FileManager"), "stale plugin name must not remain");
+assert.ok(facade.includes("plugins.AndroidFileManager"), "facade must use the registered native plugin");
+
 const bytesA = new TextEncoder().encode("same audio bytes").buffer;
 const bytesB = new TextEncoder().encode("same audio bytes").buffer;
 const bytesC = new TextEncoder().encode("different bytes").buffer;
-const fake = (name, bytes) => ({name,size:bytes.byteLength,type:"audio/mpeg",lastModified:1,arrayBuffer:async()=>bytes});
-const scan = await files.scanExactDuplicates([fake("a.mp3",bytesA),fake("copy.mp3",bytesB),fake("other.mp3",bytesC)]);
-assert.equal(scan.scanned,3);
-assert.equal(scan.exactDuplicateGroups.length,1);
-assert.deepEqual(scan.exactDuplicateGroups[0].files.map(x=>x.name),["a.mp3","copy.mp3"]);
-assert.match(scan.note,/কোনো ফাইল মুছা হয়নি/);
+const fake = (name, bytes) => ({ name, size: bytes.byteLength, type: "audio/mpeg",
+  lastModified: 1, arrayBuffer: async () => bytes });
+const scan = await files.scanExactDuplicates([
+  fake("a.mp3", bytesA), fake("copy.mp3", bytesB), fake("other.mp3", bytesC)
+]);
+assert.equal(scan.scanned, 3);
+assert.equal(scan.exactDuplicateGroups.length, 1);
+assert.deepEqual(scan.exactDuplicateGroups[0].files.map(x => x.name), ["a.mp3", "copy.mp3"]);
+assert.match(scan.note, /কোনো ফাইল মুছা হয়নি/);
 console.log("Android SAF file-manager + exact duplicate scan contract: PASS");
