@@ -18,6 +18,7 @@ import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.accessibility.FloatingControlToggle
 import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
+import com.mosharrof.agent.permissions.DeviceCapabilityCenter
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
@@ -108,6 +109,7 @@ class MainActivity : ComponentActivity() {
             ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled)
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
+            DeviceCapabilityCenter.addTo(this@MainActivity, this, status)
             PermissionCenterControl.addTo(this@MainActivity, this, status) {
                 permissionResult.launch(PermissionCenterControl.runtimePermissions)
             }
