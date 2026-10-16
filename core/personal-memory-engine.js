@@ -43,12 +43,27 @@ function inferFolder(text) {
   for (const folder of TOPIC_FOLDERS) if (folder.pattern.test(value)) return { id: folder.id, label: folder.label };
   return { id: "general", label: "কথোপকথন ও অন্যান্য" };
 }
+function inferFolder(text, kind = "user") {
+  if (kind === "preference") return "ব্যক্তিগত পছন্দ";
+  const value = String(text || "");
+  if (/(স্মৃতি|মেমোরি|memory|শেখা|শিখবে|শিখতে|বুদ্ধিমত্তা|understand me|personal learning)/i.test(value)) return "স্মৃতি ও শেখা";
+  if (/(mosharrof|মোশাররফ|github|worker|প্রজেক্ট|কোড|ডেপ্লয়|ডেপ্লয়|repository|repo|android|অ্যান্ড্রয়েড|অ্যান্ড্রয়েড|api|app|অ্যাপ|লাইভ)/i.test(value)) return "প্রকল্প ও প্রযুক্তি";
+  if (/(গল্প|উপন্যাস|কবিতা|প্রবন্ধ|লেখা|লিখে দাও|story|novel|poem|article|writing)/i.test(value)) return "লেখালেখি ও গল্প";
+  if (/(পরিকল্পনা|লক্ষ্য|ভবিষ্যৎ|আগামীতে|পরবর্তী ধাপ|করণীয়|করণীয়|plan|goal|next step|future)/i.test(value)) return "লক্ষ্য ও পরিকল্পনা";
+  if (/(কুরআন|কোরআন|আয়াত|আয়াত|সূরা|গবেষণা|ব্যাকরণ|শব্দমূল|research|study|grammar)/i.test(value)) return "গবেষণা ও জ্ঞান";
+  if (/(পছন্দ করি|আমি চাই|মনে রাখ|পরের বার|সবসময়|সবসময়|সর্বদা|i prefer|remember this|next time)/i.test(value)) return "ব্যক্তিগত পছন্দ";
+  return "সাধারণ কথোপকথন";
+}
+
 function inferPreferences(text) {
   const rules = [];
   if (/(ছোট করে|সংক্ষেপে|সংক্ষিপ্ত উত্তর|briefly|keep it short)/i.test(text)) rules.push({ key: "response_length", value: "short when not otherwise specified" });
   if (/(বিস্তারিত|খুঁটিনাটি|খুলে বল|বড় করে|বড় করে|দীর্ঘ|long-form|in detail)/i.test(text)) rules.push({ key: "response_length", value: "detailed when the request implies depth" });
   if (/(গল্প|উপন্যাস|story|novel)/i.test(text) && /(আরও বড়|আরও বড়|দীর্ঘ|বিস্তারিত|বড় গল্প|বড় গল্প|long|more detail)/i.test(text)) rules.push({ key: "story_style", value: "prefers fuller story development when requested" });
-  if (/(মনে রাখ|পরের বার|আগামীতে|সবসময়|সর্বদা|আমার পছন্দ|remember this|next time)/i.test(text)) rules.push({ key: "explicit_preference", value: text.slice(0, 500) });
+  if (/(মনে রাখ|স্মৃতিতে রাখ|পরের বার|আগামীতে|সবসময়|সর্বদা|আমার পছন্দ|remember this|next time)/i.test(text)) rules.push({ key: "explicit_preference", value: text.slice(0, 500) });
+  if (/(ফোল্ডার|বিষয়ভিত্তিক|বিষয়ভিত্তিক|গুছিয়ে|গুছিয়ে|ধাপে ধাপে|chronological|topic-based|folder)/i.test(text)) rules.push({ key: "memory_organization", value: "organize memories by topic and chronology" });
+  if (/(বর্তমানকে|বর্তমান কথ|বর্তমান চ্যাট|অতীতকে চাপিয়ে|অতীতকে চাপিয়ে|current.*past|current request|present first)/i.test(text)) rules.push({ key: "context_priority", value: "current request takes priority over old memories" });
+  if (/(ভবিষ্যতে|আগে পরে|পরবর্তী কথা|কি হতে পারে|কী হতে পারে|next step|future|likely follow-up)/i.test(text)) rules.push({ key: "future_planning", value: "consider likely next steps cautiously" });
   return rules;
 }
 
@@ -92,7 +107,8 @@ export function createPersonalMemoryEngine(options = {}) {
       text, createdAt, isoTime: new Date(createdAt).toISOString(),
       sessionId: String(input.sessionId || "default").slice(0, 100),
       sequence: Number.isFinite(input.sequence) ? input.sequence : createdAt,
-      tags: Array.isArray(input.tags) ? input.tags.slice(0, 12).map(x => String(x).slice(0, 40)) : [],
+      tags: [...new Set([...(Array.isArray(input.tags) ? input.tags.slice(0, 12).map(x => String(x).slice(0, 40)) : []), inferFolder(text, input.kind)])],
+      folder: input.folder || inferFolder(text, input.kind),
       previousId: input.previousId || null,
       preferences: input.kind === "user" ? inferPreferences(text) : []
     };
@@ -121,7 +137,7 @@ export function createPersonalMemoryEngine(options = {}) {
     const q = new Set(tokenize(query));
     const rows = await allRows();
     return rows.map(row => {
-      const words = tokenize(row.text);
+      const words = tokenize([row.text, row.folder, ...(row.tags || [])].join(" "));
       let overlap = 0;
       for (const word of words) if (q.has(word)) overlap += 1;
       const recency = Math.max(0, 1 - (now() - row.createdAt) / (365 * 86400000));
@@ -141,11 +157,11 @@ export function createPersonalMemoryEngine(options = {}) {
         latestPreferences.set(key, row);
       }
     }
-    const selected = memories.filter(row => row.kind !== "preference").slice(-7)
+    const selected = memories.filter(row => row.kind !== "preference").slice(0, 7)
       .concat(Array.from(latestPreferences.values()))
       .sort((a, b) => a.sequence - b.sequence);
     return "PERSONAL MEMORY, OLDEST TO NEWEST (past user-provided context; may be incomplete or stale; current request overrides it):\n" +
-      selected.map(row => "[" + row.isoTime + " · " + row.kind + "] " + row.text.slice(0, 700)).join("\n");
+      selected.map(row => "[" + (row.folder || "সাধারণ কথোপকথন") + " · " + row.isoTime + " · " + row.kind + "] " + row.text.slice(0, 700)).join("\n");
   }
   async function list(limit = 100) {
     const rows = await allRows();
@@ -196,6 +212,23 @@ export function createPersonalMemoryEngine(options = {}) {
       imported += 1;
     }
     return { imported };
+  }
+  async function folders() {
+    const rows = await allRows();
+    const counts = new Map();
+    for (const row of rows) {
+      const name = row.folder || inferFolder(row.text, row.kind);
+      const item = counts.get(name) || { folder: name, count: 0, latestAt: 0 };
+      item.count += 1;
+      item.latestAt = Math.max(item.latestAt, Number(row.createdAt) || 0);
+      counts.set(name, item);
+    }
+    return Array.from(counts.values()).sort((a, b) => b.latestAt - a.latestAt || a.folder.localeCompare(b.folder));
+  }
+  async function timeline(limit = 100) {
+    const rows = await allRows();
+    return rows.sort((a, b) => a.sequence - b.sequence)
+      .slice(-Math.max(1, Math.min(1000, Number(limit) || 100)));
   }
   async function clear() {
     if (adapter) { await adapter.clear(); return { cleared: true }; }
