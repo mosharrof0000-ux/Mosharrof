@@ -2,6 +2,9 @@ package com.mosharrof.ai;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
+import android.accessibilityservice.GestureDescription;
+import android.graphics.Path;
+import android.graphics.Rect;
 import android.content.Context;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -107,5 +110,55 @@ public class AgentAccessibilityService extends AccessibilityService {
         AccessibilityNodeInfo root = s == null ? null : s.getRootInActiveWindow();
         return root != null && root.performAction(forward
             ? AccessibilityNodeInfo.ACTION_SCROLL_FORWARD : AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+    }
+
+    public interface GestureResult { void onResult(boolean success); }
+
+    private boolean containsSensitiveNode(AccessibilityNodeInfo node, int depth) {
+        if (node == null || depth > 20) return false;
+        if (node.isPassword()) return true;
+        CharSequence text = node.getText();
+        CharSequence description = node.getContentDescription();
+        if (sensitive(text == null ? "" : text.toString())
+                || sensitive(description == null ? "" : description.toString())) return true;
+        for (int i = 0; i < node.getChildCount(); i++) {
+            if (containsSensitiveNode(node.getChild(i), depth + 1)) return true;
+        }
+        return false;
+    }
+
+    public void swipeCoordinates(int startX, int startY, int endX, int endY,
+            long durationMs, GestureResult result) {
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        if (root == null || containsSensitiveNode(root, 0)) {
+            result.onResult(false);
+            return;
+        }
+        Rect bounds = new Rect();
+        root.getBoundsInScreen(bounds);
+        int width = getResources().getDisplayMetrics().widthPixels;
+        int height = getResources().getDisplayMetrics().heightPixels;
+        if (startX < 0 || startY < 0 || endX < 0 || endY < 0
+                || startX >= width || endX >= width || startY >= height || endY >= height
+                || !bounds.contains(startX, startY) || !bounds.contains(endX, endY)) {
+            result.onResult(false);
+            return;
+        }
+        long duration = Math.max(100L, Math.min(durationMs, 1500L));
+        Path path = new Path();
+        path.moveTo(startX, startY);
+        path.lineTo(endX, endY);
+        GestureDescription gesture = new GestureDescription.Builder()
+            .addStroke(new GestureDescription.StrokeDescription(path, 0, duration))
+            .build();
+        boolean queued = dispatchGesture(gesture, new GestureResultCallback() {
+            @Override public void onCompleted(GestureDescription description) {
+                result.onResult(true);
+            }
+            @Override public void onCancelled(GestureDescription description) {
+                result.onResult(false);
+            }
+        }, null);
+        if (!queued) result.onResult(false);
     }
 }
