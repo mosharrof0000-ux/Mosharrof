@@ -43,6 +43,13 @@ class ActionPolicy(
                     PolicyResult(PolicyDecision.REQUIRE_CONFIRMATION, RiskLevel.MODERATE, "UI interaction requires task-level approval")
                 }
             }
+            is AgentAction.TypeText -> {
+                if (action.targetPackage !in allowedPackages || action.text.isBlank() || action.text.length > 160) {
+                    PolicyResult(PolicyDecision.DENY, RiskLevel.HIGH, "Text entry target or content is invalid")
+                } else {
+                    PolicyResult(PolicyDecision.REQUIRE_CONFIRMATION, RiskLevel.MODERATE, "Text entry requires explicit confirmation and a focused editable field")
+                }
+            }
             is AgentAction.Swipe -> {
                 if (action.targetPackage !in allowedPackages) {
                     PolicyResult(PolicyDecision.DENY, RiskLevel.HIGH, "Target app is not allowlisted")
