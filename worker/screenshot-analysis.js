@@ -1,6 +1,7 @@
 import { buildChatContext } from "../core/chat-context.js";
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
-import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
+import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
+import { parseImageSpec } from "../core/image-spec.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
@@ -272,17 +273,39 @@ async function tts(request,env){
 }
 
 const CHAT_PROVIDER_TIMEOUT_MS=12000;
-async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
+const LONG_CHAT_PROVIDER_TIMEOUT_MS=120000;
+function requestedWordCount(value){
+  const text=String(value||"").replace(/[০-৯]/g,d=>String("০১২৩৪৫৬৭৮৯".indexOf(d))).replace(/,/g,"");
+  const unit="(?:words?|শব্দ|ওয়ার্ড|ওয়ার্ড)(?:ের|এর|ে)?";
+  const patterns=[
+    new RegExp("(\\d{1,6})\\s*(?:-|\\s)?"+unit,"i"),
+    new RegExp("(\\d{1,3})\\s*(?:thousand|k)\\s*"+unit,"i"),
+    new RegExp("(\\d{1,3})\\s*হাজার\\s*"+unit,"i"),
+    new RegExp("(\\d{1,6})\\s*[- ]?"+unit+"\\s*(?:long|লম্বা|দীর্ঘ)","i")
+  ];
+  for(const pattern of patterns){
+    const match=text.match(pattern);
+    if(!match)continue;
+    let count=Number(match[1]);
+    if(/thousand|k|হাজার/i.test(match[0]))count*=1000;
+    if(Number.isFinite(count)&&count>0)return Math.min(20000,Math.floor(count));
+  }
+  return 0;
+}
+function outputTokenBudget(words){
+  return words>0?Math.min(65536,Math.max(2048,Math.ceil(words*3.1)+512)):0;
+}
+async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY, timeoutMs=CHAT_PROVIDER_TIMEOUT_MS){
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
     method:"POST",
     headers:{"content-type":"application/json","x-goog-api-key":apiKey},
     body:JSON.stringify(body),
-    signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)
+    signal:AbortSignal.timeout(timeoutMs)
   });
   const data=await upstream.json().catch(()=>({}));
   return {upstream,data,model};
 }
-async function generateWithCloudflareChat(text,env,onStatus){
+async function generateWithCloudflareChat(text,env,onStatus,targetWords=0){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   const configured=String(env.CLOUDFLARE_CHAT_MODELS||env.CLOUDFLARE_CHAT_MODEL||"@cf/zai-org/glm-4.7-flash,@cf/meta/llama-3.3-70b-instruct-fp8-fast");
   const models=[...new Set(configured.split(",").map(x=>x.trim()).filter(Boolean))];
@@ -294,7 +317,7 @@ async function generateWithCloudflareChat(text,env,onStatus){
       const result=await withChatProviderTimeout(env.AI.run(model,{messages:[
         {role:"system",content:buildReflectiveSystemPrompt()},
         {role:"user",content:text}
-      ],max_tokens:1024,temperature:0.3}),CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
+      ],max_tokens:targetWords?Math.min(8192,outputTokenBudget(targetWords)):1024,temperature:0.3}),targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
       const answer=String(result?.response||result?.choices?.[0]?.message?.content||"").trim();
       if(answer)return {ok:true,provider:"cloudflare-workers-ai",model,text:answer};
       last={model,reason:"empty_response"};
@@ -303,7 +326,7 @@ async function generateWithCloudflareChat(text,env,onStatus){
   }
   return {ok:false,provider:"cloudflare-workers-ai",model:last?.model||null,reason:last?.reason||"all_models_failed"};
 }
-async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={},onStatus){
+async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={},onStatus,targetWords=0){
   if(!apiKey)return {ok:false,provider,reason:"not_configured"};
   if(onStatus)onStatus({stage:"trying",provider,model});
   try{
@@ -313,8 +336,8 @@ async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,t
       body:JSON.stringify({model,messages:[
         {role:"system",content:buildReflectiveSystemPrompt()},
         {role:"user",content:text}
-      ],temperature:0.3,max_tokens:1024}),
-      signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)
+      ],temperature:0.3,max_tokens:targetWords?Math.min(8192,outputTokenBudget(targetWords)):1024}),
+      signal:AbortSignal.timeout(targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS)
     });
     const data=await upstream.json().catch(()=>({}));
     if(!upstream.ok){if(onStatus)onStatus({stage:"failed",provider,model});return {ok:false,provider,model,status:upstream.status,reason:data?.error?.message||("HTTP "+upstream.status)};}
@@ -330,79 +353,6 @@ function bytesToBase64(bytes){
     binary+=String.fromCharCode(...bytes.subarray(i,i+chunk));
   }
   return btoa(binary);
-}
-function nearestProviderRatio(ratio){
-  const parts=String(ratio||"1:1").split(":").map(Number),target=(parts[0]||1)/(parts[1]||1);
-  const supported=["1:1","3:2","2:3","4:3","3:4","16:9","9:16","4:5","5:4","21:9"];
-  let best="1:1",delta=Infinity;
-  for(const r of supported){const p=r.split(":").map(Number),d=Math.abs(Math.log(target/(p[0]/p[1])));if(d<delta){delta=d;best=r;}}
-  return best;
-}
-function simplifyImageRatio(w,h){let a=w,b=h;while(b){const t=b;b=a%b;a=t;}return (w/a)+":"+(h/a);}
-function parseImageSpec(prompt){
-  const original=String(prompt||"");
-  const p=original.toLowerCase();
-  const dimMatch=original.match(/(\d{2,5})\s*[x×]\s*(\d{2,5})/i);
-  const ratioMatch=original.match(/(\d{1,2})\s*:\s*(\d{1,2})/);
-  const hasExplicitDimensions=!!dimMatch;
-  const hasExplicitRatio=!!ratioMatch;
-  let width=0,height=0,ratio="1:1",intent="general";
-  const isShort=/youtube\s*shorts|shorts|tiktok|tik tok|reels|reel|vertical video|টিকটক|রিলস|শর্টস/i.test(p);
-  const isYouTube=/youtube|ইউটিউব|thumbnail|থাম্বনেইল/i.test(p);
-  const isInstagram=/instagram|ইনস্টাগ্রাম/i.test(p);
-  const isFacebook=/facebook|ফেসবুক/i.test(p);
-  const isIcon=/icon|আইকন|favicon/i.test(p);
-  const isWebsite=/website|web image|web graphic|ওয়েবসাইট|ওয়েবসাইট/i.test(p);
-  if(isShort){ratio="9:16";intent="short-video";}
-  else if(isYouTube){ratio="16:9";intent="youtube";}
-  else if(isInstagram){ratio=/portrait|vertical|4\s*:\s*5|পোর্ট্রেট|লম্বা/i.test(p)?"4:5":"1:1";intent="instagram";}
-  else if(isFacebook){ratio=/portrait|vertical|পোর্ট্রেট|লম্বা/i.test(p)?"4:5":"16:9";intent="facebook";}
-  else if(isIcon){ratio="1:1";intent="icon";}
-  else if(isWebsite){ratio="3:2";intent="web";}
-  if(hasExplicitRatio){
-    const rw=Number(ratioMatch[1]),rh=Number(ratioMatch[2]);
-    if(rw>0&&rh>0&&rw<=100&&rh<=100)ratio=rw+":"+rh;
-  }
-  if(hasExplicitDimensions){
-    width=Number(dimMatch[1]);height=Number(dimMatch[2]);
-    if(width<1||height<1||width>8192||height>8192)throw new Error("invalid_image_dimensions");
-    ratio=simplifyImageRatio(width,height);
-  }
-  const transparent=/transparent|transparency|স্বচ্ছ ব্যাকগ্রাউন্ড|স্বচ্ছ পটভূমি|ব্যাকগ্রাউন্ড ছাড়া|background\s*remove/i.test(p);
-  const formatMatch=p.match(/\b(png|webp|jpe?g)\b/i);
-  let format=formatMatch?(formatMatch[1].toLowerCase()==="jpg"?"image/jpeg":"image/"+formatMatch[1].toLowerCase()):"image/webp";
-  if(transparent)format="image/png";
-  const maxMatch=p.match(/(?:under|below|less than|maximum|max|সর্বোচ্চ|এর কম)\s*(\d+(?:\.\d+)?)\s*(kb|mb|কেবি|এমবি)/i);
-  let maxBytes=null;
-  if(maxMatch){const amount=Number(maxMatch[1]);const unit=maxMatch[2].toLowerCase();maxBytes=Math.floor(amount*(unit==="kb"||unit==="কেবি"?1000:1000000));}
-  else if(/under\s*1\s*mb|less than\s*1\s*mb|১\s*এমবি.?র কম|১\s*এমবি এর কম/i.test(p))maxBytes=1000000;
-  let quality="standard",longEdge=0;
-  if(/4k|uhd|ultra\s*hd|৪কে/i.test(p)){quality="4K";longEdge=3840;}
-  else if(/2k|qhd|quad\s*hd|২কে/i.test(p)){quality="2K";longEdge=2560;}
-  else if(/full\s*hd|1080p|ফুল\s*এইচডি/i.test(p)){quality="Full HD";longEdge=1920;}
-  else if(/\bhd\b|720p|এইচডি/i.test(p)){quality="HD";longEdge=1280;}
-  if(!width||!height){
-    const parts=ratio.split(":").map(Number),rw=parts[0]||1,rh=parts[1]||1;
-    if(longEdge){
-      const ratioValue=rw/rh;
-      if(ratioValue>16/9){
-        const targetHeight=quality==="4K"?2160:(quality==="2K"?1440:(quality==="Full HD"?1080:720));
-        height=targetHeight;width=Math.max(1,Math.round(targetHeight*ratioValue));
-      }else if(rw>=rh){width=longEdge;height=Math.max(1,Math.round(longEdge*rh/rw));}
-      else{height=longEdge;width=Math.max(1,Math.round(longEdge*rw/rh));}
-    }else if(intent==="youtube"){width=1280;height=720;}
-    else if(intent==="short-video"){width=1080;height=1920;}
-    else if(intent==="instagram"&&ratio==="4:5"){width=1080;height=1350;}
-    else if(intent==="instagram"){width=1080;height=1080;}
-    else if(intent==="facebook"&&ratio==="4:5"){width=1080;height=1350;}
-    else if(intent==="facebook"){width=1200;height=675;}
-    else if(intent==="icon"){width=512;height=512;}
-    else if(intent==="web"){width=1200;height=800;}
-    else {const base=1024;if(rw>=rh){width=base;height=Math.max(1,Math.round(base*rh/rw));}else{height=base;width=Math.max(1,Math.round(base*rw/rh));}}
-  }
-  const pixels=width*height;
-  const imageSize=(Math.max(width,height)>=3500||quality==="4K")?"4K":(quality==="2K"||pixels>1800000||Math.max(width,height)>=2000)?"2K":"1K";
-  return {intent,aspect_ratio:ratio,provider_aspect_ratio:nearestProviderRatio(ratio),width,height,format,transparent,max_bytes:maxBytes,quality,image_size:imageSize,explicit_dimensions:hasExplicitDimensions,explicit_ratio:hasExplicitRatio};
 }
 async function generateWithGemini(prompt,body,env){
   if(!env.GEMINI_API_KEY)return {ok:false,provider:"gemini",reason:"not_configured"};
@@ -487,6 +437,8 @@ async function runChat(body,env,onStatus){
   const text=buildChatContext(body.text,body.history);
   if(!text)return {status:400,data:{error:"text_required"}};
   if(text.length>12000)return {status:413,data:{error:"text_too_large"}};
+  const targetWords=requestedWordCount(body.text);
+  const maxOutputTokens=outputTokenBudget(targetWords);
   const report=event=>{if(typeof onStatus==="function")onStatus(event);};
   const attempted=[];
   const configuredKeys=[
@@ -499,7 +451,11 @@ async function runChat(body,env,onStatus){
   const preferred=env.GEMINI_CHAT_MODEL
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
-  const payload={contents:[{parts:[{text:buildReflectiveUserPrompt(text)}]}]};
+  const userPrompt=buildReflectiveUserPrompt(targetWords
+    ? text+"\n\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words. Continue the requested story or text in full, with coherent structure and no premature summary. Do not claim the target was met if output is cut off."
+    : text);
+  const payload={contents:[{parts:[{text:userPrompt}]}]};
+  if(targetWords)payload.generationConfig={temperature:0.3,maxOutputTokens};
   const geminiPlan=[];
   if(configuredKeys.length){
     for(const [slot,apiKey] of configuredKeys)geminiPlan.push({model:preferred[0],slot,apiKey});
@@ -509,7 +465,7 @@ async function runChat(body,env,onStatus){
     const {model,slot,apiKey}=attempt;
     report({stage:"trying",provider:"gemini",model});
     try{
-      const r=await callGemini(env,model,payload,apiKey);
+      const r=await callGemini(env,model,payload,apiKey,targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS);
       if(!r.upstream.ok){
         attempted.push({provider:"gemini",model,credential_slot:slot,status:r.upstream.status,reason:r.data?.error?.message||("HTTP "+r.upstream.status)});
         report({stage:"failed",provider:"gemini",model});
@@ -518,7 +474,7 @@ async function runChat(body,env,onStatus){
       const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
       if(answer){
         report({stage:"answered",provider:"gemini",model});
-        return {status:200,data:{ok:true,provider:"gemini",model,text:answer,attempted}};
+        return {status:200,data:{ok:true,provider:"gemini",model,text:answer,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}: {})}};
       }
       attempted.push({provider:"gemini",model,credential_slot:slot,reason:"empty_response"});
       report({stage:"failed",provider:"gemini",model});
@@ -527,32 +483,32 @@ async function runChat(body,env,onStatus){
       report({stage:"failed",provider:"gemini",model});
     }
   }
-  const cloudflare=await generateWithCloudflareChat(text,env,report);
+  const cloudflare=await generateWithCloudflareChat(text,env,report,targetWords);
   attempted.push({provider:cloudflare.provider,model:cloudflare.model||null,status:cloudflare.status||null,reason:cloudflare.ok?null:cloudflare.reason||"failed"});
   if(cloudflare.ok){
     report({stage:"answered",provider:cloudflare.provider,model:cloudflare.model});
-    return {status:200,data:{ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted}};
+    return {status:200,data:{ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
   }
   const groq=await generateWithOpenAICompatibleChat(
     "groq","https://api.groq.com/openai/v1/chat/completions",
     String(env.GROQ_API_KEY||"").trim(),
-    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text,{},report
+    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text,{},report,targetWords
   );
   attempted.push({provider:groq.provider,model:groq.model||null,status:groq.status||null,reason:groq.ok?null:groq.reason||"failed"});
   if(groq.ok){
     report({stage:"answered",provider:groq.provider,model:groq.model});
-    return {status:200,data:{ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted}};
+    return {status:200,data:{ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
   }
   const openrouter=await generateWithOpenAICompatibleChat(
     "openrouter","https://openrouter.ai/api/v1/chat/completions",
     String(env.OPENROUTER_API_KEY||"").trim(),
     String(env.OPENROUTER_CHAT_MODEL||"meta-llama/llama-3.3-70b-instruct:free").trim(),text,
-    {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"},report
+    {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"},report,targetWords
   );
   attempted.push({provider:openrouter.provider,model:openrouter.model||null,status:openrouter.status||null,reason:openrouter.ok?null:openrouter.reason||"failed"});
   if(openrouter.ok){
     report({stage:"answered",provider:openrouter.provider,model:openrouter.model});
-    return {status:200,data:{ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted}};
+    return {status:200,data:{ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
   }
   return {status:502,data:{
     error:"chat_provider_failed",

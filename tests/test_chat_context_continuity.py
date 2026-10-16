@@ -11,8 +11,8 @@ def test_worker_uses_bounded_conversation_history_for_all_chat_providers():
     assert "Math.min(6000, 12000 - current.length - 200)" in helper
     assert "historyInput.slice(-12)" in helper
     assert "Current user message:" in helper
-    assert "generateWithCloudflareChat(text,env,report)" in chat
-    assert '"llama-3.1-8b-instant").trim(),text,{},report' in chat
+    assert "generateWithCloudflareChat(text,env,report,targetWords)" in chat
+    assert '"llama-3.1-8b-instant").trim(),text,{},report,targetWords' in chat
     assert '"meta-llama/llama-3.3-70b-instruct:free").trim(),text,' in chat
 
 
