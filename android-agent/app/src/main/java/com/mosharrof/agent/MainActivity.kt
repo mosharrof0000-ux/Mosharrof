@@ -1,5 +1,4 @@
 package com.mosharrof.agent
-
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.os.Bundle
@@ -22,7 +21,6 @@ import com.mosharrof.agent.planner.TaskPlan
 import com.mosharrof.agent.planner.TaskPlanner
 import com.mosharrof.agent.policy.ActionPolicy
 import com.mosharrof.agent.policy.PolicyDecision
-
 class MainActivity : ComponentActivity() {
     private val planner = TaskPlanner()
     private val appCatalog by lazy { InstalledAppCatalog(this) }
@@ -34,7 +32,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var screenDetails: TextView
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
-
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -44,7 +41,6 @@ class MainActivity : ComponentActivity() {
                 prepareTask(it)
             }
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val title = TextView(this).apply {
@@ -100,7 +96,6 @@ class MainActivity : ComponentActivity() {
         })
         refreshServiceStatus()
     }
-
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
@@ -108,7 +103,6 @@ class MainActivity : ComponentActivity() {
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
         }
     }
-
     private fun prepareTask(command: String) {
         pendingApp = null
         pendingSettings = null
@@ -136,26 +130,22 @@ class MainActivity : ComponentActivity() {
             is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
         }
     }
-
     private fun prepareSettings(plan: TaskPlan, label: String) {
         pendingSettings = plan
         status.text = "পরিকল্পনা: ${label} খোলা হবে। চালানোর আগে নিশ্চিত করুন।"
         confirmButton.isEnabled = true
     }
-
     private fun settingLabel(setting: AgentAction.SupportedSetting): String = when (setting) {
         AgentAction.SupportedSetting.WIFI_PANEL -> "Wi-Fi Settings"
         AgentAction.SupportedSetting.BLUETOOTH_PANEL -> "Bluetooth Settings"
         AgentAction.SupportedSetting.LOCATION_SETTINGS -> "Location Settings"
     }
-
     private fun launchConfirmedSettings() {
         val plan = pendingSettings ?: return
         status.text = settingsLauncher.launch(plan)
         pendingSettings = null
         confirmButton.isEnabled = false
     }
-
     private fun launchConfirmedTap() {
         val plan = pendingTap ?: return
         if (!isServiceEnabled()) {
@@ -183,7 +173,6 @@ class MainActivity : ComponentActivity() {
         pendingTap = null
         confirmButton.isEnabled = false
     }
-
     private fun launchConfirmedApp() {
         val app = pendingApp ?: return
         val allowed = installedApps().map { it.packageName }.toSet()
@@ -202,7 +191,6 @@ class MainActivity : ComponentActivity() {
         pendingApp = null
         confirmButton.isEnabled = false
     }
-
     private fun inspectCurrentScreen() {
         if (!isServiceEnabled()) {
             status.text = "স্ক্রিন পরীক্ষা করতে আগে Accessibility service চালু করুন।"
@@ -221,9 +209,7 @@ class MainActivity : ComponentActivity() {
             "এই স্ক্রিনে পড়ার মতো কোনো দৃশ্যমান লেবেল পাওয়া যায়নি।"
         }
     }
-
     private fun installedApps(): List<InstalledApp> = appCatalog.listLauncherApps()
-
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -236,7 +222,6 @@ class MainActivity : ComponentActivity() {
             status.text = "এই ডিভাইসে speech recognition অ্যাপ পাওয়া যায়নি।"
         }
     }
-
     private fun refreshServiceStatus() {
         status.text = when {
             !isServiceEnabled() ->
@@ -249,7 +234,6 @@ class MainActivity : ComponentActivity() {
             else -> "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ/Settings খোলা যাবে।"
         }
     }
-
     private fun isServiceEnabled(): Boolean {
         val manager = getSystemService<AccessibilityManager>() ?: return false
         return manager.getEnabledAccessibilityServiceList(
