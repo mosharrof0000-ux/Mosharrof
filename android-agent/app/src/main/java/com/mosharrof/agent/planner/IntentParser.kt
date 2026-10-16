@@ -82,5 +82,6 @@ class IntentParser {
 sealed interface ParsedIntent {
     data class OpenApp(val query: String) : ParsedIntent
     data class TapText(val text: String, val appQuery: String) : ParsedIntent
+    data class Swipe(val direction: AgentAction.Direction, val appQuery: String) : ParsedIntent
     data class Unsupported(val reason: String) : ParsedIntent
 }
