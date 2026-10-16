@@ -105,7 +105,7 @@ class ProjectInventoryTests(unittest.TestCase):
         self.assertIn("contents: read", workflow)
         self.assertIn("pull-requests: read", workflow)
         self.assertIn("actions: read", workflow)
-        self.assertIn("GITHUB_TOKEN: \${{ github.token }}", workflow)
+        self.assertIn("GITHUB_TOKEN: ${{ github.token }}", workflow)
         self.assertNotIn("\n  push:", workflow)
         self.assertNotIn("\n  pull_request:", workflow)
         self.assertIn("actions/upload-artifact@v4", workflow)
