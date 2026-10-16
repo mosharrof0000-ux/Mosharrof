@@ -3,7 +3,6 @@ set -euo pipefail
 
 cp native/android/DeviceControlPlugin.java android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
 cp native/android/AndroidAccessibilityPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidAccessibilityPlugin.java
-cp native/android/AndroidAccessibilityPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidAccessibilityPlugin.java
 cp native/android/AndroidFileManagerPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidFileManagerPlugin.java
 cp native/android/AndroidDuplicateScanner.java android/app/src/main/java/com/mosharrof/ai/AndroidDuplicateScanner.java
 
@@ -41,7 +40,6 @@ public class MainActivity extends BridgeActivity {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(DeviceControlPlugin.class);
-        registerPlugin(AndroidAccessibilityPlugin.class);
         registerPlugin(AndroidAccessibilityPlugin.class);
         registerPlugin(AndroidFileManagerPlugin.class);
         super.onCreate(savedInstanceState);
