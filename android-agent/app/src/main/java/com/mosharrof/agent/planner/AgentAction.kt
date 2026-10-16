@@ -23,6 +23,10 @@ sealed interface AgentAction {
         val direction: Direction
     ) : AgentAction
 
+    data object InspectScreen : AgentAction {
+        override val targetPackage: String? = null
+    }
+
     data class ToggleSystemSetting(
         val setting: SupportedSetting,
         val enabled: Boolean
