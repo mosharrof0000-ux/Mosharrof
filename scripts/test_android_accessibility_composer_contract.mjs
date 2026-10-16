@@ -8,7 +8,7 @@ assert.ok(accessibility.includes("node.isPassword()"), "Accessibility inspection
 assert.ok(accessibility.includes("ACTION_CLICK"), "Accessibility tap capability is missing");
 assert.ok(accessibility.includes("ACTION_SCROLL_FORWARD"), "Accessibility scroll capability is missing");
 assert.ok(accessibilityInstaller.includes("BIND_ACCESSIBILITY_SERVICE"), "Service must use Android's protected service binding");
-assert.ok(accessibility.includes("AgentAccessibilityService.isConnected()") || readFileSync("native/android/DeviceControlPlugin.java", "utf8").includes("AgentAccessibilityService.isConnected()"), "Accessibility actions must require the explicitly enabled service");
+assert.ok(accessibility.includes("AgentAccessibilityService.isConnected()") || readFileSync("native/android/AndroidAccessibilityPlugin.java", "utf8").includes("AgentAccessibilityService.isConnected()"), "Accessibility actions must require the explicitly enabled service");
 assert.ok(ui.includes("ফাইল অপারেশন বাস্তব ডিভাইসে এখনও পরীক্ষা হয়নি"), "Self-test must clearly state physical file operations remain untested");
 
 const composer = readFileSync("core/composer-enhancements.js", "utf8");
