@@ -26,6 +26,7 @@ import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
 import com.mosharrof.agent.notifications.NotificationAccessControl
 import com.mosharrof.agent.files.UserFileAccessControl
+import com.mosharrof.agent.planner.AiCommandNormalizer
 import com.mosharrof.agent.permissions.PermissionCenterControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
         result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             ?.firstOrNull()?.takeIf { it.isNotBlank() }?.let {
                 commandInput.setText(it)
-                if (!DeviceIntentControl.handle(this@MainActivity, it, status)) taskController.prepareTask(it)
+                prepareCommand(it)
             }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,7 +80,7 @@ class MainActivity : ComponentActivity() {
             text = "কমান্ড যাচাই করুন"
             setOnClickListener {
                 val command = commandInput.text.toString()
-                if (!DeviceIntentControl.handle(this@MainActivity, command, status)) taskController.prepareTask(command)
+                prepareCommand(command)
             }
         }
         val voiceButton = Button(this).apply {
@@ -148,6 +149,32 @@ class MainActivity : ComponentActivity() {
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
         }
     }
+    private fun prepareCommand(command: String) {
+        if (DeviceIntentControl.handle(this, command, status)) return
+        if (taskController.prepareTask(command)) return
+        status.text = "স্থানীয় কমান্ডে কাজটি বোঝা যায়নি; AI-কে সমর্থিত Android কমান্ডে রূপান্তর করতে বলা হচ্ছে…"
+        AiCommandNormalizer.resolve(command, taskController.installedAppLabels()) { result, error ->
+            runOnUiThread {
+                if (isFinishing) return@runOnUiThread
+                if (error != null) {
+                    status.text = "AI কমান্ড সহায়তা ব্যর্থ: $error"
+                    return@runOnUiThread
+                }
+                val normalized = result?.normalizedCommand
+                if (normalized.isNullOrBlank()) {
+                    status.text = result?.explanation ?: "AI নিরাপদ, সমর্থিত কমান্ড দিতে পারেনি।"
+                    return@runOnUiThread
+                }
+                commandInput.setText(normalized)
+                if (taskController.prepareTask(normalized)) {
+                    status.text = "AI ব্যাখ্যা: ${result.explanation}\nপ্রস্তাবিত কমান্ডটি যাচাই করুন; চালাতে ‘নিশ্চিত করে চালান’ চাপুন।"
+                } else {
+                    status.text = "AI একটি কমান্ড প্রস্তাব করেছে, কিন্তু স্থানীয় নীতি সেটি প্রত্যাখ্যান করেছে। কোনো কাজ চালানো হয়নি।"
+                }
+            }
+        }
+    }
+
     private fun inspectCurrentScreen() {
         if (!isServiceEnabled()) {
             status.text = "স্ক্রিন পরীক্ষা করতে আগে Accessibility service চালু করুন।"
