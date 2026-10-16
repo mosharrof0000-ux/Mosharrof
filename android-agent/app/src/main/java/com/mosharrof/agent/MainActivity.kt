@@ -16,26 +16,12 @@ import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.accessibility.FloatingControlToggle
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
-import com.mosharrof.agent.execution.InstalledAppCatalog
-import com.mosharrof.agent.execution.SystemSettingsLauncher
+import com.mosharrof.agent.execution.AgentTaskController
 import com.mosharrof.agent.execution.TaskControlButtons
-import com.mosharrof.agent.planner.AgentAction
-import com.mosharrof.agent.planner.InstalledApp
-import com.mosharrof.agent.planner.TaskPlan
-import com.mosharrof.agent.planner.TaskPlanner
-import com.mosharrof.agent.policy.ActionPolicy
-import com.mosharrof.agent.policy.PolicyDecision
 import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
 class MainActivity : ComponentActivity() {
-    private val planner = TaskPlanner()
-    private val appCatalog by lazy { InstalledAppCatalog(this) }
-    private val settingsLauncher by lazy { SystemSettingsLauncher(this) }
-    private var pendingApp: InstalledApp? = null
-    private var pendingSettings: TaskPlan? = null
-    private var pendingTap: TaskPlan.TapVisibleText? = null
-    private var pendingSwipe: TaskPlan.SwipeScreen? = null
-    private var pendingNavigation: AgentAction.NavigationDestination? = null
+    private lateinit var taskController: AgentTaskController
     private lateinit var status: TextView
     private lateinit var speechStatus: TextView
     private lateinit var screenDetails: TextView
@@ -48,7 +34,7 @@ class MainActivity : ComponentActivity() {
         result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             ?.firstOrNull()?.takeIf { it.isNotBlank() }?.let {
                 commandInput.setText(it)
-                prepareTask(it)
+                taskController.prepareTask(it)
             }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,19 +55,12 @@ class MainActivity : ComponentActivity() {
         confirmButton = Button(this).apply {
             text = "নিশ্চিত করে চালান"
             isEnabled = false
-            setOnClickListener {
-                when {
-                    pendingApp != null -> launchConfirmedApp()
-                    pendingSettings != null -> launchConfirmedSettings()
-                    pendingTap != null -> launchConfirmedTap()
-                    pendingSwipe != null -> launchConfirmedSwipe()
-                    pendingNavigation != null -> launchConfirmedNavigation()
-                }
-            }
         }
+        taskController = AgentTaskController(this, status, confirmButton, ::isServiceEnabled)
+        confirmButton.setOnClickListener { taskController.confirmPending() }
         val planButton = Button(this).apply {
             text = "কমান্ড যাচাই করুন"
-            setOnClickListener { prepareTask(commandInput.text.toString()) }
+            setOnClickListener { taskController.prepareTask(commandInput.text.toString()) }
         }
         val voiceButton = Button(this).apply {
             text = "কথা বলে কমান্ড দিন"
@@ -111,7 +90,7 @@ class MainActivity : ComponentActivity() {
             addView(confirmButton)
             SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
             FloatingControlToggle.addTo(this@MainActivity, this, status)
-            TaskControlButtons.addCancelButton(this@MainActivity, this) { pendingApp = null; pendingSettings = null; pendingTap = null; pendingSwipe = null; pendingNavigation = null; MosharrofAccessibilityService.cancelSemanticTap(); MosharrofAccessibilityService.cancelInspection(); confirmButton.isEnabled = false; status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।" }
+            TaskControlButtons.addCancelButton(this@MainActivity, this) { taskController.cancelPending() }
             addView(inspectButton)
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
@@ -139,138 +118,6 @@ class MainActivity : ComponentActivity() {
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
         }
     }
-    private fun prepareTask(command: String) {
-        pendingApp = null
-        pendingSettings = null
-        pendingTap = null
-        pendingSwipe = null
-        pendingNavigation = null
-        confirmButton.isEnabled = false
-        when (val plan = planner.plan(command, installedApps())) {
-            is TaskPlan.OpenApp -> {
-                pendingApp = plan.app
-                status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
-                confirmButton.isEnabled = true
-            }
-            is TaskPlan.GlobalNavigation -> {
-                pendingNavigation = plan.destination
-                val label = when (plan.destination) {
-                    AgentAction.NavigationDestination.BACK -> "এক ধাপ পেছনে যাওয়া"
-                    AgentAction.NavigationDestination.HOME -> "হোম স্ক্রিন খোলা"
-                    AgentAction.NavigationDestination.NOTIFICATIONS -> "নোটিফিকেশন প্যানেল খোলা"
-                    AgentAction.NavigationDestination.RECENTS -> "সাম্প্রতিক অ্যাপ দেখানো"
-                }
-                status.text = "পরিকল্পনা: $label হবে। নিশ্চিত করুন।"
-                confirmButton.isEnabled = isServiceEnabled()
-            }
-            is TaskPlan.SwipeScreen -> {
-                pendingSwipe = plan
-                status.text = "পরিকল্পনা: ${plan.app.label}-এ ${plan.direction.name.lowercase()} দিকে একবার স্ক্রল হবে। নিশ্চিত করুন।"
-                confirmButton.isEnabled = isServiceEnabled()
-            }
-            is TaskPlan.TapVisibleText -> {
-                pendingTap = plan
-                status.text = if (isServiceEnabled()) {
-                    "পরিকল্পনা: ${plan.app.label}-এ ‘${plan.text}’ লেবেলে একবার ট্যাপ হবে। নিশ্চিত করুন।"
-                } else {
-                    "এই UI action-এর জন্য আগে Accessibility চালু করুন।"
-                }
-                confirmButton.isEnabled = isServiceEnabled()
-            }
-            TaskPlan.OpenSystemSettings -> prepareSettings(plan, "Android Settings")
-            is TaskPlan.OpenSettingPanel -> prepareSettings(plan, settingsLauncher.label(plan.setting))
-            is TaskPlan.NeedsChoice -> status.text =
-                "একাধিক/আংশিক মিল: ${plan.candidates.joinToString { it.label }}। সঠিক অ্যাপের পুরো নাম লিখুন।"
-            is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
-        }
-    }
-    private fun prepareSettings(plan: TaskPlan, label: String) { pendingSettings = plan; status.text = "পরিকল্পনা: ${label} খোলা হবে। চালানোর আগে নিশ্চিত করুন।"; confirmButton.isEnabled = true }
-    private fun launchConfirmedSettings() {
-        val plan = pendingSettings ?: return
-        status.text = settingsLauncher.launch(plan)
-        pendingSettings = null
-        confirmButton.isEnabled = false
-    }
-    private fun launchConfirmedNavigation() {
-        val destination = pendingNavigation ?: return
-        if (!isServiceEnabled()) {
-            status.text = "Accessibility বন্ধ; কোনো নেভিগেশন করা হয়নি।"
-            return
-        }
-        val decision = ActionPolicy(installedApps().map { it.packageName }.toSet())
-            .evaluate(AgentAction.GlobalNavigation(destination), 0)
-        if (decision.decision == PolicyDecision.DENY) {
-            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
-            return
-        }
-        val success = MosharrofAccessibilityService.performGlobalNavigation(destination)
-        status.text = if (success) "নেভিগেশন অনুরোধ Android গ্রহণ করেছে।" else "Android নেভিগেশন অনুরোধ গ্রহণ করেনি।"
-        pendingNavigation = null
-        confirmButton.isEnabled = false
-    }
-    private fun launchConfirmedSwipe() {
-        val plan = pendingSwipe ?: return
-        if (!isServiceEnabled()) { status.text = "Accessibility বন্ধ; কোনো স্ক্রল করা হয়নি।"; return }
-        val allowed = installedApps().map { it.packageName }.toSet()
-        val action = AgentAction.Swipe(plan.app.packageName, plan.direction)
-        val decision = ActionPolicy(allowed).evaluate(action, 0)
-        if (decision.decision == PolicyDecision.DENY) { status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"; return }
-        if (!MosharrofAccessibilityService.armSwipe(plan.app.packageName, plan.direction)) {
-            status.text = "Accessibility service প্রস্তুত নয় বা অন্য action চলছে; স্ক্রল করা হয়নি।"; return
-        }
-        if (!appCatalog.launch(plan.app.packageName)) {
-            MosharrofAccessibilityService.cancelSemanticTap()
-            status.text = "লক্ষ্য অ্যাপ খোলা যায়নি; স্ক্রল করা হয়নি।"; return
-        }
-        status.text = "লক্ষ্য অ্যাপ খুলছে; লক্ষ্য স্ক্রিনে পৌঁছালে একবার স্ক্রল হবে।"
-        pendingSwipe = null
-        confirmButton.isEnabled = false
-    }
-    private fun launchConfirmedTap() {
-        val plan = pendingTap ?: return
-        if (!isServiceEnabled()) {
-            status.text = "Accessibility বন্ধ; কোনো ট্যাপ করা হয়নি।"
-            return
-        }
-        val allowed = installedApps().map { it.packageName }.toSet()
-        val decision = ActionPolicy(allowed).evaluate(
-            AgentAction.TapSemanticNode(plan.app.packageName, visibleText = plan.text), 0
-        )
-        if (decision.decision == PolicyDecision.DENY) {
-            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
-            return
-        }
-        if (!MosharrofAccessibilityService.armSemanticTap(plan.app.packageName, plan.text)) {
-            status.text = "Accessibility service প্রস্তুত নয় বা অন্য action চলছে; কোনো ট্যাপ করা হয়নি।"
-            return
-        }
-        if (!appCatalog.launch(plan.app.packageName)) {
-            MosharrofAccessibilityService.cancelSemanticTap()
-            status.text = "লক্ষ্য অ্যাপ খোলা যায়নি; কোনো ট্যাপ করা হয়নি।"
-            return
-        }
-        status.text = "লক্ষ্য অ্যাপ খুলছে। নির্দিষ্ট লেবেল একবারই মিললে ট্যাপ হবে; অস্পষ্ট হলে বাতিল হবে।"
-        pendingTap = null
-        confirmButton.isEnabled = false
-    }
-    private fun launchConfirmedApp() {
-        val app = pendingApp ?: return
-        val allowed = installedApps().map { it.packageName }.toSet()
-        val decision = ActionPolicy(allowed).evaluate(
-            AgentAction.OpenApp(app.packageName, userRequested = true), 0
-        )
-        if (decision.decision != PolicyDecision.ALLOW) {
-            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
-            return
-        }
-        if (!appCatalog.launch(app.packageName)) {
-            status.text = "অ্যাপটি খোলা যায়নি; অ্যাপটি সরানো বা নিষ্ক্রিয় থাকতে পারে।"
-            return
-        }
-        status.text = "${app.label} খোলার অনুরোধ পাঠানো হয়েছে।"
-        pendingApp = null
-        confirmButton.isEnabled = false
-    }
     private fun inspectCurrentScreen() {
         if (!isServiceEnabled()) {
             status.text = "স্ক্রিন পরীক্ষা করতে আগে Accessibility service চালু করুন।"
@@ -289,7 +136,6 @@ class MainActivity : ComponentActivity() {
             "এই স্ক্রিনে পড়ার মতো কোনো দৃশ্যমান লেবেল পাওয়া যায়নি।"
         }
     }
-    private fun installedApps() = appCatalog.listLauncherApps()
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
