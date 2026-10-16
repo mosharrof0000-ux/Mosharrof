@@ -112,7 +112,7 @@
         } else if (action === "duplicates") {
           if (!window.confirm("নির্বাচিত ফোল্ডারের ফাইলের SHA-256 মিলিয়ে ডুপ্লিকেট খুঁজব। কোনো ফাইল মুছবে না। চালাব?")) return;
           status.textContent = "ডুপ্লিকেট স্ক্যান চলছে…";
-          var scan = await p.scanDuplicates();
+          var scan = await p.scanSelectedDirectoryDuplicates();
           results.textContent = "";
           (scan.groups || []).forEach(function (group) {
             var card = document.createElement("div");
