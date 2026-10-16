@@ -88,6 +88,7 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
       created_at: safeTime(input.created_at || now()), updated_at: timestamp,
       valid_from: input.valid_from ? safeTime(input.valid_from) : null,
       valid_until: input.valid_until ? safeTime(input.valid_until) : null,
+      conversation_id: clean(input.conversation_id,120),
       relates_to: Array.isArray(input.relates_to) ? input.relates_to.map(v => clean(v,120)).filter(Boolean).slice(0,20) : [],
       supersedes: clean(input.supersedes,120) || null,
       rationale: clean(input.rationale,500),
@@ -148,10 +149,10 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     const start = Math.max(0, Number(offset) || 0), end = Number.isInteger(limit) && limit > 0 ? start + limit : items.length;
     return { total: items.length, offset: start, items: clone(items.slice(start, end)) };
   }
-  async function recordTurn(userText, assistantText = "") {
+  async function recordTurn(userText, assistantText = "", options = {}) {
     const candidates = inferMemoryCandidates(userText);
     const learned = candidates[0] || null;
-    const turn = await remember({ content: "ব্যবহারকারীর বার্তা: " + clean(userText, 1800) + (assistantText ? "\nসহকারীর উত্তর: " + clean(assistantText, 1000) : ""), category: "event", source: "conversation_turn", confidence: 0.75, status: "active" });
+    const turn = await remember({ content: "ব্যবহারকারীর বার্তা: " + clean(userText, 1800) + (assistantText ? "\nসহকারীর উত্তর: " + clean(assistantText, 1000) : ""), category: "event", source: "conversation_turn", confidence: 0.75, status: "active", conversation_id: options && options.conversation_id });
     if (!turn.saved) return { ...turn, learned: null };
     if (learned) {
       const ledger = await readLedger();
