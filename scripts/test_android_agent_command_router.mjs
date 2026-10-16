@@ -5,7 +5,12 @@ const require = createRequire(import.meta.url);
 const { createCommandRouter } = require("../core/android-agent-command-router.js");
 const { planCommand } = require("../core/android-agent-planner.js");
 const { createExecutor } = require("../core/android-agent-executor.js");
+const wrapper = await (await import("node:fs/promises")).readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
 
+assert.ok(wrapper.includes("cp core/android-agent-command-router.js android-web/android-agent-command-router.js"));
+assert.ok(wrapper.includes("routeAndroidAgentCommand"));
+assert.ok(wrapper.includes("sendBtn.addEventListener(\"click\""));
+assert.ok(wrapper.includes("android-agent-memory.js"));
 let calls = 0;
 let confirmationText = "";
 const router = createCommandRouter({
