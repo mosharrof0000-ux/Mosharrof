@@ -11,7 +11,6 @@ class IntentParser {
             return ParsedIntent.Unsupported("কমান্ড খালি অথবা অতিরিক্ত বড়")
         }
 
-        parseTextCommand(text)?.let { return it }
         parseTypeTextCommand(text)?.let { return it }
         parseTapCommand(text)?.let { return it }
         parseSwipeCommand(text)?.let { return it }
@@ -32,12 +31,6 @@ class IntentParser {
         val query = match.groupValues[1].trim().trim('"', '\'')
         if (query.isBlank()) return ParsedIntent.Unsupported("অ্যাপের নাম পাওয়া যায়নি")
         return ParsedIntent.OpenApp(query)
-    }
-
-    private fun parseTextCommand(text: String): ParsedIntent.TypeText? {
-        val match = Regex("^(?:type|লিখুন|লেখো)\\s+[\\\"](.{1,200})[\\\"]$", RegexOption.IGNORE_CASE).find(text)
-            ?: return null
-        return ParsedIntent.TypeText(match.groupValues[1], null)
     }
 
     private fun parseTypeTextCommand(text: String): ParsedIntent.TypeText? {
