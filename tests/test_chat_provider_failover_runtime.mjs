@@ -57,6 +57,15 @@ try {
   memory.remember({ id: "goal-1", category: "goal", content: "MOSHARROF AI-তে স্মৃতি ও ধাপে ধাপে চিন্তার প্রেক্ষাপট ব্যবহার করা" });
   assert.equal(memory.recall().total, 2, "memory has no artificial entry-count cap");
   assert.equal(memory.recall({ category: "preference" }).items.length, 1);
+  const prior = memory.recall({ category: "goal" }).items[0];
+  memory.revise(prior.id, { content: "বর্তমান লক্ষ্য: স্মৃতি কালানুক্রমে রাখা ও পরবর্তী ধাপ অনুমান করা", category: "goal", user_confirmed: true });
+  const timeline = memory.timeline();
+  assert.equal(timeline.items.length, 3, "revisions remain in the timeline rather than erasing history");
+  assert.equal(timeline.items[0].status, "superseded");
+  assert.ok(timeline.items[1].supersedes);
+  for (let i = 0; i < 250; i++) memory.remember({ id: "scale-" + i, category: "fact", content: "Memory growth record " + i });
+  assert.equal(memory.recall().total, 253, "the ledger has no artificial total-entry cap");
+  assert.throws(() => memory.remember({ content: "API_KEY=do-not-save" }), /Secret-like content/);
   assert.match(buildPersonalMemoryContext(memory.exportAll(), "একটি গল্প লিখো"), /পূর্ণাঙ্গ সমাপ্তি/);
   assert.match(buildPersonalMemoryContext(memory.exportAll(), "একটি গল্প লিখো"), /what happened before/i);
   assert.equal(inferMemoryCandidates("ভবিষ্যতে আমার পছন্দ মনে রাখবে").length, 1);
