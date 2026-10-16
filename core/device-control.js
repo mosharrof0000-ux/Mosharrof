@@ -27,7 +27,7 @@ if(a==="selfTest"){
   Object.keys(methods).forEach(function(k){if(!p||typeof p[methods[k]]!=="function")missing.push(k);});
   ["chooseFolder","listItems","createFolder","createTextFile","renameItem","deleteItem"].forEach(function(k){if(!fm||typeof fm[k]!=="function")missing.push("file:"+k);});
   var d=section.querySelector("#deviceControlDiagnostic");d.hidden=false;
-  d.textContent=missing.length?"FAIL — "+missing.join(", "):"PASS — Android settings ও SAF ফাইল API সংযুক্ত। API সংযোগ মাত্র; বাস্তব ফাইল অপারেশন পরীক্ষা বাকি।";
+  d.textContent=missing.length?"FAIL — "+missing.join(", "):"PASS — Android settings ও SAF API সংযুক্ত। API সংযোগ মাত্র; বাস্তব ফাইল অপারেশন পরীক্ষা বাকি";
   notify(missing.length?"সংযোগে সমস্যা পাওয়া গেছে।":"API সংযোগ PASS; বাস্তব ডিভাইসে পরীক্ষা বাকি।");return;
 }
 b.disabled=true;
