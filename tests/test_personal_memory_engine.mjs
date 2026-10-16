@@ -19,7 +19,7 @@ const store = {
   clear() { rows.clear(); return request(undefined); }
 };
 function request(value) {
-  const req = {};
+  const req = { onsuccess: null, onerror: null };
   queueMicrotask(() => { req.result = value; if (req.onsuccess) req.onsuccess(); });
   return req;
 }
