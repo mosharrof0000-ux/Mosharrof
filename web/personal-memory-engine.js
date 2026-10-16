@@ -98,12 +98,21 @@
   async function remember(text, source) {
     if (!enabled() || !shouldRemember(text)) return null;
     const clean = String(text).trim().slice(0, MAX_RECORD_TEXT);
-    const topic = topicFor(clean);
+    const topic = topicFor(clean), kind = kindFor(clean), now = Date.now();
+    if (kind === "preference" && /(এখন থেকে|আর চাই না|পরিবর্তন কর|instead|actually|from now on|change my preference)/i.test(clean)) {
+      const prior = await transact("readonly", store => store.getAll());
+      const words = new Set(tokens(clean));
+      for (const item of prior) {
+        if (item.status !== "active" || item.kind !== "preference" || item.topic !== topic) continue;
+        const oldWords = tokens(item.text);
+        if (oldWords.some(word => words.has(word))) {
+          await transact("readwrite", store => store.put(Object.assign({}, item, { status: "superseded", updatedAt: now })));
+        }
+      }
+    }
     const id = idFor(clean);
-    const old = await transact("readonly", store => store.get(id));
-    const now = Date.now();
     const record = {
-      id, topic, kind: kindFor(clean), folder: topic + "/" + kindFor(clean), text: clean, tags: tagsFor(clean, topic),
+      id, topic, kind, folder: topic + "/" + kind, text: clean, tags: tagsFor(clean, topic),
       source: source || "current-chat-user-message",
       createdAt: now, updatedAt: now,
       status: "active", confidence: /মনে রেখো|remember that|আমার পছন্দ|i prefer/i.test(clean) ? 0.95 : 0.65
@@ -130,7 +139,8 @@
   async function retrieve(query, limit) {
     if (!enabled() || !String(query || "").trim()) return [];
     const rows = await transact("readonly", store => store.getAll());
-    return rows.filter(row => row && row.status !== "deleted")
+    const includeHistory = /(আগে|পুরোনো|ইতিহাস|previous|before|history)/i.test(String(query || ""));
+    return rows.filter(row => row && (row.status === "active" || (includeHistory && row.status === "superseded")) )
       .map(row => ({ row, score: score(row, query) }))
       .filter(item => item.score >= 0.09)
       .sort((a, b) => b.score - a.score || b.row.updatedAt - a.row.updatedAt)
