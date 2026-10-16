@@ -4,37 +4,64 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.speech.RecognizerIntent
 import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
-import com.mosharrof.agent.planner.AgentIntent
-import com.mosharrof.agent.planner.DispatchResult
-import com.mosharrof.agent.planner.IntentDispatcher
-import com.mosharrof.agent.planner.VoiceCommandParser
+import com.mosharrof.agent.planner.AgentAction
+import com.mosharrof.agent.planner.InstalledApp
+import com.mosharrof.agent.planner.TaskPlan
+import com.mosharrof.agent.planner.TaskPlanner
+import com.mosharrof.agent.policy.ActionPolicy
+import com.mosharrof.agent.policy.PolicyDecision
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
-    private val parser = VoiceCommandParser()
+    private val planner = TaskPlanner()
+    private var pendingApp: InstalledApp? = null
+    private lateinit var status: TextView
     private lateinit var commandInput: EditText
-    private lateinit var result: TextView
-    private var pendingIntent: AgentIntent? = null
+    private lateinit var confirmButton: Button
+
+    private val speechResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()?.takeIf { it.isNotBlank() }?.let {
+                commandInput.setText(it)
+                prepareTask(it)
+            }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val title = TextView(this).apply { text = "মোশাররফ অটোনোমাস এজেন্ট"; textSize = 24f }
-        val status = TextView(this).apply { textSize = 15f; text = serviceStatus() }
-        commandInput = EditText(this).apply { hint = "বলুন বা লিখুন: সেটিংস খোলো"; minLines = 2 }
-        result = TextView(this).apply { textSize = 16f }
-        val previewButton = Button(this).apply {
-            text = "কমান্ড বুঝুন"
-            setOnClickListener { previewCommand() }
+        val title = TextView(this).apply {
+            text = "মোশাররফ অটোনোমাস এজেন্ট"
+            textSize = 24f
+            contentDescription = "Mosharrof Autonomous Agent"
         }
-        val executeButton = Button(this).apply {
-            text = "আমি নিশ্চিত — কাজটি করুন"
-            setOnClickListener { executePending() }
+        status = TextView(this).apply { textSize = 16f }
+        commandInput = EditText(this).apply {
+            hint = "যেমন: Open YouTube / ইউটিউব খুলুন"
+            singleLine = true
+        }
+        confirmButton = Button(this).apply {
+            text = "নিশ্চিত করে অ্যাপ খুলুন"
+            isEnabled = false
+            setOnClickListener { launchConfirmedApp() }
+        }
+        val planButton = Button(this).apply {
+            text = "কমান্ড যাচাই করুন"
+            setOnClickListener { prepareTask(commandInput.text.toString()) }
+        }
+        val voiceButton = Button(this).apply {
+            text = "কথা বলে কমান্ড দিন"
+            setOnClickListener { startSpeechInput() }
         }
         val accessibilityButton = Button(this).apply {
             text = "Accessibility সেটিংস খুলুন"
@@ -42,48 +69,92 @@ class MainActivity : ComponentActivity() {
         }
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(32, 40, 32, 32)
-            addView(title); addView(status); addView(commandInput)
-            addView(previewButton); addView(result); addView(executeButton)
+            setPadding(32, 48, 32, 32)
+            addView(title)
+            addView(status)
+            addView(commandInput)
+            addView(voiceButton)
+            addView(planButton)
+            addView(confirmButton)
             addView(accessibilityButton)
         })
+        refreshServiceStatus()
     }
 
-    private fun previewCommand() {
-        pendingIntent = parser.parse(commandInput.text.toString())
-        result.text = when (val intent = pendingIntent) {
-            is AgentIntent.OpenApp -> "কাজের প্রস্তাব: ${intent.appKey} খুলুন। নিশ্চিত করলে তবেই চলবে।"
-            is AgentIntent.SearchWeb -> "ওয়েবে খুঁজুন: ${intent.query}। নিশ্চিত করলে তবেই চলবে।"
-            AgentIntent.InspectCurrentScreen -> "স্ক্রিন পরিদর্শন এখনও চালু নয়।"
-            is AgentIntent.Unknown -> "কাজ করা যাচ্ছে না: ${intent.reason}"
-            null -> "আগে একটি কমান্ড লিখুন।"
+    override fun onResume() {
+        super.onResume()
+        if (::status.isInitialized) refreshServiceStatus()
+    }
+
+    private fun prepareTask(command: String) {
+        pendingApp = null
+        confirmButton.isEnabled = false
+        when (val plan = planner.plan(command, installedApps())) {
+            is TaskPlan.OpenApp -> {
+                pendingApp = plan.app
+                status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
+                confirmButton.isEnabled = true
+            }
+            is TaskPlan.NeedsChoice -> status.text =
+                "একাধিক/আংশিক মিল: ${plan.candidates.joinToString { it.label }}। সঠিক অ্যাপের পুরো নাম লিখুন।"
+            is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
         }
     }
 
-    private fun executePending() {
-        val intent = pendingIntent ?: run {
-            result.text = "আগে কমান্ড বুঝুন, তারপর নিশ্চিত করুন."
+    private fun launchConfirmedApp() {
+        val app = pendingApp ?: return
+        val allowed = installedApps().map { it.packageName }.toSet()
+        val decision = ActionPolicy(allowed).evaluate(
+            AgentAction.OpenApp(app.packageName, userRequested = true), 0
+        )
+        if (decision.decision != PolicyDecision.ALLOW) {
+            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
             return
         }
-        if (intent is AgentIntent.Unknown || intent is AgentIntent.InspectCurrentScreen) {
-            result.text = "এই কমান্ডটি এখন সমর্থিত নয়।"
+        val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
+        if (launchIntent == null) {
+            status.text = "অ্যাপটি খোলা যায়নি; অ্যাপটি সরানো বা নিষ্ক্রিয় থাকতে পারে।"
             return
         }
-        result.text = when (val outcome = IntentDispatcher(this).dispatch(intent)) {
-            DispatchResult.Started -> "Android-এ কাজটি খোলার অনুরোধ পাঠানো হয়েছে।"
-            is DispatchResult.NotSupported -> outcome.message
-            is DispatchResult.Failed -> outcome.message
-        }
-        pendingIntent = null
+        startActivity(launchIntent)
+        status.text = "${app.label} খোলার অনুরোধ পাঠানো হয়েছে।"
+        pendingApp = null
+        confirmButton.isEnabled = false
     }
 
-    private fun serviceStatus(): String {
-        val manager = getSystemService<AccessibilityManager>()
-            ?: return "সার্ভিস স্ট্যাটাস পাওয়া যায়নি।"
-        val enabled = manager.getEnabledAccessibilityServiceList(
+    private fun installedApps(): List<InstalledApp> {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        return packageManager.queryIntentActivities(intent, 0).mapNotNull { info ->
+            val pkg = info.activityInfo?.packageName ?: return@mapNotNull null
+            InstalledApp(info.loadLabel(packageManager).toString(), pkg)
+        }.distinctBy { it.packageName }.sortedBy { it.label.lowercase(Locale.ROOT) }
+    }
+
+    private fun startSpeechInput() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "কী অ্যাপ খুলতে চান বলুন")
+        }
+        try {
+            speechResult.launch(intent)
+        } catch (_: Exception) {
+            status.text = "এই ডিভাইসে speech recognition অ্যাপ পাওয়া যায়নি।"
+        }
+    }
+
+    private fun refreshServiceStatus() {
+        status.text = if (isServiceEnabled()) {
+            "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ খোলা যাবে।"
+        } else {
+            "Accessibility বন্ধ। অ্যাপ খোলার কমান্ড চলবে; UI পরিদর্শনের জন্য Settings-এ চালু করুন।"
+        }
+    }
+
+    private fun isServiceEnabled(): Boolean {
+        val manager = getSystemService<AccessibilityManager>() ?: return false
+        return manager.getEnabledAccessibilityServiceList(
             AccessibilityServiceInfo.FEEDBACK_ALL_MASK
         ).any { it.resolveInfo.serviceInfo.packageName == packageName }
-        return if (enabled) "Accessibility Service সক্রিয়."
-        else "Accessibility Service বন্ধ। সেটিংস থেকে নিজে চালু করুন।"
     }
 }
