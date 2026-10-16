@@ -17,9 +17,10 @@ permissions:
   contents: read
   pull-requests: read
 
+# Queue new runs instead of terminating an active run.
 concurrency:
   group: mosharrof-autonomous
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   agent:
