@@ -33,6 +33,8 @@ def main() -> int:
         "core/device-control.js": "web/device-control.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
+        "core/personal-memory-engine.js": "web/core/personal-memory-engine.js",
+        "core/personal-memory-bootstrap.js": "web/core/personal-memory-bootstrap.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
