@@ -29,7 +29,7 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Confirmed global navigation commands for Back, Home, Notifications, and Recent Apps; deterministic parser and approval-policy tests added. Emulator/physical-device verification pending.
 - [ ] Semantic UI actions beyond the current bounded exact-label tap, one-shot directional swipe, and global navigation: safe text entry, focus handling, and per-step result verification; each individually reviewed and confirmed.
 - [ ] Task plans with multiple steps, visible step-by-step progress, stop/cancel and deadlines.
-- [ ] Re-check screen state and verify postconditions after each action.
+- [x] Verify app-launch foreground package and poll confirmed tap/swipe outcomes with a bounded timeout; report uncertainty instead of claiming success. Full postcondition checks for every action remain pending.
 - [ ] Bounded retry/re-plan and recovery when an expected control is absent; stop safely when uncertain.
 - [x] User-toggleable floating voice control using Android's Accessibility overlay (draggable, edge-snapping, long-press expand/collapse, close control, voice launch); requires the user to enable Accessibility. CI and physical-device interaction/position persistence verification pending.
 - [ ] Device/OEM and screen-size adaptation (small phones, tablets, desktop/TV contexts where applicable).
@@ -53,9 +53,9 @@ This is the single source of truth for the Android device-control feature set re
 ## E. Vision, memory and AI planning
 - [x] Typed action model and deterministic policy gate; arbitrary shell commands are not representable.
 - [x] User-triggered Android Accessibility screenshot capture and in-app preview, with transient visible-label/node analysis; screenshots are not saved automatically. Build/device verification pending.
-- [x] Explicit opt-in screenshot upload to the MOSHARROF screenshot-analysis Worker for Gemini vision analysis; bounded JPEG size, API key remains server-side, and the image is not uploaded until the user taps the AI-analysis button. CI/live endpoint/device verification pending.
+- [x] Explicit opt-in screenshot upload directly to Google Gemini Vision over HTTPS; bounded JPEG size, API key encrypted at rest with Android Keystore, and image upload requires a separate user confirmation. CI/live API/device verification pending.
 - [ ] Measure vision latency/accuracy and connect semantic screenshot results to the planner/action loop; image coordinates only as a last resort with revalidation.
-- [ ] Connect screenshot semantics to the planner and action loop; AI Vision currently returns an explanation only and does not autonomously execute its recommendations.
+- [x] AI Vision returns structured screen summary, visible controls, uncertainty, and one constrained reversible next-command suggestion; a separate button passes it through the local deterministic planner and existing confirmation policy. The model cannot directly execute actions.
 - [ ] Bounded planner that proposes typed actions, not executable shell or unrestricted code.
 - [ ] Optional local retrieval/memory, encrypted and opt-in.
 - [ ] AI provider failover and connection to existing MOSHARROF/Gemini services, with no hard-coded secrets and clear offline fallback.
