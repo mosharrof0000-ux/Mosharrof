@@ -80,6 +80,7 @@ object CapabilityPermissionCenter {
     private fun capabilities(activity: Activity): List<Capability> = listOf(
         Capability("Accessibility UI নিয়ন্ত্রণ", "স্ক্রিনের দৃশ্যমান UI পড়া, অনুমোদিত ট্যাপ/gesture ও global navigation.", settingsAction = Settings.ACTION_ACCESSIBILITY_SETTINGS, readiness = ::accessibilityEnabled),
         Capability("Floating control / overlay", "অন্য অ্যাপের উপরে ভাসমান কন্ট্রোল দেখানো.", settingsAction = Settings.ACTION_MANAGE_OVERLAY_PERMISSION, readiness = { Settings.canDrawOverlays(it) }),
+        Capability("নোটিফিকেশন পড়া", "Android-এর আলাদা Notification access অনুমতি দিলে সাম্প্রতিক notification-এর bounded in-memory snapshot.", settingsAction = Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS, readiness = { com.mosharrof.agent.notifications.NotificationAccessControl.isAccessEnabled(it) }),
         Capability("ব্যবহারের পরিসংখ্যান", "Android অনুমতি দিলে অ্যাপ ব্যবহারের তথ্য.", settingsAction = Settings.ACTION_USAGE_ACCESS_SETTINGS, readiness = ::usageAccessGranted),
         Capability("সম্পূর্ণ ফাইল ব্যবস্থাপনা", "সমর্থিত Android সংস্করণে all-files access; অনুমতি পাওয়া গেলেও protected app data নয়.", settingsAction = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, readiness = { Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager() }),
         Capability("মাইক্রোফোন", "ভয়েস কমান্ড বা ভবিষ্যৎ hands-free voice session.", listOf(Manifest.permission.RECORD_AUDIO), readiness = { permissionsGranted(it, listOf(Manifest.permission.RECORD_AUDIO)) }),
