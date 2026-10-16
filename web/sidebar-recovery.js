@@ -121,3 +121,9 @@
 import("./composer-enhancements.js")
   .then(function (module) { module.initializeComposerEnhancements(); })
   .catch(function (error) { console.error("Composer enhancement initialization failed:", error); });
+
+ 
+// Local-first personal memory engine. It augments chat requests with retrieved
+// context and never writes application code or stores provider credentials.
+import("./personal-memory-bootstrap.js")
+  .catch(function (error) { console.error("[MOSHARROF memory] bootstrap failed:", error); });
