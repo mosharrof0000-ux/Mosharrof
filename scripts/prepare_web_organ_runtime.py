@@ -76,7 +76,7 @@ def main() -> int:
 
     old_chat_request = '    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})'
     new_chat_request = """    var currentText=String(t||"").trim();
-    return Promise.resolve(memorySignals(currentText)).then(function(){return personalMemoryContext(currentText);}).then(function(memoryContext){
+    return Promise.resolve(personalMemoryContext(currentText)).then(function(memoryContext){return Promise.resolve(memorySignals(currentText)).then(function(){return memoryContext;});}).then(function(memoryContext){
       var priorHistory=(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};});
       return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:currentText,history:priorHistory,memory_context:memoryContext,image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})});
     })"""
