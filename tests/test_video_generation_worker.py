@@ -17,7 +17,7 @@ def test_video_worker_contract_is_executed():
 
 
 def test_video_ui_is_disabled_until_owner_enables_provider():
-    worker = Path("worker/video-generation/wrangler.toml").read_text(encoding="utf-8")
+    worker = Path("core/video-generation/wrangler.toml").read_text(encoding="utf-8")
     ui = Path("core/video-generation-ui.js").read_text(encoding="utf-8")
     prep = Path("scripts/prepare_web_organ_runtime.py").read_text(encoding="utf-8")
     deploy = Path(".github/workflows/deploy-gemini-worker.yml").read_text(encoding="utf-8")
@@ -28,4 +28,4 @@ def test_video_ui_is_disabled_until_owner_enables_provider():
     assert "secrets.FAL_KEY" not in ui
     assert '"core/video-generation-ui.js": "web/video-generation-ui.js"' in prep
     assert "mosharrof-video-generation" in deploy
-    assert "node --check worker/video-generation/index.js" in deploy
+    assert "node --check core/video-generation/worker.js" in deploy
