@@ -1,4 +1,5 @@
-import { buildChatContext, buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/chat-context.js";
+import { buildChatContext } from "../core/chat-context.js";
+import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
