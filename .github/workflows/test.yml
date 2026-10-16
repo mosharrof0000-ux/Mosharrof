@@ -12,8 +12,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Setup Node.js for memory and chat tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Verify image engine prompt parsing
         run: node scripts/test_image_engine.mjs
+      - name: Test personal memory and chat context integration
+        run: node --test tests/personal-memory-engine.test.mjs tests/test_chat_provider_failover_runtime.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
