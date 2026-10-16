@@ -76,7 +76,7 @@ import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "./person
         const rows = await engine.timeline({ limit: 30 });
         const profile = await engine.profile();
         const folders = Object.entries(profile.folders || {}).sort((a,b) => b[1]-a[1]).map(([folder,count]) => folder + " (" + count + ")");
-        preview.textContent = "বিষয়ভিত্তিক ফোল্ডার:\\n" + (folders.join("\\n") || "এখনও ফোল্ডার নেই") + "\\n\\nসাম্প্রতিক স্মৃতি:\\n" + rows.slice().reverse().map(row => "[" + new Date(row.createdAt).toLocaleString() + "] " + (row.folder || "topics/general") + "\\n" + String(row.summary || row.userText || row.assistantExcerpt || "").slice(0,180)).join("\\n\\n");
+        preview.textContent = "বিষয়ভিত্তিক ফোল্ডার:\n" + (folders.join("\n") || "এখনও ফোল্ডার নেই") + "\n\nসাম্প্রতিক স্মৃতি:\n" + rows.slice().reverse().map(row => "[" + new Date(row.createdAt).toLocaleString() + "] " + (row.folder || "topics/general") + "\n" + String(row.summary || row.userText || row.assistantExcerpt || "").slice(0,180)).join("\n\n");
       } catch (_) { preview.textContent = "স্মৃতি পড়া যায়নি।"; }
     });
     document.getElementById("mosharrof-memory-export").addEventListener("click", async function () {
