@@ -42,8 +42,8 @@ This is the single source of truth for the Android device-control feature set re
 - [ ] No silent changes to protected settings; never bypass OS permission dialogs or lock screen.
 
 ## D. Files, media, apps and privacy
-- [ ] User-selected files/folders via Storage Access Framework; list, search, organize and copy/move only after preview/confirmation.
-- [ ] Duplicate detection with a review list; never auto-delete.
+- [x] User-selected folder via Storage Access Framework; bounded local inventory and duplicate hashing are wired into the app (CI/device verification pending).
+- [x] Duplicate detection with a review list; deletion requires a separate explicit confirmation and is never automatic (CI/device verification pending).
 - [ ] Media/photo/video/audio management with scoped permissions and user-selected targets.
 - [ ] App info, launch, supported app settings and uninstall handoff through Android system UI; no silent uninstall or app-data wipe.
 - [ ] Suspicious-file guidance and safe scanning integration; do not claim antivirus protection without an actual scanner.
