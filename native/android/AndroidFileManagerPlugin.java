@@ -71,6 +71,7 @@ public class AndroidFileManagerPlugin extends Plugin {
         JSObject out = new JSObject();
         out.put("selected", true);
         out.put("uri", tree.toString());
+        out.put("documentId", DocumentsContract.getTreeDocumentId(tree));
         out.put("scope", "user_selected_folder_only");
         call.resolve(out);
     }
@@ -128,6 +129,7 @@ public class AndroidFileManagerPlugin extends Plugin {
             JSObject out = new JSObject();
             out.put("created", true);
             out.put("uri", created.toString());
+            out.put("documentId", DocumentsContract.getDocumentId(created));
             out.put("name", name);
             call.resolve(out);
         } catch (Exception error) {

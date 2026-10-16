@@ -91,13 +91,25 @@
         .sort((a, b) => b.score - a.score)
         .slice(0, Math.max(1, Math.min(Number(limit) || 5, 20)));
     }
+    async function list() {
+      requireEnabled();
+      const rows = await storage().list();
+      return rows.map(record => ({ id: record.id, text: record.text,
+        tags: record.tags || [], createdAt: record.createdAt }));
+    }
+    async function clear() {
+      requireEnabled();
+      const rows = await storage().list();
+      for (const record of rows) await storage().delete(record.id);
+      return { deleted: rows.length };
+    }
     async function forget(id) {
       requireEnabled();
       if (!String(id || "").trim()) throw new Error("মেমোরির পরিচয় প্রয়োজন।");
       await storage().delete(String(id));
       return { deleted: true };
     }
-    return Object.freeze({ remember, search, forget, enabled });
+    return Object.freeze({ remember, search, list, forget, clear, enabled });
   }
   const api = Object.freeze({ createMemory, createIndexedDbStore, cosine });
   if (typeof module !== "undefined" && module.exports) module.exports = api;

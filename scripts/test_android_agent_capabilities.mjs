@@ -14,8 +14,10 @@ assert.equal(registry.readiness("media.duplicates.delete").status, "planned");
 assert.equal(registry.readiness("security.credentials").status, "blocked");
 assert.equal(registry.readiness("security.payment_submit").ready, false);
 assert.equal(registry.readiness("does.not.exist").status, "unknown");
-assert.equal(registry.readiness("device.accessibility.tap_swipe", ["accessibility_service"]).ready, false,
-  "a permission cannot make an unimplemented capability ready");
+assert.equal(registry.readiness("device.accessibility.tap_swipe", ["accessibility_service"]).ready, true,
+  "owner-enabled, confirmed accessibility actions are mediated and available");
+assert.equal(registry.readiness("screen.capture", ["media_projection_consent"]).ready, false,
+  "screen capture remains unavailable until the consented capture pipeline exists");
 console.log("Android capability registry contract: PASS");
 const { createExecutor } = require("../core/android-agent-executor.js");
 const safePlan = { status: "preview", steps: [

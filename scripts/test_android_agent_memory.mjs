@@ -25,4 +25,8 @@ assert.equal(found[0].text, "প্রিয় ভাষা বাংলা");
 assert.ok(found[0].score > found[1].score);
 await memory.forget("m1");
 assert.equal(records.has("m1"), false);
+assert.equal((await memory.list()).length, 2);
+const cleared = await memory.clear();
+assert.equal(cleared.deleted, 2);
+assert.equal(records.size, 0);
 console.log("Android agent local memory contract: PASS");

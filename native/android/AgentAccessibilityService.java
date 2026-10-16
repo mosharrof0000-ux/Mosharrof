@@ -81,29 +81,33 @@ public class AgentAccessibilityService extends AccessibilityService {
         if (s != null) s.collect(s.getRootInActiveWindow(), out, 0);
         return out;
     }
-    private boolean clickMatch(AccessibilityNodeInfo node, String wanted, int depth) {
-        if (node == null || depth > 20) return false;
+    private void collectExactMatches(AccessibilityNodeInfo node, String target,
+            List<AccessibilityNodeInfo> matches, int depth) {
+        if (node == null || depth > 20 || matches.size() > 1) return;
         String label = "";
         if (!node.isPassword()) {
-            CharSequence t = node.getText(), d = node.getContentDescription();
-            label = t != null ? t.toString() : (d != null ? d.toString() : "");
+            CharSequence text = node.getText(), description = node.getContentDescription();
+            label = text != null ? text.toString() : (description != null ? description.toString() : "");
         }
-        String target = wanted.toLowerCase(Locale.ROOT).trim();
         String normalized = label.toLowerCase(Locale.ROOT).trim();
-        if (!target.isEmpty() && !sensitive(target) && !sensitive(normalized)
-            && !node.isPassword() && !node.isEditable() && node.isEnabled()
-            && (normalized.equals(target) || normalized.contains(target)) && node.isClickable()) {
-            return node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+        if (!target.isEmpty() && normalized.equals(target) && !sensitive(normalized)
+                && !node.isPassword() && !node.isEditable() && node.isEnabled() && node.isClickable()) {
+            matches.add(node);
+            return;
         }
         for (int i = 0; i < node.getChildCount(); i++) {
-            if (clickMatch(node.getChild(i), wanted, depth + 1)) return true;
+            collectExactMatches(node.getChild(i), target, matches, depth + 1);
+            if (matches.size() > 1) return;
         }
-        return false;
     }
     public static boolean tapLabel(String label) {
-        AgentAccessibilityService s = instance;
-        if (s == null || label == null || label.trim().isEmpty() || sensitive(label)) return false;
-        return s.clickMatch(s.getRootInActiveWindow(), label, 0);
+        AgentAccessibilityService service = instance;
+        if (service == null || label == null || label.trim().isEmpty() || sensitive(label)) return false;
+        AccessibilityNodeInfo root = service.getRootInActiveWindow();
+        if (root == null || service.containsSensitiveNode(root, 0)) return false;
+        List<AccessibilityNodeInfo> matches = new ArrayList<>();
+        service.collectExactMatches(root, label.toLowerCase(Locale.ROOT).trim(), matches, 0);
+        return matches.size() == 1 && matches.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK);
     }
     public static boolean scroll(boolean forward) {
         AgentAccessibilityService s = instance;

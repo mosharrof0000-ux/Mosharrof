@@ -1,9 +1,12 @@
-/* MOSHARROF bounded Android task executor.
- * A policy/verification harness only: real native adapters must be explicitly injected.
- * It never invents device capabilities and never reports a step complete without verification.
- */
+/* Verified Android executor. */
 (function (root) {
   "use strict";
+
+  const guardApi = typeof module !== "undefined" && module.exports
+    ? require("./android-agent-executor-guards.js") : root.MosharrofAndroidAgentExecutorGuards;
+  const recoveryHandler = options => options.recoveryHandler ||
+    (typeof module !== "undefined" && module.exports
+      ? require("./android-agent-executor-recovery.js") : root.MosharrofAndroidAgentExecutorRecovery);
 
   function createExecutor(options = {}) {
     const adapter = options.adapter;
@@ -11,6 +14,9 @@
     const isCapabilityReady = options.isCapabilityReady || (() => false);
     const confirm = options.confirm || (async () => false);
     const onProgress = options.onProgress || (() => {});
+    const recoveryApi = options.recovery || root.MosharrofAgentRecovery;
+    const getRecoveryAttempts = options.getRecoveryAttempts;
+    const isSafeToRetry = options.isSafeToRetry || (() => false);
     const maxSteps = Number.isInteger(options.maxSteps) ? Math.max(1, Math.min(options.maxSteps, 50)) : 20;
     const timeoutMs = Number.isFinite(options.timeoutMs) ? Math.max(250, Math.min(options.timeoutMs, 120000)) : 15000;
     let cancelled = false;
@@ -33,15 +39,8 @@
 
     async function run(plan) {
       cancelled = false;
-      if (!plan || plan.status !== "preview" || !Array.isArray(plan.steps) || !plan.steps.length) {
-        return { status: "rejected", reason: "শুধু যাচাইযোগ্য preview plan চালানো যায়।", steps: [] };
-      }
-      if (plan.steps.length > maxSteps) {
-        return { status: "rejected", reason: "নিরাপত্তার জন্য পরিকল্পনায় অতিরিক্ত ধাপ আছে।", steps: [] };
-      }
-      if (!adapter || typeof adapter.execute !== "function" || typeof verify !== "function") {
-        return { status: "unavailable", reason: "Native executor ও postcondition verifier সংযুক্ত নেই; কোনো কাজ চালানো হয়নি।", steps: [] };
-      }
+      const rejected = guardApi.validatePlan(plan, maxSteps, adapter, verify);
+      if (rejected) return rejected;
 
       const results = [];
       for (let i = 0; i < plan.steps.length; i += 1) {
@@ -68,7 +67,26 @@
           results.push({ index: i, action: step.action, status: "verified", evidence: verified.evidence || null });
           onProgress({ index: i, total: plan.steps.length, action: step.action, status: "verified" });
         } catch (error) {
-          results.push({ index: i, action: step.action, status: "failed", reason: String(error && error.message || error) });
+          const failureReason = String(error && error.message || error).slice(0, 240);
+          const recovery = recoveryHandler(options);
+          const recovered = recovery && typeof recovery.recoverStep === "function"
+            ? await recovery.recoverStep({
+              recoveryApi, getRecoveryAttempts, isSafeToRetry, step, error,
+              isCancelled: () => cancelled, isCapabilityReady, confirm, adapter, verify, withTimeout, onProgress
+            }) : null;
+          if (recovered && recovered.status === "recovered") {
+            const last = recovered.attempts[recovered.attempts.length - 1];
+            results.push({ index: i, action: step.action, status: "recovered",
+              recovery: recovered, evidence: last && last.evidence || null });
+            onProgress({ index: i, total: plan.steps.length, action: step.action, status: "recovered" });
+            continue;
+          }
+          if (cancelled) {
+            results.push({ index: i, action: step.action, status: "cancelled" });
+            return { status: "cancelled", reason: "ব্যবহারকারী recovery চলাকালে কাজ থামিয়েছেন।", steps: results };
+          }
+          results.push({ index: i, action: step.action, status: "failed", reason: failureReason,
+            recovery: recovered && recovered.attempts ? recovered : undefined });
           return { status: "failed", reason: "একটি ধাপ ব্যর্থ বা যাচাইহীন; নিরাপদে পরবর্তী ধাপ বন্ধ করা হয়েছে।", steps: results };
         }
       }

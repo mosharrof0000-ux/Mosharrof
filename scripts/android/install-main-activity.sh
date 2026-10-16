@@ -4,6 +4,7 @@ set -euo pipefail
 cp native/android/DeviceControlPlugin.java android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
 cp native/android/AndroidAccessibilityPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidAccessibilityPlugin.java
 cp native/android/AndroidFileManagerPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidFileManagerPlugin.java
+cp native/android/AndroidMediaOrganizerPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidMediaOrganizerPlugin.java
 cp native/android/AndroidDuplicateScanner.java android/app/src/main/java/com/mosharrof/ai/AndroidDuplicateScanner.java
 
 cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
@@ -42,6 +43,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DeviceControlPlugin.class);
         registerPlugin(AndroidAccessibilityPlugin.class);
         registerPlugin(AndroidFileManagerPlugin.class);
+        registerPlugin(AndroidMediaOrganizerPlugin.class);
         super.onCreate(savedInstanceState);
         Window window = getWindow();
         WindowCompat.setDecorFitsSystemWindows(window, false);
