@@ -434,7 +434,7 @@ async function transcribeAudio(request,env){
   return reply({error:"audio_transcription_failed",attempted},502);
 }
 async function runChat(body,env,onStatus){
-  const text=buildChatContext(body.text,body.history,body.memory_context);
+  const text=buildChatContext(body);
   if(!text)return {status:400,data:{error:"text_required"}};
   if(text.length>12000)return {status:413,data:{error:"text_too_large"}};
   const targetWords=requestedWordCount(body.text);
