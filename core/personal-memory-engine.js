@@ -6,7 +6,7 @@
 const SCHEMA_VERSION = 1;
 const DEFAULT_NAMESPACE = "mosharrof.personal-memory.v1";
 const MAX_CONTEXT_CHARS = 9000;
-const CATEGORIES = new Set(["preference", "goal", "project", "correction", "decision", "fact", "open_question", "plan"]);
+const CATEGORIES = new Set(["preference", "goal", "project", "correction", "decision", "fact", "open_question", "plan", "hypothesis", "event", "commitment"]);\nconst STATUSES = new Set(["active", "pending_confirmation", "superseded", "resolved", "archived"]);\nconst SECRET_LIKE = /(password|passcode|\\bpin\\b|\\botp\\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
 const clean = (value, limit = 2000) => String(value ?? "").replace(/\u0000/g, "").trim().slice(0, limit);
 const safeTime = value => {
   const parsed = Date.parse(value || "");
@@ -80,7 +80,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     const count = Number.isInteger(limit) && limit > 0 ? limit : items.length;
     return { revision: ledger.revision, total: ledger.memories.length, items: clone(items.slice(0, count)) };
   }
-  function exportAll() { return clone(readLedger()); }
+  function timeline({ includeSuperseded = true, category, after, before, limit, offset = 0 } = {}) {\n    const ledger = readLedger();\n    let items = ledger.memories.filter(m => (includeSuperseded || !["superseded", "archived"].includes(m.status)) && (!category || m.category === category) && (!after || Date.parse(m.created_at) >= Date.parse(after)) && (!before || Date.parse(m.created_at) <= Date.parse(before)));\n    items.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)) || String(a.id).localeCompare(String(b.id)));\n    const start = Math.max(0, Number(offset) || 0);\n    const end = Number.isInteger(limit) && limit > 0 ? start + limit : items.length;\n    return { total: items.length, offset: start, items: clone(items.slice(start, end)) };\n  }\n  function exportAll() { return clone(readLedger()); }
   function importAll(snapshot) {
     if (!snapshot || snapshot.schema_version !== SCHEMA_VERSION || !Array.isArray(snapshot.memories)) throw new TypeError("Unsupported memory export.");
     const ledger = readLedger();
@@ -96,7 +96,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     storage.removeItem(key);
     return true;
   }
-  return Object.freeze({ remember, revise, recall, exportAll, importAll, clear });
+  return Object.freeze({ remember, revise, recall, timeline, exportAll, importAll, clear });
 }
 
 export function buildPersonalMemoryContext(profile, currentText = "") {
@@ -125,7 +125,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
   return [
     "USER PERSONAL MEMORY (user-provided/previously approved context; may be incomplete or outdated):",
     "Use relevant memories to adapt helpfully. Confirm important or high-impact assumptions instead of treating guesses as facts.",
-    "Consider temporal order: what happened before, what the user wants now, what may happen next, and what remains uncertain.",
+    "Consider temporal order: distinguish past events, current goals, future plans, and open questions. Use valid_from/valid_until and supersedes links when present; never treat a superseded belief or plan as current.",\n    "Offer a concise next-step forecast only when supported by saved goals/events, label it as a possibility, and ask when conflicting timelines materially change the answer.",
     "Do not infer private traits beyond the evidence, do not pretend to read minds, and let the user's current instruction override older preferences.",
     ...selected
   ].join("\n");
