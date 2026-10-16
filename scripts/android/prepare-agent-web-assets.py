@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy small Android-only agent modules and inject their script tags."""
+"""Package small Android agent modules and inject their script tags."""
 from pathlib import Path
 
 core = Path("core")
@@ -19,6 +19,7 @@ assets = (
     "android-agent-memory.js",
     "android-agent-memory-ui.js",
     "android-agent-command-router.js",
+    "android-agent-task-planner.js",
 )
 for name in assets:
     source = core / name
@@ -43,6 +44,7 @@ scripts = (
     "android-agent-recovery.js",
     "android-agent-memory.js",
     "android-agent-memory-ui.js",
+    "android-agent-task-planner.js",
     "android-agent-command-router.js",)
 for script in scripts:
     tag = f'<script src="./{script}"></script>'
