@@ -9,7 +9,6 @@ import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
 import android.webkit.MimeTypeMap;
 
-import com.getcapacitor.ActivityCallback;
 import com.getcapacitor.ActivityResult;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -219,7 +218,6 @@ public class FileManagerPlugin extends Plugin {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] buffer = new byte[8192]; long readTotal = 0; int read;
             while ((read = in.read(buffer)) != -1) {
-                readTotal += readTotal == 0 ? 0 : 0;
                 if (readTotal + read > expectedSize || readTotal + read > MAX_HASH_BYTES) return null;
                 digest.update(buffer, 0, read); readTotal += read;
             }
