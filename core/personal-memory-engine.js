@@ -7,7 +7,8 @@ const SCHEMA_VERSION = 1;
 const DEFAULT_NAMESPACE = "mosharrof.personal-memory.v1";
 const MAX_CONTEXT_CHARS = 9000;
 const CATEGORIES = new Set(["preference", "goal", "project", "correction", "decision", "fact", "open_question", "plan", "hypothesis", "event", "commitment"]);
-const STATUSES = new Set(["active", "pending_confirmation", "superseded", "resolved", "archived"]);\nconst SECRET_LIKE = /(password|passcode|\\bpin\\b|\\botp\\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
+const STATUSES = new Set(["active", "pending_confirmation", "superseded", "resolved", "archived"]);
+const SECRET_LIKE = /(password|passcode|\\bpin\\b|\\botp\\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
 const clean = (value, limit = 2000) => String(value ?? "").replace(/\u0000/g, "").trim().slice(0, limit);
 const safeTime = value => {
   const parsed = Date.parse(value || "");
@@ -134,7 +135,8 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
   return [
     "USER PERSONAL MEMORY (user-provided/previously approved context; may be incomplete or outdated):",
     "Use relevant memories to adapt helpfully. Confirm important or high-impact assumptions instead of treating guesses as facts.",
-    "Consider temporal order: distinguish past events, current goals, future plans, and open questions. Use valid_from/valid_until and supersedes links when present; never treat a superseded belief or plan as current.",\n    "Offer a concise next-step forecast only when supported by saved goals/events, label it as a possibility, and ask when conflicting timelines materially change the answer.",
+    "Consider temporal order: distinguish past events, current goals, future plans, and open questions. Use valid_from/valid_until and supersedes links when present; never treat a superseded belief or plan as current.",
+    "Offer a concise next-step forecast only when supported by saved goals/events, label it as a possibility, and ask when conflicting timelines materially change the answer.",
     "Do not infer private traits beyond the evidence, do not pretend to read minds, and let the user's current instruction override older preferences.",
     ...selected
   ].join("\n");
