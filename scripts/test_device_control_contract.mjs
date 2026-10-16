@@ -34,4 +34,4 @@ assert.ok(activity.includes("registerPlugin(AndroidAccessibilityPlugin.class)"))
 assert.ok(assets.includes('"core/device-control.js": "web/device-control.js"'));
 assert.ok(workflow.includes("node scripts/test_device_control_contract.mjs"));
 
-console.log("Android device-control safety contract: PASS");
+console.log("Device-control safety: PASS");
