@@ -12,6 +12,7 @@ class IntentParser {
         }
 
         parseTextCommand(text)?.let { return it }
+        parseTypeTextCommand(text)?.let { return it }
         parseTapCommand(text)?.let { return it }
         parseSwipeCommand(text)?.let { return it }
 
@@ -37,6 +38,22 @@ class IntentParser {
         val match = Regex("^(?:type|লিখুন|লেখো)\\s+[\\\"](.{1,200})[\\\"]$", RegexOption.IGNORE_CASE).find(text)
             ?: return null
         return ParsedIntent.TypeText(match.groupValues[1])
+    }
+
+    private fun parseTypeTextCommand(text: String): ParsedIntent.TypeText? {
+        val english = Regex("""^(?:type|enter|write)\s+(['"])(.{1,160}?)\1\s+(?:in|into)\s+(.+)$""", RegexOption.IGNORE_CASE).find(text)
+        if (english != null) {
+            val value = english.groupValues[2].trim()
+            val app = english.groupValues[3].trim().trim('"', '\\'')
+            if (value.isNotBlank() && app.isNotBlank()) return ParsedIntent.TypeText(value, app)
+        }
+        val bengali = Regex("""^(.+?)(?:-এ| এ)\s+(['"])(.{1,160}?)\2\s+(?:লিখুন|লিখে দিন|টাইপ করুন)$""", RegexOption.IGNORE_CASE).find(text)
+        if (bengali != null) {
+            val app = bengali.groupValues[1].trim().trim('"', '\\'')
+            val value = bengali.groupValues[3].trim()
+            if (value.isNotBlank() && app.isNotBlank()) return ParsedIntent.TypeText(value, app)
+        }
+        return null
     }
 
     private fun parseSwipeCommand(text: String): ParsedIntent.Swipe? {
@@ -89,6 +106,7 @@ class IntentParser {
 sealed interface ParsedIntent {
     data class OpenApp(val query: String) : ParsedIntent
     data class TapText(val text: String, val appQuery: String) : ParsedIntent
+    data class TypeText(val text: String, val appQuery: String) : ParsedIntent
     data class TypeText(val text: String) : ParsedIntent
     data class Swipe(val direction: AgentAction.Direction, val appQuery: String) : ParsedIntent
     data class Unsupported(val reason: String) : ParsedIntent
