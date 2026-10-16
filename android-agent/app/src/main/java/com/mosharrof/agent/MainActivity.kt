@@ -26,6 +26,7 @@ import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
 import com.mosharrof.agent.notifications.NotificationAccessControl
 import com.mosharrof.agent.files.UserFileAccessControl
+import com.mosharrof.agent.admin.ManagedDeviceControl
 import com.mosharrof.agent.planner.AiCommandNormalizer
 import com.mosharrof.agent.permissions.PermissionCenterControl
 class MainActivity : ComponentActivity() {
@@ -123,6 +124,7 @@ class MainActivity : ComponentActivity() {
                 setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
             })
             CapabilityPermissionCenter.addButton(this@MainActivity, this)
+            ManagedDeviceControl.addTo(this@MainActivity, this, status)
             NotificationAccessControl.addTo(this@MainActivity, this)
             addView(accessibilityButton)
         })
