@@ -1,29 +1,92 @@
-/* Browser-local personal memory bridge. No artificial record cap; browser quotas still apply. */
-(function () {
-"use strict";
-if (window.__mosharrofMemoryBridgeInstalled) return;
-window.__mosharrofMemoryBridgeInstalled = true;
-const DB="mosharrof-personal-memory", STORE="entries", MAX_CONTEXT=9000;
-const SECRET=/(?:password|passcode|\bpin\b|\botp\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
-function openDB(){return new Promise((resolve,reject)=>{if(!window.indexedDB)return reject(new Error("IndexedDB unavailable"));const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains(STORE)){const s=db.createObjectStore(STORE,{keyPath:"id"});s.createIndex("folder","folder");s.createIndex("created_at","created_at");s.createIndex("status","status");}};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
-async function all(){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error);tx.oncomplete=()=>db.close();tx.onerror=()=>{db.close();reject(tx.error);};});}
-async function put(item){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(item);tx.oncomplete=()=>{db.close();resolve(true);};tx.onerror=()=>{db.close();reject(tx.error);};});}
-async function del(id){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).delete(String(id));tx.oncomplete=()=>{db.close();resolve(true);};tx.onerror=()=>{db.close();reject(tx.error);};});}
-function folder(text,category){const t=text.toLowerCase();const topic=/quran|কোরআন|কুরআন|আয়াত|আয়াত|তাফসির/.test(t)?"quran-research":/android|অ্যান্ড্রয়েড|অ্যান্ড্রয়েড|ফোন|ডিভাইস/.test(t)?"android-agent":/গল্প|উপন্যাস|কবিতা|লেখা|story|novel|writing/.test(t)?"writing":/voice|কণ্ঠ|ভয়েস|ভয়েস|tts|বক্তৃতা/.test(t)?"voice":/memory|স্মৃতি|মেমোরি/.test(t)?"memory-engine":/github|worker|deploy|ডেপ্লয়|ডেপ্লয়|রিপোজিটরি|প্রজেক্ট|প্রকল্প/.test(t)?"mosharrof-project":"general";return category+"/"+topic;}
-function candidate(text){const content=String(text||"").replace(/\u0000/g,"").trim().slice(0,2000);if(!content||SECRET.test(content))return null;const explicit=/(মনে রাখ|ভবিষ্যতে|পরের বার|সবসময়|সব সময়|আমার পছন্দ|আমি চাই|i prefer|remember that|from now on|always)/i.test(content);const correction=/(না,? এভাবে নয়|এভাবে না|আরও বড়|আরও ছোট|বিস্তারিত কর|সংক্ষিপ্ত কর|that's not|instead|make it longer|make it shorter)/i.test(content);const goal=/(লক্ষ্য|পরিকল্পনা|তৈরি করছি|বাস্তবায়ন|বাস্তবায়ন|i am building|my goal|plan to)/i.test(content);if(!explicit&&!correction&&!goal)return null;const category=correction?"correction":explicit?"preference":"goal";return{id:"mem-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9),category,folder:folder(content,category),content,confidence:explicit?.92:correction?.84:.72,source:"user-message",status:"active",user_confirmed:explicit,created_at:new Date().toISOString()};}
-function rank(entries,text){const terms=String(text||"").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(x=>x.length>2);return entries.filter(m=>m&&m.content&&!["superseded","archived"].includes(m.status)).map((m,i)=>({m,i,score:terms.reduce((n,t)=>n+(String(m.content).toLowerCase().includes(t)?1:0),0)*3+(m.user_confirmed?8:0)+(m.category==="preference"?2:0)+(Date.parse(m.updated_at||m.created_at||0)/1e13||0)})).sort((a,b)=>b.score-a.score||b.i-a.i);}
-async function attach(body){const selected=[];let used=0;for(const x of rank(await all(),body.text)){const n=String(x.m.content).slice(0,1000).length;if(used+n>MAX_CONTEXT)continue;selected.push(x.m);used+=n;}body.personal_memory={memories:selected};return body;}
-async function save(text){const item=candidate(text);if(!item)return false;const entries=await all();const same=entries.find(m=>m.status!=="superseded"&&m.category===item.category&&m.folder===item.folder&&m.content===item.content);if(same){same.updated_at=new Date().toISOString();same.last_seen_at=same.updated_at;await put(same);return true;}if(item.category==="preference")for(const old of entries.filter(m=>m.category===item.category&&m.folder===item.folder&&m.status==="active")){old.status="superseded";old.superseded_at=item.created_at;await put(old);}await put(item);return true;}
-window.MOSHARROF_MEMORY=Object.freeze({
-async list(filter={}){return(await all()).filter(m=>(!filter.folder||m.folder===filter.folder)&&(!filter.category||m.category===filter.category)).sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));},
-async search(query){return rank(await all(),query).map(x=>x.m);},
-async folders(){return[...new Set((await all()).map(m=>m.folder).filter(Boolean))].sort();},
-async exportAll(){return{schema_version:1,exported_at:new Date().toISOString(),memories:await all()};},
-async forget(id){return del(id);},
-async clear(){const entries=await all();for(const m of entries)await del(m.id);return entries.length;},
-async stats(){const e=await all();return{total:e.length,folders:new Set(e.map(m=>m.folder)).size,storage:"IndexedDB (browser-local)"};}
-});
-const originalFetch=window.fetch.bind(window);
-window.fetch=async function(input,init){const url=typeof input==="string"?input:input&&input.url;const isChat=typeof url==="string"&&/\/chat(?:\?|$)/.test(url);let outgoing=init,userText="";if(isChat&&init&&typeof init.body==="string"){try{const body=JSON.parse(init.body);userText=String(body.text||"");outgoing={...init,body:JSON.stringify(await attach(body))};}catch(e){console.warn("MOSHARROF memory recall skipped:",e&&e.message||e);}}const response=await originalFetch(input,outgoing);if(isChat&&userText)save(userText).catch(e=>console.warn("MOSHARROF memory save skipped:",e&&e.message||e));return response;};
-openDB().then(db=>db.close()).then(()=>window.dispatchEvent(new CustomEvent("mosharrof-memory-ready",{detail:{storage:"IndexedDB"}}))).catch(e=>console.warn("MOSHARROF memory unavailable:",e&&e.message||e));
-})();
+import { createPersonalMemoryEngine, buildPersonalMemoryContext, inferMemoryCandidates } from "./personal-memory-engine.js";
+
+const SECRET = /(?:password|passcode|\bpin\b|\botp\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
+
+function topicFolder(text, category) {
+  const t = String(text || "").toLowerCase();
+  const topic = /quran|কোরআন|কুরআন|আয়াত|আয়াত|তাফসির/.test(t) ? "quran-research"
+    : /android|অ্যান্ড্রয়েড|অ্যান্ড্রয়েড|ফোন|ডিভাইস/.test(t) ? "android-agent"
+    : /গল্প|উপন্যাস|কবিতা|লেখা|story|novel|writing/.test(t) ? "writing"
+    : /voice|কণ্ঠ|ভয়েস|ভয়েস|tts|বক্তৃতা/.test(t) ? "voice"
+    : /memory|স্মৃতি|মেমোরি/.test(t) ? "memory-engine"
+    : /github|worker|deploy|ডেপ্লয়|ডেপ্লয়|রিপোজিটরি|প্রজেক্ট|প্রকল্প/.test(t) ? "mosharrof-project"
+    : "general";
+  return category + "/" + topic;
+}
+
+export function createBrowserPersonalMemory(storage) {
+  if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") {
+    throw new TypeError("Browser storage is required for personal memory.");
+  }
+  const engine = createPersonalMemoryEngine({ storage, namespace: "mosharrof.personal-memory.v1" });
+
+  function sameActive(candidate) {
+    return engine.recall({ category: candidate.category, folder: candidate.folder }).items
+      .some(item => item.content === candidate.content && item.status === "active");
+  }
+
+  function observe(text) {
+    const candidates = inferMemoryCandidates(text);
+    const saved = [];
+    for (const candidate of candidates) {
+      if (SECRET.test(candidate.content)) continue;
+      const folder = topicFolder(candidate.content, candidate.category);
+      const normalized = { ...candidate, folder, status: "active",
+        user_confirmed: /মনে রাখ|ভবিষ্যতে|পরের বার|সবসময়|সব সময়|আমার পছন্দ|remember that|from now on|always/i.test(candidate.content),
+        source: "conversation" };
+      if (sameActive(normalized)) continue;
+      saved.push(engine.remember(normalized));
+    }
+    return { saved: saved.length, candidates: candidates.length };
+  }
+
+  function context(text) {
+    return buildPersonalMemoryContext(engine.exportAll(), text);
+  }
+
+  function command(text) {
+    const value = String(text || "").trim();
+    if (/স্মৃতি\s*(মুছে ফেল|মুছে দাও)|স্মৃতি.*delete all|memory.*clear/i.test(value)) {
+      const count = engine.recall({ includeSuperseded: true }).total;
+      engine.clear();
+      return "আপনার ব্রাউজারে সংরক্ষিত " + count + "টি স্মৃতি মুছে ফেলা হয়েছে।";
+    }
+    const remember = value.match(/^(?:মনে রাখো|স্মৃতিতে রাখো|remember)\s*[:：-]?\s*(.+)$/i);
+    if (remember) {
+      if (SECRET.test(remember[1])) return "নিরাপত্তার কারণে পাসওয়ার্ড, API key, টোকেন বা গোপন কোড স্মৃতিতে রাখা হয়নি।";
+      const text = remember[1].slice(0, 2000);
+      const category = "preference";
+      engine.remember({ category, folder: topicFolder(text, category), content: text, confidence: 1, source: "explicit-memory-command", user_confirmed: true });
+      return "মনে রাখা হয়েছে। এটি আপনার এই ব্রাউজারের স্মৃতিতে বিষয়ভিত্তিক ফোল্ডারে সংরক্ষিত হয়েছে।";
+    }
+    const ledger = engine.exportAll();
+    if (/স্মৃতি|memory|list/i.test(value)) {
+      const active = ledger.memories.filter(m => !["superseded", "archived"].includes(m.status));
+      const folders = [...new Set(active.map(m => m.folder || m.category))];
+      if (!active.length) return "এখনো কোনো ব্যক্তিগত স্মৃতি সংরক্ষিত নেই।";
+      return "স্মৃতি: " + active.length + "টি সক্রিয়, " + folders.length + "টি বিষয়ভিত্তিক ফোল্ডার।\n" +
+        folders.map(folder => "• " + folder + ": " + active.filter(m => (m.folder || m.category) === folder).length + "টি").join("\n") +
+        "\nসর্বশেষ: " + active.slice(-5).map(m => m.content).join(" | ");
+    }
+    return "স্মৃতি কমান্ড বুঝতে পারিনি। ‘স্মৃতি দেখাও’, ‘মনে রাখো: …’ অথবা ‘সব স্মৃতি মুছে ফেল’ বলতে পারেন।";
+  }
+
+  function recordTurn(userText) {
+    // The user's stated intent/corrections are the source of truth. Do not store the model's guesses as facts.
+    return observe(userText);
+  }
+
+  return Object.freeze({
+    observe,
+    context,
+    command,
+    recordTurn,
+    list: options => engine.recall(options),
+    timeline: options => engine.timeline(options),
+    exportAll: () => engine.exportAll(),
+    importAll: snapshot => engine.importAll(snapshot),
+    forget: id => engine.revise(id, { status: "archived" }),
+    clear: () => engine.clear(),
+    stats: () => ({ total: engine.recall({ includeSuperseded: true }).total, folders: [...new Set(engine.timeline().items.map(m => m.folder || m.category))].length, storage: "browser localStorage" })
+  });
+}
