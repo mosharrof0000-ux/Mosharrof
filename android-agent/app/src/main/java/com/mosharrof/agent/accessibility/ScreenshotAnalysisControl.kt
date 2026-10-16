@@ -94,7 +94,7 @@ object ScreenshotAnalysisControl {
         }
         AlertDialog.Builder(activity)
             .setTitle("স্ক্রিনশট AI-তে পাঠাবেন?")
-            .setMessage("ছবিটি MOSHARROF-এর বিদ্যমান HTTPS chat Worker-এ পাঠানো হবে, যাতে সংযুক্ত AI ইঞ্জিন স্ক্রিন বুঝতে পারে। ছবিটি এই ফিচার থেকে ডিভাইসে সংরক্ষণ করা হয় না। সংবেদনশীল তথ্য থাকলে আগে স্ক্রিনটি বন্ধ করুন বা বাতিল করুন।")
+            .setMessage("ছবিটি MOSHARROF-এর HTTPS screenshot-analysis Worker-এ পাঠানো হবে, যাতে Gemini Vision স্ক্রিন বুঝতে পারে। ছবিটি এই ফিচার থেকে ডিভাইসে সংরক্ষণ করা হয় না। সংবেদনশীল তথ্য থাকলে আগে স্ক্রিনটি বন্ধ করুন বা বাতিল করুন।")
             .setNegativeButton("বাতিল", null)
             .setPositiveButton("পাঠিয়ে বিশ্লেষণ করুন") { _, _ ->
                 analyzeButton?.isEnabled = false
