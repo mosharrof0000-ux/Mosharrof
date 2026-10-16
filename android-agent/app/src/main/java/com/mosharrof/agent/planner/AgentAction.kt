@@ -23,6 +23,10 @@ sealed interface AgentAction {
         val direction: Direction
     ) : AgentAction
 
+    data class GlobalNavigation(val destination: NavigationDestination) : AgentAction {
+        override val targetPackage: String? = null
+    }
+
     data object InspectScreen : AgentAction {
         override val targetPackage: String? = null
     }
@@ -41,5 +45,6 @@ sealed interface AgentAction {
     }
 
     enum class Direction { UP, DOWN, LEFT, RIGHT }
+    enum class NavigationDestination { BACK, HOME, NOTIFICATIONS, RECENTS }
     enum class SupportedSetting { WIFI_PANEL, BLUETOOTH_PANEL, LOCATION_SETTINGS, DISPLAY_SETTINGS, SOUND_SETTINGS, BATTERY_SAVER_SETTINGS, NOTIFICATION_SETTINGS, APPLICATION_SETTINGS }
 }
