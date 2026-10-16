@@ -57,8 +57,8 @@ function mountMemoryPanel(memory) {
   Object.assign(panel.style, { display:"none", position:"fixed", right:"10px", bottom:"136px", zIndex:"9999", width:"min(92vw,380px)", maxHeight:"65vh", overflow:"auto", padding:"14px", borderRadius:"14px", background:"#171717", color:"#f5f5f5", border:"1px solid #555", boxShadow:"0 8px 28px #000a", font:"14px system-ui,sans-serif" });
   const enabledLabel=document.createElement("label"); enabledLabel.style.cssText="display:flex;align-items:center;gap:8px;margin:8px 0";
   const enabled=document.createElement("input"); enabled.type="checkbox"; enabled.id="mosharrof-memory-enabled";
-  try { enabled.checked=localStorage.getItem("mosharrof-personal-memory-enabled-v1")!=="false"; } catch { enabled.checked=true; }
-  enabled.addEventListener("change",()=>{try{localStorage.setItem("mosharrof-personal-memory-enabled-v1",enabled.checked?"true":"false");}catch{}});
+  try { enabled.checked=localStorage.getItem("mosharrof-personal-memory-enabled-v1")==="enabled"; } catch { enabled.checked=false; }
+  enabled.addEventListener("change",()=>{try{localStorage.setItem("mosharrof-personal-memory-enabled-v1",enabled.checked?"enabled":"disabled");}catch{}});
   enabledLabel.append(enabled,safeText(document.createElement("span"),"প্রাসঙ্গিক স্মৃতি AI উত্তরে ব্যবহার করুন"));
   const heading = safeText(document.createElement("h3"), "ব্যক্তিগত স্মৃতি");
   heading.style.margin = "0 0 6px";
@@ -112,21 +112,38 @@ export function installPersonalMemoryClient() {
     try { body=JSON.parse(init.body); } catch { return nativeFetch(input,init); }
     const text=String(body.text||"").trim();
     if (!text) return nativeFetch(input,init);
+    try {
+      if (isPersonalMemoryCommand(text)) return sseResult(await memory.command(text));
+    } catch (error) { console.warn("MOSHARROF memory command failed.",error); }
     // Do not observe, store, or attach personal memories until the user explicitly opts in.
     let consentEnabled = false;
     try { consentEnabled = localStorage.getItem("mosharrof-personal-memory-enabled-v1") === "enabled"; } catch (_) {}
     if (!consentEnabled) return nativeFetch(input,init);
     try {
-      if (isPersonalMemoryCommand(text)) return sseResult(await memory.command(text));
       await memory.observe(text);
-      const useMemory = (()=>{try{return localStorage.getItem("mosharrof-personal-memory-enabled-v1")!=="false";}catch{return true;}})();
-      if(useMemory) body.memory_context=await memory.context(text);
+      body.memory_context=await memory.context(text);
       body.memory_suggestions_enabled=true;
     } catch (error) {
       // Memory failure must never block ordinary chat; the app continues without memory.
       console.warn("MOSHARROF memory unavailable; continuing without saved context.",error);
     }
-    return nativeFetch(input,{...init,body:JSON.stringify(body)});
+    const response=await nativeFetch(input,{...init,body:JSON.stringify(body)});
+    if(consentEnabled && response.ok){
+      response.clone().text().then(async raw=>{
+        try{
+          let answer="",data=null;
+          if((response.headers.get("content-type")||"").includes("text/event-stream")){
+            for(const block of raw.split(/\r?\n\r?\n/))for(const line of block.split(/\r?\n/))if(line.startsWith("data:")){try{const event=JSON.parse(line.slice(5).trim());if(event.type==="result"&&event.status>=200&&event.status<300){data=event.data||{};answer=String(data.text||"");}}catch{}}
+          }else{data=JSON.parse(raw);answer=String(data.text||"");}
+          if(!answer.trim())return;
+          await memory.recordTurn(text,answer,body.conversation_id||"current-chat");
+          for(const candidate of (data&&Array.isArray(data.memory_candidates)?data.memory_candidates:[])){
+            await memory.remember({...candidate,status:"pending_confirmation",source:"ai_suggested",user_confirmed:false});
+          }
+        }catch(error){console.warn("MOSHARROF memory save skipped.",error);}
+      }).catch(()=>{});
+    }
+    return response;
   };
   // The accessible sidebar UI is mounted by personal-memory-ui.js; avoid a duplicate floating panel.
   if (navigator.storage?.persist) navigator.storage.persist().catch(()=>false);
