@@ -221,7 +221,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onDestroy() {
         ScreenshotAnalysisControl.release()
-        speechOutput?.stop()
+        speechOutput?.close()
         super.onDestroy()
     }
 
