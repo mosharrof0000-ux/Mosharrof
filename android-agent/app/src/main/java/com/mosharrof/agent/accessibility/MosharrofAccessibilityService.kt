@@ -29,6 +29,13 @@ class MosharrofAccessibilityService : AccessibilityService() {
         val eventPackage = event.packageName?.toString().orEmpty()
         if (eventPackage == packageName) return
 
+        if (screenshotCaptureArmed && event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            isScreenshotTarget(eventPackage)) {
+            screenshotCaptureArmed = false
+            AccessibilityScreenshotCapture.capture(this) { bitmap, error ->
+                ScreenshotAnalysisControl.displayCapturedScreenshot(bitmap, error, eventPackage)
+            }
+        }
         pendingTap?.takeIf { it.targetPackage == eventPackage }?.let { processPendingTap(it) }
         pendingSwipe?.takeIf { it.targetPackage == eventPackage }?.let { processPendingSwipe(it) }
         if (!scanArmed) return
@@ -155,6 +162,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
         private const val MAX_LABEL_LENGTH = 80
         @Volatile private var activeService: MosharrofAccessibilityService? = null
         @Volatile private var scanArmed = false
+        @Volatile private var screenshotCaptureArmed = false
         @Volatile private var latestSnapshot: ScreenSnapshot? = null
         @Volatile private var pendingTap: PendingSemanticTap? = null
         @Volatile private var pendingSwipe: PendingSwipe? = null
@@ -197,6 +205,18 @@ class MosharrofAccessibilityService : AccessibilityService() {
             latestSnapshot = null
             scanArmed = true
         }
+
+        fun armScreenshotCapture(): Boolean {
+            if (activeService == null) return false
+            screenshotCaptureArmed = true
+            return true
+        }
+
+        private fun isScreenshotTarget(packageName: String): Boolean =
+            packageName.isNotBlank() && packageName !in setOf(
+                "com.android.systemui", "com.android.launcher", "com.android.launcher3",
+                "com.google.android.apps.nexuslauncher", "com.oplus.launcher"
+            )
 
         fun inspectCurrentScreenNow(): ScreenSnapshot? = activeService?.inspectWindow()
 
