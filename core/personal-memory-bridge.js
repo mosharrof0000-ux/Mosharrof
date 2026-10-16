@@ -95,6 +95,7 @@ export function installPersonalMemoryBridge(root = window) {
     section.append(title, note, toggle, folder, search, results, exportButton, clear);
     drawer.appendChild(section);
     refresh();
+    refreshFolders().catch(error => console.warn("[MOSHARROF Memory] Initial listing failed:", error));
   }
   if (root.document.readyState === "loading") root.document.addEventListener("DOMContentLoaded", installMemoryControls, { once: true });
   else installMemoryControls();
