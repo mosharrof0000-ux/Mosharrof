@@ -501,7 +501,8 @@ header.top{
     var fence=String.fromCharCode(96).repeat(3);
     var value=String(source||"").replace(new RegExp(fence+"[\\s\\S]*?"+fence,"g")," ").replace(/<[^>]*>/g," ").trim();
     var first=value.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||"";
-    
+    /* Detect song headings anywhere in the response, not only on the first line.
+       This covers AI replies that start with an introduction before the lyrics. */
     if(/^#{1,6}\s*(?:গান|গানের কথা|গীত|lyrics|song)\s*[:：—-]/im.test(value)||
        /(?:গানের কথা|একটি গান(?: লিখ| নিচে| তৈরি| রচনা| তুলে)|গান রচনা|গানটি নিচে|কোরাস|ধ্রুবক|স্থায়ী|অন্তরা|সঞ্চারী|আভোগ|মুখড়া)/i.test(value)||
        /\b(?:chorus|verse|lyrics)\b/i.test(value))return"song";
@@ -705,7 +706,7 @@ header.top{
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
   function coreReply(t,image){
-    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),history:Array.isArray(session.messages)?session.messages.slice(-13,-1).map(function(m){return {role:m.role,text:String(m.text||"").slice(0,900)};}):[],image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
       .then(function(res){
         function finish(data,status){
           var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
