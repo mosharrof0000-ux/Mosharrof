@@ -20,11 +20,6 @@ class AgentNotificationListenerService : NotificationListenerService() {
         }
     }
 
-    override fun onNotificationRemoved(sbn: StatusBarNotification?) {
-        if (sbn == null) return
-        synchronized(lock) { recent.removeAll { it.key == "${sbn.packageName}:${sbn.key}" } }
-    }
-
     companion object {
         private const val MAX_ITEMS = 30
         private const val MAX_FIELD = 240
