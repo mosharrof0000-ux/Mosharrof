@@ -25,6 +25,7 @@ import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
 import com.mosharrof.agent.notifications.NotificationAccessControl
+import com.mosharrof.agent.files.UserFileAccessControl
 import com.mosharrof.agent.permissions.PermissionCenterControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
@@ -40,6 +41,9 @@ class MainActivity : ComponentActivity() {
         val granted = grants.count { it.value }
         val denied = grants.size - granted
         status.text = "অনুমতি ফলাফল: $grantedটি অনুমোদিত, $deniedটি অননুমোদিত। বিশেষ অনুমতিগুলো নিচের Settings বোতাম থেকে চালু করুন।"
+    }
+    private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -112,6 +116,7 @@ class MainActivity : ComponentActivity() {
             ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled)
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
+            UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
             addView(Button(this@MainActivity).apply {
                 text = "সমস্ত runtime permission চাইুন"
                 setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
