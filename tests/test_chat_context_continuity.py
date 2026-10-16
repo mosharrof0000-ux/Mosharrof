@@ -24,3 +24,15 @@ def test_prepared_frontend_sends_prior_turns_without_current_message_as_history(
     assert "chat request shape changed" in prep
     wrapper = Path("scripts/android/prepare-wrapper.sh").read_text(encoding="utf-8")
     assert "python3 scripts/prepare_web_organ_runtime.py" in wrapper
+
+
+def test_every_live_chat_provider_uses_reflective_pre_and_post_response_contract():
+    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+    prompt = Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8")
+    assert 'from "../core/reflective-chat-prompt.js"' in worker
+    assert "buildReflectiveUserPrompt(text)" in worker
+    assert worker.count("buildReflectiveSystemPrompt()") >= 2
+    assert "Before answering" in prompt
+    assert "Before sending" in prompt
+    assert "tentative hypotheses" in prompt
+    assert "Do not reveal private chain-of-thought" in prompt
