@@ -17,6 +17,9 @@ assert.match(ui, /tapVisibleLabel/);
 assert.match(ui, /scrollVisibleUi/);
 assert.match(ui, /window\.confirm/);
 assert.match(ui, /স্ক্রিনশট সার্ভারে পাঠানো হয়নি/);
+assert.match(bridge, /AgentAccessibilityService\.isConnected/);
+assert.match(bridge, /userMustEnableInSettings/);
+assert.match(bridge, /result.put\("verified", false\)/);
 assert.match(bridge, /public void getAccessibilityStatus/);
 assert.match(bridge, /public void inspectVisibleUi/);
 assert.match(bridge, /public void tapVisibleLabel/);
@@ -28,4 +31,5 @@ assert.match(wrapper, /cp core\/android-accessibility-ui\.js android-web\/androi
 assert.match(wrapper, /android-accessibility-ui\.js/);
 assert.match(ui, /Plugins\.AndroidAccessibility/);
 assert.match(installer, /registerPlugin\(AndroidAccessibilityPlugin\.class\)/);
+assert.ok(installer.includes("cp native/android/AndroidAccessibilityPlugin.java"), "accessibility plugin must be packaged into APK");
 console.log("Android Accessibility UI/native bridge contract: PASS");
