@@ -1,0 +1,24 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const { planCommand } = require("../core/android-agent-planner.js");
+
+let p = planCommand("ওয়াইফাই অন করে ব্রাইটনেস ৫০% করো");
+assert.equal(p.status, "preview");
+assert.equal(p.steps.length, 2);
+assert.equal(p.steps[0].action, "open_wifi_settings");
+assert.equal(p.steps[1].action, "open_display_settings");
+assert.ok(p.steps.every(s => s.capability && s.risk === "navigation"));
+p = planCommand("Bluetooth বন্ধ করো");
+assert.equal(p.status, "preview");
+assert.equal(p.steps[0].action, "open_bluetooth_settings");
+p = planCommand("আমার পাসওয়ার্ড লিখে দাও");
+assert.equal(p.status, "blocked_for_confirmation");
+assert.equal(p.steps.length, 0);
+p = planCommand("আমার জন্য গান গাও");
+assert.equal(p.status, "unsupported");
+assert.equal(p.steps.length, 0);
+p = planCommand("");
+assert.equal(p.status, "needs_clarification");
+assert.equal(p.steps.length, 0);
+console.log("Android agent planner contract: PASS");

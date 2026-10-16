@@ -1,7 +1,7 @@
 {
   "name": "mosharrof-file-folder-size-gate",
-  "version": "1.1",
-  "purpose": "Prevent oversized files and folders from growing unnoticed while preserving stricter per-language architecture limits already specified by the mandatory organ-isolation policy.",
+  "version": "1.2",
+  "purpose": "Prevent oversized files and folders from growing unnoticed. Enforce strict language-specific budgets for web, script, and Android native source files; legacy oversized files may only remain unchanged or shrink.",
   "source_extensions": [
     ".py",
     ".js",
@@ -18,7 +18,10 @@
     ".json",
     ".md",
     ".toml",
-    ".sh"
+    ".sh",
+    ".java",
+    ".kt",
+    ".kts"
   ],
   "excluded_path_parts": [
     ".git",
@@ -51,6 +54,9 @@
     ".jsx": 250,
     ".ts": 250,
     ".tsx": 250,
+    ".kt": 250,
+    ".kts": 250,
+    ".java": 250,
     ".css": 350,
     ".scss": 350,
     ".html": 300,
