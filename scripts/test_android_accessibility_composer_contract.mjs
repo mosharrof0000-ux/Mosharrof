@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 const ui = readFileSync("core/device-control.js", "utf8");
 const accessibility = readFileSync("native/android/AgentAccessibilityService.java", "utf8");
 const accessibilityXml = readFileSync("native/android/agent_accessibility_service.xml", "utf8");
-const devicePlugin = readFileSync("native/android/DeviceControlPlugin.java", "utf8");
+const accessibilityPlugin = readFileSync("native/android/AndroidAccessibilityPlugin.java", "utf8");
 const accessibilityUi = readFileSync("core/android-accessibility-ui.js", "utf8");
 const accessibilityInstaller = readFileSync("scripts/android/install-agent-accessibility.sh", "utf8");
 assert.ok(accessibility.includes("node.isPassword()"), "Accessibility inspection must exclude password fields");
@@ -13,7 +13,7 @@ assert.ok(accessibility.includes("ACTION_SCROLL_FORWARD"), "Accessibility scroll
 assert.ok(accessibility.includes("dispatchGesture("), "Bounded coordinate gesture dispatcher is missing");
 assert.ok(accessibility.includes("containsSensitiveNode"), "Gestures must stop on sensitive screens");
 assert.ok(accessibilityXml.includes('android:canPerformGestures="true"'), "Gesture capability must be declared in Accessibility metadata");
-assert.ok(devicePlugin.includes("swipeVisibleUi"), "Native bridge must expose the bounded swipe action");
+assert.ok(accessibilityPlugin.includes("swipeVisibleUi"), "Native bridge must expose the bounded swipe action");
 assert.ok(accessibilityUi.includes("data-access=\"swipe\"") && accessibilityUi.includes("window.confirm"), "Swipe UI must be visible and user-confirmed");
 assert.ok(accessibilityInstaller.includes("BIND_ACCESSIBILITY_SERVICE"), "Service must use Android's protected service binding");
 assert.ok(accessibility.includes("AgentAccessibilityService.isConnected()") || readFileSync("native/android/AndroidAccessibilityPlugin.java", "utf8").includes("AgentAccessibilityService.isConnected()"), "Accessibility actions must require the explicitly enabled service");
