@@ -48,6 +48,22 @@ try {
 
   const memorySource = await readFile(new URL("../core/personal-memory-engine.js", import.meta.url), "utf8");
   const { createPersonalMemoryEngine } = await import("data:text/javascript;base64," + Buffer.from(memorySource).toString("base64"));
+  globalThis.fetch = async (url, options) => {
+    if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
+    geminiRequestBody = JSON.parse(options.body);
+    return response({ candidates: [{ content: { parts: [{ text: "Long story opening" }] } }] });
+  };
+  result = await ask({ GEMINI_API_KEY: "test-key" }, "বাংলায় ৫০০০ শব্দের একটি গল্প লিখে দাও");
+  assert.equal(result.status, 200);
+  assert.equal(result.data.requested_words, 5000);
+  assert.ok(geminiRequestBody.generationConfig.maxOutputTokens >= 15000);
+  assert.match(geminiRequestBody.contents[0].parts[0].text, /approximately 5000 words/);
+
+  result = await ask({ GEMINI_API_KEY: "test-key" }, "Write a story of 20 thousand words");
+  assert.equal(result.status, 200);
+  assert.equal(result.data.requested_words, 20000);
+  assert.equal(geminiRequestBody.generationConfig.maxOutputTokens, 62512);
+
   const seenKeys = [];
   globalThis.fetch = async (url, options) => {
     if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
