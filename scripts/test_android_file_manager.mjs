@@ -8,6 +8,7 @@ const java = await readFile(new URL("../native/android/AndroidFileManagerPlugin.
 const scanner = await readFile(new URL("../native/android/AndroidDuplicateScanner.java", import.meta.url), "utf8");
 const installer = await readFile(new URL("./android/install-main-activity.sh", import.meta.url), "utf8");
 const wrapper = await readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
+const assetPrep = await readFile(new URL("./android/prepare-agent-web-assets.py", import.meta.url), "utf8");
 const ui = await readFile(new URL("../core/android-file-manager-ui.js", import.meta.url), "utf8");
 const facade = await readFile(new URL("../core/android-file-manager.js", import.meta.url), "utf8");
 
@@ -27,9 +28,9 @@ for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES", "MAX_BYTES"]) {
 assert.ok(java.split("\n").length <= 250, "AndroidFileManagerPlugin must stay within the 250-line native-source budget");
 assert.ok(scanner.split("\n").length <= 250, "AndroidDuplicateScanner must stay within the 250-line native-source budget");
 assert.ok(wrapper.includes("cp core/device-control.js android-web/device-control.js"));
-assert.ok(wrapper.includes("cp core/android-file-manager.js android-web/android-file-manager.js"));
-assert.ok(wrapper.includes("cp core/android-file-manager-ui.js android-web/android-file-manager-ui.js"));
-assert.ok(wrapper.includes('ui_tag = \'<script src="./android-file-manager-ui.js"></script>\''),
+assert.ok(assetPrep.includes('"android-file-manager.js"'));
+assert.ok(assetPrep.includes('"android-file-manager-ui.js"'));
+assert.ok(assetPrep.includes('<script src="./{script}"></script>') && assetPrep.includes("Android agent script injection incomplete"),
   "Android file-manager UI must be injected into the APK web entrypoint");
 assert.ok(installer.includes("registerPlugin(AndroidFileManagerPlugin.class)"));
 assert.ok(installer.includes("AndroidDuplicateScanner.java"), "scanner helper must be installed into APK");
