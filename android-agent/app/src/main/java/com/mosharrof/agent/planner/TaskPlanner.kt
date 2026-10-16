@@ -35,7 +35,7 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
     }
 
     private fun normalizeAppName(value: String): String {
-        val normalized = value.trim().lowercase().replace(Regex("[^\\p{L}\\p{M}\\p{M}\p{N}]"), "")
+        val normalized = value.trim().lowercase().replace(Regex("[^\\p{L}\\p{M}\\p{N}]"), "")
         return BENGALI_ALIASES[normalized] ?: normalized
     }
 
