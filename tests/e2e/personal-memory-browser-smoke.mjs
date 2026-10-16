@@ -126,7 +126,13 @@ try {
   await page.locator("#scrim").click({ position: { x: 5, y: 120 } });
 
   await page.locator("#input").fill("আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?");
+  const followUpRequestPromise = page.waitForRequest(request => {
+    if (request.method() !== "POST") return false;
+    try { return new URL(request.url()).pathname.endsWith("/chat"); }
+    catch { return false; }
+  }, { timeout: timeoutMs });
   await page.locator("#sendBtn").click();
+  const followUpRequest = (await followUpRequestPromise).postDataJSON();
   await page.waitForFunction(async () => {
     const request = indexedDB.open("mosharrof-personal-memory-v1");
     const db = await new Promise((resolve, reject) => {
@@ -144,7 +150,6 @@ try {
     return rows.some(row => row.kind === "user" && row.text.includes("শনাক্তকারীটি মনে রাখতে"));
   }, null, { timeout: 20000 });
 
-  const followUpRequest = chatRequests.at(-1);
   if (!followUpRequest) throw new Error("Follow-up chat request was not observed");
   const diagnostic = await page.evaluate(async query => {
     const rows = await window.MosharrofPersonalMemory.recall(query, 16);
