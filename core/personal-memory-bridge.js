@@ -157,4 +157,4 @@ export function installPersonalMemoryBridge(root = window) {
   };
   return root.MosharrofPersonalMemory;
 }
-installPersonalMemoryBridge();
+if (typeof window !== "undefined") installPersonalMemoryBridge();
