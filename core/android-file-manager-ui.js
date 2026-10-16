@@ -36,18 +36,18 @@
       entries.forEach(function (item) {
         var row = document.createElement("div"); row.className = "device-quick-actions";
         var label = document.createElement("div");
-        label.textContent = (item.directory ? "📁 " : "📄 ") + item.name + (item.directory ? "" : " · " + Number(item.size || 0) + " bytes");
+        label.textContent = (item.isDirectory ? "📁 " : "📄 ") + item.name + (item.isDirectory ? "" : " · " + Number(item.size || 0) + " bytes");
         row.appendChild(label);
         var rename = document.createElement("button"); rename.type = "button"; rename.textContent = "নাম বদলান";
         rename.addEventListener("click", async function () {
           var name = window.prompt("নতুন নাম দিন", item.name); if (!name || !name.trim()) return;
-          try { await api().renameEntry({ id: item.id, name: name.trim() }); notify("নাম পরিবর্তন হয়েছে।"); await refresh(); }
+          try { await api().renameItem({ documentId: item.documentId, name: name.trim() }); notify("নাম পরিবর্তন হয়েছে।"); await refresh(); }
           catch (e) { notify("নাম পরিবর্তন হয়নি: " + (e.message || e)); }
         });
         var del = document.createElement("button"); del.type = "button"; del.textContent = "মুছুন";
         del.addEventListener("click", async function () {
           if (!window.confirm('"' + item.name + '" মুছে ফেলবেন? এই কাজটি Android provider অনুযায়ী স্থায়ী হতে পারে।')) return;
-          try { await api().deleteEntry({ id: item.id }); notify("মুছে ফেলা হয়েছে।"); await refresh(); }
+          try { await api().deleteItem({ documentId: item.documentId, confirmed: true }); notify("মুছে ফেলা হয়েছে।"); await refresh(); }
           catch (e) { notify("মুছতে পারেনি: " + (e.message || e)); }
         });
         row.appendChild(rename); row.appendChild(del); results.appendChild(row);
@@ -56,7 +56,7 @@
     async function refresh() {
       var p = api(); if (!p) return;
       status.textContent = "ফাইলের তালিকা পড়া হচ্ছে…";
-      try { var r = await p.listEntries(); status.textContent = "মোট " + r.count + "টি এন্ট্রি"; showEntries(r.entries || []); }
+      try { var r = await p.listItems(); status.textContent = "মোট " + r.count + "টি এন্ট্রি"; showEntries(r.items || []); }
       catch (e) { status.textContent = e.message || String(e); }
     }
     section.addEventListener("click", async function (event) {
@@ -65,7 +65,7 @@
       try {
         var action = button.getAttribute("data-fm");
         if (action === "pick") {
-          await p.pickFolder(); notify("ফোল্ডারের অনুমতি সংরক্ষিত হয়েছে।"); await refresh();
+          await p.chooseFolder(); notify("ফোল্ডারের অনুমতি সংরক্ষিত হয়েছে।"); await refresh();
         } else if (action === "list") await refresh();
         else if (action === "folder") {
           var folder = window.prompt("নতুন ফোল্ডারের নাম"); if (!folder || !folder.trim()) return;
