@@ -13,6 +13,12 @@ cp core/device-control.js android-web/device-control.js
 cp core/android-file-manager-ui.js android-web/android-file-manager-ui.js
 cp core/android-file-manager.js android-web/android-file-manager.js
 cp core/android-accessibility-ui.js android-web/android-accessibility-ui.js
+cp core/android-agent-planner.js android-web/android-agent-planner.js
+cp core/android-agent-capabilities.js android-web/android-agent-capabilities.js
+cp core/android-agent-executor.js android-web/android-agent-executor.js
+cp core/android-agent-recovery.js android-web/android-agent-recovery.js
+cp core/android-agent-memory.js android-web/android-agent-memory.js
+cp core/android-agent-command-router.js android-web/android-agent-command-router.js
 python - <<'PY'
 from pathlib import Path
 page = Path("android-web/index.html")
@@ -29,6 +35,19 @@ if ui_tag not in html:
 accessibility_tag = '<script src="./android-accessibility-ui.js"></script>'
 if accessibility_tag not in html:
     html = html.replace("</body>", accessibility_tag + "\n</body>", 1)
+
+agent_scripts = [
+    "android-agent-planner.js",
+    "android-agent-capabilities.js",
+    "android-agent-executor.js",
+    "android-agent-recovery.js",
+    "android-agent-memory.js",
+    "android-agent-command-router.js",
+]
+for script in agent_scripts:
+    tag = f'<script src="./{script}"></script>'
+    if tag not in html:
+        html = html.replace("</body>", tag + "\\n</body>", 1)
 page.write_text(html, encoding="utf-8")
 PY
 python - <<'PY'
@@ -71,10 +90,39 @@ if(!skipSave)''',
     1
 )
 # Let the native Android voice manager submit speech transcripts through the existing chat pipeline.
-bridge = '''  window.mosharrofNativeVoiceCommand = function (text) {
-  try { window.mosharrofAutoSpeakNext = true; input.value = String(text || ""); resize(); send(); return true; }
-  catch (error) { console.error("Native voice command could not be sent", error); return false; }
+bridge = '''function routeAndroidAgentCommand(command) {
+  var api = window.MosharrofAndroidAgentCommandRouter;
+  if (!api) return false;
+  if (!window.mosharrofAndroidAgentRouterInstance) {
+    window.mosharrofAndroidAgentRouterInstance = api.createCommandRouter();
+  }
+  var routed = window.mosharrofAndroidAgentRouterInstance.handle(String(command || ""));
+  if (!routed || !routed.handled) return false;
+  input.value = ""; resize();
+  Promise.resolve(routed.promise).catch(function(error) {
+    console.error("Android agent command failed", error);
+  });
+  return true;
+}
+window.mosharrofNativeVoiceCommand = function (text) {
+  try {
+    if (routeAndroidAgentCommand(text)) return true;
+    window.mosharrofAutoSpeakNext = true;
+    input.value = String(text || ""); resize(); send(); return true;
+  } catch (error) {
+    console.error("Native voice command could not be sent", error); return false;
+  }
 };
+sendBtn.addEventListener("click", function(event) {
+  if (routeAndroidAgentCommand(input.value)) {
+    event.preventDefault(); event.stopImmediatePropagation();
+  }
+}, true);
+input.addEventListener("keydown", function(event) {
+  if (event.key === "Enter" && !event.shiftKey && routeAndroidAgentCommand(input.value)) {
+    event.preventDefault(); event.stopImmediatePropagation();
+  }
+}, true);
 '''
 marker = "})();\n</script>"
 at = html.rfind(marker)
@@ -92,6 +140,8 @@ grep -q 'edge-to-edge.css' android-web/index.html
 grep -q 'mosharrof-android-header-hidden' android-web/index.html
 grep -q '.top .brand { display:none !important; }' android-web/index.html
 grep -q 'window.mosharrofNativeVoiceCommand' android-web/index.html
+grep -q 'android-agent-command-router.js' android-web/index.html
+grep -q 'routeAndroidAgentCommand' android-web/index.html
 grep -q 'window.mosharrofAutoSpeakNext' android-web/index.html
 npx cap init "MOSHARROF AI" "com.mosharrof.ai" --web-dir android-web
 npx cap add android
