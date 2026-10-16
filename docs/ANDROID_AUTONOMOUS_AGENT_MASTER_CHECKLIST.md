@@ -30,7 +30,7 @@ This is the single source of truth for the Android device-control feature set re
 - [ ] Task plans with multiple steps, visible step-by-step progress, stop/cancel and deadlines.
 - [ ] Re-check screen state and verify postconditions after each action.
 - [ ] Bounded retry/re-plan and recovery when an expected control is absent; stop safely when uncertain.
-- [ ] Floating voice control/overlay movable to screen edges, expand/collapse, hide/disable; explicit overlay permission and foreground lifecycle.
+- [x] User-toggleable floating voice control using Android's Accessibility overlay (draggable, edge-snapping, long-press expand/collapse, close control, voice launch); requires the user to enable Accessibility. CI and physical-device interaction/position persistence verification pending.
 - [ ] Device/OEM and screen-size adaptation (small phones, tablets, desktop/TV contexts where applicable).
 
 ## C. Android system settings and device health
