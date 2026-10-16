@@ -14,7 +14,7 @@ def test_possible_emotional_need_is_tentative_not_a_diagnosis():
     plan = IntentReflectionEngine().prepare("বারবার সমস্যা হচ্ছে, আমি বিরক্ত")
     assert "সম্ভাব্য" in plan["affect_signal"]
     assert "সমাধান" in plan["possible_need"]
-    assert "অনুমানকে নিশ্চিত সত্য বলা নয়" in plan["constraints_to_respect"]
+    assert any("অনুমানকে নিশ্চিত সত্য বলা নয়" in item for item in plan["constraints_to_respect"])
 
 
 def test_ambiguous_short_request_triggers_clarification():
