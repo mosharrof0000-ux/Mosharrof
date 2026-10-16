@@ -24,6 +24,9 @@ for (const marker of ["ACTION_OPEN_DOCUMENT_TREE", "takePersistableUriPermission
 for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES"]) {
   assert.ok(scanner.includes(marker), "duplicate scanner contract missing: " + marker);
 }
+for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES"]) {
+  assert.ok(scanner.includes(marker), "duplicate scanner contract missing: " + marker);
+}
 for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES", "MAX_BYTES"]) {
   assert.ok(scanner.includes(marker), "bounded duplicate scanner contract missing: " + marker);
 }
