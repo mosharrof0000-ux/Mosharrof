@@ -1,6 +1,9 @@
 package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
@@ -97,6 +100,7 @@ class MainActivity : ComponentActivity() {
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             addView(accessibilityButton)
+            addCapabilitySettings(this)
         })
         refreshServiceStatus()
         if (intent.getBooleanExtra(EXTRA_START_VOICE, false)) {
@@ -119,6 +123,29 @@ class MainActivity : ComponentActivity() {
             val actionResult = MosharrofAccessibilityService.takeActionResult()
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
         }
+    }
+    private fun addCapabilitySettings(layout: LinearLayout) {
+        layout.addView(TextView(this).apply { text = "পূর্ণ ডিভাইস সক্ষমতা — Android অনুমতি"; textSize = 20f })
+        val routes = listOf(
+            "Accessibility: স্ক্রিন বোঝা ও UI নিয়ন্ত্রণ" to (Settings.ACTION_ACCESSIBILITY_SETTINGS to null),
+            "ভাসমান নিয়ন্ত্রণের অনুমতি" to (Settings.ACTION_MANAGE_OVERLAY_PERMISSION to ("package:" + packageName)),
+            "সব ফাইল অ্যাক্সেস" to (Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION to ("package:" + packageName)),
+            "অ্যাপ ব্যবহার-ইতিহাস অ্যাক্সেস" to (Settings.ACTION_USAGE_ACCESS_SETTINGS to null),
+            "ব্যাটারি অপ্টিমাইজেশন সেটিংস" to (Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS to null),
+            "MOSHARROF অ্যাপ অনুমতি" to (Settings.ACTION_APPLICATION_DETAILS_SETTINGS to ("package:" + packageName))
+        )
+        routes.forEach { (label, route) ->
+            layout.addView(Button(this).apply {
+                text = label
+                setOnClickListener {
+                    val target = Intent(route.first)
+                    route.second?.let { target.data = Uri.parse(it) }
+                    try { startActivity(target) } catch (_: Exception) { startActivity(Intent(Settings.ACTION_SETTINGS)) }
+                }
+            })
+        }
+        status.append("\\nOverlay: " + Settings.canDrawOverlays(this) +
+            " • All files: " + (Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager()))
     }
     private fun inspectCurrentScreen() {
         if (!isServiceEnabled()) {
