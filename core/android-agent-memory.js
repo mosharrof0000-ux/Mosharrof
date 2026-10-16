@@ -56,7 +56,11 @@
   }
   function createMemory(options = {}) {
     const enabled = options.enabled === true;
-    const store = options.store || createIndexedDbStore(root.indexedDB, options.databaseName);
+    let store = options.store || null;
+    function storage() {
+      if (!store) store = createIndexedDbStore(root.indexedDB, options.databaseName);
+      return store;
+    }
     const now = options.now || (() => Date.now());
     const makeId = options.makeId || (() => (root.crypto && root.crypto.randomUUID
       ? root.crypto.randomUUID() : "mem-" + now().toString(36) + "-" + Math.random().toString(36).slice(2, 10)));
@@ -73,14 +77,14 @@
       if (!vector) throw new Error("বৈধ local embedding প্রয়োজন।");
       const record = { id: makeId(), text, embedding: vector,
         createdAt: now(), tags: Array.isArray(input.tags) ? input.tags.slice(0, 12).map(String) : [] };
-      await store.put(record);
+      await storage().put(record);
       return { id: record.id, createdAt: record.createdAt };
     }
     async function search(embedding, limit = 5) {
       requireEnabled();
       const query = safeVector(embedding);
       if (!query) throw new Error("সার্চের embedding বৈধ নয়।");
-      const rows = await store.list();
+      const rows = await storage().list();
       return rows.map(record => ({ id: record.id, text: record.text, tags: record.tags || [],
         createdAt: record.createdAt, score: cosine(query, safeVector(record.embedding)) }))
         .filter(row => row.score >= 0)
@@ -90,7 +94,7 @@
     async function forget(id) {
       requireEnabled();
       if (!String(id || "").trim()) throw new Error("মেমোরির পরিচয় প্রয়োজন।");
-      await store.delete(String(id));
+      await storage().delete(String(id));
       return { deleted: true };
     }
     return Object.freeze({ remember, search, forget, enabled });
