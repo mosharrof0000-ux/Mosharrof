@@ -50,9 +50,9 @@ export function initializePersonalMemory() {
       const store = createIndexedDbMemoryStore(window.indexedDB);
       engine = createPersonalMemoryEngine({ store });
       const setting = savedSetting();
-      enabled = setting !== "disabled";
+      enabled = setting === "enabled";
       enabledInput.checked = enabled;
-      if (setting === null) localStorage.setItem(CONSENT_KEY, "enabled");
+      if (setting === null) localStorage.setItem(CONSENT_KEY, "disabled");
       setStatus(enabled ? "স্মৃতি চালু · এই ডিভাইসে সংরক্ষণ হচ্ছে" : "স্মৃতি বন্ধ · নতুন কিছু সংরক্ষণ হবে না");
       if (!originalFetch) installChatBridge();
       await refresh();
