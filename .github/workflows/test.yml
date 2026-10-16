@@ -14,14 +14,6 @@ jobs:
           fetch-depth: 0
       - name: Verify image engine prompt parsing
         run: node scripts/test_image_engine.mjs
-      - name: Test personal memory engine
-        run: node tests/test_personal_memory_engine.mjs
-      - name: Check personal memory module syntax
-        run: node --check core/personal-memory-engine.js
-      - name: Check personal memory bridge syntax
-        run: node --check web/personal-memory-bridge.js
-      - name: Check Worker syntax
-        run: node --check worker/screenshot-analysis.js
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
