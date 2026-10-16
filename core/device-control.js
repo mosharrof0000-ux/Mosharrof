@@ -20,7 +20,7 @@ section.innerHTML=html;nav.appendChild(section);
 section.addEventListener("click",async function(e){
 var b=e.target.closest("button[data-device-action]");if(!b)return;
 var a=b.getAttribute("data-device-action"),p=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.DeviceControl;
-if(a==="selfTest"){var missing=[];if(!p||typeof p.getDeviceInfo!=="function")missing.push("device info");Object.keys(methods).forEach(function(k){if(!p||typeof p[methods[k]]!=="function")missing.push(k);});var d=section.querySelector("#deviceControlDiagnostic");d.hidden=false;d.textContent=missing.length?"FAIL — "+missing.join(", "):"PASS — ২২টি অ্যাকশন সংযুক্ত। API সংযোগ মাত্র; ফোনে যাচাই নয়।";notify(missing.length?"সংযোগে সমস্যা পাওয়া গেছে।":"API সংযোগ PASS; বাস্তব স্ক্রিন পরীক্ষা বাকি।");return;}
+if(a==="selfTest"){var missing=[];if(!p||typeof p.getDeviceInfo!=="function")missing.push("device info");Object.keys(methods).forEach(function(k){if(!p||typeof p[methods[k]]!=="function")missing.push(k);});var d=section.querySelector("#deviceControlDiagnostic");d.hidden=false;d.textContent=missing.length?"FAIL — "+missing.join(", "):"PASS — ২২টি অ্যাকশন সংযুক্ত। API সংযোগ মাত্র; ফোনে যাচাই নয়। ফাইল অপারেশন বাস্তব ডিভাইসে এখনও পরীক্ষা হয়নি।";notify(missing.length?"সংযোগে সমস্যা পাওয়া গেছে।":"API সংযোগ PASS; বাস্তব স্ক্রিন পরীক্ষা বাকি।");return;}
 if(!p){notify("ওয়েবসাইট একা ফোনের সেটিংস বদলাতে পারে না। Android APK ব্যবহার করুন।");return;}
 b.disabled=true;
 try{if(a==="info"){var d=await p.getDeviceInfo();notify([d.manufacturer,d.model,"Android "+d.androidVersion].filter(Boolean).join(" · "));return;}
