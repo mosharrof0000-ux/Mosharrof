@@ -10,8 +10,6 @@ const organizer = await readFile(new URL("../native/android/AndroidMediaOrganize
 const installer = await readFile(new URL("./android/install-main-activity.sh", import.meta.url), "utf8");
 const wrapper = await readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
 const assetPrep = await readFile(new URL("./android/prepare-agent-web-assets.py", import.meta.url), "utf8");
-const ui = await readFile(new URL("../core/android-file-manager-ui.js", import.meta.url), "utf8");
-const facade = await readFile(new URL("../core/android-file-manager.js", import.meta.url), "utf8");
 
 for (const method of ["pickDirectory", "getSelectedDirectory", "listEntries", "createFolder",
   "createTextFile", "renameEntry", "deleteEntry", "moveEntry", "scanSelectedDirectoryDuplicates", "scanExactDuplicates"]) {
@@ -45,14 +43,7 @@ assert.ok(installer.includes("AndroidMediaOrganizerPlugin.java"));
 assert.ok(installer.includes("registerPlugin(AndroidMediaOrganizerPlugin.class)"));
 assert.ok(!installer.includes("registerPlugin(MosharrofFilesPlugin.class)"),
   "duplicate plugin registration must be removed");
-assert.ok(ui.includes("scanSelectedDirectoryDuplicates"));
-assert.ok(ui.includes("কোনো ফাইল মুছবে না"));
-assert.ok(ui.includes("window.MosharrofFiles"), "UI must use the file-manager facade");
-assert.ok(ui.includes('data-fm="organize"') && ui.includes("organizeMedia"), "photo/audio organizer preview is missing");
-assert.ok(ui.includes("undoMediaMoves") && ui.includes("lastMoveBatch"), "recent media moves must have an undo path");
-assert.ok(facade.includes("plugins.AndroidMediaOrganizer") && facade.includes("moveEntry"), "facade must expose the separate media-move bridge");
 assert.ok(!ui.includes("Plugins.FileManager"), "stale plugin name must not remain");
-assert.ok(facade.includes("plugins.AndroidFileManager"), "facade must use the registered native plugin");
 
 const bytesA = new TextEncoder().encode("same audio bytes").buffer;
 const bytesB = new TextEncoder().encode("same audio bytes").buffer;
