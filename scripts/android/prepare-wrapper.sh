@@ -3,6 +3,7 @@ set -euo pipefail
 
 npm init -y
 npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
+python3 scripts/prepare_web_organ_runtime.py
 rm -rf android-web
 cp -a web android-web
 # Android-only CSS is copied into the temporary APK bundle, not the live Pages folder.
