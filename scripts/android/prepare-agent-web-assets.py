@@ -6,6 +6,8 @@ core = Path("core")
 bundle = Path("android-web")
 assets = (
     "android-file-manager-ui.js",
+    "android-media-organizer-ui.js",
+    "android-file-hash-scan.js",
     "android-file-manager.js",
     "android-accessibility-ui.js",
     "android-agent-planner.js",
@@ -26,8 +28,10 @@ page = bundle / "index.html"
 html = page.read_text(encoding="utf-8")
 scripts = (
     "device-control.js",
+    "android-file-hash-scan.js",
     "android-file-manager.js",
     "android-file-manager-ui.js",
+    "android-media-organizer-ui.js",
     "android-accessibility-ui.js",
     "android-agent-planner.js",
     "android-agent-capabilities.js",
