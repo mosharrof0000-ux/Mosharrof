@@ -7,6 +7,7 @@ const SCHEMA_VERSION = 1;
 const DEFAULT_NAMESPACE = "mosharrof.personal-memory.v1";
 const MAX_CONTEXT_CHARS = 9000;
 const CATEGORIES = new Set(["preference","goal","project","correction","decision","fact","open_question","plan","hypothesis","event","commitment"]);
+const FOLDERS = {preference:"পছন্দ ও নির্দেশনা",goal:"লক্ষ্য ও পরিকল্পনা",project:"প্রকল্প ও প্রযুক্তি",correction:"সংশোধন ও শেখা",decision:"সিদ্ধান্ত",fact:"তথ্য ও অভিজ্ঞতা",open_question:"অসমাপ্ত প্রশ্ন",plan:"লক্ষ্য ও পরিকল্পনা",hypothesis:"অনুমান",event:"ঘটনা ও কথোপকথন",commitment:"প্রতিশ্রুতি ও পরবর্তী কাজ"};
 const SECRET_LIKE = /(password|passcode|\bpin\b|\botp\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
 const clean = (value, limit = 2000) => String(value ?? "").replace(/\u0000/g, "").trim().slice(0, limit);
 const safeTime = value => { const parsed = Date.parse(value || ""); return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date(0).toISOString(); };
@@ -41,7 +42,7 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     const timestamp = safeTime(now());
     const entry = {
       id: clean(input.id, 120) || "mem-" + timestamp.replace(/[^0-9]/g,"").slice(0,14) + "-" + (ledger.revision + 1),
-      category, folder: clean(input.folder || category,120), content,
+      category, folder: clean(input.folder || FOLDERS[category] || FOLDERS.fact,120), content,
       confidence: Math.max(0, Math.min(1, Number(input.confidence ?? 0.65) || 0)),
       source: clean(input.source || "conversation", 80),
       status: ["active","pending_confirmation","superseded","resolved","archived"].includes(input.status) ? input.status : "active",
@@ -136,7 +137,7 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
 
 export function buildPersonalMemoryContext(profile, currentText = "") {
   if (!profile || typeof profile !== "object") return "";
-  const entries=Array.isArray(profile.memories)?profile.memories:Array.isArray(profile.items)?profile.items:[];
+  const entries=Array.isArray(profile)?profile:Array.isArray(profile.memories)?profile.memories:Array.isArray(profile.items)?profile.items:[];
   const current=clean(currentText,1500).toLowerCase();
   const terms=current.split(/[^\p{L}\p{N}]+/u).filter(t=>t.length>2);
   const ranked=entries.filter(m=>m&&typeof m==="object"&&!["superseded","archived","resolved"].includes(m.status))
@@ -157,7 +158,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
   if(!selected.length)return "";
   return [
     "USER PERSONAL MEMORY (local user-provided conversation history and preferences; may be incomplete or outdated):",
-    "Retrieve only memories relevant to the current request. Current user instructions override older preferences and plans.",
+    "Retrieve only memories relevant to the current request. বর্তমান ব্যবহারকারীর কথা পুরোনো স্মৃতির চেয়ে অগ্রাধিকার পাবে; current user instructions override older preferences and plans.",
     "Treat pending_confirmation entries as tentative hypotheses, not established facts. Confirm important or high-impact assumptions.",
     "Consider chronological order: distinguish past events, current goals, future plans, and open questions. Use what happened before to understand the present; superseded entries are not current.",
     "Think ahead only as a grounded possibility from stated goals and events; explain uncertainty briefly and do not claim to know private thoughts.",
@@ -178,5 +179,11 @@ export function inferMemoryCandidates(userText) {
   const question=/(কীভাবে সম্ভব|কী হতে পারে|কেন এমন|what if|how can i|কিভাবে করব)/i.test(text);
   if(!explicitPreference&&!correction&&!goal&&!project&&!commitment&&!decision&&!question)return [];
   const category=correction?"correction":explicitPreference?"preference":project?"project":commitment?"commitment":decision?"decision":question?"open_question":"goal";
-  return [{category,folder:category,content:text,confidence:explicitPreference?0.9:correction?0.82:project?0.78:0.7,source:"conversation_candidate",status:"pending_confirmation",user_confirmed:false,rationale:"Tentative memory candidate extracted from explicit wording; may be reviewed or corrected."}];
+  return [{category,folder:category,content:text,confidence:explicitPreference?0.9:correction?0.82:project?0.78:0.7,source:"conversation_candidate",status:"active",user_confirmed:false,rationale:"Tentative memory candidate extracted from explicit wording; may be reviewed or corrected."}];
+}
+
+export function classifyMemory(text) {
+  const candidate = inferMemoryCandidates(text)[0];
+  if (candidate) return candidate;
+  return { category:"fact", folder:FOLDERS.fact, content:clean(text,4000), confidence:0.55, status:"pending_confirmation", user_confirmed:false };
 }
