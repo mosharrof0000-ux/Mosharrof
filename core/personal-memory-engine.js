@@ -31,6 +31,18 @@ function safeText(value, limit = 2400) {
   if (!text || SECRET.test(text) || SENSITIVE.test(text)) return "";
   return text.slice(0, limit);
 }
+const TOPIC_FOLDERS = [
+  { id: "projects", label: "প্রকল্প ও প্রযুক্তি", pattern: /(mosharrof|মোশাররফ|প্রজেক্ট|প্রকল্প|কোড|github|অ্যাপ|সার্ভার|api|android|অ্যান্ড্রয়েড|automation|অটোমেশন|worker|deploy|ডেপ্লয়)/i },
+  { id: "writing", label: "লেখালেখি ও গল্প", pattern: /(গল্প|উপন্যাস|কবিতা|প্রবন্ধ|লেখা|লিখে|শব্দের|words?|story|novel|poem|article|writing)/i },
+  { id: "quran-research", label: "কুরআন ও গবেষণা", pattern: /(কুরআন|কোরআন|আয়াত|আয়াত|সূরা|তাফসির|তাফসীর|quran|research|গবেষণা|আরবি|ব্যাকরণ)/i },
+  { id: "preferences", label: "পছন্দ ও আচরণ", pattern: /(আমার পছন্দ|মনে রাখ|পরের বার|সবসময়|সব সময়|সংক্ষিপ্ত|বিস্তারিত|ছোট করে|বড় করে|বড় করে|i prefer|remember|next time|always)/i },
+  { id: "plans", label: "পরিকল্পনা ও লক্ষ্য", pattern: /(পরিকল্পনা|লক্ষ্য|ভবিষ্যতে|পরবর্তীতে|করব|করতে চাই|বাকি কাজ|পরবর্তী ধাপ|plan|goal|future|next step)/i }
+];
+function inferFolder(text) {
+  const value = String(text || "");
+  for (const folder of TOPIC_FOLDERS) if (folder.pattern.test(value)) return { id: folder.id, label: folder.label };
+  return { id: "general", label: "কথোপকথন ও অন্যান্য" };
+}
 function inferPreferences(text) {
   const rules = [];
   if (/(ছোট করে|সংক্ষেপে|সংক্ষিপ্ত উত্তর|briefly|keep it short)/i.test(text)) rules.push({ key: "response_length", value: "short when not otherwise specified" });
@@ -87,7 +99,7 @@ export function createPersonalMemoryEngine(options = {}) {
     if (adapter) await adapter.add(row); else await transaction("readwrite", s => s.add(row));
     for (const pref of row.preferences) {
       const learned = {
-        id: makeId(), kind: "preference", text: pref.key + ": " + pref.value,
+        id: makeId(), kind: "preference", folder: inferFolder("আমার পছন্দ " + pref.key), text: pref.key + ": " + pref.value,
         createdAt, isoTime: row.isoTime, sessionId: row.sessionId, sequence: row.sequence,
         tags: ["learned-preference", pref.key], previousId: row.id, preferences: [pref]
       };
@@ -114,7 +126,7 @@ export function createPersonalMemoryEngine(options = {}) {
       for (const word of words) if (q.has(word)) overlap += 1;
       const recency = Math.max(0, 1 - (now() - row.createdAt) / (365 * 86400000));
       const preferenceBoost = row.kind === "preference" ? 0.45 : 0;
-      return { ...row, score: overlap / Math.max(1, q.size) + recency * 0.08 + preferenceBoost };
+      return { ...row, score: overlap / Math.max(1, q.size) + recency * 0.08 + preferenceBoost + (row.folder?.id === queryFolder.id ? 0.22 : 0) };
     }).filter(row => row.kind === "preference" || row.score > 0.05)
       .sort((a, b) => b.score - a.score || a.sequence - b.sequence)
       .slice(0, Math.max(1, Math.min(16, Number(limit) || 8)));
@@ -138,9 +150,52 @@ export function createPersonalMemoryEngine(options = {}) {
   async function list(limit = 100) {
     const rows = await allRows();
     return rows.sort((a, b) => a.sequence - b.sequence)
-      .slice(-Math.max(1, Math.min(500, Number(limit) || 100)))
-      .map(({ id, kind, text, createdAt, isoTime, sessionId, sequence, tags, previousId }) =>
-        ({ id, kind, text, createdAt, isoTime, sessionId, sequence, tags, previousId }));
+      .slice(-Math.max(1, Math.min(500, Number(limit) || 100)));
+  }
+  async function listFolder(folderId, limit = 100) {
+    const rows = await allRows();
+    return rows.filter(row => row.folder?.id === folderId)
+      .sort((a, b) => a.sequence - b.sequence)
+      .slice(-Math.max(1, Math.min(500, Number(limit) || 100)));
+  }
+  async function folders() {
+    const rows = await allRows();
+    const counts = new Map();
+    for (const row of rows) {
+      const folder = row.folder || inferFolder(row.text);
+      const current = counts.get(folder.id) || { id: folder.id, label: folder.label, count: 0, latestAt: 0 };
+      current.count += 1;
+      current.latestAt = Math.max(current.latestAt, Number(row.createdAt) || 0);
+      counts.set(folder.id, current);
+    }
+    return Array.from(counts.values()).sort((a, b) => b.latestAt - a.latestAt);
+  }
+  async function search(query, limit = 100) {
+    const q = new Set(tokenize(query));
+    const rows = await allRows();
+    return rows.map(row => {
+      const words = tokenize(row.text);
+      const overlap = words.reduce((n, word) => n + (q.has(word) ? 1 : 0), 0);
+      return { ...row, relevance: overlap / Math.max(1, q.size) };
+    }).filter(row => row.relevance > 0)
+      .sort((a, b) => b.relevance - a.relevance || b.createdAt - a.createdAt)
+      .slice(0, Math.max(1, Math.min(500, Number(limit) || 100)));
+  }
+  async function exportAll() {
+    return { schemaVersion: 1, exportedAt: new Date(now()).toISOString(), entries: await allRows() };
+  }
+  async function importAll(snapshot) {
+    if (!snapshot || snapshot.schemaVersion !== 1 || !Array.isArray(snapshot.entries)) throw new TypeError("Unsupported memory export.");
+    const existing = new Set((await allRows()).map(row => row.id));
+    let imported = 0;
+    for (const row of snapshot.entries) {
+      if (!row || !row.id || existing.has(row.id) || !safeText(row.text)) continue;
+      const restored = { ...row, folder: row.folder || inferFolder(row.text) };
+      if (adapter) await adapter.add(restored); else await transaction("readwrite", s => s.put(restored));
+      existing.add(row.id);
+      imported += 1;
+    }
+    return { imported };
   }
   async function clear() {
     if (adapter) { await adapter.clear(); return { cleared: true }; }
@@ -157,5 +212,5 @@ export function createPersonalMemoryEngine(options = {}) {
     catch { /* private browsing may deny preferences; memory remains local */ }
     return !!value;
   }
-  return Object.freeze({ add, recall, buildContext, list, clear, enabled, setEnabled });
+  return Object.freeze({ add, recall, buildContext, list, listFolder, folders, search, exportAll, importAll, classifyFolder: inferFolder, clear, enabled, setEnabled });
 }
