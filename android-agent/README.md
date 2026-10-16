@@ -42,6 +42,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 
 ## Not yet complete
 
+- [x] AI-assisted normalization fallback for unsupported local commands through the existing MOSHARROF chat Worker; every normalized command is revalidated by the local planner and requires confirmation (CI/live endpoint verification pending)
 - [ ] General natural-language task planning across arbitrary apps
 - [ ] General semantic node locator and bounded UI action executor (exact-label tap, one-shot swipe, and confirmed global navigation are limited initial actions; arbitrary UI interaction and text entry are not enabled)
 - [ ] Per-task progress, interrupt, cancel, deadlines, postcondition verification and recovery (current cancel only clears pending previews/armed actions)
