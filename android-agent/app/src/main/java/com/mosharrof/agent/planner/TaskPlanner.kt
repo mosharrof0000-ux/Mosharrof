@@ -11,6 +11,7 @@ sealed interface TaskPlan {
     data class GlobalNavigation(val destination: AgentAction.NavigationDestination) : TaskPlan
     data object OpenSystemSettings : TaskPlan
     data class OpenSettingPanel(val setting: AgentAction.SupportedSetting) : TaskPlan
+    data class SystemIntent(val kind: DeviceIntentRequest.Kind, val target: String = "", val text: String = "", val seconds: Int = 0) : TaskPlan
     data class NeedsChoice(val candidates: List<InstalledApp>) : TaskPlan
     data class Rejected(val reason: String) : TaskPlan
 }
@@ -18,6 +19,7 @@ sealed interface TaskPlan {
 /** Resolves explicit commands only; unsupported or high-risk actions fail closed. */
 class TaskPlanner(private val parser: IntentParser = IntentParser()) {
     fun plan(command: String, installedApps: List<InstalledApp>): TaskPlan {
+        DeviceIntentRequest.parse(command)?.let { return TaskPlan.SystemIntent(it.kind, it.target, it.text, it.seconds) }
         when (val explicit = CommandParser().parse(command)) {
             is ParsedCommand.GlobalNavigation -> return TaskPlan.GlobalNavigation(explicit.destination)
             ParsedCommand.OpenSystemSettings -> return TaskPlan.OpenSystemSettings
