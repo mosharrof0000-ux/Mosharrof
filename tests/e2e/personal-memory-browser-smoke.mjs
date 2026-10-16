@@ -48,16 +48,29 @@ const context = await browser.newContext();
 const page = await context.newPage();
 page.setDefaultTimeout(timeoutMs);
 const chatRequests = [];
-await page.route("**/chat", async route => {
-  let payload = {};
-  try { payload = route.request().postDataJSON() || {}; } catch {}
-  chatRequests.push(payload);
-  await route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({ ok: true, text: "Browser memory smoke test reply." })
-  });
+page.on("request", request => {
+  if (request.method() !== "POST") return;
+  try {
+    if (new URL(request.url()).pathname.endsWith("/chat")) {
+      chatRequests.push(request.postDataJSON() || {});
+    }
+  } catch {}
 });
+
+// Keep PR tests deterministic and free of provider usage. Manual/live runs use
+// the real chat endpoint so the test exercises the deployed path end-to-end.
+const parsedBaseURL = new URL(baseURL);
+const isCandidatePreview = ["127.0.0.1", "localhost"].includes(parsedBaseURL.hostname)
+  && parsedBaseURL.port === "4173";
+if (isCandidatePreview) {
+  await page.route("**/chat", async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, text: "Browser memory smoke test reply." })
+    });
+  });
+}
 page.on("console", message => {
   if (message.type() === "error") console.log("[browser console error]", message.text());
 });
