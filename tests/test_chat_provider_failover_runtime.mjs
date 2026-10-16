@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import { loadWorker } from "./worker-loader.mjs";
 
 const worker = await loadWorker();
@@ -19,6 +18,15 @@ async function ask(env) {
   });
   const res = await worker.fetch(request, env);
   return { status: res.status, data: await res.json() };
+}
+async function askStream(env) {
+  const request = new Request("https://worker.test/chat", {
+    method: "POST",
+    headers: { "Origin": "https://mosharrof0000-ux.github.io", "Content-Type": "application/json" },
+    body: JSON.stringify({ text: "বাংলায় একটি সংক্ষিপ্ত উত্তর দিন", stream_status: true })
+  });
+  const res = await worker.fetch(request, env);
+  return { status: res.status, text: await res.text() };
 }
 try {
   // Gemini primary success and reflective planning instructions reach the real provider payload.
@@ -136,14 +144,26 @@ try {
   assert.equal(healthData.groq_chat_configured, true);
   assert.equal(JSON.stringify(healthData).includes("secret-must-not-leak"), false);
 
-  // Chat UI keeps elapsed time running without a total deadline and retries transient server failures.
-  const appSource = await readFile(new URL("../web/index.html", import.meta.url), "utf8");
-  assert.match(appSource, /function coreReplyOnce\(t,image\)/);
-  assert.match(appSource, /function coreReply\(t,image\)\{\s*var attempt=0;/);
-  assert.match(appSource, /Math\.min\(30000,1000\*Math\.pow\(2,Math\.min\(attempt-1,5\)\)\)/);
-  assert.match(appSource, /return run\(\);/);
-  assert.match(appSource, /n\._elapsedTimer=window\.setInterval\(refresh,100\)/);
-  console.log("PASS: provider failover, safe health configuration, unlimited chat timer and transient retry policy.");
+  // Streaming chat retries the complete provider chain after all providers fail, then returns the next successful answer.
+  let aiCalls = 0;
+  globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com") ? geminiQuota() : response({});
+  const streamed = await askStream({
+    GEMINI_API_KEY: "test-key",
+    AI: { run: async () => {
+      aiCalls++;
+      if (aiCalls === 1) throw new Error("temporary Workers AI outage");
+      return { response: "Recovered answer after retry" };
+    } }
+  });
+  assert.equal(streamed.status, 200);
+  const events = streamed.text.split(/\\n/).filter(line => line.startsWith("data: ")).map(line => JSON.parse(line.slice(6)));
+  assert.ok(events.some(event => event.type === "status" && event.provider === "সব AI সার্ভার"));
+  const finalEvent = events.find(event => event.type === "result");
+  assert.equal(finalEvent.status, 200);
+  assert.equal(finalEvent.data.provider, "cloudflare-workers-ai");
+  assert.match(finalEvent.data.text, /Recovered answer after retry/);
+  assert.equal(aiCalls, 2);
+  console.log("PASS: Gemini, Workers AI, Groq, OpenRouter failover; safe health configuration; and stream retry after transient total-provider failure.");
 } finally {
   globalThis.fetch = originalFetch;
 }
