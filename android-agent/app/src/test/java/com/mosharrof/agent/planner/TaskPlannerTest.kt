@@ -20,8 +20,8 @@ class TaskPlannerTest {
         assertEquals(TaskPlan.OpenApp(apps[0]), planner.plan("ইউটিউব খুলুন", apps))
     }
 
-    @Test fun resolvesBengaliSettingsAlias() {
-        assertEquals(TaskPlan.OpenApp(apps[2]), planner.plan("সেটিংস খুলুন", apps))
+    @Test fun resolvesBengaliSettingsCommand() {
+        assertEquals(TaskPlan.OpenSystemSettings, planner.plan("সেটিংস খুলুন", apps))
     }
 
     @Test fun plansSystemSettingsOnlyWhenExplicitlyRequested() {
