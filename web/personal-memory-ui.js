@@ -33,7 +33,7 @@
       items.slice(0, 30).forEach(row => {
         const wrap = el("div"); wrap.style.cssText = "border-top:1px solid #8884;padding:7px 0;font-size:12px";
         const txt = el("div", row.text); txt.style.whiteSpace = "pre-wrap";
-        const meta = el("div", new Date(row.updatedAt).toLocaleString() + " · " + (row.tags || []).join(", "));
+        const meta = el("div", new Date(row.updatedAt).toLocaleString() + " · " + (row.status || "active") + " · " + (row.tags || []).join(", "));
         meta.style.cssText = "opacity:.7;font-size:10px;margin:4px 0";
         const del = el("button", "এই স্মৃতি মুছুন"); del.type = "button"; del.style.cssText = "font-size:11px;padding:3px 7px";
         del.onclick = async function () { await api.remove(row.id); await renderPanel(panel); };
