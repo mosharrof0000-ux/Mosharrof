@@ -84,6 +84,14 @@ object CapabilityPermissionCenter {
         Capability("ব্যবহারের পরিসংখ্যান", "Android অনুমতি দিলে অ্যাপ ব্যবহারের তথ্য.", settingsAction = Settings.ACTION_USAGE_ACCESS_SETTINGS, readiness = ::usageAccessGranted),
         Capability("সম্পূর্ণ ফাইল ব্যবস্থাপনা", "সমর্থিত Android সংস্করণে all-files access; অনুমতি পাওয়া গেলেও protected app data নয়.", settingsAction = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, readiness = { Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager() }),
         Capability("মাইক্রোফোন", "ভয়েস কমান্ড বা ভবিষ্যৎ hands-free voice session.", listOf(Manifest.permission.RECORD_AUDIO), readiness = { permissionsGranted(it, listOf(Manifest.permission.RECORD_AUDIO)) }),
+        Capability("ক্যামেরা", "ক্যামেরা-নির্ভর ফিচারের জন্য runtime access.", listOf(Manifest.permission.CAMERA), readiness = { permissionsGranted(it, listOf(Manifest.permission.CAMERA)) }),
+        Capability("লোকেশন", "লোকেশন-ভিত্তিক কমান্ড; background location আলাদা Android অনুমতি.", listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION), readiness = { permissionsGranted(it, listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)) }),
+        Capability("Bluetooth / কাছাকাছি ডিভাইস", "Android সংস্করণ অনুযায়ী Bluetooth scan/connect access.", bluetoothPermissions(), readiness = { permissionsGranted(it, bluetoothPermissions()) }),
+        Capability("ফোন কল", "Dialer খুলে ব্যবহারকারীকে কল নিশ্চিত করতে দেওয়া; সরাসরি কল নয়.", listOf(Manifest.permission.CALL_PHONE), readiness = { permissionsGranted(it, listOf(Manifest.permission.CALL_PHONE)) }),
+        Capability("SMS / কল লগ", "উপযুক্ত অনুমতি থাকলে SMS ও call-log API; Play/OS সীমা প্রযোজ্য.", smsAndCallLogPermissions(), readiness = { permissionsGranted(it, smsAndCallLogPermissions()) }),
+        Capability("Notification listener", "অনুমোদিত notification পড়তে আলাদা Notification access.", settingsAction = Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS, readiness = ::notificationListenerEnabled),
+        Capability("সিস্টেম সেটিংস পরিবর্তন", "শুধু সমর্থিত সেটিংস; Android-এর বিশেষ access আলাদা.", settingsAction = Settings.ACTION_MANAGE_WRITE_SETTINGS, readiness = { Build.VERSION.SDK_INT < 23 || Settings.System.canWrite(it) }),
+        Capability("Battery optimization", "দীর্ঘ কাজের জন্য battery optimization অবস্থা; exemption ঐচ্ছিক.", settingsAction = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, readiness = ::batteryOptimizationIgnored),
         Capability("Camera", "ব্যবহারকারী অনুমতি দিলে ছবি/QR/ডকুমেন্ট capture.", listOf(Manifest.permission.CAMERA), readiness = { permissionsGranted(it, listOf(Manifest.permission.CAMERA)) }),
         Capability("Location", "GPS/নেটওয়ার্ক অবস্থান; background location আলাদা OS অনুমতি চায়.", listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION), readiness = { permissionsGranted(it, listOf(Manifest.permission.ACCESS_COARSE_LOCATION)) || permissionsGranted(it, listOf(Manifest.permission.ACCESS_FINE_LOCATION)) }),
         Capability("Bluetooth / nearby devices", "নিকটবর্তী ডিভাইসের সঙ্গে সংযোগ; Android সংস্করণভেদে runtime permission.", bluetoothPermissions(), readiness = { bluetoothPermissions().isEmpty() || permissionsGranted(it, bluetoothPermissions()) }),
@@ -100,6 +108,25 @@ object CapabilityPermissionCenter {
         Capability("Notifications", "Android 13+ এ notification permission.", notificationPermissions(), readiness = { permissionsGranted(it, notificationPermissions()) }),
         Capability("নির্দিষ্ট সময়ে অ্যালার্ম", "Exact alarm special access প্রয়োজন হলে Android সেটিংস খুলুন.", settingsAction = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, readiness = { Build.VERSION.SDK_INT < 31 || activity.getSystemService(android.app.AlarmManager::class.java)?.canScheduleExactAlarms() == true })
     )
+
+    private fun bluetoothPermissions(): List<String> = when {
+        Build.VERSION.SDK_INT >= 31 -> listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+        else -> listOf(Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN)
+    }
+
+    private fun smsAndCallLogPermissions(): List<String> = listOf(
+        Manifest.permission.SEND_SMS, Manifest.permission.READ_SMS,
+        Manifest.permission.RECEIVE_SMS, Manifest.permission.CALL_PHONE,
+        Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG
+    )
+
+    private fun notificationListenerEnabled(activity: Activity): Boolean =
+        Settings.Secure.getString(activity.contentResolver, "enabled_notification_listeners")
+            ?.split(':')?.any { it.contains(activity.packageName) } == true
+
+    private fun batteryOptimizationIgnored(activity: Activity): Boolean =
+        activity.getSystemService(android.os.PowerManager::class.java)
+            ?.isIgnoringBatteryOptimizations(activity.packageName) == true
 
     private fun mediaPermissions(): List<String> = when {
         Build.VERSION.SDK_INT >= 33 -> listOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
