@@ -44,7 +44,7 @@ class ActionPolicy(
                 }
             }
             is AgentAction.TypeText ->
-                if (action.text.isBlank() || action.text.length > 200) {
+                if (action.targetPackage !in allowedPackages || action.text.isBlank() || action.text.length > 160) {
                     PolicyResult(PolicyDecision.DENY, RiskLevel.HIGH, "Text is empty or too long")
                 } else {
                     PolicyResult(PolicyDecision.REQUIRE_CONFIRMATION, RiskLevel.MODERATE, "Text entry requires explicit confirmation")
