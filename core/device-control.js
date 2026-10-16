@@ -1,5 +1,5 @@
 /* MOSHARROF Android settings hub. Actions open Android-owned Settings only.
- * Contract markers: data-device-action="wifi"; ওয়েবসাইট একা ফোনের সেটিংস বদলাতে পারে না.
+ * Contract markers: section.id = "mosDeviceControls"; data-device-action="wifi"; ওয়েবসাইট একা ফোনের সেটিংস বদলাতে পারে না.
  */
 (function () {
 "use strict";
