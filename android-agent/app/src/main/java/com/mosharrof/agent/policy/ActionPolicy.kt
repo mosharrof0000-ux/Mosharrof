@@ -11,10 +11,7 @@ data class PolicyResult(
     val reason: String
 )
 
-/**
- * Deterministic policy gate. Call this before any future action adapter.
- * Unknown or ambiguous actions should be rejected by the caller, not guessed.
- */
+/** Deterministic policy gate. Unknown or ambiguous actions fail closed. */
 class ActionPolicy(
     private val allowedPackages: Set<String>,
     private val maxActionsPerTask: Int = 12
@@ -53,6 +50,8 @@ class ActionPolicy(
                     PolicyResult(PolicyDecision.REQUIRE_CONFIRMATION, RiskLevel.MODERATE, "Gesture requires task-level approval")
                 }
             }
+            AgentAction.InspectScreen ->
+                PolicyResult(PolicyDecision.ALLOW, RiskLevel.LOW, "Read-only screen inspection requested")
             is AgentAction.ToggleSystemSetting ->
                 PolicyResult(PolicyDecision.REQUIRE_CONFIRMATION, RiskLevel.HIGH, "System setting changes require explicit confirmation")
             is AgentAction.InspectUserSelectedFile ->
