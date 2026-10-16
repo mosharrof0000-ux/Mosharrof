@@ -229,5 +229,5 @@ export function createPersonalMemoryEngine(options = {}) {
     catch { /* private browsing may deny preferences; memory remains local */ }
     return !!value;
   }
-  return Object.freeze({ add, recall, buildContext, list, listFolder, folders, search, exportAll, importAll, classifyFolder: inferFolder, clear, enabled, setEnabled });
+  return Object.freeze({ add, recall, buildContext, list, listFolder, folders, search, exportAll, importAll, timeline, classifyFolder: inferFolder, clear, enabled, setEnabled });
 }
