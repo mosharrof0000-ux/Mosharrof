@@ -36,7 +36,12 @@
     if (/(পাসওয়ার্ড|পাসওয়ার্ড|password|otp|ওটিপি|পিন কোড|pin code|ব্যাংক.*টাকা|টাকা পাঠাও|payment|পেমেন্ট.*কর)/i.test(text)) {
       return { status: "blocked", reason: "গোপন তথ্য বা আর্থিক কাজ স্বয়ংক্রিয়ভাবে করা যাবে না।", steps: [] };
     }
-    const matched = rules.find(rule => rule.re.test(text));
+    // Repair intent must outrank generic diagnosis even when Bengali inflections vary.
+    const repairIntent = /(সমস্যা|ত্রুটি|error|bug|কাজ করছে না|সমাধানযোগ্য)/i.test(text) &&
+      /(ঠিক|সমাধান|মেরামত|repair|fix|সারাও)/i.test(text);
+    const matched = repairIntent
+      ? rules.find(rule => rule.action === "repair_plan")
+      : rules.find(rule => rule.re.test(text));
     if (!matched) return { status: "unsupported", reason: "এই নির্দেশের জন্য যাচাইকৃত action mapping নেই; কোনো কাজ চালানো হয়নি।", steps: [] };
     const meta = ACTIONS[matched.action];
     return { status: "preview", reason: "এটি পরিকল্পনা মাত্র—বাস্তবায়নের জন্য native adapter, প্রয়োজনীয় অনুমতি, review এবং ফলাফল যাচাই লাগবে।",
