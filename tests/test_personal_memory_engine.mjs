@@ -46,6 +46,15 @@ test("explicit preference cannot be overwritten by weaker inference; secrets are
   const item = await engine.recordMessage({ text: "api_key=abc123xyz and write a story", role: "user" });
   assert.doesNotMatch(item.text, /abc123xyz/);
 });
+test("learns only explicit durable memory preferences from user messages", async () => {
+  const { engine } = makeEngine();
+  await engine.recordMessage({ text: "বর্তমানকে ফলো করবে, অতীতকে চাপিয়ে দেবে না।", role: "user", conversationId: "c1" });
+  const context = await engine.buildContext("আগের কাজ নিয়ে কী করব?", "c2");
+  assert.match(context, /memory.current-first/);
+  await engine.recordMessage({ text: "আমার পছন্দ হলো বিষয়ভিত্তিক ফোল্ডারে স্মৃতি সাজানো।", role: "user", conversationId: "c1" });
+  const folders = await engine.listFolders();
+  assert.ok(folders.some(folder => folder.path === "memory/preferences"));
+});
 test("export and delete controls work", async () => {
   const { engine } = makeEngine();
   await engine.recordMessage({ text: "a saved message", role: "user" });
