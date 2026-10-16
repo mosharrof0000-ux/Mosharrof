@@ -91,7 +91,8 @@ object PermissionCenterControl {
         try {
             val intent = when (action) {
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                Settings.ACTION_MANAGE_WRITE_SETTINGS, Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM ->
+                Settings.ACTION_MANAGE_WRITE_SETTINGS, Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS ->
                     Intent(action, Uri.parse("package:${activity.packageName}"))
                 else -> Intent(action)
             }
