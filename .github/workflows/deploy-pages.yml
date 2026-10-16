@@ -38,7 +38,26 @@ jobs:
       - name: Install Chromium for candidate runtime smoke test
         run: python -m pip install playwright && python -m playwright install chromium
       - name: Start candidate Pages server
-        run: python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
+          server_pid=$!
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then
+              echo "Candidate Pages server ready."
+              exit 0
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              cat /tmp/mosharrof-pages.log
+              echo "Candidate Pages server exited before becoming ready."
+              exit 1
+            fi
+            sleep 1
+          done
+          cat /tmp/mosharrof-pages.log
+          echo "Candidate Pages server readiness timed out."
+          exit 1
       - name: Test candidate organ runtime in Chromium
         env:
           PAGE_URL: http://127.0.0.1:4173/
