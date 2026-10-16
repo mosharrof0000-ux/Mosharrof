@@ -1,0 +1,123 @@
+/* Transparent, local-first memory integration for the live chat request path. */
+import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "../core/personal-memory-engine.js";
+
+(function () {
+  "use strict";
+  const PREF_KEY = "mosharrof_personal_memory_enabled_v1";
+  const CHAT_PATH = "/chat";
+  let engine;
+  let enabled = true;
+  try { enabled = localStorage.getItem(PREF_KEY) !== "false"; } catch (_) {}
+  const status = { ready: false, count: 0 };
+
+  function readResponseText(response) {
+    return response.clone().text().then(function (raw) {
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.indexOf("text/event-stream") !== -1) {
+        const blocks = raw.split(/\r?\n\r?\n/);
+        for (let i = blocks.length - 1; i >= 0; i -= 1) {
+          const line = blocks[i].split(/\r?\n/).find(function (part) { return part.indexOf("data:") === 0; });
+          if (!line) continue;
+          try {
+            const event = JSON.parse(line.slice(5).trim());
+            if (event.type === "result" && event.data && event.data.text) return String(event.data.text);
+          } catch (_) {}
+        }
+        return "";
+      }
+      try {
+        const data = JSON.parse(raw);
+        return String(data.text || "");
+      } catch (_) { return ""; }
+    });
+  }
+
+  function updateUI() {
+    const button = document.getElementById("mosharrof-memory-toggle");
+    const count = document.getElementById("mosharrof-memory-count");
+    const clear = document.getElementById("mosharrof-memory-clear");
+    if (button) {
+      button.textContent = "স্মৃতি: " + (enabled ? "চালু" : "বন্ধ");
+      button.setAttribute("aria-pressed", enabled ? "true" : "false");
+      button.title = "আপনার ব্যক্তিগত স্মৃতি সেটিংস";
+    }
+    if (count) count.textContent = status.ready ? "এই ডিভাইসে " + status.count + "টি স্মৃতি-রেকর্ড আছে। অন্য ডিভাইসে স্বয়ংক্রিয়ভাবে যায় না।" : "স্থানীয় স্মৃতি চালু হচ্ছে…";
+    if (clear) clear.disabled = !status.ready;
+  }
+
+  function mountControls() {
+    if (document.getElementById("mosharrof-memory-panel")) return;
+    const style = document.createElement("style");
+    style.textContent = "#mosharrof-memory-launch{position:fixed;z-index:10001;left:10px;bottom:calc(76px + env(safe-area-inset-bottom,0px));border:1px solid #424242;border-radius:999px;padding:8px 12px;background:#171717;color:#f5f5f5;font:600 12px system-ui;box-shadow:0 3px 16px #0008}#mosharrof-memory-panel{position:fixed;z-index:10002;left:10px;bottom:calc(118px + env(safe-area-inset-bottom,0px));width:min(320px,calc(100vw - 20px));padding:14px;border:1px solid #454545;border-radius:16px;background:#171717;color:#f5f5f5;box-shadow:0 10px 35px #000b;font:13px/1.5 system-ui;display:none}#mosharrof-memory-panel.open{display:block}#mosharrof-memory-panel p{margin:8px 0;color:#c7c7c7}#mosharrof-memory-panel .memory-actions{display:flex;gap:8px;margin-top:10px}#mosharrof-memory-panel button{border:1px solid #555;border-radius:9px;padding:8px 10px;background:#242424;color:#fff;font:600 12px system-ui}#mosharrof-memory-panel button:disabled{opacity:.45}";
+    document.head.appendChild(style);
+    const launch = document.createElement("button");
+    launch.id = "mosharrof-memory-launch";
+    launch.type = "button";
+    launch.textContent = "স্মৃতি: চালু";
+    launch.setAttribute("aria-controls", "mosharrof-memory-panel");
+    const panel = document.createElement("section");
+    panel.id = "mosharrof-memory-panel";
+    panel.setAttribute("aria-label", "ব্যক্তিগত স্মৃতি নিয়ন্ত্রণ");
+    panel.innerHTML = '<strong>ব্যক্তিগত স্মৃতি</strong><p>স্মৃতি এই ডিভাইসের ব্রাউজারে থাকে। পুরোনো ও নতুন কথার সময়ক্রম রাখা হয় এবং প্রাসঙ্গিক স্মৃতি উত্তর তৈরিতে ব্যবহার হয়। স্টোরেজ সীমা ডিভাইস/ব্রাউজার নির্ধারণ করে।</p><p id="mosharrof-memory-count">স্থানীয় স্মৃতি চালু হচ্ছে…</p><div class="memory-actions"><button id="mosharrof-memory-enable" type="button">স্মৃতি বন্ধ করুন</button><button id="mosharrof-memory-clear" type="button">সব স্মৃতি মুছুন</button></div>';
+    document.body.appendChild(launch);
+    document.body.appendChild(panel);
+    launch.addEventListener("click", function () { panel.classList.toggle("open"); });
+    document.getElementById("mosharrof-memory-enable").addEventListener("click", function () {
+      enabled = !enabled;
+      if (engine) engine.setEnabled(enabled);
+      try { localStorage.setItem(PREF_KEY, enabled ? "true" : "false"); } catch (_) {}
+      updateUI();
+      this.textContent = enabled ? "স্মৃতি বন্ধ করুন" : "স্মৃতি চালু করুন";
+    });
+    document.getElementById("mosharrof-memory-clear").addEventListener("click", function () {
+      if (!engine || !window.confirm("এই ডিভাইসে সংরক্ষিত সব ব্যক্তিগত স্মৃতি মুছে ফেলবেন? চ্যাট হিস্ট্রি আলাদা থাকবে।")) return;
+      engine.clear().then(function () { status.count = 0; updateUI(); }).catch(function () { window.alert("স্মৃতি মুছতে সমস্যা হয়েছে।"); });
+    });
+    updateUI();
+  }
+
+  async function initialize() {
+    try {
+      const store = createIndexedDbMemoryStore(window.indexedDB);
+      engine = createPersonalMemoryEngine({ store: store, enabled: enabled });
+      const profile = await engine.profile();
+      status.count = profile.totalEntries;
+      status.ready = true;
+      updateUI();
+    } catch (error) {
+      console.warn("[MOSHARROF memory] local memory unavailable:", error);
+      status.ready = false;
+      updateUI();
+    }
+  }
+
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async function (input, init) {
+    const url = typeof input === "string" ? input : (input && input.url) || "";
+    const isChat = url.indexOf(CHAT_PATH) !== -1 && init && typeof init.body === "string";
+    if (!isChat || !engine || !enabled) return originalFetch(input, init);
+    let body;
+    try { body = JSON.parse(init.body); } catch (_) { return originalFetch(input, init); }
+    const userText = String(body.text || "").trim();
+    if (!userText) return originalFetch(input, init);
+    try {
+      const memoryContext = await engine.buildContext(userText, { limit: 8, maxChars: 4200 });
+      if (memoryContext) body.memory_context = memoryContext;
+    } catch (error) { console.warn("[MOSHARROF memory] recall skipped:", error); }
+    const response = await originalFetch(input, Object.assign({}, init, { body: JSON.stringify(body) }));
+    readResponseText(response).then(async function (assistantText) {
+      if (!assistantText) return;
+      try {
+        await engine.rememberTurn({ userText: userText, assistantText: assistantText });
+        const profile = await engine.profile();
+        status.count = profile.totalEntries;
+        updateUI();
+      } catch (error) { console.warn("[MOSHARROF memory] save skipped:", error); }
+    }).catch(function () {});
+    return response;
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mountControls, { once: true });
+  else mountControls();
+  initialize();
+})();
