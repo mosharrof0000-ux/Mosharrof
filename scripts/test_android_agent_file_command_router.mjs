@@ -3,6 +3,9 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const { createCommandRouter } = require("../core/android-agent-command-router.js");
 const taskPlanner = require("../core/android-agent-task-planner.js");
+import { readFileSync } from "node:fs";
+const assets = readFileSync("scripts/android/prepare-agent-web-assets.py", "utf8");
+assert.ok(assets.includes('"android-agent-task-planner.js"'));
 let reported = "";
 globalThis.MosharrofFiles = {
   async getSelectedDirectory() { return { selected: true, documentId: "root" }; },
