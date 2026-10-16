@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { loadWorker } from "./worker-loader.mjs";
-import { createPersonalMemoryEngine, buildPersonalMemoryContext, inferMemoryCandidates } from "../core/personal-memory-engine.js";
+import { readFile } from "node:fs/promises";
+const memorySource = await readFile(new URL("../core/personal-memory-engine.js", import.meta.url), "utf8");
+const { createPersonalMemoryEngine, buildPersonalMemoryContext, inferMemoryCandidates } =
+  await import("data:text/javascript;base64," + Buffer.from(memorySource).toString("base64"));
 
 const worker = await loadWorker();
 const originalFetch = globalThis.fetch;
