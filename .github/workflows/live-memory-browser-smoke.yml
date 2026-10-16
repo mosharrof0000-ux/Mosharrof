@@ -1,0 +1,40 @@
+name: Live memory browser smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "HTTPS URL to test (live site or a deploy preview)"
+        required: true
+        default: "https://deploy-preview-678--bucolic-mooncake-c83372.netlify.app"
+
+permissions:
+  contents: read
+
+jobs:
+  memory-browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: npm install --no-save playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Send test message and verify persistence after refresh
+        run: node scripts/live-memory-smoke.mjs "$TARGET_URL"
+        env:
+          TARGET_URL: ${{ inputs.target_url }}
+      - name: Upload failure screenshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-memory-smoke-failure
+          path: live-memory-smoke-failure.png
+          if-no-files-found: ignore
+          retention-days: 7
