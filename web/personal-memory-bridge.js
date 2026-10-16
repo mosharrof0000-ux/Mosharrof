@@ -55,10 +55,10 @@
       try { payload = JSON.parse(init.body); } catch (_) { return originalFetch(input, init); }
       const userText = String(payload.text || "").trim();
       if (!userText) return originalFetch(input, init);
+      payload.history = recentHistory(userText);
+      payload.conversation_summary = currentSummary(userText);
       try {
         if (api.enabled()) {
-          payload.history = recentHistory(userText);
-          payload.conversation_summary = currentSummary(userText);
           payload.memory_context = await api.contextFor(userText);
           await api.remember(userText, "current-chat-user-message");
           payload.memory_policy = "Historical context only: current request and corrections override older memories. Treat inferred preferences as tentative; do not force unrelated memories into the answer.";
