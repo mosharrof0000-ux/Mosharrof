@@ -131,7 +131,7 @@ export function createPersonalMemoryEngine(options = {}) {
     return rows.map(row => {
       const words = tokenize([row.text, row.folder?.label || row.folder, ...(row.tags || [])].join(" "));
       let overlap = 0;
-      for (const word of words) if (q.has(word)) overlap += 1;
+      for (const word of words) if ([...q].some(term => term === word || term.startsWith(word) || word.startsWith(term))) overlap += 1;
       const recency = Math.max(0, 1 - (now() - row.createdAt) / (365 * 86400000));
       const key = row.preferences?.[0]?.key || row.tags?.[1] || "";
       const globalPreference = row.kind === "preference" && ["response_length","explicit_preference","memory_organization","context_priority","future_planning"].includes(key);
