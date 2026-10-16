@@ -69,7 +69,7 @@ def main() -> int:
   var personalMemoryReady=import("./personal-memory-client.js").then(function(mod){personalMemoryClient=mod.createBrowserPersonalMemory(localStorage);return personalMemoryClient;}).catch(function(error){console.warn("Personal memory unavailable:",error);return null;});
   function memorySignals(text){return personalMemoryReady.then(function(memory){return memory?memory.observe(text):null;}).catch(function(error){console.warn("Memory signal could not be saved:",error);});}
   function personalMemoryContext(text){return personalMemoryReady.then(function(memory){return memory?memory.context(text):"";}).catch(function(error){console.warn("Memory retrieval failed:",error);return "";});}
-  function memoryCommand(text){if(!/^(?:(?:আমার\\\\s*)?(?:ব্যক্তিগত\\\\s*)?স্মৃতি\\\\s*(?:দেখাও|দেখান|তালিকা|list)|(?:আমার\\\\s*)?(?:সব\\\\s*)?(?:ব্যক্তিগত\\\\s*)?স্মৃতি\\\\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)|(?:মনে রাখো|স্মৃতিতে রাখো|remember)\\\\s*[:：-]?\\\\s*.+)$/i.test(String(text||"").trim()))return null;return personalMemoryReady.then(function(memory){return memory?memory.command(text):"স্মৃতি-সংরক্ষণ সুবিধা এখন পাওয়া যাচ্ছে না।";});}"""
+  function memoryCommand(text){if(!/^(?:(?:আমার\\s*)?(?:ব্যক্তিগত\\s*)?স্মৃতি\\s*(?:দেখাও|দেখান|তালিকা|list)|(?:আমার\\s*)?(?:সব\\s*)?(?:ব্যক্তিগত\\s*)?স্মৃতি\\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)|(?:মনে রাখো|স্মৃতিতে রাখো|remember)\\s*[:：-]?\\s*.+)$/i.test(String(text||"").trim()))return null;return personalMemoryReady.then(function(memory){return memory?memory.command(text):"স্মৃতি-সংরক্ষণ সুবিধা এখন পাওয়া যাচ্ছে না।";});}"""
     if "var personalMemoryReady=import(" not in index_html:
         if session_anchor not in index_html:
             raise SystemExit("ORGAN ASSET PREP: session anchor missing for personal memory")
@@ -81,7 +81,7 @@ def main() -> int:
       var priorHistory=(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};});
       return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:currentText,history:priorHistory,memory_context:memoryContext,image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})});
     })"""
-    if "var currentText=String(t||\\\"\\\").trim();" not in index_html:
+    if "var currentText=String(t||" not in index_html:
         if old_chat_request not in index_html:
             raise SystemExit("ORGAN ASSET PREP: chat request shape changed; memory integration requires review")
         index_html = index_html.replace(old_chat_request, new_chat_request, 1)
