@@ -115,7 +115,17 @@ export function installPersonalMemoryBridge(root = (typeof window !== "undefined
         requestBody = JSON.parse(init.body);
         if (requestBody && typeof requestBody.text === "string" && requestBody.text.trim()) {
           currentFolder = engine.classifyFolder(requestBody.text);
-          const memoryContext = await engine.buildContext(requestBody.text).catch((error) => { console.error("[MOSHARROF Memory] Context build failed:", error?.message || error); return ""; });
+          let memoryContext = await engine.buildContext(requestBody.text).catch((error) => { console.error("[MOSHARROF Memory] Context build failed:", error?.message || error); return ""; });
+          if (!memoryContext) {
+            const recalled = await engine.recall(requestBody.text, 16).catch(() => []);
+            const relevant = recalled.filter((row) => row.kind !== "preference").slice(0, 7)
+              .sort((a, b) => a.sequence - b.sequence);
+            if (relevant.length) {
+              memoryContext = "PERSONAL MEMORY, OLDEST TO NEWEST (past user-provided context; may be incomplete or stale; current request overrides it):\n" +
+                relevant.map((row) => "[" + (row.folder?.label || row.folder || "সাধারণ কথোপকথন") + " · " + row.isoTime + " · " + row.kind + "] " + String(row.text || "").slice(0, 700)).join("\n");
+              console.warn("[MOSHARROF Memory] Context recovered through recall fallback.");
+            }
+          }
           const saved = await engine.add({
             kind: "user", text: requestBody.text, folder: currentFolder, sessionId: "mosharrof-chat",
             sequence: ++sequence, previousId
