@@ -9,12 +9,12 @@ const installer = await readFile(new URL("./android/install-main-activity.sh", i
 const wrapper = await readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
 const ui = await readFile(new URL("../core/android-file-manager-ui.js", import.meta.url), "utf8");
 
-assert.equal(typeof files.pickDirectory, "function");
-assert.equal(typeof files.createFolder, "function");
-assert.equal(typeof files.createTextFile, "function");
-assert.equal(typeof files.renameEntry, "function");
-assert.equal(typeof files.deleteEntry, "function");
-assert.equal(typeof files.scanExactDuplicates, "function");
+for (const method of [
+  "pickDirectory", "getSelectedDirectory", "listEntries", "createFolder",
+  "createTextFile", "renameEntry", "deleteEntry", "scanSelectedDirectoryDuplicates",
+  "scanExactDuplicates"
+]) assert.equal(typeof files[method], "function", method + " facade method is required");
+
 await assert.rejects(() => files.createFolder("test"), /bridge unavailable/);
 await assert.rejects(() => files.deleteEntry("document-id", false), /নিশ্চিতকরণ/);
 assert.match(java, /ACTION_OPEN_DOCUMENT_TREE/);
@@ -25,15 +25,14 @@ assert.match(java, /scanDuplicates/);
 assert.match(java, /SHA-256/);
 assert.match(java, /maxFiles/);
 assert.match(wrapper, /device-control\.js/);
-assert.match(ui, /scanDuplicates/);
+assert.match(wrapper, /android-file-manager\.js/);
+assert.match(wrapper, /android-file-manager-ui\.js/);
+assert.match(ui, /scanSelectedDirectoryDuplicates/);
 assert.match(ui, /কোনো ফাইল মুছবে না/);
+assert.match(ui, /MosharrofFiles/);
+assert.doesNotMatch(ui, /Plugins\.FileManager/, "stale plugin name must not remain");
 assert.match(installer, /AndroidFileManagerPlugin\.class/);
 assert.doesNotMatch(installer, /MosharrofFilesPlugin\.class/, "duplicate plugin registration must be removed");
-assert.match(wrapper, /android-file-manager\.js/);
-assert.match(wrapper, /android-file-manager-ui\.js/, "Android file-manager UI must be copied into the APK bundle");
-assert.match(wrapper, /android-file-manager-ui\.js/, "Android file-manager UI must be injected into the web entrypoint");
-assert.match(ui, /Plugins\.AndroidFileManager/, "UI must use the registered native plugin name");
-assert.doesNotMatch(ui, /Plugins\.FileManager/, "stale plugin name must not remain");
 
 const bytesA = new TextEncoder().encode("same audio bytes").buffer;
 const bytesB = new TextEncoder().encode("same audio bytes").buffer;
