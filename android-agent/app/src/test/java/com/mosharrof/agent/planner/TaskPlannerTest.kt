@@ -24,6 +24,24 @@ class TaskPlannerTest {
         assertEquals(TaskPlan.OpenApp(apps[2]), planner.plan("সেটিংস খুলুন", apps))
     }
 
+    @Test fun plansSystemSettingsOnlyWhenExplicitlyRequested() {
+        assertEquals(TaskPlan.OpenSystemSettings, planner.plan("open settings", apps))
+    }
+
+    @Test fun plansWifiSettingsWithoutSilentlyChangingTheSetting() {
+        assertEquals(
+            TaskPlan.OpenSettingPanel(AgentAction.SupportedSetting.WIFI_PANEL),
+            planner.plan("ওয়াইফাই সেটিংস খুলুন", apps)
+        )
+    }
+
+    @Test fun resolvesExplicitInstalledPackage() {
+        assertEquals(
+            TaskPlan.OpenApp(apps[0]),
+            planner.plan("open app com.google.android.youtube", apps)
+        )
+    }
+
     @Test fun asksForChoiceWhenNameIsPartial() {
         assertTrue(planner.plan("open You", apps) is TaskPlan.NeedsChoice)
     }
