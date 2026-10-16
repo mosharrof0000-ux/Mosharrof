@@ -42,7 +42,7 @@ export function installMemoryControls(engine, options = {}) {
   });
   panel.querySelector("[data-memory-clear]").addEventListener("click", async () => {
     if (!globalThis.confirm("এই ডিভাইসের সব ব্যক্তিগত স্মৃতি স্থায়ীভাবে মুছে ফেলবেন?")) return;
-    await engine.forgetAll(); await refresh();
+    await (options.forgetAll ? options.forgetAll() : engine.forgetAll()); await refresh();
   });
   refresh();
 }
