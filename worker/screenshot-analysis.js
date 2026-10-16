@@ -434,13 +434,8 @@ async function transcribeAudio(request,env){
   return reply({error:"audio_transcription_failed",attempted},502);
 }
 async function runChat(body,env,onStatus){
-  const conversationText=buildChatContext(body.text,body.history);
-  if(!conversationText)return {status:400,data:{error:"text_required"}};
-  const memoryBudget=Math.max(0,Math.min(3000,11700-conversationText.length));
-  const memoryContext=String(body.memory_context||"").trim().slice(0,memoryBudget);
-  const text=memoryContext
-    ? "Relevant saved user memories (historical context, may be outdated; current request always takes priority):\n"+memoryContext+"\n\n"+conversationText
-    : conversationText;
+  const text=buildChatContext(body.text,body.history,body.memory_context);
+  if(!text)return {status:400,data:{error:"text_required"}};
   if(text.length>12000)return {status:413,data:{error:"text_too_large"}};
   const targetWords=requestedWordCount(body.text);
   const maxOutputTokens=outputTokenBudget(targetWords);
