@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
+import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.InstalledAppCatalog
 import com.mosharrof.agent.execution.SystemSettingsLauncher
 import com.mosharrof.agent.execution.TaskControlButtons
@@ -86,7 +87,11 @@ class MainActivity : ComponentActivity() {
         }
         val accessibilityButton = Button(this).apply {
             text = "Accessibility সেটিংস খুলুন"
-            setOnClickListener { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+            setOnClickListener {
+                AccessibilityConsentDialog.show(this@MainActivity) {
+                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                }
+            }
         }
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
