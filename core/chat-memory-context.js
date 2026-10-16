@@ -10,5 +10,5 @@ export function buildChatMemoryPrompt(body, text, targetWords = 0) {
     ? "\n\nOUTPUT LENGTH REQUIREMENT: Aim for approximately " + targetWords + " words. Continue the requested story or text in full, with coherent structure and no premature summary. Do not claim the target was met if output is cut off."
     : "";
   const contextualText = (memoryContext ? memoryContext + "\n\n" : "") + text + outputInstruction;
-  return { userPrompt: buildReflectiveUserPrompt(contextualText), memoryCandidates };
+  return { userPrompt: buildReflectiveUserPrompt(contextualText), contextualText, memoryCandidates };
 }
