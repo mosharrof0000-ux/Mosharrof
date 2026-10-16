@@ -21,6 +21,7 @@ import com.mosharrof.agent.planner.TaskPlan
 import com.mosharrof.agent.planner.TaskPlanner
 import com.mosharrof.agent.policy.ActionPolicy
 import com.mosharrof.agent.policy.PolicyDecision
+import com.mosharrof.agent.voice.AgentSpeechOutput
 class MainActivity : ComponentActivity() {
     private val planner = TaskPlanner()
     private val appCatalog by lazy { InstalledAppCatalog(this) }
@@ -32,6 +33,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var screenDetails: TextView
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
+    private var speechOutput: AgentSpeechOutput? = null
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -49,6 +51,7 @@ class MainActivity : ComponentActivity() {
             contentDescription = "Mosharrof Autonomous Agent"
         }
         status = TextView(this).apply { textSize = 16f }
+        speechOutput = AgentSpeechOutput(this) { message -> runOnUiThread { status.text = message } }
         screenDetails = TextView(this).apply { textSize = 14f }
         commandInput = EditText(this).apply {
             hint = "যেমন: Open YouTube / ইউটিউব খুলুন"
@@ -73,6 +76,14 @@ class MainActivity : ComponentActivity() {
             text = "কথা বলে কমান্ড দিন"
             setOnClickListener { startSpeechInput() }
         }
+        val speakButton = Button(this).apply {
+            text = "ফলাফল পড়ে শোনান"
+            setOnClickListener { speechOutput?.speak(status.text.toString()) }
+        }
+        val stopSpeechButton = Button(this).apply {
+            text = "কণ্ঠ থামান"
+            setOnClickListener { speechOutput?.stop() }
+        }
         val inspectButton = Button(this).apply {
             text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
             setOnClickListener { inspectCurrentScreen() }
@@ -90,11 +101,18 @@ class MainActivity : ComponentActivity() {
             addView(voiceButton)
             addView(planButton)
             addView(confirmButton)
+            addView(speakButton)
+            addView(stopSpeechButton)
             addView(inspectButton)
             addView(screenDetails)
             addView(accessibilityButton)
         })
         refreshServiceStatus()
+    }
+    override fun onDestroy() {
+        speechOutput?.close()
+        speechOutput = null
+        super.onDestroy()
     }
     override fun onResume() {
         super.onResume()
