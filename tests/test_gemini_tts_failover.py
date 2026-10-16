@@ -21,3 +21,10 @@ def test_deploy_workflow_sets_optional_failover_secrets_and_checks_build():
     assert "for i in {1..12}; do" in workflow
     assert '''grep -q '"worker_build":"2026-10-16-cf-v5"' /tmp/health.json''' in workflow
     assert "expected healthy build" in workflow
+
+
+def test_deploy_workflow_always_configures_a_free_gemini_tts_fallback_model():
+    workflow = Path(".github/workflows/deploy-gemini-worker.yml").read_text(encoding="utf-8")
+    assert 'MODELS="gemini-2.5-flash-preview-tts"' in workflow
+    assert 'secret put GEMINI_TTS_FALLBACK_MODELS' in workflow
+    assert 'if [ -z "$MODELS" ]; then' in workflow
