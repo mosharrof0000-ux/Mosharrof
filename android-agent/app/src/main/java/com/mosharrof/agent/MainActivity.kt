@@ -31,6 +31,7 @@ class MainActivity : ComponentActivity() {
     private var pendingSettings: TaskPlan? = null
     private var pendingTap: TaskPlan.TapVisibleText? = null
     private lateinit var status: TextView
+    private lateinit var speechStatus: TextView
     private lateinit var screenDetails: TextView
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
@@ -52,7 +53,8 @@ class MainActivity : ComponentActivity() {
             contentDescription = "Mosharrof Autonomous Agent"
         }
         status = TextView(this).apply { textSize = 16f }
-        speechOutput = AgentSpeechOutput(this) { message -> runOnUiThread { status.text = message } }
+        speechStatus = TextView(this).apply { textSize = 14f }
+        speechOutput = AgentSpeechOutput(this) { message -> runOnUiThread { speechStatus.text = message } }
         screenDetails = TextView(this).apply { textSize = 14f }
         commandInput = EditText(this).apply {
             hint = "যেমন: Open YouTube / ইউটিউব খুলুন"
@@ -90,6 +92,7 @@ class MainActivity : ComponentActivity() {
             setPadding(32, 48, 32, 32)
             addView(title)
             addView(status)
+            addView(speechStatus)
             addView(commandInput)
             addView(voiceButton)
             addView(planButton)
@@ -141,11 +144,7 @@ class MainActivity : ComponentActivity() {
         status.text = "পরিকল্পনা: ${label} খোলা হবে। চালানোর আগে নিশ্চিত করুন।"
         confirmButton.isEnabled = true
     }
-    private fun settingLabel(setting: AgentAction.SupportedSetting): String = when (setting) {
-        AgentAction.SupportedSetting.WIFI_PANEL -> "Wi-Fi Settings"
-        AgentAction.SupportedSetting.BLUETOOTH_PANEL -> "Bluetooth Settings"
-        AgentAction.SupportedSetting.LOCATION_SETTINGS -> "Location Settings"
-    }
+    private fun settingLabel(setting: AgentAction.SupportedSetting) = when (setting) { AgentAction.SupportedSetting.WIFI_PANEL -> "Wi-Fi Settings"; AgentAction.SupportedSetting.BLUETOOTH_PANEL -> "Bluetooth Settings"; AgentAction.SupportedSetting.LOCATION_SETTINGS -> "Location Settings" }
     private fun launchConfirmedSettings() {
         val plan = pendingSettings ?: return
         status.text = settingsLauncher.launch(plan)
