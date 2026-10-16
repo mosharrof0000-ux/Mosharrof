@@ -219,6 +219,12 @@ class MainActivity : ComponentActivity() {
             else -> "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ/Settings খোলা যাবে।"
         }
     }
+    override fun onDestroy() {
+        ScreenshotAnalysisControl.release()
+        speechOutput?.stop()
+        super.onDestroy()
+    }
+
     private fun isServiceEnabled(): Boolean {
         val manager = getSystemService<AccessibilityManager>() ?: return false
         return manager.getEnabledAccessibilityServiceList(
