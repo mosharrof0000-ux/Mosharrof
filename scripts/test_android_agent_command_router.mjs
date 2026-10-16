@@ -1,0 +1,48 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const { createCommandRouter } = require("../core/android-agent-command-router.js");
+const { planCommand } = require("../core/android-agent-planner.js");
+const { createExecutor } = require("../core/android-agent-executor.js");
+
+let calls = 0;
+let confirmationText = "";
+const router = createCommandRouter({
+  planner: { planCommand },
+  executor: { createExecutor },
+  getPlugin: () => ({
+    openWifiSettings: async () => {
+      calls += 1;
+      return { opened: true, action: "android.settings.WIFI_SETTINGS" };
+    }
+  }),
+  confirm: message => { confirmationText = message; return true; },
+  report: () => {}
+});
+const supported = router.handle("ওয়াই-ফাই সেটিংস খোলো");
+assert.equal(supported.handled, true);
+assert.match(confirmationText, /শুধু Android সেটিংস খোলা হবে/);
+const completed = await supported.promise;
+assert.equal(completed.status, "completed");
+assert.equal(calls, 1);
+assert.equal(completed.steps[0].status, "verified");
+
+const unsupported = router.handle("আমার ছবিগুলো তারিখ অনুযায়ী সাজাও");
+assert.equal(unsupported.handled, false);
+assert.equal(calls, 1, "unsupported commands must never invoke a native action");
+
+const sensitive = router.handle("পাসওয়ার্ড লিখে দাও");
+assert.equal(sensitive.handled, false);
+assert.equal(calls, 1, "sensitive commands must not invoke a native action");
+
+const cancelledRouter = createCommandRouter({
+  planner: { planCommand }, executor: { createExecutor },
+  getPlugin: () => ({ openWifiSettings: async () => { calls += 1; return { opened: true }; } }),
+  confirm: () => false, report: () => {}
+});
+const cancelled = await cancelledRouter.handle("Wi-Fi সেটিংস খোলো").promise;
+assert.equal(cancelled.status, "cancelled");
+assert.equal(calls, 1, "cancelled preview must not invoke a native action");
+
+console.log("Android agent command router contract: PASS");
