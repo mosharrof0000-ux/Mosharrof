@@ -142,9 +142,9 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     const start=Math.max(0,Number(offset)||0), end=Number.isInteger(limit)&&limit>0?start+limit:items.length;
     return { total:items.length, offset:start, items:clone(items.slice(start,end)) };
   }
-  async function all({ folder, includeSuperseded = true, limit, offset = 0 } = {}) {
+  async function all({ category, folder, includeSuperseded = true, limit, offset = 0 } = {}) {
     const ledger = await readLedger();
-    let items = ledger.memories.filter(m => (includeSuperseded || !["superseded", "archived"].includes(m.status)) && (!folder || (m.folder || m.category) === folder));
+    let items = ledger.memories.filter(m => (includeSuperseded || !["superseded", "archived"].includes(m.status)) && (!category || m.category === category) && (!folder || (m.folder || m.category) === folder));
     items.sort((a,b) => String(b.updated_at).localeCompare(String(a.updated_at)));
     const start = Math.max(0, Number(offset) || 0), end = Number.isInteger(limit) && limit > 0 ? start + limit : items.length;
     return { total: items.length, offset: start, items: clone(items.slice(start, end)) };
