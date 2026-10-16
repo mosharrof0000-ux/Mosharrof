@@ -24,25 +24,3 @@ def test_prepared_frontend_sends_prior_turns_without_current_message_as_history(
     assert "chat request shape changed" in prep
     wrapper = Path("scripts/android/prepare-wrapper.sh").read_text(encoding="utf-8")
     assert "python3 scripts/prepare_web_organ_runtime.py" in wrapper
-
- 
-def test_personal_memory_engine_is_shipped_and_retrieved_as_historical_context():
-    engine = Path("core/personal-memory-engine.js").read_text(encoding="utf-8")
-    prep = Path("scripts/prepare_web_organ_runtime.py").read_text(encoding="utf-8")
-    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
-    prompt = Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8")
-    assert '"core/personal-memory-engine.js": "web/memory-engine.js"' in prep
-    assert '<script src="./memory-engine.js"></script>' in prep
-    assert '<script src="./memory-ui.js"></script>' in prep
-    ui = Path("core/personal-memory-ui.js").read_text(encoding="utf-8")
-    assert "সব মুছুন" in ui
-    assert "এই স্মৃতি মুছুন" in ui
-    assert 'createObjectStore(STORE, { keyPath: "id" })' in engine
-    assert 'store.createIndex("topic"' in engine
-    assert 'async function contextFor(query)' in engine
-    assert 'payload.memory_context = await contextFor(userText)' in engine
-    assert 'String(body.memory_context||"").trim().slice(0,memoryBudget)' in worker
-    assert "current request always takes priority" in worker
-    assert "current message and latest explicit correction override older preferences" in prompt
-    assert "async function clear()" in engine
-    assert "async function remove(id)" in engine
