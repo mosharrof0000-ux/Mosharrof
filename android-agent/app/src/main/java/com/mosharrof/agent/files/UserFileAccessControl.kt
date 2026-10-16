@@ -82,7 +82,7 @@ object UserFileAccessControl {
                 appendLine("পাওয়া ফাইল: ${files.size}")
                 appendLine("একই কনটেন্টের ডুপ্লিকেট গ্রুপ: ${groups.size}")
                 appendLine("হ্যাশ করা হয়েছে: ${hashedBytes / (1024 * 1024)} MB")
-                if (skipped > 0) appendLine("আকার/সীমার কারণে হ্যাশ করা হয়নি: $skippedটি")
+                if (skipped > 0) appendLine("আকার/সীমার কারণে হ্যাশ করা হয়নি: ${skipped}টি")
                 groups.take(12).forEachIndexed { index, group ->
                     appendLine("\n${index + 1}. ${group.size}টি একই ফাইল")
                     group.forEach { appendLine(" • ${it.name} (${it.length()} bytes)") }
@@ -156,7 +156,7 @@ object UserFileAccessControl {
                 var failed = 0
                 targets.forEach { if (runCatching { it.delete() }.getOrDefault(false)) deleted++ else failed++ }
                 lastDuplicates = emptyList()
-                status.text = "ডুপ্লিকেট মুছে ফেলার ফল: $deletedটি মুছেছে, $failedটি মুছতে পারেনি।"
+                status.text = "ডুপ্লিকেট মুছে ফেলার ফল: ${deleted}টি মুছেছে, ${failed}টি মুছতে পারেনি।"
             }
             .show()
     }
