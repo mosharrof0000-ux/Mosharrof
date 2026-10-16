@@ -56,6 +56,9 @@ jobs:
       - name: Verify Bengali Android agent planner contract
         run: node scripts/test_android_agent_planner.mjs
 
+      - name: Verify Android capability readiness registry
+        run: node scripts/test_android_agent_capabilities.mjs
+
       - name: Build debug APK
         working-directory: android
         run: |
