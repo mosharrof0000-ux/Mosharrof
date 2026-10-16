@@ -13,26 +13,33 @@ gradle assembleDebug
 gradle testDebugUnitTest
 ```
 
-The GitHub Actions workflow uses Gradle 8.9 and publishes the debug APK as a workflow artifact.
+GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 
-## Implementation status
+## Implemented in this milestone
 
 - [x] Standalone Kotlin Android app and manifest
 - [x] User-facing Accessibility Settings entry point
 - [x] Bounded, read-only accessibility event inspection
-- [x] Bengali/English command parser with typed intents
-- [x] Action policy with deny/confirmation decisions and unit tests
+- [x] Deterministic Bengali/English text intent parsing
+- [x] Installed-app discovery and exact-label app planning
+- [x] Voice command input through Android's speech recognition activity (availability depends on device)
+- [x] Confirmation step before launching a selected app
+- [x] Policy gate for allowlisted app launch and tests
 - [x] CI debug APK build and JVM unit tests
-- [ ] Map parsed intents to installed-app launchers and safe task execution
-- [ ] Per-task confirmation UI and visible task progress/cancel controls
-- [ ] Semantic node locator and bounded gesture executor
-- [ ] Appium/UiAutomator2 device tests and real-device acceptance
-- [ ] Speech input/output, interruption, and task status updates
-- [ ] Local vision model adapter and benchmark
-- [ ] Encrypted, opt-in local memory/retrieval
-- [ ] Release signing and distribution
 
-This is an incremental foundation, not a completed fully autonomous agent. The parser only classifies text; it does not perform actions. The accessibility service currently inspects events and does not click controls or execute shell/root commands.
+## Not yet complete
+
+- [ ] General natural-language task planning across arbitrary apps
+- [ ] Semantic node locator and bounded UI action executor
+- [ ] Per-task progress, interrupt, cancel, postcondition verification and recovery
+- [ ] Safe Settings command routing and system-setting confirmation
+- [ ] Appium/UiAutomator2 device tests and real-device acceptance
+- [ ] Speech output and continuous, interruption-aware voice session
+- [ ] Local vision model adapter and on-device benchmark
+- [ ] Encrypted, opt-in local memory/retrieval
+- [ ] Release signing, installation validation and distribution
+
+This milestone is **not** a completed fully autonomous agent. Current executable scope is intentionally narrow: resolve an explicit installed-app name, ask the user to confirm, then request Android to launch it. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service inspects bounded UI structure only; it does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
 
 ## Safety model
 
