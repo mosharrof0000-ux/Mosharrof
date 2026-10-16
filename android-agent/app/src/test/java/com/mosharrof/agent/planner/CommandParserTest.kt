@@ -28,6 +28,19 @@ class CommandParserTest {
     }
 
     @Test
+    fun parsesAdditionalSafeSettingsCommands() {
+        listOf(
+            "open display settings" to AgentAction.SupportedSetting.DISPLAY_SETTINGS,
+            "সাউন্ড সেটিংস খুলুন" to AgentAction.SupportedSetting.SOUND_SETTINGS,
+            "ব্যাটারি সেভার সেটিংস খুলুন" to AgentAction.SupportedSetting.BATTERY_SAVER_SETTINGS,
+            "নোটিফিকেশন সেটিংস খুলুন" to AgentAction.SupportedSetting.NOTIFICATION_SETTINGS,
+            "অ্যাপ সেটিংস খুলুন" to AgentAction.SupportedSetting.APPLICATION_SETTINGS
+        ).forEach { (command, setting) ->
+            assertEquals(ParsedCommand.OpenSettingPanel(setting), parser.parse(command))
+        }
+    }
+
+    @Test
     fun rejectsAmbiguousAppName() {
         assertEquals(ParsedCommand.Unknown, parser.parse("open app notes"))
     }
