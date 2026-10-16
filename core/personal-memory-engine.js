@@ -132,9 +132,9 @@ export function createPersonalMemoryEngine({ store, now = () => Date.now(), make
     }));
     const lines = [...preferenceLines, ...memories];
     if (!lines.length) return "";
-    return "PERSONAL MEMORY (local saved timeline; context, not guaranteed truth):\\n" +
-      lines.join("\\n").slice(0, options.maxChars || 4200) +
-      "\\nUse dated memories to infer continuity and the user's likely preference cautiously. Prefer newer explicit statements when preferences conflict. Separate user-stated facts from interpretations; never claim certainty about unstated thoughts.";
+    return "PERSONAL MEMORY (local saved timeline; context, not guaranteed truth):\n" +
+      lines.join("\n").slice(0, options.maxChars || 4200) +
+      "\nUse dated memories to infer continuity and the user's likely preference cautiously. Prefer newer explicit statements when preferences conflict. Separate user-stated facts from interpretations; never claim certainty about unstated thoughts.";
   }
   async function timeline({ limit = 100 } = {}) {
     const rows = await store.list();
