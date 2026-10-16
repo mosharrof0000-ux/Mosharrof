@@ -6,7 +6,7 @@ function memoryStore() {
   const map = new Map();
   return {
     async put(item) { map.set(item.id, structuredClone(item)); },
-    async getAll() { return [...map.values()].map(structuredClone); },
+    async getAll() { return [...map.values()].map(item => structuredClone(item)); },
     async delete(id) { return map.delete(id); },
     async clear() { map.clear(); },
     size() { return map.size; }
