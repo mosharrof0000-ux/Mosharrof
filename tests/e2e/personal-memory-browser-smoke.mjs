@@ -141,7 +141,12 @@ try {
   const reloadedControls = await openMemoryControls(page);
   const search = reloadedControls.locator('input[type="search"]');
   await search.fill(marker);
-  await page.getByText(new RegExp(marker)).waitFor({ state: "visible", timeout: timeoutMs });
+  await page.waitForFunction((needle) => {
+    const controls = document.querySelector("[data-personal-memory-controls]");
+    return Boolean(controls && [...controls.querySelectorAll("div")].some(
+      node => (node.innerText || node.textContent || "").includes(needle)
+    ));
+  }, marker, { timeout: timeoutMs });
   const entriesAfterReload = await readMemoryEntries(page);
   if (!entriesAfterReload.some(row => JSON.stringify(row).includes(marker))) {
     throw new Error("Memory marker was not present after reload");
