@@ -17,10 +17,7 @@ on:
       confirm_send_test_message:
         description: "Choose SEND_TEST_MESSAGE to authorize one synthetic message to the real chat Worker"
         required: true
-        type: choice
-        options:
-          - NO
-          - SEND_TEST_MESSAGE
+        type: string
         default: NO
       confirm_send_test_message:
         description: "Choose SEND_TEST_MESSAGE to authorize one synthetic message to the real chat Worker"
@@ -40,7 +37,7 @@ concurrency:
 
 jobs:
   browser-memory-roundtrip:
-    if: (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') && (github.event_name != 'workflow_dispatch' || inputs.confirm_send_test_message == 'SEND_TEST_MESSAGE')
+    if: ${{ (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') && (github.event_name != 'workflow_dispatch' || inputs.confirm_send_test_message == 'SEND_TEST_MESSAGE') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
