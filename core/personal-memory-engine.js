@@ -26,7 +26,7 @@
     const db=await openDb();return new Promise((resolve,reject)=>{const req=db.transaction(STORE,"readonly").objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error);});
   }
   async function search(query,limit=12){
-    const q=normalize(query,1000).toLowerCase(),items=await all();
+    await learnFromTurn(query,"");\n    const q=normalize(query,1000).toLowerCase(),items=await all();
     const terms=q.split(/[^\p{L}\p{N}]+/u).filter(x=>x.length>1);
     return items.filter(x=>x.approved).map(x=>({...x,score:terms.reduce((n,t)=>n+((x.content+" "+x.kind).toLowerCase().includes(t)?1:0),0)})).filter(x=>!terms.length||x.score>0).sort((a,b)=>b.score-a.score||b.updatedAt-a.updatedAt).slice(0,Math.max(1,Math.min(30,limit)));
   }
@@ -40,7 +40,7 @@
     if(!user)return false;
     // Save an explicit, non-sensitive preference only when the user directly asks for it.
     const patterns=[
-      {re:/(?:মনে রাখো|মনে রাখবেন|আমার পছন্দ|আমি চাই(?: যে)?|সবসময়|সর্বদা).{0,180}/i,kind:"explicit_preference"},
+      {re:/(?:মনে রাখো|মনে রাখবেন|আমার পছন্দ|সবসময়|সর্বদা).{0,180}/i,kind:"explicit_preference"},
       {re:/(?:remember that|my preference is|i prefer|always|from now on).{0,180}/i,kind:"explicit_preference"}
     ];
     for(const p of patterns){const m=user.match(p.re);if(m){await remember(p.kind,m[0],{source:"explicit_user_statement",approved:true,confidence:0.95});return true;}}
