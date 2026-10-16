@@ -9,7 +9,6 @@ import android.os.BatteryManager
 import android.os.Environment
 import android.os.StatFs
 import android.text.format.Formatter
-import java.util.Locale
 
 /** Read-only, on-demand device diagnostics. Does not upload or persist device information. */
 class DeviceDiagnostics(private val context: Context) {
