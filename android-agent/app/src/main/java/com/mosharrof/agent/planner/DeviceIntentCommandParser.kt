@@ -13,7 +13,7 @@ object DeviceIntentCommandParser {
         val command = normalizeDigits(raw.trim().lowercase())
         if (command.isBlank() || command.length > 240) return null
         if (command.contains("timer") || command.contains("টাইমার")) {
-            val match = TIMER.find(command) ?: return null
+            val match = TIMER.find(command) ?: TIMER_SUFFIX.find(command) ?: return null
             val amount = match.groupValues[1].toIntOrNull() ?: return null
             val unit = match.groupValues[2]
             val multiplier = when {
@@ -51,6 +51,7 @@ object DeviceIntentCommandParser {
     }
 
     private val TIMER = Regex("(?:timer|টাইমার)\\s*(?:for|এর জন্য)?\\s*(\\d+)\\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?|ঘণ্টা|ঘন্টা|মিনিট|সেকেন্ড)")
+    private val TIMER_SUFFIX = Regex("(\\d+)\\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?|ঘণ্টা|ঘন্টা|মিনিট(?:ের)?|সেকেন্ড)\\s*(?:এর\\s*)?(?:timer|টাইমার)")
     private val TIME = Regex("(?:at|for|আমার|সময়|সময়)?\\s*(\\d{1,2})[:.](\\d{2})")
     private val EVENT_TITLE = Regex("(?:event|ইভেন্ট)\\s+(.+?)(?:\\s+(?:tomorrow|today|আগামীকাল|আজ|কাল)|\\s+\\d{1,2}[:.]\\d{2}|$)")
 }
