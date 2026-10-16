@@ -16,6 +16,7 @@ def test_deploy_workflow_sets_optional_failover_secrets_and_checks_build():
     assert 'secrets.GEMINI_API_KEY_2' in workflow
     assert 'secrets.GEMINI_API_KEY_5' in workflow
     assert 'secrets.GEMINI_TTS_FALLBACK_MODELS' in workflow
+    assert 'MODELS="gemini-2.5-flash-preview-tts"' in workflow
     assert '2026-10-16-cf-v5' in workflow
     assert "Waiting for the newly deployed Worker version to propagate..." in workflow
     assert "for i in {1..12}; do" in workflow

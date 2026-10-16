@@ -155,10 +155,11 @@ jobs:
             fi
           done
           MODELS="$(printf '%s' "$RAW_TTS_MODELS" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-          if [ -n "$MODELS" ]; then
-            printf '%s' "$MODELS" | npx --yes wrangler@3 secret put GEMINI_TTS_FALLBACK_MODELS --config wrangler.toml
-            echo "Configured Gemini TTS fallback model list."
+          if [ -z "$MODELS" ]; then
+            MODELS="gemini-2.5-flash-preview-tts"
           fi
+          printf '%s' "$MODELS" | npx --yes wrangler@3 secret put GEMINI_TTS_FALLBACK_MODELS --config wrangler.toml
+          echo "Configured Gemini TTS fallback model list (credential values remain hidden)."
 
 
       - name: Set optional TTS provider secrets
