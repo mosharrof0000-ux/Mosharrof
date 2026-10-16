@@ -13,7 +13,7 @@ data class DeviceIntentRequest(
         private val phone = Regex("\\+?[0-9][0-9 ()-]{5,19}")
 
         fun parse(raw: String): DeviceIntentRequest? {
-            val command = raw.trim()
+            val command = normalizeDigits(raw.trim())
             if (command.length !in 1..240) return null
             val dial = Regex("(?i)^(?:call|dial|কল করুন|ফোন করুন)\\s+(.+)$").matchEntire(command)
             if (dial != null) {
@@ -30,7 +30,12 @@ data class DeviceIntentRequest(
             }
             val timer = Regex("(?i)^(?:timer|set timer|টাইমার)\\s+(\\d{1,3})\\s*(seconds?|secs?|minutes?|mins?|hours?|ঘণ্টা|মিনিট|সেকেন্ড)?$").matchEntire(command)
             if (timer != null) {
-                val amount = timer.groupValues[1].toIntOrNull() ?: return null
+                val amount = timer.groupValues[1].toIntOrNull() ?: when (timer.groupValues[1]) {
+                    "এক" -> 1; "দুই" -> 2; "তিন" -> 3; "চার" -> 4; "পাঁচ" -> 5
+                    "ছয়", "ছয়" -> 6; "সাত" -> 7; "আট" -> 8; "নয়", "নয়" -> 9
+                    "দশ" -> 10; "পনেরো" -> 15; "বিশ" -> 20; "ত্রিশ" -> 30; "ষাট" -> 60
+                    else -> return null
+                }
                 val unit = timer.groupValues[2].lowercase()
                 val seconds = when (unit) {
                     "hour", "hours", "ঘণ্টা" -> amount * 3600
