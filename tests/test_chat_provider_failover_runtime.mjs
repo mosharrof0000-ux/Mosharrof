@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { loadWorker } from "./worker-loader.mjs";
-import { readFile } from "node:fs/promises";
 
 const worker = await loadWorker();
 const originalFetch = globalThis.fetch;
