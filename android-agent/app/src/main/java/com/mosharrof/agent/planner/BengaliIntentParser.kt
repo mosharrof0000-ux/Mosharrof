@@ -1,5 +1,7 @@
 package com.mosharrof.agent.planner
 
+import java.text.Normalizer
+
 /** Explicit Bengali/English app commands resolved only through a supplied alias map. */
 class BengaliIntentParser(private val appAliases: Map<String, String>) {
     fun parse(rawCommand: String): BengaliParsedIntent {
@@ -19,7 +21,8 @@ class BengaliIntentParser(private val appAliases: Map<String, String>) {
             ?: return BengaliParsedIntent.NeedsClarification("কমান্ডটি সমর্থিত নয়; স্পষ্ট করে বলুন।")
         val query = name.trim()
         if (query.isBlank()) return BengaliParsedIntent.NeedsClarification("কোন অ্যাপ খুলতে হবে বলুন।")
-        val packageName = appAliases.entries.firstOrNull { normalize(it.key) == query }?.value
+        val normalizedQuery = normalize(query)
+        val packageName = appAliases.entries.firstOrNull { normalize(it.key) == normalizedQuery }?.value
         return if (packageName.isNullOrBlank()) {
             BengaliParsedIntent.NeedsClarification("অ্যাপটি অনুমোদিত তালিকায় নেই; খোলা হয়নি।")
         } else BengaliParsedIntent.OpenApp(packageName)
@@ -28,8 +31,10 @@ class BengaliIntentParser(private val appAliases: Map<String, String>) {
     private fun containsAny(value: String, phrases: List<String>) =
         phrases.any { value.contains(normalize(it)) }
 
-    private fun normalize(value: String) =
-        value.trim().lowercase().replace(Regex("\\s+"), " ")
+    private fun normalize(value: String): String =
+        Normalizer.normalize(value, Normalizer.Form.NFC)
+            .replace(Regex("[\\u200B-\\u200D\\uFEFF]"), "")
+            .trim().lowercase().replace(Regex("\\s+"), " ")
 }
 
 sealed interface BengaliParsedIntent {
