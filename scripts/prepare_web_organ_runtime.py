@@ -31,6 +31,7 @@ def main() -> int:
         "core/composer-enhancements.js": "web/composer-enhancements.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
         "core/device-control.js": "web/device-control.js",
+        "core/personal-memory-engine.js": "web/memory-engine.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
     }
@@ -49,6 +50,13 @@ def main() -> int:
     # Inject runtime-only enhancements into the prepared Pages artifact; keep the tracked legacy entrypoint frozen.
     index_path = ROOT / "web/index.html"
     index_html = index_path.read_text(encoding="utf-8")
+    memory_tag = '<script src="./memory-engine.js"></script>'
+    if memory_tag not in index_html:
+        anchor_memory = '<script src="./sidebar-recovery.js"></script>'
+        if anchor_memory not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for memory engine")
+        index_html = index_html.replace(anchor_memory, anchor_memory + "\n" + memory_tag, 1)
+
     device_tag = '<script src="./device-control.js"></script>'
     if device_tag not in index_html:
         anchor_tag = '<script src="./sidebar-recovery.js"></script>'
