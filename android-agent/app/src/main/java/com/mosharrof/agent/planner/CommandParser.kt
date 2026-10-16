@@ -56,6 +56,7 @@ class CommandParser {
 
 sealed interface ParsedCommand {
     data object Unknown : ParsedCommand
+    data class GlobalNavigation(val destination: AgentAction.NavigationDestination) : ParsedCommand
     data object OpenSystemSettings : ParsedCommand
     data class OpenSettingPanel(val setting: AgentAction.SupportedSetting) : ParsedCommand
     data class OpenApp(val packageName: String) : ParsedCommand
