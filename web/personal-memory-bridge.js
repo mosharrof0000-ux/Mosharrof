@@ -24,12 +24,12 @@ export function installPersonalMemoryBridge(root = window) {
       if (init?.body && /\/chat(?:\?|$)/.test(new URL(target, root.location.href).pathname)) {
         requestBody = JSON.parse(init.body);
         if (requestBody && typeof requestBody.text === "string" && requestBody.text.trim()) {
+          const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
           const saved = await engine.add({
             kind: "user", text: requestBody.text, sessionId: "mosharrof-chat",
             sequence: ++sequence, previousId
           }).catch(() => ({ stored: false }));
           if (saved.stored) previousId = saved.id;
-          const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
           outgoing = { ...init, body: JSON.stringify({ ...requestBody, memory_context: memoryContext }) };
         }
       }
