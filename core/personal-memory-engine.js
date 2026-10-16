@@ -97,7 +97,7 @@ export function createPersonalMemoryEngine(options = {}) {
       text, createdAt, isoTime: new Date(createdAt).toISOString(),
       sessionId: String(input.sessionId || "default").slice(0, 100),
       sequence: Number.isFinite(input.sequence) ? input.sequence : createdAt,
-      tags: [...new Set([...(Array.isArray(input.tags) ? input.tags.slice(0, 12).map(x => String(x).slice(0, 40)) : []), inferFolder(text, input.kind)])],
+      tags: [...new Set([...(Array.isArray(input.tags) ? input.tags.slice(0, 12).map(x => String(x).slice(0, 40)) : []), inferFolder(text, input.kind).id])],
       folder: input.folder || inferFolder(text, input.kind),
       previousId: input.previousId || null,
       preferences: input.kind === "user" ? inferPreferences(text) : []
