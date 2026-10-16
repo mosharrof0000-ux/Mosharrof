@@ -7,6 +7,7 @@ data class InstalledApp(val label: String, val packageName: String)
 sealed interface TaskPlan {
     data class OpenApp(val app: InstalledApp) : TaskPlan
     data class TapVisibleText(val text: String, val app: InstalledApp) : TaskPlan
+    data class TypeText(val text: String, val app: InstalledApp) : TaskPlan
     data class SwipeScreen(val direction: AgentAction.Direction, val app: InstalledApp) : TaskPlan
     data class GlobalNavigation(val destination: AgentAction.NavigationDestination) : TaskPlan
     data object OpenSystemSettings : TaskPlan
@@ -41,6 +42,14 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
                     is TaskPlan.NeedsChoice -> appPlan
                     is TaskPlan.Rejected -> appPlan
                     else -> TaskPlan.Rejected("এই অ্যাপের স্ক্রল action সমর্থিত নয়।")
+                }
+            }
+            is ParsedIntent.TypeText -> {
+                when (val appPlan = resolveApp(intent.appQuery, installedApps)) {
+                    is TaskPlan.OpenApp -> TaskPlan.TypeText(intent.text, appPlan.app)
+                    is TaskPlan.NeedsChoice -> appPlan
+                    is TaskPlan.Rejected -> appPlan
+                    else -> TaskPlan.Rejected("এই অ্যাপে টেক্সট ইনপুট সমর্থিত নয়।")
                 }
             }
             is ParsedIntent.TapText -> {
