@@ -66,7 +66,7 @@
           for (var promptIndex = 0; promptIndex < 4; promptIndex += 1) {
             var names = ["শুরুর X", "শুরুর Y", "শেষের X", "শেষের Y"];
             var raw = window.prompt(names[promptIndex] + " স্থানাঙ্ক (পিক্সেল)");
-            if (raw === null || !raw.trim() || !/^\\d+$/.test(raw.trim())) return;
+            if (raw === null || !raw.trim() || !/^\d+$/.test(raw.trim())) return;
             coords.push(Number(raw.trim()));
           }
           if (!window.confirm("এই স্থানাঙ্কে ৫০০ ms সোয়াইপ করবেন? সংবেদনশীল স্ক্রিনে এটি বাতিল হবে।")) return;
