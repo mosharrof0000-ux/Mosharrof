@@ -25,7 +25,6 @@ const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","g
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
 const TTS_PROVIDERS=["edge","gemini","azure","elevenlabs","sarvam"];
-
 function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
 function elevenLabsKeyExpired(env){const raw=String(env.ELEVENLABS_KEY_EXPIRES_AT||"").trim();if(!raw)return false;const t=Date.parse(raw);return Number.isFinite(t)&&Date.now()>=t;}
 
