@@ -1,0 +1,198 @@
+package com.mosharrof.agent.execution
+
+import android.app.Activity
+import android.widget.Button
+import android.widget.TextView
+import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
+import com.mosharrof.agent.planner.AgentAction
+import com.mosharrof.agent.planner.TaskPlan
+import com.mosharrof.agent.planner.TaskPlanner
+import com.mosharrof.agent.policy.ActionPolicy
+import com.mosharrof.agent.policy.PolicyDecision
+
+/** Owns pending task state and performs only explicitly confirmed, bounded actions. */
+class AgentTaskController(
+    private val activity: Activity,
+    private val status: TextView,
+    private val confirmButton: Button,
+    private val isServiceEnabled: () -> Boolean
+) {
+    private val planner = TaskPlanner()
+    private val appCatalog by lazy { InstalledAppCatalog(activity) }
+    private val settingsLauncher by lazy { SystemSettingsLauncher(activity) }
+    private var pendingApp: com.mosharrof.agent.planner.InstalledApp? = null
+    private var pendingSettings: TaskPlan? = null
+    private var pendingTap: TaskPlan.TapVisibleText? = null
+    private var pendingSwipe: TaskPlan.SwipeScreen? = null
+    private var pendingNavigation: AgentAction.NavigationDestination? = null
+
+    fun prepareTask(command: String) {
+        clearPending()
+        confirmButton.isEnabled = false
+        when (val plan = planner.plan(command, appCatalog.listLauncherApps())) {
+            is TaskPlan.OpenApp -> {
+                pendingApp = plan.app
+                status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
+                confirmButton.isEnabled = true
+            }
+            is TaskPlan.GlobalNavigation -> {
+                pendingNavigation = plan.destination
+                val label = when (plan.destination) {
+                    AgentAction.NavigationDestination.BACK -> "এক ধাপ পেছনে যাওয়া"
+                    AgentAction.NavigationDestination.HOME -> "হোম স্ক্রিন খোলা"
+                    AgentAction.NavigationDestination.NOTIFICATIONS -> "নোটিফিকেশন প্যানেল খোলা"
+                    AgentAction.NavigationDestination.RECENTS -> "সাম্প্রতিক অ্যাপ দেখানো"
+                }
+                status.text = "পরিকল্পনা: $label হবে। নিশ্চিত করুন।"
+                confirmButton.isEnabled = isServiceEnabled()
+            }
+            is TaskPlan.SwipeScreen -> {
+                pendingSwipe = plan
+                status.text = "পরিকল্পনা: ${plan.app.label}-এ ${plan.direction.name.lowercase()} দিকে একবার স্ক্রল হবে। নিশ্চিত করুন।"
+                confirmButton.isEnabled = isServiceEnabled()
+            }
+            is TaskPlan.TapVisibleText -> {
+                pendingTap = plan
+                status.text = if (isServiceEnabled()) {
+                    "পরিকল্পনা: ${plan.app.label}-এ ‘${plan.text}’ লেবেলে একবার ট্যাপ হবে। নিশ্চিত করুন।"
+                } else {
+                    "এই UI action-এর জন্য আগে Accessibility চালু করুন।"
+                }
+                confirmButton.isEnabled = isServiceEnabled()
+            }
+            TaskPlan.OpenSystemSettings -> prepareSettings(plan, "Android Settings")
+            is TaskPlan.OpenSettingPanel -> prepareSettings(plan, settingsLauncher.label(plan.setting))
+            is TaskPlan.NeedsChoice -> status.text =
+                "একাধিক/আংশিক মিল: ${plan.candidates.joinToString { it.label }}। সঠিক অ্যাপের পুরো নাম লিখুন।"
+            is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
+        }
+    }
+
+    fun confirmPending() {
+        when {
+            pendingApp != null -> launchConfirmedApp()
+            pendingSettings != null -> launchConfirmedSettings()
+            pendingTap != null -> launchConfirmedTap()
+            pendingSwipe != null -> launchConfirmedSwipe()
+            pendingNavigation != null -> launchConfirmedNavigation()
+        }
+    }
+
+    fun cancelPending() {
+        clearPending()
+        MosharrofAccessibilityService.cancelSemanticTap()
+        MosharrofAccessibilityService.cancelInspection()
+        confirmButton.isEnabled = false
+        status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।"
+    }
+
+    private fun clearPending() {
+        pendingApp = null
+        pendingSettings = null
+        pendingTap = null
+        pendingSwipe = null
+        pendingNavigation = null
+    }
+
+    private fun prepareSettings(plan: TaskPlan, label: String) {
+        pendingSettings = plan
+        status.text = "পরিকল্পনা: $label খোলা হবে। চালানোর আগে নিশ্চিত করুন।"
+        confirmButton.isEnabled = true
+    }
+
+    private fun launchConfirmedSettings() {
+        val plan = pendingSettings ?: return
+        status.text = settingsLauncher.launch(plan)
+        pendingSettings = null
+        confirmButton.isEnabled = false
+    }
+
+    private fun launchConfirmedNavigation() {
+        val destination = pendingNavigation ?: return
+        if (!isServiceEnabled()) {
+            status.text = "Accessibility বন্ধ; কোনো নেভিগেশন করা হয়নি।"
+            return
+        }
+        val policy = ActionPolicy(appCatalog.listLauncherApps().map { it.packageName }.toSet())
+        val decision = policy.evaluate(AgentAction.GlobalNavigation(destination), 0)
+        if (decision.decision == PolicyDecision.DENY) {
+            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
+            return
+        }
+        val success = MosharrofAccessibilityService.performGlobalNavigation(destination)
+        status.text = if (success) "নেভিগেশন অনুরোধ Android গ্রহণ করেছে।" else "Android নেভিগেশন অনুরোধ গ্রহণ করেনি।"
+        pendingNavigation = null
+        confirmButton.isEnabled = false
+    }
+
+    private fun launchConfirmedSwipe() {
+        val plan = pendingSwipe ?: return
+        if (!isServiceEnabled()) {
+            status.text = "Accessibility বন্ধ; কোনো স্ক্রল করা হয়নি."
+            return
+        }
+        val allowed = appCatalog.listLauncherApps().map { it.packageName }.toSet()
+        val decision = ActionPolicy(allowed).evaluate(AgentAction.Swipe(plan.app.packageName, plan.direction), 0)
+        if (decision.decision == PolicyDecision.DENY) {
+            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
+            return
+        }
+        if (!MosharrofAccessibilityService.armSwipe(plan.app.packageName, plan.direction)) {
+            status.text = "Accessibility service প্রস্তুত নয় বা অন্য action চলছে; স্ক্রল করা হয়নি।"
+            return
+        }
+        if (!appCatalog.launch(plan.app.packageName)) {
+            MosharrofAccessibilityService.cancelSemanticTap()
+            status.text = "লক্ষ্য অ্যাপ খোলা যায়নি; স্ক্রল করা হয়নি।"
+            return
+        }
+        status.text = "লক্ষ্য অ্যাপ খুলছে; লক্ষ্য স্ক্রিনে পৌঁছালে একবার স্ক্রল হবে।"
+        pendingSwipe = null
+        confirmButton.isEnabled = false
+    }
+
+    private fun launchConfirmedTap() {
+        val plan = pendingTap ?: return
+        if (!isServiceEnabled()) {
+            status.text = "Accessibility বন্ধ; কোনো ট্যাপ করা হয়নি।"
+            return
+        }
+        val allowed = appCatalog.listLauncherApps().map { it.packageName }.toSet()
+        val decision = ActionPolicy(allowed).evaluate(
+            AgentAction.TapSemanticNode(plan.app.packageName, visibleText = plan.text), 0
+        )
+        if (decision.decision == PolicyDecision.DENY) {
+            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
+            return
+        }
+        if (!MosharrofAccessibilityService.armSemanticTap(plan.app.packageName, plan.text)) {
+            status.text = "Accessibility service প্রস্তুত নয় বা অন্য action চলছে; কোনো ট্যাপ করা হয়নি।"
+            return
+        }
+        if (!appCatalog.launch(plan.app.packageName)) {
+            MosharrofAccessibilityService.cancelSemanticTap()
+            status.text = "লক্ষ্য অ্যাপ খোলা যায়নি; কোনো ট্যাপ করা হয়নি।"
+            return
+        }
+        status.text = "লক্ষ্য অ্যাপ খুলছে। নির্দিষ্ট লেবেল একবারই মিললে ট্যাপ হবে; অস্পষ্ট হলে বাতিল হবে।"
+        pendingTap = null
+        confirmButton.isEnabled = false
+    }
+
+    private fun launchConfirmedApp() {
+        val app = pendingApp ?: return
+        val allowed = appCatalog.listLauncherApps().map { it.packageName }.toSet()
+        val decision = ActionPolicy(allowed).evaluate(AgentAction.OpenApp(app.packageName, userRequested = true), 0)
+        if (decision.decision != PolicyDecision.ALLOW) {
+            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
+            return
+        }
+        if (!appCatalog.launch(app.packageName)) {
+            status.text = "অ্যাপটি খোলা যায়নি; অ্যাপটি সরানো বা নিষ্ক্রিয় থাকতে পারে।"
+            return
+        }
+        status.text = "${app.label} খোলার অনুরোধ পাঠানো হয়েছে।"
+        pendingApp = null
+        confirmButton.isEnabled = false
+    }
+}
