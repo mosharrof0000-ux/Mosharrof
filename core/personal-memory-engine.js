@@ -89,7 +89,8 @@ export function createPersonalMemoryEngine({ store, now = () => Date.now(), make
     const user = safeText(userText), answer = safeText(assistantText, 2400);
     if (!user || SECRET_PATTERN.test(user) || SECRET_PATTERN.test(answer)) return { saved: false, reason: "sensitive_or_empty" };
     const tags = [...new Set(tokens(user).slice(0, 16))];
-    const folder = classifyFolder(user);\n    const saved = await add({ kind: "conversation", folder, topic: folder.split("/").pop(), sessionId: safeText(sessionId, 120), userText: user, assistantExcerpt: answer, summary: user.slice(0, 320), tags });
+    const folder = classifyFolder(user);
+    const saved = await add({ kind: "conversation", folder, topic: folder.split("/").pop(), sessionId: safeText(sessionId, 120), userText: user, assistantExcerpt: answer, summary: user.slice(0, 320), tags });
     const preferences = inferPreference(user);
     const profileResults = [];
     for (const preference of preferences) {
@@ -142,9 +143,12 @@ export function createPersonalMemoryEngine({ store, now = () => Date.now(), make
   async function profile() {
     const rows = await store.list();
     const activePreferences = rows.filter(row => row.kind === "preference" && row.status === "active");
-    const folders = {};\n    for (const row of rows) { const folder = row.folder || "topics/general"; folders[folder] = (folders[folder] || 0) + 1; }\n    return { enabled: active, totalEntries: rows.length, conversationCount: rows.filter(row => row.kind === "conversation").length, preferenceCount: activePreferences.length, folders, preferences: activePreferences.map(({ key, value, summary, createdAt, confidence, folder }) => ({ key, value, summary, createdAt, confidence, folder })) };
+    const folders = {};
+    for (const row of rows) { const folder = row.folder || "topics/general"; folders[folder] = (folders[folder] || 0) + 1; }
+    return { enabled: active, totalEntries: rows.length, conversationCount: rows.filter(row => row.kind === "conversation").length, preferenceCount: activePreferences.length, folders, preferences: activePreferences.map(({ key, value, summary, createdAt, confidence, folder }) => ({ key, value, summary, createdAt, confidence, folder })) };
   }
-  async function exportAll() { return { schemaVersion: 1, exportedAt: new Date(now()).toISOString(), memories: (await store.list()).sort((a, b) => a.createdAt - b.createdAt) }; }\n  async function clear() {
+  async function exportAll() { return { schemaVersion: 1, exportedAt: new Date(now()).toISOString(), memories: (await store.list()).sort((a, b) => a.createdAt - b.createdAt) }; }
+  async function clear() {
     if (typeof store.clear !== "function") throw new Error("এই store-এ পরিষ্কার করার সুবিধা নেই।");
     const before = (await store.list()).length;
     await store.clear();
