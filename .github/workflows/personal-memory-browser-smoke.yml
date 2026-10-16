@@ -4,18 +4,6 @@ on:
   pull_request:
     branches: ["main"]
     types: [opened, synchronize, reopened, ready_for_review]
-  push:
-    branches: ["main"]
-    paths:
-      - ".github/workflows/personal-memory-browser-smoke.yml"
-      - "tests/e2e/personal-memory-browser-smoke.mjs"
-      - "core/personal-memory-engine.js"
-      - "core/personal-memory-bridge.js"
-      - "organs/chat/index.js"
-      - "scripts/prepare_web_organ_runtime.py"
-      - "web/core/personal-memory-engine.js"
-      - "web/core/personal-memory-bridge.js"
-      - "web/index.html"
   workflow_run:
     workflows: ["Deploy Mosharrof Pages"]
     types: [completed]
