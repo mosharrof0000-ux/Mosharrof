@@ -405,7 +405,7 @@ jobs:
           echo "$RESP"
 
       - name: Set optional FAL video secret
-        working-directory: worker/video-generation
+        working-directory: core/video-generation
         env:
           RAW_FAL_KEY: ${{ secrets.FAL_KEY }}
         run: |
