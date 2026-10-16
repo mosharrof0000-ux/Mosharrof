@@ -6,7 +6,8 @@ import { inferResponseStyle } from "./length-intent.js";
 
 const ENABLED_KEY = "mosharrof:personal-memory:enabled:v1";
 const CHAT_URL_PART = "/chat";
-const SESSION_ID = "chat-" + (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2));
+let SESSION_ID = createSessionId();
+function createSessionId() { return "chat-" + (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)); }
 let initialized = false;
 
 function enabledByDefault() {
@@ -47,6 +48,7 @@ export function initializePersonalMemory() {
     exportAll: () => engine.exportAll(), forgetAll: async () => { turns.length = 0; return engine.forgetAll(); }, suggestNextSteps: (query, options) => engine.suggestNextSteps(query, options)
   });
   installMemoryControls(engine, { isEnabled: enabledByDefault, setEnabled, forgetAll: async () => { turns.length = 0; return engine.forgetAll(); } });
+  document.getElementById("btn-new-chat")?.addEventListener("click", () => { SESSION_ID = createSessionId(); turns.length = 0; });
   window.fetch = async function personalMemoryFetch(input, init = {}) {
     if (!isChatRequest(input) || !init.body || !enabledByDefault()) return originalFetch(input, init);
     let body;
