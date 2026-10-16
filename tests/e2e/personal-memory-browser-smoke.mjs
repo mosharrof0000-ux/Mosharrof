@@ -22,6 +22,15 @@ async function readMemoryEntries(page) {
   }));
 }
 
+async function openMemoryControls(page) {
+  const controls = page.locator("[data-personal-memory-controls]");
+  if (!(await controls.isVisible().catch(() => false))) {
+    await page.locator("#rightBtn").click();
+  }
+  await controls.waitFor({ state: "visible" });
+  return controls;
+}
+
 async function waitForStoredMarker(page, marker) {
   await page.waitForFunction(async (needle) => {
     try {
@@ -83,9 +92,7 @@ try {
     throw new Error("Preview returned HTTP " + (response?.status() ?? "no response"));
   }
   await page.locator("#input").waitFor({ state: "visible" });
-  await page.locator("#rightBtn").click();
-  const controls = page.locator("[data-personal-memory-controls]");
-  await controls.waitFor({ state: "visible" });
+  const controls = await openMemoryControls(page);
 
   const toggle = controls.locator("button").first();
   if ((await toggle.innerText()).includes("বন্ধ")) await toggle.click();
@@ -106,9 +113,7 @@ try {
 
   await page.reload({ waitUntil: "domcontentloaded", timeout: timeoutMs });
   await page.locator("#input").waitFor({ state: "visible" });
-  await page.locator("#rightBtn").click();
-  const reloadedControls = page.locator("[data-personal-memory-controls]");
-  await reloadedControls.waitFor({ state: "visible" });
+  const reloadedControls = await openMemoryControls(page);
   const search = reloadedControls.locator('input[type="search"]');
   await search.fill(marker);
   await page.getByText(new RegExp(marker)).waitFor({ state: "visible", timeout: timeoutMs });
