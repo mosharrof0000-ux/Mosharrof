@@ -57,16 +57,16 @@ object UserFileAccessControl {
             val groups = mutableListOf<List<DocumentFile>>()
             var skipped = 0
             for ((_, candidates) in bySize) {
-                val eligible = candidates.filter {
-                    it.length() <= MAX_HASH_FILE_BYTES && hashedBytes + it.length() <= MAX_TOTAL_HASH_BYTES
+                val eligible = mutableListOf<DocumentFile>()
+                for (candidate in candidates) {
+                    if (candidate.length() <= MAX_HASH_FILE_BYTES &&
+                        hashedBytes + candidate.length() <= MAX_TOTAL_HASH_BYTES) {
+                        eligible += candidate
+                        hashedBytes += candidate.length()
+                    } else skipped++
                 }
-                skipped += candidates.size - eligible.size
                 val hashes = eligible.mapNotNull { file ->
-                    val digest = hash(activity, file)
-                    if (digest == null) null else {
-                        hashedBytes += file.length()
-                        digest to file
-                    }
+                    hash(activity, file)?.let { it to file }
                 }.groupBy({ it.first }, { it.second })
                 groups += hashes.values.filter { it.size > 1 }.map { it.sortedBy { file -> file.name.orEmpty() } }
             }
@@ -104,18 +104,23 @@ object UserFileAccessControl {
         }
     }
 
-    private fun hash(activity: Activity, file: DocumentFile): String? = runCatching {
-        val digest = MessageDigest.getInstance("SHA-256")
-        activity.contentResolver.openInputStream(file.uri)?.use { input ->
-            val buffer = ByteArray(32 * 1024)
-            while (true) {
-                val count = input.read(buffer)
-                if (count < 0) break
-                digest.update(buffer, 0, count)
+    private fun hash(activity: Activity, file: DocumentFile): String? {
+        return try {
+            val input = activity.contentResolver.openInputStream(file.uri) ?: return null
+            val digest = MessageDigest.getInstance("SHA-256")
+            input.use {
+                val buffer = ByteArray(32 * 1024)
+                while (true) {
+                    val count = it.read(buffer)
+                    if (count < 0) break
+                    digest.update(buffer, 0, count)
+                }
             }
-        } ?: return null
-        digest.digest().joinToString("") { "%02x".format(it) }
-    }.getOrNull()
+            digest.digest().joinToString("") { "%02x".format(it) }
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     private fun showDuplicates(activity: Activity, status: TextView) {
         val groups = lastDuplicates
