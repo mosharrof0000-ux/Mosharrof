@@ -58,7 +58,7 @@ header.top{
 .message .label{display:block;font-size:11px;color:#8e8e93;margin-bottom:6px}
 .message .time{display:inline-block;font-size:10px;color:#6b6b70;margin:0;white-space:nowrap}.message-meta-row{display:flex;align-items:center;gap:7px;min-height:26px}.message-speak-shortcut{display:inline-grid;place-items:center;width:28px;height:26px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#080808;color:#f2f2f2}.message-speak-shortcut svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.message-speak-shortcut:active{background:#303030}.voice-companion{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:28px;padding:0 7px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:#111;color:#d4d4d8;font:11px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}.voice-companion.is-late{border-color:#ef4444;background:#3b1010;color:#ff8b8b}.voice-companion.is-download{width:32px;min-width:32px;padding:0;color:#b9f5c9;border-color:rgba(74,190,110,.65);background:#12351f}.voice-companion svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.voice-companion:disabled{opacity:.65;cursor:wait}.message-speak-shortcut.is-ready,.message-action.is-ready,.message-speak-shortcut.is-speaking,.message-action.is-speaking{background:#12351f;border-color:rgba(74,190,110,.8);color:#b9f5c9}.message-speak-shortcut.is-stop-requested,.message-action.is-stop-requested{background:#3a1014;border-color:rgba(239,68,68,.85);color:#ffb4b4}
 .response-status-row{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%;margin:0 0 6px;font-size:10px;line-height:1.3;color:#92929a}
-/* Reuse the existing read-aloud voice timer box exactly; only the timer text color differs. */
+
 .response-timer{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:28px;padding:0 7px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:#111;color:#39ff78;font:11px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
 .response-timer.is-error{color:#ff4545}
 .response-route{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a1a1aa}
@@ -66,7 +66,7 @@ header.top{
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
 
-/* MOSHARROF rich-text response system */
+
 .message.ai .rich-content{font-size:15.5px;line-height:1.82;letter-spacing:.005em;color:#ededed;overflow-wrap:anywhere}
 .message.ai .rich-content>*+*{margin-top:1em}
 .message.ai .rich-content h1,.message.ai .rich-content h2,.message.ai .rich-content h3,.message.ai .rich-content h4{font-weight:750;line-height:1.35;letter-spacing:-.02em;color:#fff;margin-top:1.25em;margin-bottom:.5em}
@@ -86,7 +86,7 @@ header.top{
 .message.ai .rich-content pre{margin:0;max-width:100%;overflow:auto;padding:14px;background:#0d1117;color:#e6edf3;font:12.5px/1.7 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:2;scrollbar-width:thin}
 .message.ai .rich-content pre code{font:inherit;white-space:pre}.message.ai .rich-content .code-block pre code{padding:0;border:0;border-radius:0;background:transparent;color:inherit}.message.ai .rich-content img{max-width:100%;height:auto;border-radius:10px}
 
-/* Dynamic Bengali typography: font families are mapped by the central registry. */
+
 .message.ai .rich-content.font-song{font-size:17px;line-height:2.02;letter-spacing:.012em}
 .message.ai .rich-content.font-song h1,.message.ai .rich-content.font-song h2,.message.ai .rich-content.font-song h3{line-height:1.5;letter-spacing:0}
 .message.ai .rich-content.font-song p{margin:1em 0}
@@ -169,9 +169,7 @@ header.top{
 .composer-action.is-transcription-success{width:76px;min-width:76px;background:#123d2a;border-color:#4ade80;color:#4ade80;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
 .composer-action.is-transcription-error{width:76px;min-width:76px;background:#451a1a;border-color:#f87171;color:#f87171;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
 .composer-action:disabled{opacity:.55;cursor:not-allowed}
-.stop-action{background:#252525;border-color:rgba(255,255,255,.22);color:#f87171}
-.stop-action:hover:not(:disabled){background:#451a1a;border-color:#f87171}
-.stop-action:disabled{opacity:.48;cursor:not-allowed}
+.stop-action{color:#f87171}
 .composer-tool-toggle:focus-visible,.composer-action:focus-visible,.send:focus-visible{outline:2px solid #aaa;outline-offset:2px}
 .composer-action svg,.send svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .composer-tools-menu{position:absolute;left:0;bottom:44px;display:none;align-items:center;gap:5px;padding:5px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#050505;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:2}
@@ -260,7 +258,7 @@ header.top{
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
-      <button class="composer-action stop-action" id="stopBtn" type="button" aria-label="চলমান মেসেজ থামান" title="চলমান মেসেজ থামান" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="currentColor"/></svg></button>
+      <button class="composer-action stop-action" id="stopBtn" type="button" aria-label="মেসেজ থামান" title="মেসেজ থামান" disabled>■</button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
   </div>
@@ -505,8 +503,7 @@ header.top{
     var fence=String.fromCharCode(96).repeat(3);
     var value=String(source||"").replace(new RegExp(fence+"[\\s\\S]*?"+fence,"g")," ").replace(/<[^>]*>/g," ").trim();
     var first=value.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||"";
-    /* Detect song headings anywhere in the response, not only on the first line.
-       This covers AI replies that start with an introduction before the lyrics. */
+    
     if(/^#{1,6}\s*(?:গান|গানের কথা|গীত|lyrics|song)\s*[:：—-]/im.test(value)||
        /(?:গানের কথা|একটি গান(?: লিখ| নিচে| তৈরি| রচনা| তুলে)|গান রচনা|গানটি নিচে|কোরাস|ধ্রুবক|স্থায়ী|অন্তরা|সঞ্চারী|আভোগ|মুখড়া)/i.test(value)||
        /\b(?:chorus|verse|lyrics)\b/i.test(value))return"song";
@@ -765,7 +762,7 @@ header.top{
     try{
       var box=document.createElement("div");
       box.innerHTML=renderRichText(source);
-      /* Read rendered HTML text, not Markdown source, so hidden syntax is never spoken. */
+      
       Array.prototype.forEach.call(box.querySelectorAll("p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,hr,tr"),function(el){
         el.insertAdjacentText("beforebegin","\n");
       });
@@ -821,7 +818,7 @@ header.top{
     setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");button.disabled=false;
     button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===session&&activeSpeechButton===button){button.classList.add("is-stop-requested");synth.cancel();activeSpeech=null;activeSpeechButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
     synth.cancel();
-    /* Android Chrome may populate its voice list asynchronously. */
+    
     var voices=synth.getVoices?synth.getVoices():[];
     if(!voices.length){var started=false;var begin=function(){if(started)return;started=true;synth.removeEventListener&&synth.removeEventListener("voiceschanged",begin);next();};if(synth.addEventListener)synth.addEventListener("voiceschanged",begin);window.setTimeout(begin,700);}else next();
   }
@@ -1098,19 +1095,13 @@ header.top{
   var busy=false,activeRequestController=null;
   function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
   function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
-  function finishRequest(){activeRequestController=null;busy=false;sendBtn.disabled=false;stopBtn.disabled=true;stopBtn.setAttribute("aria-label","চলমান মেসেজ থামান");stopBtn.title="চলমান মেসেজ থামান";input.focus();}
-  function stopCurrentRequest(){if(!busy)return;if(!activeRequestController){toast("এই ব্রাউজারে অনুরোধ থামানো সমর্থিত নয়");return;}stopBtn.disabled=true;stopBtn.setAttribute("aria-label","মেসেজ থামানো হচ্ছে");stopBtn.title="মেসেজ থামানো হচ্ছে";activeRequestController.abort();}
-  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;stopBtn.disabled=false;stopBtn.setAttribute("aria-label","চলমান মেসেজ থামান");stopBtn.title="চলমান মেসেজ থামান";activeRequestController=window.AbortController?new AbortController():null;var signal=activeRequestController?activeRequestController.signal:undefined;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
-    if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
-      session.messages=session.messages.slice(0,editTargetIndex);
-      msgEl.innerHTML="";
-      for(var ri=0;ri<session.messages.length;ri++){var rm=session.messages[ri];addMsg(rm.role,rm.text,rm.at,true,rm.feedback,ri,rm.elapsedMs,rm.responseMeta);}
-      editTargetIndex=null;
-    }
-    addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);
-    var imageMode=!attached&&looksLikeImagePrompt(text);
-    var request=imageMode?imageReply(text,signal):coreReply(text,attached,signal);
-    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}finishRequest();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();if((e&&e.name==="AbortError")||(activeRequestController&&activeRequestController.signal.aborted)){finishRequest();toast("মেসেজ থামানো হয়েছে");return;}var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);finishRequest();});}
+  function finishRequest(){activeRequestController=null;busy=false;sendBtn.disabled=false;stopBtn.disabled=true;input.focus();}
+  function stopCurrentRequest(){if(activeRequestController)activeRequestController.abort();}
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;stopBtn.disabled=false;activeRequestController=new AbortController();var controller=activeRequestController;var p=correct(raw),text=punct(p.text),attached=pendingImage;clearImage();input.value="";resize();
+    if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){session.messages=session.messages.slice(0,editTargetIndex);msgEl.innerHTML="";for(var ri=0;ri<session.messages.length;ri++){var rm=session.messages[ri];addMsg(rm.role,rm.text,rm.at,true,rm.feedback,ri,rm.elapsedMs,rm.responseMeta);}editTargetIndex=null;}
+    addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);var imageMode=!attached&&looksLikeImagePrompt(text);
+    var request=imageMode?imageReply(text,controller.signal):coreReply(text,attached,controller.signal);
+    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode)addGeneratedImage(r);else addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);finishRequest();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();if(e&&e.name==="AbortError"){finishRequest();toast("মেসেজ থামানো হয়েছে");return;}var err=String(e&&e.message||""),message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"ছবি নির্ধারিত ফাইল-সাইজে সংকুচিত করা যায়নি।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);finishRequest();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
@@ -1173,14 +1164,14 @@ header.top{
   function normalizeVoiceTranscript(value,language){
     var text=String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
     if(!text)return "";
-    /* Fix punctuation spacing but preserve the recognizer's wording and line breaks. */
+    
     text=text.replace(/[ \t]+([,.;!?।॥])/g,"$1").replace(/([,;])(?=\S)/g,"$1 ");
     var lines=text.split("\n");
     var last=-1;
     for(var i=lines.length-1;i>=0;i--){if(lines[i].trim()){last=i;break;}}
     if(last<0)return "";
     var finalLine=lines[last].trim();
-    /* Bengali regexes must not use \b: JavaScript word boundaries are ASCII-centric. */
+    
     var questionStart=/^(?:কি|কী|কেন|কিভাবে|কীভাবে|কেমন|কোথায়|কোথায়|কখন|কার|কাদের|কত|কোন|কোনটা|নাকি)(?:\s|$)/i;
     var questionEnd=/(?:^|\s)(?:কি|কী)\s*$/i;
     if(!/[.!?।॥…]$/.test(finalLine)){
