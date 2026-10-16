@@ -68,6 +68,7 @@ export function initializeComposerEnhancements() {
       input.value = largeInput.value;
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.value = largeInput.value;
       syncVisibility();
     }
     editor.classList.remove("open");
@@ -80,7 +81,10 @@ export function initializeComposerEnhancements() {
   input.addEventListener("input", syncVisibility);
   expand.addEventListener("click", openEditor);
   editor.querySelector("[data-expand-cancel]").addEventListener("click", () => closeEditor(false));
-  editor.querySelector("[data-expand-apply]").addEventListener("click", () => closeEditor(true));
+  editor.querySelector("[data-expand-apply]").addEventListener("click", event => {
+    event.preventDefault();
+    closeEditor(true);
+  });
   editor.addEventListener("click", event => {
     if (event.target === editor) closeEditor(false);
   });
