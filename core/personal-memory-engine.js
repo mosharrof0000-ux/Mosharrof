@@ -123,7 +123,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
   const entries=Array.isArray(profile.memories)?profile.memories:Array.isArray(profile.items)?profile.items:[];
   const current=clean(currentText,1500).toLowerCase();
   const terms=current.split(/[^\p{L}\p{N}]+/u).filter(t=>t.length>2);
-  const followup=/(এটা|সেটা|ওটা|আগের|চালিয়ে|চালিয়ে|আরও|তারপর|ওই|continue|that|it|previous|earlier|next|same)/i.test(currentText)||terms.length<2;
+  const followup=/(এটা|সেটা|ওটা|আগের|চালিয়ে|চালিয়ে|আরও|তারপর|ওই|continue|that|it|previous|earlier|next|same)/i.test(currentText);
   const ranked=entries.filter(m=>m&&typeof m==="object"&&!["superseded","archived","resolved"].includes(m.status))
     .map((m,index)=>{
       const content=clean(m.content,1000), lower=content.toLowerCase();
