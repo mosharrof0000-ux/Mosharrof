@@ -9,6 +9,14 @@ class CommandParser {
         }
 
         return when (command) {
+            "go back", "back", "পেছনে যান", "ফিরে যান", "এক ধাপ পেছনে" ->
+                ParsedCommand.GlobalNavigation(AgentAction.NavigationDestination.BACK)
+            "go home", "home screen", "হোমে যান", "হোম স্ক্রিন খুলুন" ->
+                ParsedCommand.GlobalNavigation(AgentAction.NavigationDestination.HOME)
+            "open notifications", "notification shade", "নোটিফিকেশন খুলুন", "নোটিফিকেশন প্যানেল খুলুন" ->
+                ParsedCommand.GlobalNavigation(AgentAction.NavigationDestination.NOTIFICATIONS)
+            "open recent apps", "recent apps", "সাম্প্রতিক অ্যাপ খুলুন" ->
+                ParsedCommand.GlobalNavigation(AgentAction.NavigationDestination.RECENTS)
             "open settings", "সেটিংস খোলো", "সেটিংস খুলুন" ->
                 ParsedCommand.OpenSystemSettings
             "open wifi settings", "ওয়াইফাই সেটিংস খুলুন", "ওয়াইফাই সেটিংস খুলুন" ->
