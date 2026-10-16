@@ -2,7 +2,6 @@
 set -euo pipefail
 
 cp native/android/DeviceControlPlugin.java android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
-cp native/android/UserFilesPlugin.java android/app/src/main/java/com/mosharrof/ai/UserFilesPlugin.java
 cp native/android/MosharrofFilesPlugin.java android/app/src/main/java/com/mosharrof/ai/MosharrofFilesPlugin.java
 cp native/android/AndroidFileManagerPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidFileManagerPlugin.java
 
@@ -40,7 +39,6 @@ public class MainActivity extends BridgeActivity {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(DeviceControlPlugin.class);
-        registerPlugin(UserFilesPlugin.class);
         registerPlugin(MosharrofFilesPlugin.class);
         registerPlugin(AndroidFileManagerPlugin.class);
         super.onCreate(savedInstanceState);
