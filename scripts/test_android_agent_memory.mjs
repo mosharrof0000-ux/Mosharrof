@@ -8,7 +8,8 @@ const store = {
   async list() { return Array.from(records.values()); },
   async delete(id) { records.delete(id); }
 };
-const make = enabled => createMemory({ enabled, store, now: () => 1000, makeId: () => "m1" });
+let sequence = 0;
+const make = enabled => createMemory({ enabled, store, now: () => 1000, makeId: () => "m" + (++sequence) });
 await assert.rejects(() => make(false).remember({ text: "প্রিয় ভাষা বাংলা", embedding: [1, 0] }), /বন্ধ/);
 const memory = make(true);
 await assert.rejects(() => memory.remember({ text: "password: secret", embedding: [1, 0] }), /গোপন/);
