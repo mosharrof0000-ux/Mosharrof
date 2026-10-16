@@ -25,7 +25,8 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Discover launchable installed apps and open a specifically resolved app after confirmation.
 - [x] User-armed, bounded, read-only accessibility screen snapshot.
 - [x] Exact visible-label tap with ambiguity rejection and confirmation.
-- [ ] Semantic UI actions beyond the current bounded exact-label tap and one-shot directional swipe: back/navigation and text entry; each individually reviewed and confirmed. Swipe code and parser tests added; latest CI/device verification pending.
+- [x] Confirmed global navigation commands for Back, Home, Notifications, and Recent Apps; deterministic parser and approval-policy tests added. Emulator/physical-device verification pending.
+- [ ] Semantic UI actions beyond the current bounded exact-label tap, one-shot directional swipe, and global navigation: safe text entry, focus handling, and per-step result verification; each individually reviewed and confirmed.
 - [ ] Task plans with multiple steps, visible step-by-step progress, stop/cancel and deadlines.
 - [ ] Re-check screen state and verify postconditions after each action.
 - [ ] Bounded retry/re-plan and recovery when an expected control is absent; stop safely when uncertain.
