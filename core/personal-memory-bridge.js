@@ -115,7 +115,7 @@ export function installPersonalMemoryBridge(root = (typeof window !== "undefined
         requestBody = JSON.parse(init.body);
         if (requestBody && typeof requestBody.text === "string" && requestBody.text.trim()) {
           currentFolder = engine.classifyFolder(requestBody.text);
-          const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
+          const memoryContext = await engine.buildContext(requestBody.text).catch((error) => { console.error("[MOSHARROF Memory] Context build failed:", error?.message || error); return ""; });
           const saved = await engine.add({
             kind: "user", text: requestBody.text, folder: currentFolder, sessionId: "mosharrof-chat",
             sequence: ++sequence, previousId
