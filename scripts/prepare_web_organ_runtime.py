@@ -39,6 +39,12 @@ def main() -> int:
             raise SystemExit(f"ORGAN ASSET PREP: missing {source}")
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
+    # The composer enhancement is loaded from both the Pages root and core/.
+    stop_source = ROOT / "core/composer-stop.js"
+    for destination in ("web/composer-stop.js", "web/core/composer-stop.js"):
+        target = ROOT / destination
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(stop_source, target)
     # Inject runtime-only enhancements into the prepared Pages artifact; keep the tracked legacy entrypoint frozen.
     index_path = ROOT / "web/index.html"
     index_html = index_path.read_text(encoding="utf-8")
