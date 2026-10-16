@@ -31,7 +31,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] User-triggered screen screenshot capture, in-app preview, and transient UI-label analysis
 - [x] Explicitly opt-in Gemini Vision screenshot analysis; the API key is encrypted at rest with Android Keystore and the image is uploaded only after a separate user tap (CI/live API/device verification pending)
 - [x] Initial Android permission center for runtime and special app-access permissions, with grant-status review (latest CI and device/OEM verification pending)
-- [x] Declared HTTPS network permission for future AI-service connectivity; backend/API adapter is not yet connected
+- [x] HTTPS Gemini Vision API adapter for explicit screenshot analysis; other chat/planner provider integration and failover are not yet connected
 - [x] Voice command input through Android's speech-recognition activity (availability depends on device)
 - [ ] Result readout using Android TextToSpeech with explicit speak/stop controls (code added; CI/device verification pending)
 - [x] Visible cancel button clears pending app/settings/tap plans and cancels an armed screen inspection (not a general multi-step executor cancel)
@@ -44,7 +44,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 
 - [x] AI-assisted normalization fallback for unsupported local commands through the existing MOSHARROF chat Worker; every normalized command is revalidated by the local planner and requires confirmation (CI/live endpoint verification pending)
 - [ ] General natural-language task planning across arbitrary apps
-- [ ] General semantic node locator and bounded UI action executor (exact-label tap, one-shot swipe, and confirmed global navigation are limited initial actions; arbitrary UI interaction and text entry are not enabled)
+- [ ] General semantic node locator and bounded UI action executor (exact-label tap, one-shot swipe, confirmed global navigation and focused-field text insertion are initial actions; arbitrary UI interaction is not enabled)
 - [ ] Per-task progress, interrupt, cancel, deadlines, postcondition verification and recovery (current cancel only clears pending previews/armed actions)
 - [ ] Safe Settings command routing and system-setting confirmation (Wi-Fi, Bluetooth, Location, Display, Sound, Battery Saver, Notifications and Application Settings routes are coded; latest CI and OEM/physical-device verification pending)
 - [ ] Appium/UiAutomator2 device tests and real-device acceptance
@@ -61,4 +61,4 @@ This milestone is **not** a completed fully autonomous agent. Current executable
 
 The service remains off until the device owner enables it in Android Settings. Tasks must be user-directed. Ask for confirmation before externally visible or destructive actions (sending, deleting, purchasing, posting, changing security settings, or sharing data). Never store passwords, OTPs, payment credentials, or arbitrary screen contents by default. Do not bypass Android permission dialogs or platform security boundaries.
 
-Root/Magisk/LSPosed/ADB shell support is not enabled by default. Any later support must be optional, separately reviewed, visibly enabled, narrowly scoped, audited, and explicitly opted into.
+Root/Magisk/LSPosed and in-app ADB shell execution are not enabled. An optional Device Admin receiver and ADB Device Owner provisioning command are exposed; the command must be run by the owner on a trusted host and does not grant unrestricted control by itself.
