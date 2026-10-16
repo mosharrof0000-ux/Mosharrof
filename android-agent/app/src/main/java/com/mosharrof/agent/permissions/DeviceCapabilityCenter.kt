@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
-import android.text.TextUtils
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -26,6 +25,12 @@ object DeviceCapabilityCenter {
             textSize = 20f
         })
         layout.addView(summary)
+        layout.addView(Button(activity).apply {
+            text = "সাম্প্রতিক নোটিফিকেশন পড়ুন"
+            setOnClickListener {
+                status.text = com.mosharrof.agent.notifications.MosharrofNotificationListenerService.snapshot()
+            }
+        })
         layout.addView(Button(activity).apply {
             text = "অনুমতির অবস্থা যাচাই করুন"
             setOnClickListener { refresh(); status.text = "অনুমতির অবস্থা আপডেট হয়েছে।" }
@@ -93,7 +98,8 @@ object DeviceCapabilityCenter {
                     if (action == Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION ||
                         action == Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM ||
                         action == Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS ||
-                        action == Settings.ACTION_MANAGE_WRITE_SETTINGS) {
+                        action == Settings.ACTION_MANAGE_WRITE_SETTINGS ||
+                        action == Settings.ACTION_APPLICATION_DETAILS_SETTINGS) {
                         this.data = Uri.parse("package:${activity.packageName}")
                     }
                 }
