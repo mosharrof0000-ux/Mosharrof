@@ -5,6 +5,10 @@
 (function (root) {
   "use strict";
 
+  const recoveryHandler = options => options.recoveryHandler ||
+    (typeof module !== "undefined" && module.exports
+      ? require("./android-agent-executor-recovery.js") : root.MosharrofAndroidAgentExecutorRecovery);
+
   function createExecutor(options = {}) {
     const adapter = options.adapter;
     const verify = options.verify;
@@ -72,36 +76,12 @@
           onProgress({ index: i, total: plan.steps.length, action: step.action, status: "verified" });
         } catch (error) {
           const failureReason = String(error && error.message || error).slice(0, 240);
-          let recovered = null;
-          if (!cancelled && recoveryApi && typeof recoveryApi.runWithRecovery === "function" &&
-              typeof getRecoveryAttempts === "function") {
-            try {
-              const proposed = await withTimeout(getRecoveryAttempts(step, error), "recovery planning");
-              const candidates = [];
-              for (const candidate of (Array.isArray(proposed) ? proposed : []).slice(0, 3)) {
-                if (!candidate || typeof candidate.action !== "string" || !candidate.capability ||
-                    candidate.action === step.action || !isCapabilityReady(candidate.capability, candidate)) continue;
-                const risky = candidate.requiresConfirmation ||
-                  ["destructive", "sensitive", "high"].includes(candidate.risk);
-                if (risky && !(await confirm(candidate))) continue;
-                candidates.push(candidate);
-              }
-              recovered = await recoveryApi.runWithRecovery({
-                attempts: candidates,
-                execute: async candidate => {
-                  if (cancelled) return { ok: false, reason: "cancelled" };
-                  return withTimeout(adapter.execute(candidate), "recovery execution");
-                },
-                verify: async (candidate, execution) =>
-                  withTimeout(verify(candidate, execution), "recovery verification"),
-                isSafeToRetry: (candidate, previous) => !cancelled &&
-                  isSafeToRetry(candidate, step, error, previous),
-                onProgress
-              });
-            } catch (recoveryError) {
-              recovered = { status: "failed", reason: String(recoveryError && recoveryError.message || recoveryError).slice(0, 240) };
-            }
-          }
+          const recovery = recoveryHandler(options);
+          const recovered = recovery && typeof recovery.recoverStep === "function"
+            ? await recovery.recoverStep({
+              recoveryApi, getRecoveryAttempts, isSafeToRetry, step, error,
+              isCancelled: () => cancelled, isCapabilityReady, confirm, adapter, verify, withTimeout, onProgress
+            }) : null;
           if (recovered && recovered.status === "recovered") {
             const last = recovered.attempts[recovered.attempts.length - 1];
             results.push({ index: i, action: step.action, status: "recovered",
