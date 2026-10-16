@@ -33,7 +33,7 @@ import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "../core/
   }
 
   function updateUI() {
-    const button = document.getElementById("mosharrof-memory-toggle");
+    const button = document.getElementById("mosharrof-memory-launch");
     const count = document.getElementById("mosharrof-memory-count");
     const clear = document.getElementById("mosharrof-memory-clear");
     if (button) {
