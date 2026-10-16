@@ -8,6 +8,7 @@ cp -a web android-web
 # Android-only CSS is copied into the temporary APK bundle, not the live Pages folder.
 test -s core/android-edge-to-edge.css
 cp core/android-edge-to-edge.css android-web/edge-to-edge.css
+cp core/device-control.js android-web/device-control.js
 python - <<'PY'
 from pathlib import Path
 page = Path("android-web/index.html")
