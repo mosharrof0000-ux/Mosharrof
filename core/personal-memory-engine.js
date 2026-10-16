@@ -64,7 +64,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     const old = ledger.memories.find(m => m.id === clean(id,120));
     if (!old) return null;
     old.status = "superseded";
-    const next = { ...old, ...patch, id: undefined, supersedes: old.id, created_at: now() };
+    const next = { ...old, ...patch, id: undefined, supersedes: old.id, status: patch.status || "active", created_at: now() };
     ledger.memories.push({
       ...next, id: "mem-" + String(Date.parse(now()) || Date.now()) + "-" + (ledger.revision + 1),
       category: CATEGORIES.has(next.category) ? next.category : "fact",
