@@ -1,7 +1,8 @@
 /* Bridges local chronological memory to the live chat Worker without blocking streaming. */
 import { createPersonalMemoryEngine } from "./personal-memory-engine.js";
 
-export function installPersonalMemoryBridge(root = window) {
+export function installPersonalMemoryBridge(root = (typeof window !== "undefined" ? window : null)) {
+  if (!root || !root.document || typeof root.fetch !== "function") return null;
   if (root.__mosharrofMemoryBridgeInstalled) return root.MosharrofPersonalMemory || null;
   root.__mosharrofMemoryBridgeInstalled = true;
   const engine = createPersonalMemoryEngine({ root });
@@ -12,6 +13,7 @@ export function installPersonalMemoryBridge(root = window) {
     clear: engine.clear,
     recall: engine.recall,
     search: engine.search,
+    timeline: engine.timeline,
     folders: engine.folders,
     listFolder: engine.listFolder,
     exportAll: engine.exportAll,
@@ -157,4 +159,4 @@ export function installPersonalMemoryBridge(root = window) {
   };
   return root.MosharrofPersonalMemory;
 }
-installPersonalMemoryBridge();
+if (typeof window !== "undefined") installPersonalMemoryBridge();
