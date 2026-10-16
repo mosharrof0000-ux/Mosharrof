@@ -80,7 +80,7 @@ def main() -> int:
         raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for memory assets")
     for tag in (memory_client_tag, memory_ui_tag):
         if tag not in index_html:
-            index_html = index_html.replace(anchor_tag, anchor_tag + "\\n" + tag, 1)
+            index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + tag, 1)
             anchor_tag = tag
 
     index_path.write_text(index_html, encoding="utf-8")
