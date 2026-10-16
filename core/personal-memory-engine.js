@@ -7,8 +7,8 @@ const SCHEMA_VERSION = 1;
 const DEFAULT_NAMESPACE = "mosharrof.personal-memory.v1";
 const MAX_CONTEXT_CHARS = 9000;
 const CATEGORIES = new Set(["preference","goal","project","correction","decision","fact","open_question","plan","hypothesis","event","commitment"]);
-const SECRET_LIKE = /(password|passcode|\\bpin\\b|\\botp\\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
-const clean = (value, limit = 2000) => String(value ?? "").replace(/\\u0000/g, "").trim().slice(0, limit);
+const SECRET_LIKE = /(password|passcode|\bpin\b|\botp\b|api[_ -]?key|access[_ -]?token|secret|verification code|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|cvv)/i;
+const clean = (value, limit = 2000) => String(value ?? "").replace(/\u0000/g, "").trim().slice(0, limit);
 const safeTime = value => { const parsed = Date.parse(value || ""); return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date(0).toISOString(); };
 const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -78,7 +78,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
   }
   async function recall({ category, query, includeSuperseded = false, includePending = true, limit, folder } = {}) {
     const ledger = await readLedger();
-    const terms = clean(query,300).toLowerCase().split(/[^\\p{L}\\p{N}]+/u).filter(Boolean);
+    const terms = clean(query,300).toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
     let items = ledger.memories.filter(m =>
       (includeSuperseded || !["superseded","archived"].includes(m.status)) &&
       (includePending || m.status !== "pending_confirmation") &&
@@ -122,7 +122,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
   if (!profile || typeof profile !== "object") return "";
   const entries=Array.isArray(profile.memories)?profile.memories:Array.isArray(profile.items)?profile.items:[];
   const current=clean(currentText,1500).toLowerCase();
-  const terms=current.split(/[^\\p{L}\\p{N}]+/u).filter(t=>t.length>2);
+  const terms=current.split(/[^\p{L}\p{N}]+/u).filter(t=>t.length>2);
   const ranked=entries.filter(m=>m&&typeof m==="object"&&!["superseded","archived","resolved"].includes(m.status))
     .map((m,index)=>{
       const content=clean(m.content,1000), lower=content.toLowerCase();
@@ -146,7 +146,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
     "Consider chronological order: distinguish past events, current goals, future plans, and open questions. Older entries marked superseded must not be treated as current.",
     "Think ahead only as a grounded possibility from stated goals and events; explain uncertainty briefly and do not claim to know private thoughts.",
     ...selected
-  ].join("\\n");
+  ].join("\n");
 }
 
 export function inferMemoryCandidates(userText) {
