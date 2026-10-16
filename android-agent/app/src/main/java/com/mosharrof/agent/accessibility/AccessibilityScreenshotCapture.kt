@@ -7,6 +7,12 @@ import android.view.Display
 
 /** Captures only after the device owner enabled this Accessibility service. */
 internal object AccessibilityScreenshotCapture {
+    fun isTargetPackage(packageName: String): Boolean =
+        packageName.isNotBlank() && packageName !in setOf(
+            "com.android.systemui", "com.android.launcher", "com.android.launcher3",
+            "com.google.android.apps.nexuslauncher", "com.oplus.launcher"
+        )
+
     fun capture(service: AccessibilityService, callback: (Bitmap?, String?) -> Unit): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             callback(null, "এই Android সংস্করণে Accessibility screenshot API নেই।")
