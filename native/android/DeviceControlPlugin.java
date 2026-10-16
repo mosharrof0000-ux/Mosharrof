@@ -76,6 +76,39 @@ public class DeviceControlPlugin extends Plugin {
         openSettings(call, Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
     }
 
+
+    // Safe communication intents: these open a user-editable draft; they never send or call directly.
+    @PluginMethod public void prepareCall(PluginCall call) {
+        String number = call.getString("number", "").trim();
+        if (!number.matches("[+0-9(). *#-]{3,25}")) { call.reject("ফোন নম্বরটি ঠিক নয়।"); return; }
+        openUserIntent(call, new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null)));
+    }
+    @PluginMethod public void prepareSms(PluginCall call) {
+        String number = call.getString("number", "").trim(), body = call.getString("body", "");
+        if (!number.matches("[+0-9(). *#-]{3,25}") || body.trim().isEmpty() || body.length() > 4000) { call.reject("নম্বর বা SMS বার্তাটি ঠিক নয়।"); return; }
+        Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + Uri.encode(number)));
+        intent.putExtra("sms_body", body);
+        openUserIntent(call, intent);
+    }
+    @PluginMethod public void prepareEmail(PluginCall call) {
+        String to = call.getString("to", "").trim(), subject = call.getString("subject", ""), body = call.getString("body", "");
+        if (!to.matches("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}") || subject.length() > 200 || body.length() > 10000) { call.reject("ইমেইল ঠিকানা বা খসড়াটি ঠিক নয়।"); return; }
+        Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:" + Uri.encode(to)));
+        intent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        intent.putExtra(Intent.EXTRA_TEXT, body);
+        openUserIntent(call, intent);
+    }
+    private void openUserIntent(PluginCall call, Intent intent) {
+        try {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+            JSObject result = new JSObject(); result.put("opened", true); result.put("userMediated", true);
+            call.resolve(result);
+        } catch (ActivityNotFoundException | SecurityException error) {
+            call.reject("এই কাজের জন্য উপযুক্ত ফোন বা মেসেজ অ্যাপ পাওয়া যায়নি।", error);
+        }
+    }
+
     private void openSettings(PluginCall call, String action) {
         openSettings(call, action, null);
     }
