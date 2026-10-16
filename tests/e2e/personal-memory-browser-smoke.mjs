@@ -156,8 +156,12 @@ try {
   const followUpText = "আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?";
   const contextPreview = await page.evaluate(query => window.MosharrofPersonalMemory.buildContext(query), followUpText);
   console.log("Memory context retrieval diagnostic:", JSON.stringify({hasMarker: contextPreview.includes(marker), length: contextPreview.length}));
-  // Send a follow-up after reload and assert the bridge injects the saved marker.
+  // Send a follow-up after reload and wait for its network request before inspecting it.
   await page.locator("#input").fill(followUpText);
+  const followUpResponse = page.waitForResponse(response =>
+    response.request().method() === "POST" && new URL(response.url()).pathname.endsWith("/chat"),
+    { timeout: timeoutMs }
+  );
   await page.locator("#sendBtn").click();
   await page.waitForFunction(async () => {
     const request = indexedDB.open("mosharrof-personal-memory-v1");
@@ -175,6 +179,7 @@ try {
     db.close();
     return rows.some(row => row.kind === "user" && row.text.includes("শনাক্তকারীটি মনে রাখতে"));
   }, null, { timeout: 20000 });
+  await followUpResponse;
 
   const followUpRequest = chatRequests.at(-1);
   if (!followUpRequest) throw new Error("Follow-up chat request was not intercepted");
