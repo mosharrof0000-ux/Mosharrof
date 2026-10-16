@@ -12,6 +12,7 @@ class IntentParser {
         }
 
         parseTapCommand(text)?.let { return it }
+        parseSwipeCommand(text)?.let { return it }
 
         val suffix = listOf("খুলে দাও", "খুলুন", "খোলো", "চালু করো", "চালু করুন")
             .firstOrNull { text.endsWith(" $it", ignoreCase = true) }
@@ -29,6 +30,28 @@ class IntentParser {
         val query = match.groupValues[1].trim().trim('"', '\'')
         if (query.isBlank()) return ParsedIntent.Unsupported("অ্যাপের নাম পাওয়া যায়নি")
         return ParsedIntent.OpenApp(query)
+    }
+
+    private fun parseSwipeCommand(text: String): ParsedIntent.Swipe? {
+        val english = Regex("^(?:swipe|scroll)\\s+(up|down|left|right)\\s+(?:in|inside|on)\\s+(.+)$", RegexOption.IGNORE_CASE).find(text)
+        if (english != null) {
+            val direction = when (english.groupValues[1].lowercase()) {
+                "up" -> AgentAction.Direction.UP
+                "down" -> AgentAction.Direction.DOWN
+                "left" -> AgentAction.Direction.LEFT
+                else -> AgentAction.Direction.RIGHT
+            }
+            return ParsedIntent.Swipe(direction, english.groupValues[2].trim())
+        }
+        val bengali = Regex("^(.+?)\\s+(উপরে|নিচে|বামে|ডানে)\\s+স্ক্রল(?:\\s+(?:করুন|করো))?$", RegexOption.IGNORE_CASE).find(text)
+            ?: return null
+        val direction = when (bengali.groupValues[2]) {
+            "উপরে" -> AgentAction.Direction.UP
+            "নিচে" -> AgentAction.Direction.DOWN
+            "বামে" -> AgentAction.Direction.LEFT
+            else -> AgentAction.Direction.RIGHT
+        }
+        return ParsedIntent.Swipe(direction, bengali.groupValues[1].trim())
     }
 
     private fun parseTapCommand(text: String): ParsedIntent.TapText? {
