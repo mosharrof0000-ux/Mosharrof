@@ -65,7 +65,6 @@ header.top{
 .message.typing .response-status-row{margin-bottom:7px}
 .message.user{align-self:flex-end;background:var(--surface3);padding:11px 16px;border-radius:20px;border-bottom-right-radius:6px;max-width:min(80%,680px)}
 .message.ai{align-self:flex-start;max-width:min(92%,760px)}
-
 /* MOSHARROF rich-text response system */
 .message.ai .rich-content{font-size:15.5px;line-height:1.82;letter-spacing:.005em;color:#ededed;overflow-wrap:anywhere}
 .message.ai .rich-content>*+*{margin-top:1em}
@@ -85,7 +84,6 @@ header.top{
 .message.ai .rich-content .code-toolbar .code-language{text-transform:lowercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.message.ai .rich-content .copy-code{flex:none;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:#252a33;color:#f4f4f5;padding:5px 9px;font-size:11px}.message.ai .rich-content .copy-code:active{background:#3b414c}
 .message.ai .rich-content pre{margin:0;max-width:100%;overflow:auto;padding:14px;background:#0d1117;color:#e6edf3;font:12.5px/1.7 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:2;scrollbar-width:thin}
 .message.ai .rich-content pre code{font:inherit;white-space:pre}.message.ai .rich-content .code-block pre code{padding:0;border:0;border-radius:0;background:transparent;color:inherit}.message.ai .rich-content img{max-width:100%;height:auto;border-radius:10px}
-
 /* Dynamic Bengali typography: font families are mapped by the central registry. */
 .message.ai .rich-content.font-song{font-size:17px;line-height:2.02;letter-spacing:.012em}
 .message.ai .rich-content.font-song h1,.message.ai .rich-content.font-song h2,.message.ai .rich-content.font-song h3{line-height:1.5;letter-spacing:0}
@@ -104,9 +102,7 @@ header.top{
 .song-design-next:active{background:rgba(95,125,190,.3)}
 .song-design-label{opacity:.8}
 .message.ai .rich-content.font-song[data-song-style]{transition:background .2s ease,border-color .2s ease}
-
 @media(max-width:480px){.message.ai .rich-content{font-size:15px;line-height:1.78}.message.ai .rich-content th,.message.ai .rich-content td{padding:8px 9px}.message.ai .rich-content pre{font-size:12px;padding:11px}}
-
 .message-actions-wrap{display:flex;flex-direction:column;align-items:flex-start;margin-top:7px;gap:6px}
 .message.user .message-actions-wrap{align-items:flex-end;margin-right:-5px;margin-bottom:-3px}
 .message-actions-toggle{width:28px;height:24px;display:inline-grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:#080808;color:#f2f2f2;font-size:16px;line-height:1}
@@ -227,21 +223,6 @@ header.top{
 .audio-setting-row label{font-size:12px;color:#e5e5e5;font-weight:650}
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
-
-.composer-expand-btn{width:34px;height:36px;flex:none;display:inline-grid;place-items:center;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#080808;color:#f2f2f2;font-size:19px;line-height:1}
-.composer-expand-btn:hover{background:#111;border-color:rgba(255,255,255,.3)}
-.composer-expand-btn:focus-visible{outline:2px solid #aaa;outline-offset:2px}
-.expand-editor-backdrop{position:fixed;inset:0;z-index:10003;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.78);padding-top:calc(16px + var(--safe-t));padding-bottom:calc(16px + var(--safe-b))}
-.expand-editor-backdrop.open{display:flex}
-.expand-editor-panel{display:flex;flex-direction:column;gap:12px;width:min(820px,100%);max-height:100%;padding:16px;border:1px solid rgba(255,255,255,.18);border-radius:18px;background:#202020;box-shadow:0 12px 40px rgba(0,0,0,.6)}
-.expand-editor-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;font-weight:700}
-.expand-editor-close{width:34px;height:34px;border-radius:9px;background:#111;color:#fff;font-size:22px}
-.expand-editor-textarea{width:100%;min-height:min(52vh,420px);flex:1;resize:vertical;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#101010;color:#fff;padding:12px;font:inherit;font-size:16px;line-height:1.55;outline:none}
-.expand-editor-textarea:focus{border-color:rgba(255,255,255,.42)}
-.expand-editor-actions{display:flex;justify-content:flex-end;gap:8px}
-.expand-editor-actions button{min-height:40px;padding:9px 15px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:#111;color:#fff;font-weight:650}
-.expand-editor-actions [data-expand-apply]{background:#e5e5e5;color:#111;border-color:#e5e5e5}
-@media(max-width:390px){.composer{left:6px;right:6px;padding:7px}.row{gap:4px}.composer-expand-btn{width:32px}.composer-tool-toggle,.composer-action,.send{width:32px;height:36px}.input{padding-left:3px;padding-right:3px}}
 </style>
 </head>
 <body>
@@ -271,7 +252,6 @@ header.top{
         </div>
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
-      <button class="composer-expand-btn" id="composerExpandBtn" type="button" aria-label="লেখার জায়গা বড় করুন" title="বড় করে লিখুন" aria-haspopup="dialog">⤢</button>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
@@ -281,13 +261,6 @@ header.top{
   <aside class="drawer right" id="drawerRight" aria-hidden="true"></aside>
   <div class="scrim" id="scrim"></div>
   <div class="toast" id="toast"></div>
-  <div class="expand-editor-backdrop" id="mosharrofExpandEditor" role="dialog" aria-modal="true" aria-labelledby="mosharrofExpandTitle" aria-hidden="true">
-    <section class="expand-editor-panel">
-      <div class="expand-editor-heading"><span id="mosharrofExpandTitle">বার্তা বড় করে সম্পাদনা করুন</span><button class="expand-editor-close" id="composerExpandClose" type="button" aria-label="বন্ধ করুন">×</button></div>
-      <textarea class="expand-editor-textarea" id="composerExpandTextarea" aria-label="সম্পূর্ণ বার্তা" placeholder="এখানে সম্পূর্ণ বার্তা লিখুন..."></textarea>
-      <div class="expand-editor-actions"><button id="composerExpandCancel" type="button">বাতিল</button><button data-expand-apply type="button">লেখা প্রয়োগ করুন</button></div>
-    </section>
-  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
@@ -356,7 +329,6 @@ header.top{
     wrap.appendChild(meta);wrap.appendChild(group);if(role==="ai")wrap.appendChild(panel);n.appendChild(wrap);
   }
   function elapsedLabel(ms){var seconds=Math.max(0,Number(ms)||0)/1000;var value=seconds<10?seconds.toFixed(1):String(Math.round(seconds));return "সময় নিয়েছে · "+value+" সেকেন্ড";}
-
   function escapeHTML(value){
     return String(value==null?"":value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
@@ -547,7 +519,6 @@ header.top{
     if(genre==="song")applySongDesign(root,source);
     return genre;
   }
-
   function renderRichText(value){
     var source=String(value==null?"":value);
     if(window.marked&&window.DOMPurify){try{window.marked.setOptions({gfm:true,breaks:false,headerIds:false,mangle:false});return window.DOMPurify.sanitize(window.marked.parse(source),{USE_PROFILES:{html:true},ADD_ATTR:["target","rel"]});}catch(e){}}
@@ -1278,19 +1249,10 @@ header.top{
   rightBtn.onclick=function(){openD("right");};
   scrim.onclick=closeD;
   document.addEventListener("click",function(e){var target=e.target.closest&&e.target.closest("button");if(!target)return;if(target.id==="cL"||target.id==="cR")closeD();if(target.id==="historyBtn")showHistory();if(target.id==="newChat")newChat();if(target.id==="clearMsg")clearMsg();if(target.id==="voiceBtn"){closeD();startV();}});
-  var composerExpandBtn=$("#composerExpandBtn"),expandEditor=$("#mosharrofExpandEditor"),expandTextarea=$("#composerExpandTextarea");
-  function closeExpandedComposer(restoreFocus){expandEditor.classList.remove("open");expandEditor.setAttribute("aria-hidden","true");if(restoreFocus)composerExpandBtn.focus();}
-  function openExpandedComposer(){expandTextarea.value=input.value;expandEditor.classList.add("open");expandEditor.setAttribute("aria-hidden","false");requestAnimationFrame(function(){expandTextarea.focus();expandTextarea.setSelectionRange(expandTextarea.value.length,expandTextarea.value.length);});}
-  composerExpandBtn.onclick=openExpandedComposer;
-  $("#composerExpandClose").onclick=function(){closeExpandedComposer(true);};
-  $("#composerExpandCancel").onclick=function(){closeExpandedComposer(true);};
-  expandEditor.querySelector("[data-expand-apply]").onclick=function(){input.value=expandTextarea.value;input.dispatchEvent(new Event("input",{bubbles:true}));closeExpandedComposer(true);toast("সম্পাদিত লেখা মেসেজ বক্সে বসানো হয়েছে");};
-  expandEditor.addEventListener("click",function(e){if(e.target===expandEditor)closeExpandedComposer(true);});
-  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&expandEditor.classList.contains("open"))closeExpandedComposer(true);});
   restoreMessages();initV();resize();input.focus();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
 })();
 </script>
-<script src="./sidebar-recovery.js"></script>
+<script src="./sidebar-recovery.js"></script><script src="./composer-expand-editor.js"></script>
 </body>
 </html>
