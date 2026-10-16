@@ -117,9 +117,14 @@ export function installPersonalMemoryBridge(root = (typeof window !== "undefined
           currentFolder = engine.classifyFolder(requestBody.text);
           let memoryContext = await engine.buildContext(requestBody.text).catch((error) => { console.error("[MOSHARROF Memory] Context build failed:", error?.message || error); return ""; });
           if (!memoryContext) {
-            const recalled = await engine.recall(requestBody.text, 16).catch(() => []);
-            const relevant = recalled.filter((row) => row.kind !== "preference").slice(0, 7)
+            let recalled = await engine.recall(requestBody.text, 16).catch(() => []);
+            let relevant = recalled.filter((row) => row.kind !== "preference").slice(0, 7)
               .sort((a, b) => a.sequence - b.sequence);
+            if (!relevant.length) {
+              recalled = await engine.search(requestBody.text, 16).catch(() => []);
+              relevant = recalled.filter((row) => row.kind !== "preference").slice(0, 7)
+                .sort((a, b) => a.sequence - b.sequence);
+            }
             if (relevant.length) {
               memoryContext = "PERSONAL MEMORY, OLDEST TO NEWEST (past user-provided context; may be incomplete or stale; current request overrides it):\n" +
                 relevant.map((row) => "[" + (row.folder?.label || row.folder || "সাধারণ কথোপকথন") + " · " + row.isoTime + " · " + row.kind + "] " + String(row.text || "").slice(0, 700)).join("\n");
