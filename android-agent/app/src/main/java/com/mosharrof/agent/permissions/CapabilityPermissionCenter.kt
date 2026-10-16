@@ -83,6 +83,15 @@ object CapabilityPermissionCenter {
         Capability("ব্যবহারের পরিসংখ্যান", "Android অনুমতি দিলে অ্যাপ ব্যবহারের তথ্য.", settingsAction = Settings.ACTION_USAGE_ACCESS_SETTINGS, readiness = ::usageAccessGranted),
         Capability("সম্পূর্ণ ফাইল ব্যবস্থাপনা", "সমর্থিত Android সংস্করণে all-files access; অনুমতি পাওয়া গেলেও protected app data নয়.", settingsAction = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, readiness = { Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager() }),
         Capability("মাইক্রোফোন", "ভয়েস কমান্ড বা ভবিষ্যৎ hands-free voice session.", listOf(Manifest.permission.RECORD_AUDIO), readiness = { permissionsGranted(it, listOf(Manifest.permission.RECORD_AUDIO)) }),
+        Capability("Camera", "ব্যবহারকারী অনুমতি দিলে ছবি/QR/ডকুমেন্ট capture.", listOf(Manifest.permission.CAMERA), readiness = { permissionsGranted(it, listOf(Manifest.permission.CAMERA)) }),
+        Capability("Location", "GPS/নেটওয়ার্ক অবস্থান; background location আলাদা OS অনুমতি চায়.", listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION), readiness = { permissionsGranted(it, listOf(Manifest.permission.ACCESS_COARSE_LOCATION)) || permissionsGranted(it, listOf(Manifest.permission.ACCESS_FINE_LOCATION)) }),
+        Capability("Bluetooth / nearby devices", "নিকটবর্তী ডিভাইসের সঙ্গে সংযোগ; Android সংস্করণভেদে runtime permission.", bluetoothPermissions(), readiness = { bluetoothPermissions().isEmpty() || permissionsGranted(it, bluetoothPermissions()) }),
+        Capability("Phone state", "SIM/নেটওয়ার্ক-সম্পর্কিত সীমিত phone state; সব telephony তথ্য সাধারণ অ্যাপে উপলব্ধ নয়.", listOf(Manifest.permission.READ_PHONE_STATE), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_PHONE_STATE)) }),
+        Capability("Phone calls", "ব্যবহারকারীর নির্দেশে কল শুরু/উত্তর দেওয়ার অনুমতি; জরুরি কল/অন্য অ্যাপের নিয়ম প্রযোজ্য.", listOf(Manifest.permission.CALL_PHONE, Manifest.permission.ANSWER_PHONE_CALLS), readiness = { permissionsGranted(it, listOf(Manifest.permission.CALL_PHONE)) && permissionsGranted(it, listOf(Manifest.permission.ANSWER_PHONE_CALLS)) }),
+        Capability("SMS / call log", "SMS ও call-log অনুমতি সংবেদনশীল এবং ডিভাইস/OS/ডিফল্ট অ্যাপের নিয়মে সীমাবদ্ধ হতে পারে.", listOf(Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CALL_LOG), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.READ_CALL_LOG)) }),
+        Capability("Notification listener", "ব্যবহারকারী চালু করলে notification content পড়া; আলাদা system consent.", settingsAction = Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS, readiness = ::notificationAccessGranted),
+        Capability("Modify system settings", "সমর্থিত settings পরিবর্তন; protected settings-এর জন্য Android-এর নিজস্ব UI লাগতে পারে.", settingsAction = Settings.ACTION_MANAGE_WRITE_SETTINGS, readiness = { Build.VERSION.SDK_INT < 23 || Settings.System.canWrite(it) }),
+        Capability("Battery optimization exemption", "দীর্ঘমেয়াদি কাজের জন্য OS অনুমোদন; ব্যাটারি/স্টোরের নীতির অধীন.", settingsAction = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, readiness = { Build.VERSION.SDK_INT < 23 || it.getSystemService(android.os.PowerManager::class.java)?.isIgnoringBatteryOptimizations(it.packageName) == true }),
         Capability("Contacts", "ব্যবহারকারী অনুমতি দিলে contacts পড়া/লেখা.", listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) }),
         Capability("Calendar", "অনুমতি দিলে calendar পড়া/লেখা.", listOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)) }),
         Capability("ছবি ও ভিডিও", "Android-এর media permission অনুযায়ী নির্বাচিত/অনুমোদিত মিডিয়া.", mediaPermissions(), readiness = { permissionsGranted(it, mediaPermissions()) }),
@@ -108,6 +117,15 @@ object CapabilityPermissionCenter {
 
     private fun permissionsGranted(activity: Activity, permissions: List<String>): Boolean =
         permissions.all { ContextCompat.checkSelfPermission(activity, it) == PackageManager.PERMISSION_GRANTED }
+
+    private fun bluetoothPermissions(): List<String> = when {
+        Build.VERSION.SDK_INT >= 31 -> listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+        else -> emptyList()
+    }
+
+    private fun notificationAccessGranted(activity: Activity): Boolean =
+        android.provider.Settings.Secure.getString(activity.contentResolver, "enabled_notification_listeners")
+            .orEmpty().split(':').any { it.contains(activity.packageName) }
 
     private fun accessibilityEnabled(activity: Activity): Boolean {
         val manager = activity.getSystemService(Context.ACCESSIBILITY_SERVICE) as? android.view.accessibility.AccessibilityManager ?: return false
