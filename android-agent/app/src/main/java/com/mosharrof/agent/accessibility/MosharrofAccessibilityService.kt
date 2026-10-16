@@ -198,6 +198,8 @@ class MosharrofAccessibilityService : AccessibilityService() {
             scanArmed = true
         }
 
+        fun inspectCurrentScreenNow(): ScreenSnapshot? = activeService?.inspectWindow()
+
         fun takeInspectionSnapshot(): ScreenSnapshot? {
             scanArmed = false
             return latestSnapshot.also { latestSnapshot = null }
