@@ -48,6 +48,11 @@ jobs:
       - name: Prepare Android full-screen voice manager
         run: bash scripts/android/prepare-and-install-voice.sh
 
+      - name: Enforce file and folder size budgets
+        run: |
+          git fetch origin main --depth=1
+          python3 scripts/mosharrof_size_gate.py --base origin/main
+
       - name: Verify Android agent contract suite
         run: bash scripts/android/test-agent-contracts.sh
 
