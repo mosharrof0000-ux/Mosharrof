@@ -524,7 +524,7 @@ async function runChat(body,env,onStatus){
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
   const userPrompt=buildReflectiveUserPrompt(targetWords
-    ? text+"\\n\\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words. Continue the requested story or text in full, with coherent structure and no premature summary. Do not claim the target was met if output is cut off."
+    ? text+"\n\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words. Continue the requested story or text in full, with coherent structure and no premature summary. Do not claim the target was met if output is cut off."
     : text);
   const payload={contents:[{parts:[{text:userPrompt}]}]};
   if(targetWords)payload.generationConfig={temperature:0.3,maxOutputTokens};
