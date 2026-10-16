@@ -127,7 +127,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
                 ExactTapResult.AMBIGUOUS -> finishTap("একই লেবেল একাধিক জায়গায় আছে; অস্পষ্টতার কারণে ট্যাপ করা হয়নি।")
             }
         } finally {
-            root.recycleCompat()
+            AccessibilityScreenInspector.recycle(root)
         }
     }
 
@@ -153,7 +153,6 @@ class MosharrofAccessibilityService : AccessibilityService() {
     companion object {
         private const val TAG = "MosharrofAgent"
         private const val MAX_LABEL_LENGTH = 80
-        private const val MAX_CLICKABLE_ANCESTORS = 5
         @Volatile private var activeService: MosharrofAccessibilityService? = null
         @Volatile private var scanArmed = false
         @Volatile private var latestSnapshot: ScreenSnapshot? = null
