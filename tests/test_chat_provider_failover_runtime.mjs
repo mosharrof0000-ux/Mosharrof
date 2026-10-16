@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { loadWorker } from "./worker-loader.mjs";
 
-const source = await readFile(new URL("../worker/screenshot-analysis.js", import.meta.url), "utf8");
-const moduleUrl = "data:text/javascript;base64," + Buffer.from(source).toString("base64");
-const worker = (await import(moduleUrl)).default;
+const worker = await loadWorker();
 const originalFetch = globalThis.fetch;
 
 function response(body, status = 200) {

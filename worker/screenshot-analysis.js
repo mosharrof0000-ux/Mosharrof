@@ -1,3 +1,4 @@
+import { buildChatContext } from "../core/chat-context.js";
 const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
@@ -314,7 +315,7 @@ async function generateWithCloudflareChat(text,env,onStatus){
     if(onStatus)onStatus({stage:"trying",provider:"cloudflare-workers-ai",model});
     try{
       const result=await withChatProviderTimeout(env.AI.run(model,{messages:[
-        {role:"system",content:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform."},
+        {role:"system",content:"You are Mosharrof AI. Help clearly; use Bengali when appropriate; never claim unperformed actions."},
         {role:"user",content:text}
       ],max_tokens:1024,temperature:0.3}),CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
       const answer=String(result?.response||result?.choices?.[0]?.message?.content||"").trim();
@@ -512,9 +513,8 @@ async function transcribeAudio(request,env){
   }
   return reply({error:"audio_transcription_failed",attempted},502);
 }
-
 async function runChat(body,env,onStatus){
-  const text=String(body.text||"").trim();
+  const text=buildChatContext(body.text,body.history);
   if(!text)return {status:400,data:{error:"text_required"}};
   if(text.length>12000)return {status:413,data:{error:"text_too_large"}};
   const report=event=>{if(typeof onStatus==="function")onStatus(event);};
@@ -590,7 +590,7 @@ async function runChat(body,env,onStatus){
 
   return {status:502,data:{
     error:"chat_provider_failed",
-    message:"All configured AI providers are unavailable. Please try again shortly.",
+    message:"AI providers unavailable. Please try again shortly.",
     attempted,
     chat_provider_order:["gemini","cloudflare-workers-ai","groq","openrouter"]
   }};
@@ -611,7 +611,7 @@ async function chat(request,env){
           const result=await runChat(body,env,event=>send({type:"status",...event}));
           send({type:"result",status:result.status,data:result.data});
         }catch(e){
-          send({type:"result",status:500,data:{error:"chat_stream_failed",message:"The chat request could not be completed."}});
+          send({type:"result",status:500,data:{error:"chat_stream_failed",message:"Chat request failed."}});
         }finally{try{controller.close();}catch(e){}}
       })();
     }
