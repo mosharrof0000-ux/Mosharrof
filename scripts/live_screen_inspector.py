@@ -344,7 +344,7 @@ async def main():
                 "memory_bridge_saves_user_and_assistant_turns",
                 any(row["kind"] == "user" and "MOSHARROF inspector safe chat test" in row["text"] for row in rows_before_reload)
                 and any(row["kind"] == "assistant" and "MOSHARROF inspector mock response" in row["text"] for row in rows_before_reload),
-                f"stored {len(rows_before_reload)} rows in browser-local memory",
+                f"stored {len(rows_before_reload)} rows: " + json.dumps([{"kind": row.get("kind"), "text": row.get("text", "")[:100]} for row in rows_before_reload], ensure_ascii=False),
             )
 
             await page.reload(wait_until="domcontentloaded", timeout=args.timeout_ms)
@@ -363,7 +363,7 @@ async def main():
             record(
                 "memory_survives_page_reload",
                 any(row["kind"] == "user" and "MOSHARROF inspector safe chat test" in row["text"] for row in rows_after_reload),
-                f"reloaded browser found {len(rows_after_reload)} stored rows",
+                f"reloaded browser found {len(rows_after_reload)} rows: " + json.dumps([{"kind": row.get("kind"), "text": row.get("text", "")[:100]} for row in rows_after_reload], ensure_ascii=False),
             )
 
             previous_answer_count = await page.locator("#messages .message.ai").count()
@@ -383,7 +383,7 @@ async def main():
             record(
                 "retrieved_memory_is_sent_to_chat_worker",
                 "MOSHARROF inspector safe chat test" in memory_context,
-                f"memory_context length={len(memory_context)}; mock requests={len(mock_requests)}",
+                f"memory_context length={len(memory_context)}; mock requests={len(mock_requests)}; context={memory_context[:800]!r}",
             )
         except Exception as exc:
             record("memory_persistence_and_recall_round_trip", False, repr(exc))
