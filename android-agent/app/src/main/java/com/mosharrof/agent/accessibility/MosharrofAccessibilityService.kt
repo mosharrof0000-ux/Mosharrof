@@ -220,6 +220,9 @@ class MosharrofAccessibilityService : AccessibilityService() {
             return latestSnapshot.also { latestSnapshot = null }
         }
 
+        fun armTextEntry(targetPackage: String, text: String): Boolean =
+            activeService != null && FocusedTextEntry.arm(targetPackage, text)
+
         fun armSemanticTap(targetPackage: String, visibleText: String): Boolean {
             if (activeService == null || targetPackage.isBlank() || visibleText.isBlank() ||
                 visibleText.length > MAX_LABEL_LENGTH || pendingTap != null
