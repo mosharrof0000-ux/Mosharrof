@@ -121,12 +121,13 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
   async function importAll(snapshot) {
     if (!snapshot || snapshot.schema_version !== SCHEMA_VERSION || !Array.isArray(snapshot.memories)) throw new TypeError("Unsupported memory export.");
     const ledger=await readLedger(), known=new Set(ledger.memories.map(m=>m.id));
+    let imported=0;
     for (const item of snapshot.memories) if (item && typeof item==="object" && item.id && !known.has(item.id) && !SECRET_LIKE.test(String(item.content||""))) {
       const category=CATEGORIES.has(item.category)?item.category:"fact";
       ledger.memories.push({...item,content:clean(item.content,4000),category,folder:clean(item.folder || category,120)});
-      known.add(item.id);
+      known.add(item.id); imported+=1;
     }
-    return save(ledger);
+    return { ...await save(ledger), imported };
   }
   async function clear() {
     if (typeof backingStorage.removeItem !== "function") throw new TypeError("Storage adapter does not support deletion.");
@@ -148,7 +149,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
       const pending=m.status==="pending_confirmation";
       const score=(m.user_confirmed?8:0)+overlap*3+(m.category==="preference"?2:0)+(pending?-5:0)+recency;
       return {m,content,score,index};
-    }).filter(x=>x.content).sort((a,b)=>b.score-a.score||b.index-a.index);
+    }).filter(x=>x.content&&(followup||x.overlap>0)).sort((a,b)=>b.score-a.score||b.index-a.index);
   const selected=[]; let used=0;
   for(const item of ranked){
     const line="- ["+clean(item.m.folder||item.m.category||"fact",40)+"; status "+clean(item.m.status||"active",32)+"; confidence "+Math.max(0,Math.min(1,Number(item.m.confidence??0.6)))+"; date "+String(item.m.created_at||"").slice(0,10)+"] "+item.content;
