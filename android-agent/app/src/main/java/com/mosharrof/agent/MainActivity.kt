@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
+import com.mosharrof.agent.accessibility.FloatingControlToggle
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.InstalledAppCatalog
@@ -109,6 +110,7 @@ class MainActivity : ComponentActivity() {
             addView(planButton)
             addView(confirmButton)
             SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
+            FloatingControlToggle.addTo(this@MainActivity, this, status)
             TaskControlButtons.addCancelButton(this@MainActivity, this) { pendingApp = null; pendingSettings = null; pendingTap = null; pendingSwipe = null; pendingNavigation = null; MosharrofAccessibilityService.cancelSemanticTap(); MosharrofAccessibilityService.cancelInspection(); confirmButton.isEnabled = false; status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।" }
             addView(inspectButton)
             addView(screenDetails)
@@ -116,6 +118,18 @@ class MainActivity : ComponentActivity() {
             addView(accessibilityButton)
         })
         refreshServiceStatus()
+        if (intent.getBooleanExtra(EXTRA_START_VOICE, false)) {
+            intent.removeExtra(EXTRA_START_VOICE)
+            window.decorView.post { startSpeechInput() }
+        }
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_START_VOICE, false)) {
+            intent.removeExtra(EXTRA_START_VOICE)
+            window.decorView.post { startSpeechInput() }
+        }
     }
     override fun onDestroy() { speechOutput?.close(); speechOutput = null; super.onDestroy() }
     override fun onResume() {
@@ -305,5 +319,8 @@ class MainActivity : ComponentActivity() {
         return manager.getEnabledAccessibilityServiceList(
             AccessibilityServiceInfo.FEEDBACK_ALL_MASK
         ).any { it.resolveInfo.serviceInfo.packageName == packageName }
+    }
+    companion object {
+        const val EXTRA_START_VOICE = "com.mosharrof.agent.EXTRA_START_VOICE"
     }
 }
