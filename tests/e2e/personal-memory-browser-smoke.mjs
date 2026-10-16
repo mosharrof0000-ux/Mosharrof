@@ -148,6 +148,12 @@ try {
     return rows.some(row => row.kind === "user" && row.text.includes("শনাক্তকারীটি মনে রাখতে"));
   }, null, { timeout: 20000 });
 
+  // The bridge persists the user message before the network request is emitted.
+  // Wait for the second network event rather than racing the IndexedDB write.
+  const requestDeadline = Date.now() + timeoutMs;
+  while (chatRequests.length < 2 && Date.now() < requestDeadline) {
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
   console.log("CHAT REQUESTS CAPTURED:", JSON.stringify(chatRequests.map(item => ({
     text: String(item.text || "").slice(0, 100),
     memory_context: String(item.memory_context || "").slice(0, 300)
