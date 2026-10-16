@@ -25,6 +25,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] Common Bengali app aliases and installed-app discovery
 - [x] Voice command input through Android's speech-recognition activity (availability depends on device)
 - [ ] Result readout using Android TextToSpeech with explicit speak/stop controls (code added; CI/device verification pending)
+- [x] Visible cancel button clears pending app/settings/tap plans and cancels an armed screen inspection (not a general multi-step executor cancel)
 - [x] Confirmation step before launching a selected app
 - [x] Policy gate for allowlisted app launch and unit tests
 - [x] CI debug APK build and JVM unit tests
