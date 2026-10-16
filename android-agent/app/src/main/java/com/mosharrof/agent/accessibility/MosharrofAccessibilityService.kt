@@ -22,6 +22,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
         val eventPackage = event.packageName?.toString().orEmpty()
+        latestForegroundPackage = eventPackage
         FocusedTextEntry.onWindowChanged(this, eventPackage, packageName)?.let { latestActionResult = it }
         if (eventPackage == packageName) return
         if (screenshotCaptureArmed && event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
@@ -44,6 +45,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
     override fun onInterrupt() {
         screenshotCaptureArmed = false
         FocusedTextEntry.cancel()
+        latestForegroundPackage = ""
         Log.i(TAG, "Accessibility service interrupted by system")
     }
     override fun onDestroy() {
@@ -52,6 +54,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
         floatingControl?.hide()
         floatingControl = null
         if (activeService === this) activeService = null
+        latestForegroundPackage = ""
         super.onDestroy()
     }
     private fun syncFloatingControl() {
@@ -152,6 +155,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
         @Volatile private var scanArmed = false
         @Volatile private var screenshotCaptureArmed = false
         @Volatile private var latestSnapshot: ScreenSnapshot? = null
+        @Volatile private var latestForegroundPackage: String = ""
         @Volatile private var pendingTap: PendingSemanticTap? = null
         @Volatile private var pendingSwipe: PendingSwipe? = null
         @Volatile private var latestActionResult: String? = null
@@ -199,6 +203,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
             return true
         }
         fun inspectCurrentScreenNow(): ScreenSnapshot? = activeService?.inspectWindow()
+        fun foregroundPackage(): String = latestForegroundPackage
         fun takeInspectionSnapshot(): ScreenSnapshot? {
             scanArmed = false
             return latestSnapshot.also { latestSnapshot = null }
