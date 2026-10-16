@@ -86,7 +86,7 @@ class IntentParser {
             "^(.+?)(?:-এ| এ)\\s+(.+?)\\s+(?:ট্যাপ করুন|ট্যাপ করো|চাপ দিন|চাপুন)$",
             RegexOption.IGNORE_CASE
         ).find(text) ?: return null
-        val app = bengali.groupValues[1].trim().trim('"', '\'')
+            val app = bengali.groupValues[1].trim().trim('"', '\'')
         val target = bengali.groupValues[2].trim().trim('"', '\'')
         return if (app.isNotBlank() && target.isNotBlank()) ParsedIntent.TapText(target, app) else null
     }
