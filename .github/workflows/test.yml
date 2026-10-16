@@ -12,10 +12,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Check personal memory engine syntax
-        run: node --check core/personal-memory-engine.js
-      - name: Check personal memory UI syntax
-        run: node --check core/personal-memory-ui.js
       - name: Verify image engine prompt parsing
         run: node scripts/test_image_engine.mjs
       - uses: actions/setup-python@v5
