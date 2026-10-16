@@ -1,7 +1,8 @@
 import { buildChatContext } from "../core/chat-context.js";
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
-import { parseImageSpec } from "../core/image-spec.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
+import { parseImageSpec } from "../core/image-spec.js";
+import { buildPersonalMemoryContext, inferMemoryCandidates } from "../core/personal-memory-engine.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
@@ -451,9 +452,12 @@ async function runChat(body,env,onStatus){
   const preferred=env.GEMINI_CHAT_MODEL
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
-  const userPrompt=buildReflectiveUserPrompt(targetWords
-    ? text+"\n\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words. Continue the requested story or text in full, with coherent structure and no premature summary. Do not claim the target was met if output is cut off."
-    : text);
+  const memoryContext=buildPersonalMemoryContext(body.personal_memory,text);
+  const memoryCandidates=inferMemoryCandidates(body.text);
+  const outputInstruction=targetWords
+    ? "\n\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words. Continue the requested story or text in full, with coherent structure and no premature summary. Do not claim the target was met if output is cut off."
+    : "";
+  const userPrompt=buildReflectiveUserPrompt((memoryContext?memoryContext+"\n\n":"")+text+outputInstruction);
   const payload={contents:[{parts:[{text:userPrompt}]}]};
   if(targetWords)payload.generationConfig={temperature:0.3,maxOutputTokens};
   const geminiPlan=[];
@@ -474,7 +478,7 @@ async function runChat(body,env,onStatus){
       const answer=r.data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();
       if(answer){
         report({stage:"answered",provider:"gemini",model});
-        return {status:200,data:{ok:true,provider:"gemini",model,text:answer,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}: {})}};
+        return {status:200,data:{ok:true,provider:"gemini",model,text:answer,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}: {}),...(body.memory_suggestions_enabled===true?{memory_candidates:memoryCandidates}: {})}};
       }
       attempted.push({provider:"gemini",model,credential_slot:slot,reason:"empty_response"});
       report({stage:"failed",provider:"gemini",model});
@@ -487,7 +491,7 @@ async function runChat(body,env,onStatus){
   attempted.push({provider:cloudflare.provider,model:cloudflare.model||null,status:cloudflare.status||null,reason:cloudflare.ok?null:cloudflare.reason||"failed"});
   if(cloudflare.ok){
     report({stage:"answered",provider:cloudflare.provider,model:cloudflare.model});
-    return {status:200,data:{ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
+    return {status:200,data:{ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{}),...(body.memory_suggestions_enabled===true?{memory_candidates:memoryCandidates}: {})}};
   }
   const groq=await generateWithOpenAICompatibleChat(
     "groq","https://api.groq.com/openai/v1/chat/completions",
@@ -497,7 +501,7 @@ async function runChat(body,env,onStatus){
   attempted.push({provider:groq.provider,model:groq.model||null,status:groq.status||null,reason:groq.ok?null:groq.reason||"failed"});
   if(groq.ok){
     report({stage:"answered",provider:groq.provider,model:groq.model});
-    return {status:200,data:{ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
+    return {status:200,data:{ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{}),...(body.memory_suggestions_enabled===true?{memory_candidates:memoryCandidates}: {})}};
   }
   const openrouter=await generateWithOpenAICompatibleChat(
     "openrouter","https://openrouter.ai/api/v1/chat/completions",
@@ -508,7 +512,7 @@ async function runChat(body,env,onStatus){
   attempted.push({provider:openrouter.provider,model:openrouter.model||null,status:openrouter.status||null,reason:openrouter.ok?null:openrouter.reason||"failed"});
   if(openrouter.ok){
     report({stage:"answered",provider:openrouter.provider,model:openrouter.model});
-    return {status:200,data:{ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{})}};
+    return {status:200,data:{ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted,...(targetWords?{requested_words:targetWords,output_token_budget:maxOutputTokens}:{}),...(body.memory_suggestions_enabled===true?{memory_candidates:memoryCandidates}: {})}};
   }
   return {status:502,data:{
     error:"chat_provider_failed",
