@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 const [ui, bridge, service, metadata, wrapper] = await Promise.all([
   read("../core/android-accessibility-ui.js"),
-  read("../native/android/DeviceControlPlugin.java"),
+  read("../native/android/AccessibilityControlPlugin.java"),
   read("../native/android/AgentAccessibilityService.java"),
   read("../native/android/agent_accessibility_service.xml"),
   read("./android/prepare-wrapper.sh")
