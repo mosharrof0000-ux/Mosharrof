@@ -21,16 +21,21 @@ class TaskDispatcher(private val context: Context) {
         "সেটিংস খোলা হয়েছে।"
     }.getOrElse { "সেটিংস খোলা যায়নি: ${it.message ?: "অজানা সমস্যা"}" }
 
-    private fun dispatchAction(action: AgentAction): String = when (action) {
-        is AgentAction.OpenApp -> {
-            if (!action.userRequested) return "অ্যাপ খোলার আগে স্পষ্ট নির্দেশ দরকার।"
-            runCatching {
-                val intent = context.packageManager.getLaunchIntentForPackage(action.packageName)
-                    ?: return "এই অ্যাপটি ইনস্টল নেই বা খোলা যাচ্ছে না।"
-                context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                "অ্যাপ খোলা হয়েছে: ${action.packageName}"
-            }.getOrElse { "অ্যাপ খোলা যায়নি: ${it.message ?: "অজানা সমস্যা"}" }
+    private fun dispatchAction(action: AgentAction): String {
+        return when (action) {
+            is AgentAction.OpenApp -> {
+                if (!action.userRequested) {
+                    "অ্যাপ খোলার আগে স্পষ্ট নির্দেশ দরকার।"
+                } else {
+                    runCatching {
+                        val intent = context.packageManager.getLaunchIntentForPackage(action.packageName)
+                            ?: return "এই অ্যাপটি ইনস্টল নেই বা খোলা যাচ্ছে না।"
+                        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        "অ্যাপ খোলা হয়েছে: ${action.packageName}"
+                    }.getOrElse { "অ্যাপ খোলা যায়নি: ${it.message ?: "অজানা সমস্যা"}" }
+                }
+            }
+            else -> "এই ধরনের কাজের executor এখনো বাস্তবায়িত হয়নি। কোনো পরিবর্তন করা হয়নি।"
         }
-        else -> "এই ধরনের কাজের executor এখনো বাস্তবায়িত হয়নি। কোনো পরিবর্তন করা হয়নি।"
     }
 }
