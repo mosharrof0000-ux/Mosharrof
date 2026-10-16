@@ -24,6 +24,8 @@ def main() -> int:
         "core/organ-runtime/index.js": "web/runtime/core/organ-runtime/index.js",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
+        "core/personal-memory-engine.js": "web/core/personal-memory-engine.js",
+        "core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
