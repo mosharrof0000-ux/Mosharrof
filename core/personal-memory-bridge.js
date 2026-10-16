@@ -113,9 +113,11 @@ export function installPersonalMemoryBridge(root = window) {
         requestBody = JSON.parse(init.body);
         if (requestBody && typeof requestBody.text === "string" && requestBody.text.trim()) {
           currentFolder = engine.classifyFolder(requestBody.text);
-          const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
           const history = Array.isArray(requestBody.history) ? requestBody.history.slice(-8) : [];
           const currentSummary = history.map(item => (item.role === "ai" ? "AI: " : "User: ") + String(item.text || "").replace(/\s+/g, " ").slice(0, 180)).filter(Boolean).join("\n");
+          const followup = /(এটা|সেটা|ওটা|আগের|চালিয়ে|চালিয়ে|আরও|তারপর|ওই|continue|that|it|previous|earlier|next|same|কেন|আরেকটু)/i.test(requestBody.text);
+          const memoryQuery = followup && currentSummary ? currentSummary + "\n" + requestBody.text : requestBody.text;
+          const memoryContext = await engine.buildContext(memoryQuery).catch(() => "");
           const prioritizedContext = [
             currentSummary ? "CURRENT CHAT SUMMARY (recent turns, not long-term truth):\n" + currentSummary : "",
             memoryContext
