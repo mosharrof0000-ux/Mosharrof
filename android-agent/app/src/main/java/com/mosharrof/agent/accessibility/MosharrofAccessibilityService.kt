@@ -27,6 +27,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
         val eventPackage = event.packageName?.toString().orEmpty()
+        FocusedTextEntry.onWindowChanged(this, eventPackage, packageName)?.let { latestActionResult = it }
         if (eventPackage == packageName) return
 
         if (screenshotCaptureArmed && event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
