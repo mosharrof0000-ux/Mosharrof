@@ -138,11 +138,11 @@ try {
 
   // Chat UI keeps elapsed time running without a total deadline and retries transient server failures.
   const appSource = await readFile(new URL("../web/index.html", import.meta.url), "utf8");
-  assert.match(appSource, /function coreReplyOnce\\(t,image\\)/);
-  assert.match(appSource, /function coreReply\\(t,image\\)\\{\\s*var attempt=0;/);
-  assert.match(appSource, /Math\\.min\\(30000,1000\\*Math\\.pow\\(2,Math\\.min\\(attempt-1,5\\)\\)\\)/);
-  assert.match(appSource, /return run\\(\\);/);
-  assert.match(appSource, /n\\._elapsedTimer=window\\.setInterval\\(refresh,100\\)/);
+  assert.match(appSource, /function coreReplyOnce\(t,image\)/);
+  assert.match(appSource, /function coreReply\(t,image\)\{\s*var attempt=0;/);
+  assert.match(appSource, /Math\.min\(30000,1000\*Math\.pow\(2,Math\.min\(attempt-1,5\)\)\)/);
+  assert.match(appSource, /return run\(\);/);
+  assert.match(appSource, /n\._elapsedTimer=window\.setInterval\(refresh,100\)/);
   console.log("PASS: provider failover, safe health configuration, unlimited chat timer and transient retry policy.");
 } finally {
   globalThis.fetch = originalFetch;
