@@ -16,6 +16,10 @@ on:
       - "web/core/personal-memory-engine.js"
       - "web/core/personal-memory-bridge.js"
       - "web/index.html"
+  workflow_run:
+    workflows: ["Deploy Mosharrof Pages"]
+    types: [completed]
+    branches: ["main"]
   workflow_dispatch:
     inputs:
       test_url:
@@ -32,6 +36,7 @@ concurrency:
 
 jobs:
   browser-memory-roundtrip:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
