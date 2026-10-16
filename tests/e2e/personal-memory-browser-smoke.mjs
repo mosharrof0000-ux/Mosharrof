@@ -66,20 +66,43 @@ page.on("request", request => {
   } catch {}
 });
 
-// Keep PR tests deterministic and free of provider usage. Manual/live runs use
-// the real chat endpoint so the test exercises the deployed path end-to-end.
+// Candidate and post-deploy checks mock chat calls to avoid quota use. A manual
+// live run sends one synthetic message to the real Worker; the follow-up is mocked.
 const parsedBaseURL = new URL(baseURL);
 const isCandidatePreview = ["127.0.0.1", "localhost"].includes(parsedBaseURL.hostname)
   && parsedBaseURL.port === "4173";
-if (isCandidatePreview) {
-  await page.route("**/chat", async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ ok: true, text: "Browser memory smoke test reply." })
-    });
+const useMockChat = process.env.MOSHARROF_MOCK_CHAT !== "0" || isCandidatePreview;
+let livePostCount = 0;
+await page.route("**/chat", async route => {
+  const method = route.request().method();
+  if (method === "OPTIONS") {
+    if (useMockChat) {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "POST, OPTIONS",
+          "access-control-allow-headers": "content-type"
+        }
+      });
+    } else {
+      await route.continue();
+    }
+    return;
+  }
+  let payload = {};
+  try { payload = route.request().postDataJSON() || {}; } catch {}
+  if (!useMockChat && livePostCount++ === 0) {
+    await route.continue();
+    return;
+  }
+  await route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    headers: { "access-control-allow-origin": "*" },
+    body: JSON.stringify({ ok: true, text: "Browser memory smoke test reply." })
   });
-}
+});
 page.on("console", message => {
   if (message.type() === "error") console.log("[browser console error]", message.text());
 });
@@ -105,11 +128,16 @@ try {
   const marker = "MOSHARROF_MEMORY_SMOKE_" + Date.now();
   const message = "স্মৃতি ইঞ্জিনের স্বয়ংক্রিয় পরীক্ষা। এই শনাক্তকারীটি মনে রাখুন: " + marker;
   await page.locator("#input").fill(message);
+  const firstChatResponse = page.waitForResponse(response =>
+    response.request().method() === "POST" && new URL(response.url()).pathname.endsWith("/chat"),
+    { timeout: timeoutMs }
+  );
   await page.locator("#sendBtn").click();
 
   // The bridge stores the user message locally before the chat request completes.
   await waitForStoredMarker(page, marker);
-  console.log("PASS: message was written to IndexedDB:", marker);
+  const chatResponse = await firstChatResponse;
+  console.log("PASS: message was written to IndexedDB:", marker, "chat HTTP", chatResponse.status());
 
   await page.reload({ waitUntil: "domcontentloaded", timeout: timeoutMs });
   await page.locator("#input").waitFor({ state: "visible" });
