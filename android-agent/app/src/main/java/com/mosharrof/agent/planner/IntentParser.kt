@@ -11,6 +11,13 @@ class IntentParser {
             return ParsedIntent.Unsupported("কমান্ড খালি অথবা অতিরিক্ত বড়")
         }
 
+        val suffix = listOf("খুলে দাও", "খুলুন", "খোলো", "চালু করো", "চালু করুন")
+            .firstOrNull { text.endsWith(" $it", ignoreCase = true) }
+        if (suffix != null) {
+            val query = text.removeSuffix(" $suffix").trim()
+            if (query.isBlank()) return ParsedIntent.Unsupported("অ্যাপের নাম পাওয়া যায়নি")
+            return ParsedIntent.OpenApp(query)
+        }
         val patterns = listOf(
             Regex("^(?:open|launch|start|চালু কর(?:ো|ুন)?|খুল(?:ো|ুন)?)\\s+(.+)$", RegexOption.IGNORE_CASE),
             Regex("^(.+?)\\s+(?:খুলে দাও|খুলুন|চালু করো|চালু করুন)$", RegexOption.IGNORE_CASE)
