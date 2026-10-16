@@ -34,7 +34,7 @@ This is the single source of truth for the Android device-control feature set re
 
 ## C. Android system settings and device health
 - [x] Open Android Settings, Wi-Fi, Bluetooth and Location settings pages; user makes changes in Android UI.
-- [ ] Add supported setting intents individually (display, sound, battery, notifications, accessibility, apps), with OEM fallback and tests.
+- [ ] Additional Settings routes are coded for display, sound, battery saver, notifications and apps; verify in latest CI and on OEM devices. Accessibility Settings is already available; OEM fallback tests remain.
 - [ ] Device diagnostics: battery/storage/network/basic device info and explainable recommendations.
 - [ ] Safe performance/storage assistance with before/after measurement and explicit confirmation for changes.
 - [ ] Alarm, timer and calendar intents with preview/confirmation.
