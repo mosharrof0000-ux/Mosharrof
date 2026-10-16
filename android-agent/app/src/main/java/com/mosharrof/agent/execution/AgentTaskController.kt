@@ -26,10 +26,11 @@ class AgentTaskController(
     private var pendingText: TaskPlan.TypeText? = null
     private var pendingNavigation: AgentAction.NavigationDestination? = null
     private var pendingSystemIntent: TaskPlan.SystemIntent? = null
-    fun prepareTask(command: String) {
+    fun prepareTask(command: String): Boolean {
         clearPending()
         confirmButton.isEnabled = false
-        when (val plan = planner.plan(command, appCatalog.listLauncherApps())) {
+        val plan = planner.plan(command, appCatalog.listLauncherApps())
+        when (plan) {
             is TaskPlan.OpenApp -> {
                 pendingApp = plan.app
                 status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
@@ -85,7 +86,12 @@ class AgentTaskController(
                 "একাধিক/আংশিক মিল: ${plan.candidates.joinToString { it.label }}। সঠিক অ্যাপের পুরো নাম লিখুন।"
             is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
         }
+        return plan !is TaskPlan.Rejected
     }
+
+    fun installedAppLabels(): List<String> =
+        appCatalog.listLauncherApps().map { it.label }.distinct().take(100)
+
     fun confirmPending() {
         when {
             pendingApp != null -> launchConfirmedApp()
