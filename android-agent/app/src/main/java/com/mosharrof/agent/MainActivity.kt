@@ -13,13 +13,10 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
-import com.mosharrof.agent.execution.InstalledAppCatalog
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.planner.AgentAction
 import com.mosharrof.agent.planner.InstalledApp
 import com.mosharrof.agent.planner.TaskPlan
-import com.mosharrof.agent.planner.TaskCommandParser
-import com.mosharrof.agent.planner.TaskParsedCommand
 import com.mosharrof.agent.planner.TaskPlanner
 import com.mosharrof.agent.policy.ActionPolicy
 import com.mosharrof.agent.policy.PolicyDecision
@@ -27,12 +24,9 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private val planner = TaskPlanner()
-    private val appCatalog by lazy { InstalledAppCatalog(this) }
-    private val settingsParser = TaskCommandParser()
-    private var pendingIntent: Intent? = null
-    private var pendingTaskLabel = ""
     private var pendingApp: InstalledApp? = null
     private lateinit var status: TextView
+    private lateinit var screenDetails: TextView
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
 
@@ -54,12 +48,13 @@ class MainActivity : ComponentActivity() {
             contentDescription = "Mosharrof Autonomous Agent"
         }
         status = TextView(this).apply { textSize = 16f }
+        screenDetails = TextView(this).apply { textSize = 14f }
         commandInput = EditText(this).apply {
             hint = "যেমন: Open YouTube / ইউটিউব খুলুন"
             singleLine = true
         }
         confirmButton = Button(this).apply {
-            text = "নিশ্চিত করে চালান"
+            text = "নিশ্চিত করে অ্যাপ খুলুন"
             isEnabled = false
             setOnClickListener { launchConfirmedApp() }
         }
@@ -71,13 +66,13 @@ class MainActivity : ComponentActivity() {
             text = "কথা বলে কমান্ড দিন"
             setOnClickListener { startSpeechInput() }
         }
-        val accessibilityButton = Button(this).apply {
-            text = "Accessibility সেটিংস খুলুন"
-            setOnClickListener { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
-        }
         val inspectButton = Button(this).apply {
             text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
             setOnClickListener { inspectCurrentScreen() }
+        }
+        val accessibilityButton = Button(this).apply {
+            text = "Accessibility সেটিংস খুলুন"
+            setOnClickListener { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         }
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -88,8 +83,9 @@ class MainActivity : ComponentActivity() {
             addView(voiceButton)
             addView(planButton)
             addView(confirmButton)
-            addView(accessibilityButton)
             addView(inspectButton)
+            addView(screenDetails)
+            addView(accessibilityButton)
         })
         refreshServiceStatus()
     }
@@ -101,35 +97,11 @@ class MainActivity : ComponentActivity() {
 
     private fun prepareTask(command: String) {
         pendingApp = null
-        pendingIntent = null
-        pendingTaskLabel = ""
         confirmButton.isEnabled = false
-
-        when (val settingsCommand = settingsParser.parse(command)) {
-            TaskParsedCommand.OpenSystemSettings -> {
-                queueIntent(Intent(Settings.ACTION_SETTINGS), "Android Settings")
-                return
-            }
-            is TaskParsedCommand.OpenSettingPanel -> {
-                val action = when (settingsCommand.setting) {
-                    AgentAction.SupportedSetting.WIFI_PANEL -> Settings.ACTION_WIFI_SETTINGS
-                    AgentAction.SupportedSetting.BLUETOOTH_PANEL -> Settings.ACTION_BLUETOOTH_SETTINGS
-                    AgentAction.SupportedSetting.LOCATION_SETTINGS -> Settings.ACTION_LOCATION_SOURCE_SETTINGS
-                }
-                queueIntent(Intent(action), "নির্বাচিত Settings প্যানেল")
-                return
-            }
-            TaskParsedCommand.Stop -> {
-                status.text = "কমান্ড বাতিল করা হয়েছে। কোনো নতুন কাজ চালানো হয়নি।"
-                return
-            }
-            is TaskParsedCommand.Unknown -> Unit
-        }
-
         when (val plan = planner.plan(command, installedApps())) {
             is TaskPlan.OpenApp -> {
                 pendingApp = plan.app
-                status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন."
+                status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
                 confirmButton.isEnabled = true
             }
             is TaskPlan.NeedsChoice -> status.text =
@@ -138,31 +110,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun queueIntent(intent: Intent, label: String) {
-        pendingIntent = intent
-        pendingTaskLabel = label
-        status.text = "পরিকল্পনা: $label খুলবে। চালানোর আগে নিশ্চিত করুন।"
-        confirmButton.isEnabled = true
-    }
-
     private fun launchConfirmedApp() {
-        val queuedIntent = pendingIntent
-        if (queuedIntent != null) {
-            try {
-                startActivity(queuedIntent)
-                status.text = "$pendingTaskLabel খোলার অনুরোধ পাঠানো হয়েছে।"
-            } catch (_: Exception) {
-                status.text = "এই Settings প্যানেলটি এই ডিভাইসে খোলা যায়নি।"
-            } finally {
-                pendingIntent = null
-                pendingTaskLabel = ""
-                confirmButton.isEnabled = false
-            }
-            return
-        }
-
         val app = pendingApp ?: return
-
         val allowed = installedApps().map { it.packageName }.toSet()
         val decision = ActionPolicy(allowed).evaluate(
             AgentAction.OpenApp(app.packageName, userRequested = true), 0
@@ -171,16 +120,37 @@ class MainActivity : ComponentActivity() {
             status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
             return
         }
-        if (!appCatalog.launch(app.packageName)) {
+        val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
+        if (launchIntent == null) {
             status.text = "অ্যাপটি খোলা যায়নি; অ্যাপটি সরানো বা নিষ্ক্রিয় থাকতে পারে।"
             return
         }
+        startActivity(launchIntent)
         status.text = "${app.label} খোলার অনুরোধ পাঠানো হয়েছে।"
         pendingApp = null
         confirmButton.isEnabled = false
     }
 
-    private fun installedApps(): List<InstalledApp> = appCatalog.listLauncherApps()
+    private fun inspectCurrentScreen() {
+        val snapshot = MosharrofAccessibilityService.inspectActiveWindow()
+        if (snapshot == null) {
+            status.text = "স্ক্রিন পরীক্ষা করতে Accessibility service চালু করুন এবং আবার চেষ্টা করুন।"
+            screenDetails.text = ""
+            return
+        }
+        status.text = "স্ক্রিন পরীক্ষা সম্পন্ন: ${snapshot.packageName} • ${snapshot.nodeCount}টি UI node"
+        screenDetails.text = snapshot.visibleLabels.joinToString("\n").ifBlank {
+            "এই স্ক্রিনে পড়ার মতো কোনো দৃশ্যমান লেবেল পাওয়া যায়নি।"
+        }
+    }
+
+    private fun installedApps(): List<InstalledApp> {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        return packageManager.queryIntentActivities(intent, 0).mapNotNull { info ->
+            val pkg = info.activityInfo?.packageName ?: return@mapNotNull null
+            InstalledApp(info.loadLabel(packageManager).toString(), pkg)
+        }.distinctBy { it.packageName }.sortedBy { it.label.lowercase(Locale.ROOT) }
+    }
 
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -192,20 +162,6 @@ class MainActivity : ComponentActivity() {
             speechResult.launch(intent)
         } catch (_: Exception) {
             status.text = "এই ডিভাইসে speech recognition অ্যাপ পাওয়া যায়নি।"
-        }
-    }
-
-    private fun inspectCurrentScreen() {
-        val snapshot = MosharrofAccessibilityService.inspectActiveWindow()
-        if (snapshot == null) {
-            status.text = "স্ক্রিন পরীক্ষা করা যায়নি। আগে Accessibility সেটিংসে এই সার্ভিস চালু করুন।"
-            return
-        }
-        val labels = snapshot.visibleLabels.joinToString(" • ")
-        status.text = buildString {
-            append("প্যাকেজ: ").append(snapshot.packageName)
-            append(" | UI নোড: ").append(snapshot.nodeCount)
-            if (labels.isNotBlank()) append("\nদৃশ্যমান লেবেল: ").append(labels)
         }
     }
 
