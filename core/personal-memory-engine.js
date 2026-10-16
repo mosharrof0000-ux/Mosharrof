@@ -28,8 +28,8 @@ function tokenize(value) {
 }
 function safeText(value, limit = 2400) {
   const text = String(value || "").replace(/\s+/g, " ").trim();
-  if (!text || text.length > limit || SECRET.test(text) || SENSITIVE.test(text)) return "";
-  return text;
+  if (!text || SECRET.test(text) || SENSITIVE.test(text)) return "";
+  return text.slice(0, limit);
 }
 function inferPreferences(text) {
   const rules = [];
