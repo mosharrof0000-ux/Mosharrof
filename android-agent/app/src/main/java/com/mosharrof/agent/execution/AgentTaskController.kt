@@ -25,6 +25,7 @@ class AgentTaskController(
     private var pendingTap: TaskPlan.TapVisibleText? = null
     private var pendingSwipe: TaskPlan.SwipeScreen? = null
     private var pendingNavigation: AgentAction.NavigationDestination? = null
+    private var pendingSystemIntent: TaskPlan.SystemIntent? = null
 
     fun prepareTask(command: String) {
         clearPending()
@@ -33,6 +34,20 @@ class AgentTaskController(
             is TaskPlan.OpenApp -> {
                 pendingApp = plan.app
                 status.text = "পরিকল্পনা: ${plan.app.label} খুলবে। চালানোর আগে নিশ্চিত করুন।"
+                confirmButton.isEnabled = true
+            }
+            is TaskPlan.SystemIntent -> {
+                pendingSystemIntent = plan
+                status.text = when (plan.kind) {
+                    com.mosharrof.agent.planner.DeviceIntentRequest.Kind.DIAL ->
+                        "পরিকল্পনা: ডায়ালার খুলে ${plan.target} নম্বরটি প্রস্তুত করা হবে; কল নিজে নিশ্চিত করতে হবে।"
+                    com.mosharrof.agent.planner.DeviceIntentRequest.Kind.COMPOSE_SMS ->
+                        "পরিকল্পনা: ${plan.target} নম্বরে SMS খসড়া খোলা হবে। পাঠানোর আগে মেসেজটি যাচাই করে নিজে পাঠাবেন।"
+                    com.mosharrof.agent.planner.DeviceIntentRequest.Kind.SET_TIMER ->
+                        "পরিকল্পনা: ${plan.seconds} সেকেন্ডের টাইমার Android Clock-এ তৈরি হবে। নিশ্চিত করুন।"
+                    com.mosharrof.agent.planner.DeviceIntentRequest.Kind.CREATE_CALENDAR_EVENT ->
+                        "পরিকল্পনা: ‘${plan.text}’ শিরোনামে Calendar ইভেন্ট খসড়া খোলা হবে; সময়/বিস্তারিত নিজে যাচাই করবেন।"
+                }
                 confirmButton.isEnabled = true
             }
             is TaskPlan.GlobalNavigation -> {
@@ -75,6 +90,7 @@ class AgentTaskController(
             pendingTap != null -> launchConfirmedTap()
             pendingSwipe != null -> launchConfirmedSwipe()
             pendingNavigation != null -> launchConfirmedNavigation()
+            pendingSystemIntent != null -> launchConfirmedSystemIntent()
         }
     }
 
@@ -92,6 +108,7 @@ class AgentTaskController(
         pendingTap = null
         pendingSwipe = null
         pendingNavigation = null
+        pendingSystemIntent = null
     }
 
     private fun prepareSettings(plan: TaskPlan, label: String) {
@@ -104,6 +121,13 @@ class AgentTaskController(
         val plan = pendingSettings ?: return
         status.text = settingsLauncher.launch(plan)
         pendingSettings = null
+        confirmButton.isEnabled = false
+    }
+
+    private fun launchConfirmedSystemIntent() {
+        val request = pendingSystemIntent ?: return
+        status.text = DeviceIntentLauncher(activity).launch(request)
+        pendingSystemIntent = null
         confirmButton.isEnabled = false
     }
 
