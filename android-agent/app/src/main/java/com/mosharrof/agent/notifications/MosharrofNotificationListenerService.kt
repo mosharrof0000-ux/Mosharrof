@@ -1,6 +1,7 @@
 package com.mosharrof.agent.notifications
 
 import android.app.Notification
+import android.content.ComponentName
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import java.text.SimpleDateFormat
@@ -36,7 +37,7 @@ class MosharrofNotificationListenerService : NotificationListenerService() {
     override fun onListenerDisconnected() {
         clearRecent()
         super.onListenerDisconnected()
-        requestRebind(android.content.ComponentName(this, javaClass))
+        NotificationListenerService.requestRebind(ComponentName(this, javaClass))
     }
 
     override fun onDestroy() {
