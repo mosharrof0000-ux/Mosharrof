@@ -57,10 +57,10 @@
       if (!userText) return originalFetch(input, init);
       try {
         if (api.enabled()) {
-          await api.remember(userText, "current-chat-user-message");
           payload.history = recentHistory(userText);
           payload.conversation_summary = currentSummary(userText);
           payload.memory_context = await api.contextFor(userText);
+          await api.remember(userText, "current-chat-user-message");
           payload.memory_policy = "Historical context only: current request and corrections override older memories. Treat inferred preferences as tentative; do not force unrelated memories into the answer.";
         }
       } catch (error) {
