@@ -32,29 +32,19 @@ function safeText(value, limit = 2400) {
   return text.slice(0, limit);
 }
 const TOPIC_FOLDERS = [
+  { id: "memory-learning", label: "স্মৃতি ও শেখা", pattern: /(স্মৃতি|মেমোরি|memory|শিখতে|শেখা|বুদ্ধিমত্তা|personal learning)/i },
   { id: "projects", label: "প্রকল্প ও প্রযুক্তি", pattern: /(mosharrof|মোশাররফ|প্রজেক্ট|প্রকল্প|কোড|github|অ্যাপ|সার্ভার|api|android|অ্যান্ড্রয়েড|automation|অটোমেশন|worker|deploy|ডেপ্লয়)/i },
   { id: "writing", label: "লেখালেখি ও গল্প", pattern: /(গল্প|উপন্যাস|কবিতা|প্রবন্ধ|লেখা|লিখে|শব্দের|words?|story|novel|poem|article|writing)/i },
   { id: "quran-research", label: "কুরআন ও গবেষণা", pattern: /(কুরআন|কোরআন|আয়াত|আয়াত|সূরা|তাফসির|তাফসীর|quran|research|গবেষণা|আরবি|ব্যাকরণ)/i },
   { id: "preferences", label: "পছন্দ ও আচরণ", pattern: /(আমার পছন্দ|মনে রাখ|পরের বার|সবসময়|সব সময়|সংক্ষিপ্ত|বিস্তারিত|ছোট করে|বড় করে|বড় করে|i prefer|remember|next time|always)/i },
   { id: "plans", label: "পরিকল্পনা ও লক্ষ্য", pattern: /(পরিকল্পনা|লক্ষ্য|ভবিষ্যতে|পরবর্তীতে|করব|করতে চাই|বাকি কাজ|পরবর্তী ধাপ|plan|goal|future|next step)/i }
 ];
-function inferFolder(text) {
+function inferFolder(text, kind = "user") {
+  if (kind === "preference") return TOPIC_FOLDERS.find(folder => folder.id === "preferences");
   const value = String(text || "");
   for (const folder of TOPIC_FOLDERS) if (folder.pattern.test(value)) return { id: folder.id, label: folder.label };
   return { id: "general", label: "কথোপকথন ও অন্যান্য" };
 }
-function inferFolder(text, kind = "user") {
-  if (kind === "preference") return "ব্যক্তিগত পছন্দ";
-  const value = String(text || "");
-  if (/(স্মৃতি|মেমোরি|memory|শেখা|শিখবে|শিখতে|বুদ্ধিমত্তা|understand me|personal learning)/i.test(value)) return "স্মৃতি ও শেখা";
-  if (/(mosharrof|মোশাররফ|github|worker|প্রজেক্ট|কোড|ডেপ্লয়|ডেপ্লয়|repository|repo|android|অ্যান্ড্রয়েড|অ্যান্ড্রয়েড|api|app|অ্যাপ|লাইভ)/i.test(value)) return "প্রকল্প ও প্রযুক্তি";
-  if (/(গল্প|উপন্যাস|কবিতা|প্রবন্ধ|লেখা|লিখে দাও|story|novel|poem|article|writing)/i.test(value)) return "লেখালেখি ও গল্প";
-  if (/(পরিকল্পনা|লক্ষ্য|ভবিষ্যৎ|আগামীতে|পরবর্তী ধাপ|করণীয়|করণীয়|plan|goal|next step|future)/i.test(value)) return "লক্ষ্য ও পরিকল্পনা";
-  if (/(কুরআন|কোরআন|আয়াত|আয়াত|সূরা|গবেষণা|ব্যাকরণ|শব্দমূল|research|study|grammar)/i.test(value)) return "গবেষণা ও জ্ঞান";
-  if (/(পছন্দ করি|আমি চাই|মনে রাখ|পরের বার|সবসময়|সবসময়|সর্বদা|i prefer|remember this|next time)/i.test(value)) return "ব্যক্তিগত পছন্দ";
-  return "সাধারণ কথোপকথন";
-}
-
 function inferPreferences(text) {
   const rules = [];
   if (/(ছোট করে|সংক্ষেপে|সংক্ষিপ্ত উত্তর|briefly|keep it short)/i.test(text)) rules.push({ key: "response_length", value: "short when not otherwise specified" });
@@ -162,7 +152,7 @@ export function createPersonalMemoryEngine(options = {}) {
       .concat(Array.from(latestPreferences.values()))
       .sort((a, b) => a.sequence - b.sequence);
     return "PERSONAL MEMORY, OLDEST TO NEWEST (past user-provided context; may be incomplete or stale; current request overrides it):\n" +
-      selected.map(row => "[" + (row.folder || "সাধারণ কথোপকথন") + " · " + row.isoTime + " · " + row.kind + "] " + row.text.slice(0, 700)).join("\n");
+      selected.map(row => "[" + (row.folder?.label || row.folder || "সাধারণ কথোপকথন") + " · " + row.isoTime + " · " + row.kind + "] " + row.text.slice(0, 700)).join("\n");
   }
   async function list(limit = 100) {
     const rows = await allRows();
@@ -191,7 +181,7 @@ export function createPersonalMemoryEngine(options = {}) {
     const q = new Set(tokenize(query));
     const rows = await allRows();
     return rows.map(row => {
-      const words = tokenize(row.text);
+      const words = tokenize([row.text, row.folder?.label || row.folder, ...(row.tags || [])].join(" "));
       const overlap = words.reduce((n, word) => n + (q.has(word) ? 1 : 0), 0);
       return { ...row, relevance: overlap / Math.max(1, q.size) };
     }).filter(row => row.relevance > 0)
@@ -213,18 +203,6 @@ export function createPersonalMemoryEngine(options = {}) {
       imported += 1;
     }
     return { imported };
-  }
-  async function folders() {
-    const rows = await allRows();
-    const counts = new Map();
-    for (const row of rows) {
-      const name = row.folder || inferFolder(row.text, row.kind);
-      const item = counts.get(name) || { folder: name, count: 0, latestAt: 0 };
-      item.count += 1;
-      item.latestAt = Math.max(item.latestAt, Number(row.createdAt) || 0);
-      counts.set(name, item);
-    }
-    return Array.from(counts.values()).sort((a, b) => b.latestAt - a.latestAt || a.folder.localeCompare(b.folder));
   }
   async function timeline(limit = 100) {
     const rows = await allRows();
