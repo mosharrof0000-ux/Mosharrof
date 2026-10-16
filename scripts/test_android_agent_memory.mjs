@@ -10,6 +10,7 @@ const store = {
 };
 let sequence = 0;
 const make = enabled => createMemory({ enabled, store, now: () => 1000, makeId: () => "m" + (++sequence) });
+await assert.rejects(() => createMemory().remember({ text: "প্রিয় ভাষা বাংলা", embedding: [1, 0] }), /বন্ধ/);
 await assert.rejects(() => make(false).remember({ text: "প্রিয় ভাষা বাংলা", embedding: [1, 0] }), /বন্ধ/);
 const memory = make(true);
 await assert.rejects(() => memory.remember({ text: "password: secret", embedding: [1, 0] }), /গোপন/);
