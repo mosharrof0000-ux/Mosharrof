@@ -26,14 +26,14 @@ assert.match(java, /scanDuplicates/);
 assert.match(java, /SHA-256/);
 assert.match(java, /maxFiles/);
 assert.match(wrapper, /device-control\.js/);
-assert.match(ui, /scanDuplicates/);
+assert.match(ui, /scanSelectedDirectoryDuplicates/);
 assert.match(ui, /কোনো ফাইল মুছবে না/);
 assert.match(installer, /AndroidFileManagerPlugin\.class/);
 assert.doesNotMatch(installer, /MosharrofFilesPlugin\.class/, "duplicate plugin registration must be removed");
 assert.match(wrapper, /android-file-manager\.js/);
-assert.match(wrapper, /android-file-manager-ui\.js/, "Android file-manager UI must be copied into the APK bundle");
-assert.match(wrapper, /android-file-manager-ui\.js/, "Android file-manager UI must be injected into the web entrypoint");
-assert.match(ui, /Plugins\.AndroidFileManager/, "UI must use the registered native plugin name");
+assert.match(wrapper, /cp core\/android-file-manager-ui\.js android-web\/android-file-manager-ui\.js/, "Android file-manager UI must be copied into the APK bundle");
+assert.match(wrapper, /ui_tag = '<script src="\.\/android-file-manager-ui\.js"><\/script>'/, "Android file-manager UI must be injected into the web entrypoint");
+assert.match(ui, /window\.MosharrofFiles/, "UI must use the file-manager facade");
 assert.doesNotMatch(ui, /Plugins\.FileManager/, "stale plugin name must not remain");
 
 const bytesA = new TextEncoder().encode("same audio bytes").buffer;
