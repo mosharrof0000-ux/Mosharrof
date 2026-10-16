@@ -100,7 +100,7 @@
       status: "active", confidence: /মনে রেখো|remember that|আমার পছন্দ|i prefer/i.test(clean) ? 0.95 : 0.65
     };
     await transact("readwrite", store => store.put(record));
-    updatePanel();
+    if (root.MosharrofMemoryUI) root.MosharrofMemoryUI.updatePanel();
     return { id, topic };
   }
   function tokens(text) {
@@ -146,12 +146,12 @@
   async function clear() {
     const rows = await list();
     await transact("readwrite", store => store.clear());
-    updatePanel();
+    if (root.MosharrofMemoryUI) root.MosharrofMemoryUI.updatePanel();
     return rows.length;
   }
   async function remove(id) {
     await transact("readwrite", store => store.delete(String(id || "")));
-    updatePanel();
+    if (root.MosharrofMemoryUI) root.MosharrofMemoryUI.updatePanel();
   }
   function isChatRequest(input) {
     try {
