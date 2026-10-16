@@ -8,7 +8,8 @@ data class TaskStep(
     val description: String,
     val requiresConfirmation: Boolean = true,
     val timeoutMillis: Long = 8_000,
-    val maxAttempts: Int = 1
+    val maxAttempts: Int = 1,
+    val retrySafe: Boolean = false
 ) {
     init {
         require(id.isNotBlank())
@@ -19,7 +20,6 @@ data class TaskStep(
 }
 
 enum class TaskRunState { IDLE, RUNNING, SUCCEEDED, FAILED, CANCELLED }
-
 enum class StepState { SUCCEEDED, FAILED, NEEDS_CONFIRMATION, TIMED_OUT, CANCELLED }
 
 data class StepReport(
@@ -40,7 +40,7 @@ sealed interface StepOutcome {
     data class Failed(val reason: String) : StepOutcome
 }
 
-/** Executes a user-approved sequence in order and stops on ambiguity, failure, timeout or cancel. */
+/** The adapter must use supported Android APIs and verify the actual resulting state. */
 interface TaskStepAdapter {
     fun execute(step: TaskStep): StepOutcome
     fun verifyPostcondition(step: TaskStep): Boolean
@@ -50,6 +50,10 @@ fun interface TaskClock {
     fun nowMillis(): Long
 }
 
+/**
+ * Single-use coordinator: bounded steps, explicit approvals, cancellation checkpoints,
+ * per-step deadlines and postcondition verification. It never retries a non-idempotent action.
+ */
 class TaskExecutionCoordinator(
     private val maxSteps: Int = 12,
     private val clock: TaskClock = TaskClock { System.nanoTime() / 1_000_000 }
@@ -93,10 +97,11 @@ class TaskExecutionCoordinator(
             }
 
             val startedAt = clock.nowMillis()
+            val attemptLimit = if (step.retrySafe) step.maxAttempts else 1
             var attempts = 0
-            var completed = false
+            var verified = false
             var failure = "কাজটি সফল হয়নি।"
-            while (attempts < step.maxAttempts && !completed) {
+            while (attempts < attemptLimit) {
                 if (cancellationRequested.get()) {
                     reports += StepReport(step.id, StepState.CANCELLED, attempts, "ব্যবহারকারীর অনুরোধে কাজ বাতিল হয়েছে।")
                     return finish(TaskRunState.CANCELLED, reports, "কাজ বাতিল হয়েছে।")
@@ -105,24 +110,34 @@ class TaskExecutionCoordinator(
                     reports += StepReport(step.id, StepState.TIMED_OUT, attempts, "ধাপটির সময়সীমা শেষ হয়েছে; আর চেষ্টা করা হয়নি।")
                     return finish(TaskRunState.FAILED, reports, "সময়সীমা শেষ হওয়ায় কাজ থামানো হয়েছে।")
                 }
+
                 attempts += 1
-                when (val outcome = runCatching { adapter.execute(step) }.getOrElse {
-                    StepOutcome.Failed(it.message ?: "অজানা ত্রুটি")
-                }) {
+                val outcome = runCatching { adapter.execute(step) }
+                    .getOrElse { StepOutcome.Failed(it.message ?: "অজানা ত্রুটি") }
+
+                if (clock.nowMillis() - startedAt >= step.timeoutMillis) {
+                    reports += StepReport(step.id, StepState.TIMED_OUT, attempts, "ধাপটি নির্ধারিত সময়ের পরে ফিরেছে।")
+                    return finish(TaskRunState.FAILED, reports, "সময়সীমা অতিক্রম করেছে; পরের ধাপ চালানো হয়নি।")
+                }
+
+                when (outcome) {
                     StepOutcome.Completed -> {
-                        if (clock.nowMillis() - startedAt >= step.timeoutMillis) {
-                            reports += StepReport(step.id, StepState.TIMED_OUT, attempts, "ধাপটি নির্ধারিত সময়ের পরে ফিরেছে।")
-                            return finish(TaskRunState.FAILED, reports, "সময়সীমা অতিক্রম করেছে।")
-                        }
-                        completed = runCatching { adapter.verifyPostcondition(step) }.getOrDefault(false)
-                        if (!completed) failure = "কাজের পরের অবস্থা যাচাই করা যায়নি।"
+                        verified = runCatching { adapter.verifyPostcondition(step) }.getOrDefault(false)
+                        if (verified) break
+                        // Never repeat an action whose side effect may already have occurred.
+                        failure = "কাজের পরের অবস্থা নিশ্চিত করা যায়নি; পুনরায় চালানো হয়নি।"
+                        break
                     }
-                    is StepOutcome.Failed -> failure = outcome.reason
+                    is StepOutcome.Failed -> {
+                        failure = outcome.reason
+                        if (!step.retrySafe) break
+                    }
                 }
             }
-            if (!completed) {
+
+            if (!verified) {
                 reports += StepReport(step.id, StepState.FAILED, attempts, failure)
-                return finish(TaskRunState.FAILED, reports, "একটি ধাপ ব্যর্থ হয়েছে; নিরাপত্তার জন্য পরের ধাপ চালানো হয়নি।")
+                return finish(TaskRunState.FAILED, reports, "একটি ধাপ ব্যর্থ/যাচাই-অযোগ্য; পরের ধাপ চালানো হয়নি।")
             }
             reports += StepReport(step.id, StepState.SUCCEEDED, attempts, "কাজ সম্পন্ন এবং ফলাফল যাচাই হয়েছে।")
         }
