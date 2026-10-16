@@ -12,3 +12,4 @@ node scripts/test_android_agent_memory.mjs
 node scripts/test_android_agent_recovery.mjs
 node scripts/test_android_agent_executor.mjs
 node scripts/test_android_accessibility_composer_contract.mjs
+bash scripts/android/test-agent-ui-contracts.sh
