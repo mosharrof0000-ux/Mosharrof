@@ -9,7 +9,7 @@ import android.util.Base64
 
 /** Uses the existing MOSHARROF chat Worker; no API key is embedded in the Android app. */
 object VisionAnalysisClient {
-    private const val ENDPOINT = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/chat"
+    private const val ENDPOINT = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/"
     private const val MAX_EDGE = 1280
 
     data class Result(val text: String, val provider: String?, val model: String?)
@@ -19,10 +19,9 @@ object VisionAnalysisClient {
             try {
                 val image = encodeBoundedJpeg(bitmap)
                 val body = JSONObject()
-                    .put("text", "এই Android স্ক্রিনশটটি বাংলায় বুদ্ধিমত্তার সঙ্গে বিশ্লেষণ করুন। স্ক্রিনে কী আছে, গুরুত্বপূর্ণ লেখা/বোতাম, ব্যবহারকারীর সম্ভাব্য লক্ষ্য এবং পরবর্তী নিরাপদ পদক্ষেপ জানান। অনুমানকে নিশ্চিত তথ্য হিসেবে বলবেন না। কোনো বোতাম চাপবেন না; শুধু বিশ্লেষণ দিন।")
-                    .put("image", "data:image/jpeg;base64,$image")
-                    .put("image_name", "mosharrof-android-screen.jpg")
-                    .put("stream_status", false)
+                    .put("prompt", "এই Android স্ক্রিনশটটি বাংলায় বুদ্ধিমত্তার সঙ্গে বিশ্লেষণ করুন। স্ক্রিনে কী আছে, গুরুত্বপূর্ণ লেখা/বোতাম, ব্যবহারকারীর সম্ভাব্য লক্ষ্য এবং পরবর্তী নিরাপদ পদক্ষেপ জানান। পর্যবেক্ষণ ও অনুমান আলাদা করুন। কোনো বোতাম চাপবেন না; শুধু বিশ্লেষণ দিন।")
+                    .put("image_base64", image)
+                    .put("mime_type", "image/jpeg")
                     .toString()
                 val connection = (URL(ENDPOINT).openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
