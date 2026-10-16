@@ -24,6 +24,7 @@ import com.mosharrof.agent.execution.AgentTaskController
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
+import com.mosharrof.agent.permissions.PermissionCenterControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
     private lateinit var status: TextView
@@ -32,6 +33,13 @@ class MainActivity : ComponentActivity() {
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
     private var speechOutput: AgentSpeechOutput? = null
+    private val permissionResult = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        val granted = grants.count { it.value }
+        val denied = grants.size - granted
+        status.text = "অনুমতি ফলাফল: $grantedটি অনুমোদিত, $deniedটি অননুমোদিত। বিশেষ অনুমতিগুলো নিচের Settings বোতাম থেকে চালু করুন।"
+    }
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -99,6 +107,9 @@ class MainActivity : ComponentActivity() {
             ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled)
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
+            PermissionCenterControl.addTo(this@MainActivity, this, status) {
+                permissionResult.launch(PermissionCenterControl.runtimePermissions)
+            }
             addView(accessibilityButton)
             addCapabilitySettings(this)
         })
