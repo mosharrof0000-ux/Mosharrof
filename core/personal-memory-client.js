@@ -55,9 +55,14 @@ function mountMemoryPanel(memory) {
   const panel = document.createElement("section");
   panel.id = "mosharrof-memory-panel";
   Object.assign(panel.style, { display:"none", position:"fixed", right:"10px", bottom:"136px", zIndex:"9999", width:"min(92vw,380px)", maxHeight:"65vh", overflow:"auto", padding:"14px", borderRadius:"14px", background:"#171717", color:"#f5f5f5", border:"1px solid #555", boxShadow:"0 8px 28px #000a", font:"14px system-ui,sans-serif" });
+  const enabledLabel=document.createElement("label"); enabledLabel.style.cssText="display:flex;align-items:center;gap:8px;margin:8px 0";
+  const enabled=document.createElement("input"); enabled.type="checkbox"; enabled.id="mosharrof-memory-enabled";
+  try { enabled.checked=localStorage.getItem("mosharrof-personal-memory-enabled-v1")!=="false"; } catch { enabled.checked=true; }
+  enabled.addEventListener("change",()=>{try{localStorage.setItem("mosharrof-personal-memory-enabled-v1",enabled.checked?"true":"false");}catch{}});
+  enabledLabel.append(enabled,safeText(document.createElement("span"),"প্রাসঙ্গিক স্মৃতি AI উত্তরে ব্যবহার করুন"));
   const heading = safeText(document.createElement("h3"), "ব্যক্তিগত স্মৃতি");
   heading.style.margin = "0 0 6px";
-  const description = safeText(document.createElement("p"), "বিষয়ভিত্তিক স্মৃতি · এই ডিভাইসের IndexedDB-তে সংরক্ষিত");
+  const description = safeText(document.createElement("p"), "স্মৃতি এই ডিভাইসের IndexedDB-তে থাকবে। চালু করলে প্রাসঙ্গিক অংশ AI সার্ভারে পাঠানো হবে; পছন্দ পরিবর্তন বা সব স্মৃতি মুছতে পারবেন।");
   description.style.cssText = "font-size:12px;color:#aaa;margin:0 0 10px";
   const search = document.createElement("input"); search.type="search"; search.placeholder="স্মৃতি খুঁজুন"; search.setAttribute("aria-label","স্মৃতি খুঁজুন");
   search.style.cssText = "width:100%;padding:9px;margin:0 0 10px;border-radius:8px;background:#080808;color:white;border:1px solid #555";
@@ -90,7 +95,7 @@ function mountMemoryPanel(memory) {
   action("JSON রপ্তানি", async()=>{const data=JSON.stringify(await memory.exportAll(),null,2);const blob=new Blob([data],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="mosharrof-personal-memory.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
   action("সব স্মৃতি মুছুন", async()=>{if(globalThis.confirm("সব ব্যক্তিগত স্মৃতি স্থায়ীভাবে মুছবেন?")){await memory.clear();await render();}});
   action("বন্ধ",()=>{panel.style.display="none";});
-  panel.append(heading,description,search,list,actions);document.body.append(button,panel);
+  panel.append(heading,description,enabledLabel,search,list,actions);document.body.append(button,panel);
   button.addEventListener("click",async()=>{panel.style.display=panel.style.display==="none"?"block":"none";if(panel.style.display==="block")await render();});
 }
 
@@ -110,13 +115,22 @@ export function installPersonalMemoryClient() {
     try {
       if (isPersonalMemoryCommand(text)) return sseResult(await memory.command(text));
       await memory.observe(text);
-      body.memory_context=await memory.context(text);
+      const useMemory = (()=>{try{return localStorage.getItem("mosharrof-personal-memory-enabled-v1")!=="false";}catch{return true;}})();
+      if(useMemory) body.memory_context=await memory.context(text);
       body.memory_suggestions_enabled=true;
     } catch (error) {
       // Memory failure must never block ordinary chat; the app continues without memory.
       console.warn("MOSHARROF memory unavailable; continuing without saved context.",error);
     }
     const response=await nativeFetch(input,{...init,body:JSON.stringify(body)});
+    try {
+      const copy=response.clone();
+      copy.text().then(async raw=>{
+        const events=raw.split(/\\n/).filter(line=>line.startsWith("data: ")).map(line=>{try{return JSON.parse(line.slice(6));}catch{return null;}}).filter(Boolean);
+        const final=events.find(event=>event.type==="result"&&event.status===200&&event.data&&typeof event.data.text==="string");
+        if(final && final.data.provider!=="local-memory") await memory.recordTurn(text,final.data.text,body.conversation_id||"current-chat");
+      }).catch(()=>{});
+    } catch {}
     return response;
   };
   if (document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>mountMemoryPanel(memory),{once:true});
