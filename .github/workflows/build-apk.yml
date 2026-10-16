@@ -59,6 +59,9 @@ jobs:
       - name: Verify Android capability readiness registry
         run: node scripts/test_android_agent_capabilities.mjs
 
+      - name: Verify user-mediated Android Accessibility UI bridge
+        run: node scripts/test_android_accessibility_ui.mjs
+
       - name: Verify Android SAF file manager and duplicate scanner
         run: node scripts/test_android_file_manager.mjs
 
