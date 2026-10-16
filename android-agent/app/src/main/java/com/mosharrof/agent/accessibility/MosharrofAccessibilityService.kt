@@ -7,7 +7,6 @@ import android.graphics.Path
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.mosharrof.agent.planner.AgentAction
-
 private data class PendingSemanticTap(
     val targetPackage: String,
     val visibleText: String,
