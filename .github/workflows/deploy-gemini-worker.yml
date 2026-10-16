@@ -105,7 +105,7 @@ jobs:
       - name: Validate Worker JavaScript syntax
         run: node --check worker/screenshot-analysis.js
       - name: Validate video Worker JavaScript syntax
-        run: node --check core/video-generation/worker.js
+        run: node --input-type=module --check < core/video-generation/worker.js
 
       - name: Run safe video Worker contract tests
         run: node tests/test_video_generation_worker.mjs
