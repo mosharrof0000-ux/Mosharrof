@@ -11,6 +11,7 @@ class IntentParser {
             return ParsedIntent.Unsupported("কমান্ড খালি অথবা অতিরিক্ত বড়")
         }
 
+        parseTextCommand(text)?.let { return it }
         parseTapCommand(text)?.let { return it }
         parseSwipeCommand(text)?.let { return it }
 
@@ -30,6 +31,12 @@ class IntentParser {
         val query = match.groupValues[1].trim().trim('"', '\'')
         if (query.isBlank()) return ParsedIntent.Unsupported("অ্যাপের নাম পাওয়া যায়নি")
         return ParsedIntent.OpenApp(query)
+    }
+
+    private fun parseTextCommand(text: String): ParsedIntent.TypeText? {
+        val match = Regex("^(?:type|লিখুন|লেখো)\\s+[\\\"](.{1,200})[\\\"]$", RegexOption.IGNORE_CASE).find(text)
+            ?: return null
+        return ParsedIntent.TypeText(match.groupValues[1])
     }
 
     private fun parseSwipeCommand(text: String): ParsedIntent.Swipe? {
@@ -82,6 +89,7 @@ class IntentParser {
 sealed interface ParsedIntent {
     data class OpenApp(val query: String) : ParsedIntent
     data class TapText(val text: String, val appQuery: String) : ParsedIntent
+    data class TypeText(val text: String) : ParsedIntent
     data class Swipe(val direction: AgentAction.Direction, val appQuery: String) : ParsedIntent
     data class Unsupported(val reason: String) : ParsedIntent
 }
