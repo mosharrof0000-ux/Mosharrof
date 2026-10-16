@@ -156,7 +156,7 @@ try {
     } }
   });
   assert.equal(streamed.status, 200);
-  const events = streamed.text.split(/\\n/).filter(line => line.startsWith("data: ")).map(line => JSON.parse(line.slice(6)));
+  const events = streamed.text.split(/\n/).filter(line => line.startsWith("data: ")).map(line => JSON.parse(line.slice(6)));
   assert.ok(events.some(event => event.type === "status" && event.provider === "সব AI সার্ভার"));
   const finalEvent = events.find(event => event.type === "result");
   assert.equal(finalEvent.status, 200);
