@@ -1,10 +1,65 @@
 export function initializeComposerEnhancements() {
   if (typeof document === "undefined") return;
-  if (document.getElementById("composerExpandBtn")) return;
   const input = document.getElementById("input");
   const composer = document.getElementById("composer");
   const send = document.getElementById("sendBtn");
   if (!input || !composer || !send) return;
+
+  let stop = document.getElementById("stopBtn");
+  if (!stop) {
+    stop = document.createElement("button");
+    stop.id = "stopBtn";
+    stop.type = "button";
+    stop.className = "composer-action mosharrof-stop-action";
+    stop.disabled = true;
+    stop.title = "চলমান মেসেজ থামান";
+    stop.setAttribute("aria-label", stop.title);
+    stop.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="currentColor"/></svg>';
+    send.parentNode.insertBefore(stop, send);
+  }
+  if (!document.getElementById("mosharrof-stop-styles")) {
+    const stopStyle = document.createElement("style");
+    stopStyle.id = "mosharrof-stop-styles";
+    stopStyle.textContent = ".mosharrof-stop-action{color:#f87171}.mosharrof-stop-action:disabled{opacity:.48;cursor:not-allowed}";
+    document.head.appendChild(stopStyle);
+  }
+  if (!window.__mosharrofStopFetchPatched) {
+    window.__mosharrofStopFetchPatched = true;
+    let activeController = null;
+    const nativeFetch = window.fetch.bind(window);
+    const finishStop = controller => {
+      if (activeController === controller) activeController = null;
+      stop.disabled = true;
+    };
+    window.fetch = function (resource, init) {
+      const url = String(typeof resource === "string" ? resource : resource && resource.url || "");
+      if (!url.includes("/chat")) return nativeFetch(resource, init);
+      const controller = new AbortController();
+      activeController = controller;
+      stop.disabled = false;
+      const options = { ...(init || {}), signal: controller.signal };
+      return nativeFetch(resource, options).then(response => {
+        response.clone().text().catch(() => {}).finally(() => finishStop(controller));
+        return response;
+      }).catch(error => {
+        if (!controller.signal.aborted) {
+          finishStop(controller);
+          throw error;
+        }
+        finishStop(controller);
+        return new Response(JSON.stringify({ text: "মেসেজ থামানো হয়েছে", provider: "MOSHARROF", model: "stopped", attempted: [] }), {
+          status: 200, headers: { "Content-Type": "application/json" }
+        });
+      });
+    };
+    stop.addEventListener("click", () => {
+      if (activeController) {
+        stop.disabled = true;
+        activeController.abort();
+      }
+    });
+  }
+  if (document.getElementById("composerExpandBtn")) return;
 
   const style = document.createElement("style");
   style.id = "chat-composer-expand-styles";
