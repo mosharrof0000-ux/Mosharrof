@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
+import { spawnSync } from "node:child_process";
 
+const modulePaths = ["personal-memory-engine.js", "personal-memory-ui.js", "personal-memory-bridge.js", "personal-memory-loader.js"];
+for (const path of modulePaths) {
+  const check = spawnSync(process.execPath, ["--check", "web/" + path], { encoding: "utf8" });
+  assert.equal(check.status, 0, path + " syntax: " + check.stderr);
+}
 const source = await readFile(new URL("../web/personal-memory-engine.js", import.meta.url), "utf8");
 const rows = new Map();
 const store = {
