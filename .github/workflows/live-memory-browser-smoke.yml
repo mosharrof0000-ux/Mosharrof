@@ -1,6 +1,9 @@
 name: Live memory browser smoke test
 
 on:
+  pull_request:
+    branches:
+      - fix/load-personal-memory-bridge
   workflow_dispatch:
     inputs:
       target_url:
@@ -29,7 +32,7 @@ jobs:
       - name: Send test message and verify persistence after refresh
         run: node scripts/live-memory-smoke.mjs "$TARGET_URL"
         env:
-          TARGET_URL: ${{ inputs.target_url }}
+          TARGET_URL: ${{ inputs.target_url || 'https://deploy-preview-678--bucolic-mooncake-c83372.netlify.app' }}
       - name: Upload failure screenshot
         if: failure()
         uses: actions/upload-artifact@v4
