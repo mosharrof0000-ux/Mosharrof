@@ -1,7 +1,4 @@
-/* MOSHARROF bounded Android task executor.
- * A policy/verification harness only: real native adapters must be explicitly injected.
- * It never invents device capabilities and never reports a step complete without verification.
- */
+/* Bounded Android executor with explicit adapter and postcondition verification. */
 (function (root) {
   "use strict";
 
