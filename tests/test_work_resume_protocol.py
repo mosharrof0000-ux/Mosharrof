@@ -32,3 +32,7 @@ def test_issue_command_workflow_reports_status_and_avoids_duplicate_runs():
     assert "cancel-in-progress: false" in workflow
     assert "RUNNING" in workflow
     assert "NOT RUNNING" in workflow
+
+    cycle = Path(".github/workflows/autonomous-cycle.yml").read_text(encoding="utf-8")
+    assert "startsWith(github.event.comment.body, '/mosharrof run')" in cycle
+    assert "contains(github.event.comment.body, '/mosharrof')" not in cycle
