@@ -11,6 +11,9 @@
     const isCapabilityReady = options.isCapabilityReady || (() => false);
     const confirm = options.confirm || (async () => false);
     const onProgress = options.onProgress || (() => {});
+    const recoveryApi = options.recovery || root.MosharrofAgentRecovery;
+    const getRecoveryAttempts = options.getRecoveryAttempts;
+    const isSafeToRetry = options.isSafeToRetry || (() => false);
     const maxSteps = Number.isInteger(options.maxSteps) ? Math.max(1, Math.min(options.maxSteps, 50)) : 20;
     const timeoutMs = Number.isFinite(options.timeoutMs) ? Math.max(250, Math.min(options.timeoutMs, 120000)) : 15000;
     let cancelled = false;
@@ -68,7 +71,50 @@
           results.push({ index: i, action: step.action, status: "verified", evidence: verified.evidence || null });
           onProgress({ index: i, total: plan.steps.length, action: step.action, status: "verified" });
         } catch (error) {
-          results.push({ index: i, action: step.action, status: "failed", reason: String(error && error.message || error) });
+          const failureReason = String(error && error.message || error).slice(0, 240);
+          let recovered = null;
+          if (!cancelled && recoveryApi && typeof recoveryApi.runWithRecovery === "function" &&
+              typeof getRecoveryAttempts === "function") {
+            try {
+              const proposed = await withTimeout(getRecoveryAttempts(step, error), "recovery planning");
+              const candidates = [];
+              for (const candidate of (Array.isArray(proposed) ? proposed : []).slice(0, 3)) {
+                if (!candidate || typeof candidate.action !== "string" || !candidate.capability ||
+                    candidate.action === step.action || !isCapabilityReady(candidate.capability, candidate)) continue;
+                const risky = candidate.requiresConfirmation ||
+                  ["destructive", "sensitive", "high"].includes(candidate.risk);
+                if (risky && !(await confirm(candidate))) continue;
+                candidates.push(candidate);
+              }
+              recovered = await recoveryApi.runWithRecovery({
+                attempts: candidates,
+                execute: async candidate => {
+                  if (cancelled) return { ok: false, reason: "cancelled" };
+                  return withTimeout(adapter.execute(candidate), "recovery execution");
+                },
+                verify: async (candidate, execution) =>
+                  withTimeout(verify(candidate, execution), "recovery verification"),
+                isSafeToRetry: (candidate, previous) => !cancelled &&
+                  isSafeToRetry(candidate, step, error, previous),
+                onProgress
+              });
+            } catch (recoveryError) {
+              recovered = { status: "failed", reason: String(recoveryError && recoveryError.message || recoveryError).slice(0, 240) };
+            }
+          }
+          if (recovered && recovered.status === "recovered") {
+            const last = recovered.attempts[recovered.attempts.length - 1];
+            results.push({ index: i, action: step.action, status: "recovered",
+              recovery: recovered, evidence: last && last.evidence || null });
+            onProgress({ index: i, total: plan.steps.length, action: step.action, status: "recovered" });
+            continue;
+          }
+          if (cancelled) {
+            results.push({ index: i, action: step.action, status: "cancelled" });
+            return { status: "cancelled", reason: "ব্যবহারকারী recovery চলাকালে কাজ থামিয়েছেন।", steps: results };
+          }
+          results.push({ index: i, action: step.action, status: "failed", reason: failureReason,
+            recovery: recovered && recovered.attempts ? recovered : undefined });
           return { status: "failed", reason: "একটি ধাপ ব্যর্থ বা যাচাইহীন; নিরাপদে পরবর্তী ধাপ বন্ধ করা হয়েছে।", steps: results };
         }
       }
