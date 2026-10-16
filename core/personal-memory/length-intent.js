@@ -4,8 +4,8 @@ const PATTERNS = [
   { mode: "long", score: 3, re: /\b(novel|long story|full length|very long|thousand words|\d{3,5}\s*words?)\b|উপন্যাস|দীর্ঘ গল্প|অনেক বড়|বড় করে|হাজার শব্দ|\d{3,5}\s*(?:শব্দ|ওয়ার্ড)/i }
 ];
 export function inferResponseStyle(message, retrievedPreferences = []) {
-  const text = String(message || "");
-  const explicit = text.match(/(?:\b|^)(\d{1,2})\s*(?:k|thousand)\s*words?\b|(?:^|\s)(\d{3,5})\s*(?:words?|শব্দ(?:ের|)?|ওয়ার্ড(?:ের|)?)/i);
+  const text = String(message || "").replace(/[০-৯]/g, digit => String("০১২৩৪৫৬৭৮৯".indexOf(digit)));
+  const explicit = text.match(/(?:\b|^)(\d{1,2})\s*(?:k|thousand)\s*words?\b|(?:^|\s)(\d{3,5})\s*(?:words?|শব্দ(?:ের|এর)?|ওয়ার্ড(?:ের|এর)?)/i);
   if (explicit) {
     const count = Number(explicit[1] || explicit[2]) * (/k|thousand/i.test(explicit[0]) ? 1000 : 1);
     return { mode: "explicit-length", requestedWords: Math.min(20000, count), source: "current-message", confidence: 0.99 };
