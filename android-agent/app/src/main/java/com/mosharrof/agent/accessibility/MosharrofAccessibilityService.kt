@@ -2,10 +2,7 @@ package com.mosharrof.agent.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
-import android.graphics.Bitmap
 import android.graphics.Path
-import android.os.Build
-import android.view.Display
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.mosharrof.agent.planner.AgentAction
@@ -176,37 +173,9 @@ class MosharrofAccessibilityService : AccessibilityService() {
             activeService?.syncFloatingControl()
         }
 
-        fun captureScreenshot(callback: (Bitmap?, String?) -> Unit): Boolean {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-                callback(null, "এই Android সংস্করণে Accessibility screenshot API নেই।")
-                return false
-            }
-            val service = activeService ?: run {
-                callback(null, "Accessibility service চালু নেই।")
-                return false
-            }
-            service.takeScreenshot(Display.DEFAULT_DISPLAY, service.mainExecutor,
-                object : TakeScreenshotCallback {
-                    override fun onSuccess(result: ScreenshotResult) {
-                        val buffer = result.hardwareBuffer
-                        try {
-                            val hardwareBitmap = Bitmap.wrapHardwareBuffer(buffer, result.colorSpace)
-                            val bitmap = hardwareBitmap?.copy(Bitmap.Config.ARGB_8888, false)
-                            hardwareBitmap?.recycle()
-                            callback(bitmap, if (bitmap == null) "স্ক্রিনশট bitmap তৈরি করা যায়নি।" else null)
-                        } catch (_: Exception) {
-                            callback(null, "স্ক্রিনশট রূপান্তর করা যায়নি।")
-                        } finally {
-                            buffer.close()
-                        }
-                    }
-
-                    override fun onFailure(errorCode: Int) {
-                        callback(null, "Android screenshot নিতে দেয়নি (code=$errorCode)।")
-                    }
-                })
-            return true
-        }
+        fun captureScreenshot(callback: (Bitmap?, String?) -> Unit): Boolean =
+            activeService?.let { AccessibilityScreenshotCapture.capture(it, callback) }
+                ?: run { callback(null, "Accessibility service চালু নেই।"); false }
 
         fun performGlobalNavigation(destination: AgentAction.NavigationDestination): Boolean {
             val service = activeService ?: return false
