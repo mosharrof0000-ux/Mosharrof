@@ -15,3 +15,10 @@ export async function runChatUntilAnswer(run, report, sleep = ms => new Promise(
     waitMs = Math.min(30000, waitMs * 2);
   }
 }
+
+export async function withChatProviderTimeout(promise, ms, label) {
+  let timer;
+  try {
+    return await Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(label + "_timeout")), ms); })]);
+  } finally { if (timer) clearTimeout(timer); }
+}
