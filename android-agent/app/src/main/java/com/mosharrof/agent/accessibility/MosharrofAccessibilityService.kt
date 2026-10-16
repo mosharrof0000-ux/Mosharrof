@@ -49,10 +49,12 @@ class MosharrofAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() {
+        screenshotCaptureArmed = false
         Log.i(TAG, "Accessibility service interrupted by system")
     }
 
     override fun onDestroy() {
+        screenshotCaptureArmed = false
         floatingControl?.hide()
         floatingControl = null
         if (activeService === this) activeService = null
