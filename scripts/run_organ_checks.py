@@ -14,6 +14,7 @@ COMMANDS = [
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/organ-runtime.test.mjs"],
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/organ-runtime-services.test.mjs"],
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/organ-memory-persistence.test.mjs"],
+    ["node", "--experimental-default-type=module", "--test", "tests/test_personal_memory_engine.mjs", "tests/test_chat_context_memory.mjs"],
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/organ-memory-persistence.test.mjs"],
     ["node", "--experimental-default-type=module", "--test", "tests/architecture/ui-organ-migration.test.mjs", "tests/architecture/ui-organ-bootstrap.test.mjs"],
     ["node", "--experimental-default-type=module", "--test", "organs/user-preference-intelligence/tests/preference-intelligence.test.mjs"],
