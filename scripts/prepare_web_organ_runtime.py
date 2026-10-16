@@ -38,6 +38,17 @@ def main() -> int:
             raise SystemExit(f"ORGAN ASSET PREP: missing {source}")
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
+    # Generate the device-control script tag only in the prepared Pages artifact.
+    # The tracked legacy entrypoint remains frozen; browser/PWA builds stay read-only.
+    index_path = ROOT / "web/index.html"
+    index_html = index_path.read_text(encoding="utf-8")
+    device_tag = '<script src="./device-control.js"></script>'
+    if device_tag not in index_html:
+        anchor_tag = '<script src="./sidebar-recovery.js"></script>'
+        if anchor_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for device-control asset")
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\\n" + device_tag, 1)
+        index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
     composer_runtime = ROOT / "web/core/composer-enhancements.js"
