@@ -127,6 +127,16 @@ public class AgentAccessibilityService extends AccessibilityService {
         return false;
     }
 
+    public static void requestSwipe(int startX, int startY, int endX, int endY,
+            long durationMs, GestureResult result) {
+        AgentAccessibilityService service = instance;
+        if (service == null) {
+            result.onResult(false);
+            return;
+        }
+        service.swipeCoordinates(startX, startY, endX, endY, durationMs, result);
+    }
+
     public void swipeCoordinates(int startX, int startY, int endX, int endY,
             long durationMs, GestureResult result) {
         AccessibilityNodeInfo root = getRootInActiveWindow();
