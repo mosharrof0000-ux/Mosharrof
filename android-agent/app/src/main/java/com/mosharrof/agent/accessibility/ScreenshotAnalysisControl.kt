@@ -89,7 +89,7 @@ object ScreenshotAnalysisControl {
             appendLine("UI node: ${snapshot?.nodeCount ?: 0}")
             appendLine("পড়া যায় এমন লেবেল: ${labels.size}")
             labels.take(20).forEach { appendLine("• $it") }
-            append("এটি UI-লেবেলভিত্তিক প্রাথমিক বিশ্লেষণ। চাইলে নিচের AI Vision বোতাম থেকে ছবি Worker-এ পাঠিয়ে বিশ্লেষণ করান।")
+            append("এটি UI-লেবেলভিত্তিক প্রাথমিক বিশ্লেষণ। চাইলে নিচের AI Vision বোতাম থেকে Google Gemini-তে ছবি পাঠিয়ে বিশ্লেষণ করান।")
         }
         status.text = "স্ক্রিনশট নেওয়া হয়েছে। স্থানীয় তথ্য দেখুন অথবা অনুমতি দিয়ে AI Vision চালান।"
     }
