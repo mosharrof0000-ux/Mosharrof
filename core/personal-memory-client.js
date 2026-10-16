@@ -1,74 +1,29 @@
-import { createPersonalMemoryEngine, buildPersonalMemoryContext, inferMemoryCandidates } from "./personal-memory-engine.js";
+import { createIndexedDbMemoryStore, createPersonalMemoryEngine, buildPersonalMemoryContext, inferMemoryCandidates } from "./personal-memory-engine.js";
 
-const DB_NAME = "mosharrof-personal-memory";
-const DB_VERSION = 1;
-const STORE = "state";
-const NAMESPACE = "mosharrof.personal-memory.v1";
 const SECRET_LIKE = /(password|passcode|api[_ -]?key|access[_ -]?token|secret|otp|one.time.password|private key|পাসওয়ার্ড|পাসওয়ার্ড|গোপন কোড|এপিআই কি|টোকেন)/i;
 const COMMAND = /^(?:(?:আমার\s*)?(?:ব্যক্তিগত\s*)?স্মৃতি\s*(?:দেখাও|দেখান|তালিকা|list)|(?:আমার\s*)?(?:সব\s*)?(?:ব্যক্তিগত\s*)?স্মৃতি\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)|(?:মনে রাখো|স্মৃতিতে রাখো|remember)\s*[:：-]?\s*.+)$/i;
-
 export function isPersonalMemoryCommand(text) { return COMMAND.test(String(text || "").trim()); }
 
-function createIndexedDbStorage() {
-  let opening;
-  function database() {
-    if (!globalThis.indexedDB) throw new Error("এই ব্রাউজারে IndexedDB নেই; স্মৃতি সংরক্ষণ করা যায়নি।");
-    if (!opening) opening = new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onupgradeneeded = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "key" });
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error("স্মৃতি ডেটাবেস খোলা যায়নি।"));
-    });
-    return opening;
-  }
-  async function transact(mode, action) {
-    const db = await database();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, mode), request = action(tx.objectStore(STORE));
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error("স্মৃতি ডেটাবেসে কাজ ব্যর্থ।"));
-      tx.onabort = () => reject(tx.error || new Error("স্মৃতি ডেটাবেসের কাজ বাতিল হয়েছে।"));
-    });
-  }
-  return {
-    async getItem(key) {
-      const row = await transact("readonly", store => store.get(key));
-      if (row && typeof row.value === "string") return row.value;
-      // One-time migration from the earlier localStorage ledger, if present.
-      try {
-        const legacy = localStorage.getItem(key);
-        if (legacy) { await this.setItem(key, legacy); localStorage.removeItem(key); return legacy; }
-      } catch {}
-      return null;
-    },
-    async setItem(key, value) { return transact("readwrite", store => store.put({ key, value: String(value) })); },
-    async removeItem(key) { return transact("readwrite", store => store.delete(key)); }
-  };
-}
-
 export function createBrowserPersonalMemory() {
-  const engine = createPersonalMemoryEngine({ storage: createIndexedDbStorage(), namespace: NAMESPACE });
+  const engine = createPersonalMemoryEngine({ store: createIndexedDbMemoryStore() });
   async function observe(text) {
     const value = String(text || "").trim();
     if (!value || SECRET_LIKE.test(value)) return;
     const candidates = inferMemoryCandidates(value);
     if (!candidates.length) return;
-    const ledger = await engine.exportAll();
+    const ledger = await engine.all({ limit: 500 });
     for (const candidate of candidates) {
-      const duplicate = ledger.memories.some(item => item.status !== "superseded" && item.content === candidate.content && item.category === candidate.category);
+      const duplicate = ledger.items.some(item => item.status !== "superseded" && item.content === candidate.content && item.category === candidate.category);
       if (!duplicate) await engine.remember(candidate);
     }
   }
-  async function context(text) { return buildPersonalMemoryContext(await engine.exportAll(), String(text || "")); }
+  async function context(text) { const result = await engine.recall({ query: String(text || ""), limit: 8 }); return buildPersonalMemoryContext(result.items, String(text || "")); }
   async function command(text) {
     const value = String(text || "").trim();
     if (/^(?:আমার\s*)?(?:ব্যক্তিগত\s*)?স্মৃতি\s*(?:দেখাও|দেখান|তালিকা|list)$/i.test(value)) {
-      const report = await engine.recall({ includeSuperseded: true, limit: 50 });
+      const report = await engine.recall({ query: "", includeSuperseded: true, limit: 50 });
       if (!report.items.length) return "এখনও কোনো ব্যক্তিগত স্মৃতি সংরক্ষিত নেই।";
-      return "আপনার সাম্প্রতিক " + report.items.length + "টি স্মৃতি (মোট " + report.total + "টি):\n" + report.items.map(item => "- [" + item.folder + " · " + String(item.status || "active") + " · " + String(item.created_at || "").slice(0,10) + "] " + item.content).join("\n");
+      return "আপনার সাম্প্রতিক " + report.items.length + "টি স্মৃতি (মোট " + report.total + "টি):\n" + report.items.map(item => "- [" + (item.folder || item.category) + " · " + String(item.status || "active") + " · " + String(item.created_at || "").slice(0,10) + "] " + item.content).join("\n");
     }
     if (/^(?:আমার\s*)?(?:সব\s*)?(?:ব্যক্তিগত\s*)?স্মৃতি\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)$/i.test(value)) {
       if (!globalThis.confirm("সংরক্ষিত সব ব্যক্তিগত স্মৃতি মুছে ফেলবেন? চ্যাটের ইতিহাস আলাদাভাবে থাকবে।")) return "স্মৃতি মোছা বাতিল করা হয়েছে।";
@@ -83,7 +38,7 @@ export function createBrowserPersonalMemory() {
     }
     return "স্মৃতি কমান্ডটি বোঝা যায়নি।";
   }
-  return Object.freeze({ observe, context, command, recall: options => engine.recall(options), revise: (id, patch) => engine.revise(id, patch), clear: () => engine.clear(), exportAll: () => engine.exportAll(), importAll: snapshot => engine.importAll(snapshot) });
+  return Object.freeze({ observe, context, command, recordTurn: (userText, assistantText, conversationId) => engine.recordTurn(userText, assistantText, { conversation_id: conversationId }), recall: options => engine.recall(options), revise: (id, patch) => engine.revise(id, patch), clear: () => engine.clear(), exportAll: () => engine.exportAll(), importAll: snapshot => engine.importAll(snapshot) });
 }
 
 function sseResult(text) {
