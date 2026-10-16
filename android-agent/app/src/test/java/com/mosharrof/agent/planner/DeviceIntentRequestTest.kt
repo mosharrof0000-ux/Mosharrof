@@ -19,6 +19,12 @@ class DeviceIntentRequestTest {
         assertNull(DeviceIntentRequest.parse("timer 25 hours"))
     }
 
+    @Test fun parsesBengaliDigitsAndSpokenTimerDuration() {
+        assertEquals(600, DeviceIntentRequest.parse("টাইমার ১০ মিনিট")?.seconds)
+        assertEquals(600, DeviceIntentRequest.parse("টাইমার দশ মিনিট")?.seconds)
+        assertEquals(120, DeviceIntentRequest.parse("টাইমার দুই মিনিট")?.seconds)
+    }
+
     @Test fun calendarTitleIsBounded() {
         assertEquals(DeviceIntentRequest.Kind.CREATE_CALENDAR_EVENT, DeviceIntentRequest.parse("calendar appointment")?.kind)
         assertNull(DeviceIntentRequest.parse("calendar " + "x".repeat(121)))
