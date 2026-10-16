@@ -8,6 +8,7 @@ sealed interface TaskPlan {
     data class OpenApp(val app: InstalledApp) : TaskPlan
     data class TapVisibleText(val text: String, val app: InstalledApp) : TaskPlan
     data class SwipeScreen(val direction: AgentAction.Direction, val app: InstalledApp) : TaskPlan
+    data class GlobalNavigation(val destination: AgentAction.NavigationDestination) : TaskPlan
     data object OpenSystemSettings : TaskPlan
     data class OpenSettingPanel(val setting: AgentAction.SupportedSetting) : TaskPlan
     data class NeedsChoice(val candidates: List<InstalledApp>) : TaskPlan
@@ -18,6 +19,7 @@ sealed interface TaskPlan {
 class TaskPlanner(private val parser: IntentParser = IntentParser()) {
     fun plan(command: String, installedApps: List<InstalledApp>): TaskPlan {
         when (val explicit = CommandParser().parse(command)) {
+            is ParsedCommand.GlobalNavigation -> return TaskPlan.GlobalNavigation(explicit.destination)
             ParsedCommand.OpenSystemSettings -> return TaskPlan.OpenSystemSettings
             is ParsedCommand.OpenSettingPanel -> return TaskPlan.OpenSettingPanel(explicit.setting)
             is ParsedCommand.OpenApp -> {
