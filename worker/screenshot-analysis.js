@@ -1,6 +1,6 @@
 import { buildChatContext } from "../core/chat-context.js";
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
-import { runChatUntilAnswer } from "../core/chat-provider-retry.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
+import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
@@ -272,15 +272,6 @@ async function tts(request,env){
 }
 
 const CHAT_PROVIDER_TIMEOUT_MS=12000;
-async function withChatProviderTimeout(promise,ms,label){
-  let timer;
-  try{
-    return await Promise.race([
-      promise,
-      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+"_timeout")),ms);})
-    ]);
-  }finally{if(timer)clearTimeout(timer);}
-}
 async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
     method:"POST",
