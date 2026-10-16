@@ -66,7 +66,7 @@ def main() -> int:
 
     # Keep the tracked legacy entrypoint frozen; inject chat continuity and memory into the generated artifact.
     old_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
-    new_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),history:(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};}),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
+    new_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),conversation_id:session.id,history:(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};}),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
     if new_chat_request not in index_html:
         if old_chat_request not in index_html:
             raise SystemExit("ORGAN ASSET PREP: chat request shape changed; history injection requires review")
@@ -78,6 +78,13 @@ def main() -> int:
         if anchor_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for personal memory asset")
         index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + memory_tag, 1)
+
+    # Add visible topic-organized memory controls to the generated artifact only.
+    memory_ui_tag = '<script type="module" src="./personal-memory-ui.js"></script>'
+    if memory_ui_tag not in index_html:
+        if memory_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: memory client tag missing before memory UI")
+        index_html = index_html.replace(memory_tag, memory_tag + "\\n" + memory_ui_tag, 1)
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
