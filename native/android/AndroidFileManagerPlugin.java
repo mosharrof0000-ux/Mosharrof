@@ -1,7 +1,6 @@
 package com.mosharrof.ai;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -20,11 +19,6 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import org.json.JSONException;
 
 import java.io.OutputStream;
-import java.io.InputStream;
-import java.security.MessageDigest;
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Map;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -224,85 +218,7 @@ public class AndroidFileManagerPlugin extends Plugin {
     public void scanDuplicates(PluginCall call) {
         Uri tree = getTreeUri(call);
         if (tree == null) return;
-        final int maxFiles = 3000;
-        final long maxBytes = 64L * 1024L * 1024L;
-        ArrayDeque<String> pending = new ArrayDeque<>();
-        Map<String, JSArray> byHash = new HashMap<>();
-        int scanned = 0;
-        long hashedBytes = 0;
-        pending.add(DocumentsContract.getTreeDocumentId(tree));
-        try {
-            ContentResolver resolver = getContext().getContentResolver();
-            while (!pending.isEmpty() && scanned < maxFiles && hashedBytes < maxBytes) {
-                String parentId = pending.removeFirst();
-                Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId);
-                String[] columns = { DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                    DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE,
-                    DocumentsContract.Document.COLUMN_SIZE };
-                try (Cursor cursor = resolver.query(children, columns, null, null, null)) {
-                    if (cursor == null) continue;
-                    while (cursor.moveToNext() && scanned < maxFiles && hashedBytes < maxBytes) {
-                        String id = cursor.getString(0);
-                        String name = cursor.getString(1);
-                        String mime = cursor.getString(2);
-                        if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) {
-                            pending.addLast(id);
-                            continue;
-                        }
-                        scanned++;
-                        long size = cursor.isNull(3) ? 0 : cursor.getLong(3);
-                        if (size <= 0 || size > maxBytes - hashedBytes) continue;
-                        Uri itemUri = DocumentsContract.buildDocumentUriUsingTree(tree, id);
-                        String hash = hashContent(resolver, itemUri, size, maxBytes);
-                        if (hash == null) continue;
-                        hashedBytes += size;
-                        JSArray group = byHash.get(hash);
-                        if (group == null) { group = new JSArray(); byHash.put(hash, group); }
-                        JSObject item = new JSObject();
-                        item.put("documentId", id); item.put("name", name); item.put("size", size);
-                        group.put(item);
-                    }
-                }
-            }
-            JSArray groups = new JSArray();
-            for (Map.Entry<String, JSArray> entry : byHash.entrySet()) {
-                if (entry.getValue().length() > 1) {
-                    JSObject group = new JSObject();
-                    group.put("sha256", entry.getKey());
-                    group.put("files", entry.getValue());
-                    groups.put(group);
-                }
-            }
-            JSObject out = new JSObject();
-            out.put("groups", groups);
-            out.put("filesScanned", scanned);
-            out.put("bytesHashed", hashedBytes);
-            out.put("truncated", !pending.isEmpty() || scanned >= maxFiles || hashedBytes >= maxBytes);
-            out.put("deletesAnything", false);
-            call.resolve(out);
-        } catch (Exception error) {
-            call.reject("ডুপ্লিকেট স্ক্যান সম্পন্ন হয়নি।", error);
-        }
-    }
-
-    private String hashContent(ContentResolver resolver, Uri uri, long expectedSize, long maxBytes) {
-        try (InputStream input = resolver.openInputStream(uri)) {
-            if (input == null) return null;
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] buffer = new byte[8192];
-            long total = 0;
-            int read;
-            while ((read = input.read(buffer)) != -1) {
-                total += read;
-                if (total > expectedSize || total > maxBytes) return null;
-                digest.update(buffer, 0, read);
-            }
-            StringBuilder hash = new StringBuilder();
-            for (byte b : digest.digest()) hash.append(String.format(java.util.Locale.ROOT, "%02x", b));
-            return hash.toString();
-        } catch (Exception ignored) {
-            return null;
-        }
+        AndroidDuplicateScanner.scan(getContext().getContentResolver(), tree, call);
     }
 
     private Uri getTreeUri(PluginCall call) {
