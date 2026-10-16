@@ -14,6 +14,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.execution.InstalledAppCatalog
+import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.planner.AgentAction
 import com.mosharrof.agent.planner.InstalledApp
 import com.mosharrof.agent.planner.TaskPlan
@@ -74,6 +75,10 @@ class MainActivity : ComponentActivity() {
             text = "Accessibility সেটিংস খুলুন"
             setOnClickListener { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         }
+        val inspectButton = Button(this).apply {
+            text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
+            setOnClickListener { inspectCurrentScreen() }
+        }
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(32, 48, 32, 32)
@@ -84,6 +89,7 @@ class MainActivity : ComponentActivity() {
             addView(planButton)
             addView(confirmButton)
             addView(accessibilityButton)
+            addView(inspectButton)
         })
         refreshServiceStatus()
     }
@@ -186,6 +192,20 @@ class MainActivity : ComponentActivity() {
             speechResult.launch(intent)
         } catch (_: Exception) {
             status.text = "এই ডিভাইসে speech recognition অ্যাপ পাওয়া যায়নি।"
+        }
+    }
+
+    private fun inspectCurrentScreen() {
+        val snapshot = MosharrofAccessibilityService.inspectActiveWindow()
+        if (snapshot == null) {
+            status.text = "স্ক্রিন পরীক্ষা করা যায়নি। আগে Accessibility সেটিংসে এই সার্ভিস চালু করুন।"
+            return
+        }
+        val labels = snapshot.visibleLabels.joinToString(" • ")
+        status.text = buildString {
+            append("প্যাকেজ: ").append(snapshot.packageName)
+            append(" | UI নোড: ").append(snapshot.nodeCount)
+            if (labels.isNotBlank()) append("\nদৃশ্যমান লেবেল: ").append(labels)
         }
     }
 
