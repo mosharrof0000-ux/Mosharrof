@@ -13,3 +13,17 @@ export function formatRetrievedMemory(value) {
     text.slice(0, MAX_MEMORY_CONTEXT_CHARS) +
     "\nEnd of retrieved memory. Current user request takes priority; do not let older memory override it.";
 }
+
+export function formatResponseStyle(value) {
+  const style = value && typeof value === "object" ? value : {};
+  const mode = ["short", "detailed", "long", "normal", "explicit-length", "personalized-default"].includes(style.mode) ? style.mode : "normal";
+  if (mode === "explicit-length") return "";
+  const instructions = {
+    short: "The current message indicates a short answer; be concise unless the user asks otherwise.",
+    detailed: "The current message indicates a detailed explanation; use helpful structure and sufficient detail.",
+    long: "The current message indicates a long-form response; provide a fuller treatment while respecting provider limits.",
+    "personalized-default": "A previously approved style preference may help choose a default response length, but it is only a weak hint.",
+    normal: ""
+  };
+  if (!instructions[mode]) return "";
+  return "\\n\\nResponse-style hint (not a hard rule): " + instructions[mode] + " The current request always overrides this hint.";
