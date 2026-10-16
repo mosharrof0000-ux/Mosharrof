@@ -5,14 +5,7 @@ import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityNodeInfo
 import com.mosharrof.agent.planner.AgentAction
-
-data class ScreenSnapshot(
-    val packageName: String,
-    val nodeCount: Int,
-    val visibleLabels: List<String>
-)
 
 private data class PendingSemanticTap(
     val targetPackage: String,
@@ -21,8 +14,6 @@ private data class PendingSemanticTap(
 )
 
 private data class PendingSwipe(val targetPackage: String, val direction: AgentAction.Direction, var targetEventsRemaining: Int = 20)
-
-private class NodeBudget(var remaining: Int)
 
 /** Bounded screen inspection and exact-label taps run only after explicit user action. */
 class MosharrofAccessibilityService : AccessibilityService() {
@@ -112,7 +103,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
             }, null)
             if (!accepted) latestActionResult = "Android gesture গ্রহণ করেনি; স্ক্রল করা হয়নি।"
         } finally {
-            root.recycleCompat()
+            AccessibilityScreenInspector.recycle(root)
         }
     }
 
@@ -129,17 +120,11 @@ class MosharrofAccessibilityService : AccessibilityService() {
         }
         try {
             if (root.packageName?.toString() != tap.targetPackage) return
-            when (countMatches(root, tap.visibleText, NodeBudget(MAX_NODES))) {
-                0 -> failAfterBudget(tap, "লক্ষ্য লেবেল এখনো পাওয়া যায়নি।")
-                1 -> {
-                    val success = clickMatchingNode(root, tap.visibleText, NodeBudget(MAX_NODES))
-                    finishTap(if (success) {
-                        "নির্দিষ্ট UI লেবেলে একবার ট্যাপ করা হয়েছে।"
-                    } else {
-                        "লেবেল পাওয়া গেছে কিন্তু নিরাপদ clickable control মেলেনি; কোনো ট্যাপ করা হয়নি।"
-                    })
-                }
-                else -> finishTap("একই লেবেল একাধিক জায়গায় আছে; অস্পষ্টতার কারণে ট্যাপ করা হয়নি।")
+            when (AccessibilityScreenInspector.tapExact(root, tap.visibleText)) {
+                ExactTapResult.NO_MATCH -> failAfterBudget(tap, "লক্ষ্য লেবেল এখনো পাওয়া যায়নি।")
+                ExactTapResult.CLICKED -> finishTap("নির্দিষ্ট UI লেবেলে একবার ট্যাপ করা হয়েছে।")
+                ExactTapResult.NOT_CLICKABLE -> finishTap("লেবেল পাওয়া গেছে কিন্তু নিরাপদ clickable control মেলেনি; কোনো ট্যাপ করা হয়নি।")
+                ExactTapResult.AMBIGUOUS -> finishTap("একই লেবেল একাধিক জায়গায় আছে; অস্পষ্টতার কারণে ট্যাপ করা হয়নি।")
             }
         } finally {
             root.recycleCompat()
@@ -156,115 +141,17 @@ class MosharrofAccessibilityService : AccessibilityService() {
         pendingTap = null
     }
 
-    private fun countMatches(
-        node: AccessibilityNodeInfo,
-        target: String,
-        budget: NodeBudget
-    ): Int {
-        if (budget.remaining <= 0) return 0
-        budget.remaining -= 1
-        var count = if (matchesTarget(node, target)) 1 else 0
-        for (index in 0 until node.childCount) {
-            if (count > 1 || budget.remaining <= 0) break
-            val child = node.getChild(index) ?: continue
-            try {
-                count += countMatches(child, target, budget)
-            } finally {
-                child.recycleCompat()
-            }
-        }
-        return count
-    }
-
-    private fun clickMatchingNode(
-        node: AccessibilityNodeInfo,
-        target: String,
-        budget: NodeBudget
-    ): Boolean {
-        if (budget.remaining <= 0) return false
-        budget.remaining -= 1
-        if (matchesTarget(node, target)) return clickSelfOrClickableParent(node)
-        for (index in 0 until node.childCount) {
-            if (budget.remaining <= 0) break
-            val child = node.getChild(index) ?: continue
-            try {
-                if (clickMatchingNode(child, target, budget)) return true
-            } finally {
-                child.recycleCompat()
-            }
-        }
-        return false
-    }
-
-    private fun clickSelfOrClickableParent(node: AccessibilityNodeInfo): Boolean {
-        if (node.isClickable) return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-        var parent = node.parent
-        repeat(MAX_CLICKABLE_ANCESTORS) {
-            if (parent == null) return false
-            if (parent.isClickable) {
-                val clicked = parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                parent.recycleCompat()
-                return clicked
-            }
-            val next = parent.parent
-            parent.recycleCompat()
-            parent = next
-        }
-        parent?.recycleCompat()
-        return false
-    }
-
-    private fun matchesTarget(node: AccessibilityNodeInfo, target: String): Boolean {
-        val expected = target.trim()
-        return node.text?.toString()?.trim()?.equals(expected, ignoreCase = true) == true ||
-            node.contentDescription?.toString()?.trim()?.equals(expected, ignoreCase = true) == true
-    }
-
     private fun inspectWindow(): ScreenSnapshot? {
         val root = rootInActiveWindow ?: return null
         return try {
-            val labels = mutableListOf<String>()
-            val count = collectLabels(root, labels, MAX_NODES)
-            ScreenSnapshot(
-                root.packageName?.toString().orEmpty(),
-                count,
-                labels.distinct().take(MAX_LABELS)
-            )
+            AccessibilityScreenInspector.inspect(root)
         } finally {
-            root.recycleCompat()
+            AccessibilityScreenInspector.recycle(root)
         }
     }
-
-    private fun collectLabels(
-        node: AccessibilityNodeInfo,
-        labels: MutableList<String>,
-        budget: Int
-    ): Int {
-        if (budget <= 0) return 0
-        listOf(node.text, node.contentDescription).forEach { value ->
-            value?.toString()?.trim()?.take(MAX_LABEL_LENGTH)?.takeIf { it.isNotBlank() }
-                ?.let { if (labels.size < MAX_LABELS) labels.add(it) }
-        }
-        var count = 1
-        for (index in 0 until node.childCount) {
-            if (count >= budget) break
-            val child = node.getChild(index) ?: continue
-            try {
-                count += collectLabels(child, labels, budget - count)
-            } finally {
-                child.recycleCompat()
-            }
-        }
-        return count
-    }
-
-    @Suppress("DEPRECATION")
-    private fun AccessibilityNodeInfo.recycleCompat() = recycle()
 
     companion object {
         private const val TAG = "MosharrofAgent"
-        private const val MAX_NODES = 500
-        private const val MAX_LABELS = 40
         private const val MAX_LABEL_LENGTH = 80
         private const val MAX_CLICKABLE_ANCESTORS = 5
         @Volatile private var activeService: MosharrofAccessibilityService? = null
