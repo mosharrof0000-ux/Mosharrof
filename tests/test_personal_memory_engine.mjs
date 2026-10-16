@@ -52,9 +52,14 @@ const relevant = await engine.retrieve("গল্পের দৈর্ঘ্য
 assert.ok(relevant.length > 0, "relevant memories should be retrievable");
 const context = await engine.contextFor("গল্পের দৈর্ঘ্য");
 assert.ok(context.includes("গল্পের দৈর্ঘ্য"), "retrieved memories should form usable chat context");
+await engine.remember("আমার পছন্দ দীর্ঘ গল্পের উত্তর সবসময় বিস্তারিত হবে", "test-user-turn");
+await engine.remember("এখন থেকে আমি চাই গল্পের উত্তর সংক্ষিপ্ত হোক", "test-user-turn");
+const corrected = await engine.list();
+assert.equal(corrected.find(item => item.text.includes("আমার পছন্দ দীর্ঘ গল্প")).status, "superseded", "explicit preference corrections should preserve but supersede stale preferences");
+assert.equal(corrected.find(item => item.text.includes("এখন থেকে আমি চাই গল্প")).status, "active");
 await engine.remember("আমার API key হলো secret-key-123456", "test-user-turn");
-assert.equal((await engine.list()).length, 120, "credential-like messages must not be stored");
+assert.equal((await engine.list()).length, 122, "credential-like messages must not be stored");
 await engine.setEnabled(false);
 await engine.remember("এটি আরেকটি নতুন স্মৃতি যা সংরক্ষণ করা উচিত নয়", "test-user-turn");
-assert.equal((await engine.list()).length, 120, "memory-off must stop writes");
+assert.equal((await engine.list()).length, 122, "memory-off must stop writes");
 console.log("Personal memory engine tests passed: unlimited count, topic folders, retrieval, secret filter, opt-out.");
