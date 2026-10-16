@@ -12,6 +12,39 @@ export function installPersonalMemoryBridge(root = window) {
     clear: engine.clear,
     recall: engine.recall
   });
+  function installMemoryControls() {
+    const drawer = root.document.getElementById("drawerRight") || root.document.getElementById("drawer-right");
+    if (!drawer || drawer.querySelector("[data-personal-memory-controls]")) return;
+    const section = root.document.createElement("section");
+    section.className = "nav-family";
+    section.dataset.personalMemoryControls = "true";
+    section.style.cssText = "padding:14px;margin:10px;border:1px solid var(--border,rgba(255,255,255,.15));border-radius:14px";
+    const title = root.document.createElement("div");
+    title.className = "nav-family-title";
+    title.textContent = "ব্যক্তিগত স্মৃতি";
+    const note = root.document.createElement("p");
+    note.textContent = "এই ব্রাউজার/ডিভাইসে কথোপকথন থেকে শেখা পছন্দ ও প্রাসঙ্গিক স্মৃতি রাখা হয়।";
+    note.style.cssText = "font-size:12px;line-height:1.5;opacity:.8";
+    const toggle = root.document.createElement("button");
+    toggle.type = "button";
+    toggle.style.cssText = "width:100%;padding:10px;margin:4px 0;border-radius:10px";
+    const clear = root.document.createElement("button");
+    clear.type = "button";
+    clear.textContent = "সব স্মৃতি মুছুন";
+    clear.style.cssText = toggle.style.cssText;
+    function refresh() { toggle.textContent = "স্মৃতি সংরক্ষণ: " + (engine.enabled() ? "চালু" : "বন্ধ"); }
+    toggle.addEventListener("click", function () { engine.setEnabled(!engine.enabled()); refresh(); });
+    clear.addEventListener("click", async function () {
+      if (!root.confirm("এই ডিভাইসে সংরক্ষিত সব ব্যক্তিগত স্মৃতি মুছে ফেলবেন?")) return;
+      try { await engine.clear(); if (root.MosharrofToast) root.MosharrofToast("ব্যক্তিগত স্মৃতি মুছে ফেলা হয়েছে"); }
+      catch (error) { console.error("[MOSHARROF Memory] Clear failed:", error); }
+    });
+    section.append(title, note, toggle, clear);
+    drawer.appendChild(section);
+    refresh();
+  }
+  if (root.document.readyState === "loading") root.document.addEventListener("DOMContentLoaded", installMemoryControls, { once: true });
+  else installMemoryControls();
   const originalFetch = root.fetch.bind(root);
   let sequence = Date.now();
   let previousId = null;
