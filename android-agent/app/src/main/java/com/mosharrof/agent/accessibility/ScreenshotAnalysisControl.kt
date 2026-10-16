@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.view.ViewGroup
 import android.text.InputType
 import android.widget.Button
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -21,9 +22,13 @@ object ScreenshotAnalysisControl {
     private var statusView: TextView? = null
     private var analyzeButton: Button? = null
     private var capturedBitmap: Bitmap? = null
+    private var suggestionButton: Button? = null
+    private var commandSuggestion: ((String) -> Unit)? = null
+    private var suggestedCommand: String? = null
 
-    fun addTo(activity: Activity, layout: LinearLayout, status: TextView, isServiceEnabled: () -> Boolean) {
+    fun addTo(activity: Activity, layout: LinearLayout, status: TextView, isServiceEnabled: () -> Boolean, onCommandSuggestion: (String) -> Unit) {
         hostActivity = activity
+        commandSuggestion = onCommandSuggestion
         val preview = ImageView(activity).apply {
             adjustViewBounds = true
             contentDescription = "Captured Android screen preview"
@@ -45,6 +50,8 @@ object ScreenshotAnalysisControl {
                 capturedBitmap = null
                 preview.visibility = ImageView.GONE
                 analysis.text = ""
+                suggestedCommand = null
+                suggestionButton?.visibility = View.GONE
                 analyzeButton?.isEnabled = false
                 if (!MosharrofAccessibilityService.armScreenshotCapture()) {
                     status.text = "Accessibility service প্রস্তুত নয়; স্ক্রিনশট আর্ম করা যায়নি।"
@@ -64,6 +71,12 @@ object ScreenshotAnalysisControl {
             setOnClickListener { configureApiKey(activity) }
         })
         layout.addView(analyze)
+        suggestionButton = Button(activity).apply {
+            text = "AI প্রস্তাব যাচাই করে কাজের পরিকল্পনা করুন"
+            visibility = View.GONE
+            setOnClickListener { suggestedCommand?.let { command -> commandSuggestion?.invoke(command) } }
+        }
+        layout.addView(suggestionButton)
         layout.addView(preview, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         layout.addView(analysis)
     }
