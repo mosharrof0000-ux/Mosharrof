@@ -1,0 +1,16 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const ui = readFileSync("core/android-file-manager-ui.js", "utf8");
+const media = readFileSync("core/android-media-organizer-ui.js", "utf8");
+const facade = readFileSync("core/android-file-manager.js", "utf8");
+const assets = readFileSync("scripts/android/prepare-agent-web-assets.py", "utf8");
+assert.ok(ui.includes("scanSelectedDirectoryDuplicates"));
+assert.ok(ui.includes("কোনো ফাইল মুছবে না"));
+assert.ok(ui.includes("window.MosharrofFiles"));
+assert.ok(!ui.includes("Plugins.FileManager"));
+assert.ok(media.includes("প্রিভিউ") && media.includes("undoMoves"));
+assert.ok(media.includes("moveEntry") && media.includes("window.confirm"));
+assert.ok(facade.includes("plugins.AndroidMediaOrganizer") && facade.includes("moveEntry"));
+assert.ok(facade.includes("plugins.AndroidFileManager"));
+assert.ok(assets.includes('"android-media-organizer-ui.js"') && assets.includes('"android-file-hash-scan.js"'));
+console.log("Android file-manager and media UI contract: PASS");
