@@ -22,7 +22,7 @@
         <service
             android:name=".accessibility.MosharrofAccessibilityService"
             android:description="@string/accessibility_service_description"
-            android:exported="false"
+            android:exported="true"
             android:label="Mosharrof user-directed automation"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
