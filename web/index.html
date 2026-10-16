@@ -705,14 +705,14 @@ header.top{
     else if(event.stage==="failed")route.textContent=provider+" ব্যর্থ · বিকল্প খোঁজা হচ্ছে";
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
-  function coreReply(t,image){
+  function coreReplyOnce(t,image){
     return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
       .then(function(res){
         function finish(data,status){
           var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
-          if(status<200||status>=300){var failure=new Error(data.provider_message||data.message||data.error||("HTTP "+status));failure.responseMeta={provider:null,model:null,attempted:responseMeta.attempted,failed:true};throw failure;}
+          if(status<200||status>=300){var failure=new Error(data.provider_message||data.message||data.error||("HTTP "+status));failure.status=status;failure.responseMeta={provider:null,model:null,attempted:responseMeta.attempted,failed:true};throw failure;}
           var answer=String(data.text||"").trim();
-          if(!answer){var empty=new Error("empty_response");empty.responseMeta={provider:responseMeta.provider,model:responseMeta.model,attempted:responseMeta.attempted,failed:true};throw empty;}
+          if(!answer){var empty=new Error("empty_response");empty.status=status;empty.retryable=true;empty.responseMeta={provider:responseMeta.provider,model:responseMeta.model,attempted:responseMeta.attempted,failed:true};throw empty;}
           return {text:answer,responseMeta:responseMeta};
         }
         if((res.headers.get("content-type")||"").toLowerCase().indexOf("text/event-stream")===-1){
@@ -738,6 +738,22 @@ header.top{
           read();
         });
       });
+  }
+  /* Keep the user-facing elapsed timer alive while transient server/provider failures retry. */
+  function coreReply(t,image){
+    var attempt=0;
+    function run(){
+      return coreReplyOnce(t,image).catch(function(error){
+        var status=Number(error&&error.status||0);
+        var retryable=!!(error&&error.retryable)||!status||status===408||status===429||status>=500;
+        if(!retryable)throw error;
+        attempt++;
+        updateLiveChatRoute({stage:"failed",provider:"MOSHARROF AI",model:"আবার চেষ্টা "+attempt});
+        var delay=Math.min(30000,1000*Math.pow(2,Math.min(attempt-1,5)));
+        return new Promise(function(resolve){window.setTimeout(resolve,delay);}).then(run);
+      });
+    }
+    return run();
   }
   function setSpeakButton(button,label){
     var preparing=label.indexOf("প্রস্তুত")!==-1,playing=label.indexOf("বন্ধ")!==-1;
