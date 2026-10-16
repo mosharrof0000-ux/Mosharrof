@@ -117,6 +117,11 @@
   }
 })();
 
+// Load the modular personal memory engine without growing the frozen Pages entrypoint.
+import("./personal-memory-loader.js")
+  .then(function (module) { module.initializePersonalMemory(); })
+  .catch(function (error) { console.error("Personal memory initialization failed:", error); });
+
 // Load the composer enhancement from a prepared root-level asset.
 import("./composer-enhancements.js")
   .then(function (module) { module.initializeComposerEnhancements(); })
