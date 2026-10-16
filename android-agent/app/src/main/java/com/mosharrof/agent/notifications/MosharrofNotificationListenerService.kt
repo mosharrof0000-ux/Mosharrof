@@ -58,7 +58,9 @@ class MosharrofNotificationListenerService : NotificationListenerService() {
             }
         }
 
-        private fun clearRecent() = synchronized(lock) { recent.clear() }
+        fun clearLocalSnapshot() = synchronized(lock) { recent.clear() }
+
+        private fun clearRecent() = clearLocalSnapshot()
     }
 }
 
