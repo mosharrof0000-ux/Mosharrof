@@ -26,9 +26,11 @@ private class NodeBudget(var remaining: Int)
 
 /** Bounded screen inspection and exact-label taps run only after explicit user action. */
 class MosharrofAccessibilityService : AccessibilityService() {
+    private var floatingControl: FloatingAgentControl? = null
     override fun onServiceConnected() {
         super.onServiceConnected()
         activeService = this
+        syncFloatingControl()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -53,8 +55,24 @@ class MosharrofAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        floatingControl?.hide()
+        floatingControl = null
         if (activeService === this) activeService = null
         super.onDestroy()
+    }
+
+    private fun syncFloatingControl() {
+        if (FloatingAgentControl.isEnabled(this)) {
+            if (floatingControl == null) {
+                floatingControl = FloatingAgentControl(this) {
+                    setFloatingControlEnabled(this, false)
+                }
+            }
+            floatingControl?.show()
+        } else {
+            floatingControl?.hide()
+            floatingControl = null
+        }
     }
 
     private fun processPendingSwipe(swipe: PendingSwipe) {
@@ -255,6 +273,19 @@ class MosharrofAccessibilityService : AccessibilityService() {
         @Volatile private var pendingTap: PendingSemanticTap? = null
         @Volatile private var pendingSwipe: PendingSwipe? = null
         @Volatile private var latestActionResult: String? = null
+
+        fun setFloatingControlEnabled(context: android.content.Context, enabled: Boolean) {
+            context.getSharedPreferences(FloatingAgentControl.PREFS, MODE_PRIVATE)
+                .edit().putBoolean(FloatingAgentControl.KEY_ENABLED, enabled).apply()
+            activeService?.syncFloatingControl()
+        }
+
+        fun isFloatingControlEnabled(context: android.content.Context): Boolean =
+            FloatingAgentControl.isEnabled(context)
+
+        fun refreshFloatingControl() {
+            activeService?.syncFloatingControl()
+        }
 
         fun performGlobalNavigation(destination: AgentAction.NavigationDestination): Boolean {
             val service = activeService ?: return false
