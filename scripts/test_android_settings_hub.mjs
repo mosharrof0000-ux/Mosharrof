@@ -34,5 +34,5 @@ const prep = readFileSync("scripts/prepare_web_organ_runtime.py", "utf8");
 assert.ok(prep.includes('"web/composer-stop.js"') && prep.includes('"web/core/composer-stop.js"'), "Pages build must copy the stop helper beside both composer entrypoints");
 assert.ok(ui.includes('data-device-action="selfTest"'), "Device-control self-test button is missing");
 assert.ok(ui.includes("Object.keys(methods).forEach"), "Self-test must inspect all native action methods");
-assert.ok(ui.includes("API সংযোগ মাত্র; ফোনে যাচাই নয়"), "Self-test must not claim physical device validation");
+assert.ok(ui.includes("API সংযোগ মাত্র; বাস্তব ফাইল অপারেশন পরীক্ষা বাকি"), "Self-test must clearly state physical file operations remain untested");
 console.log("Android settings hub, diagnostics and composer stop contract: PASS");
