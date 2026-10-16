@@ -13,7 +13,7 @@ const bridge = await fs.readFile(new URL("./android/inject-android-voice-bridge.
 assert.ok(wrapper.includes("prepare-agent-web-assets.py"));
 assert.ok(assets.includes('"android-agent-command-router.js"'));
 assert.ok(bridge.includes("routeAndroidAgentCommand"));
-assert.ok(wrapper.includes("sendBtn.addEventListener(\"click\""));
+assert.ok(bridge.includes("sendBtn.addEventListener(\"click\""));
 assert.ok(assets.includes('"android-agent-memory.js"'));
 let calls = 0;
 let confirmationText = "";
