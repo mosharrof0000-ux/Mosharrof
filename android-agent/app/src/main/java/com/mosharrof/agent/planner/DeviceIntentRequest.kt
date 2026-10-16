@@ -10,6 +10,14 @@ data class DeviceIntentRequest(
     enum class Kind { DIAL, COMPOSE_SMS, SET_TIMER, CREATE_CALENDAR_EVENT }
 
     companion object {
+        private fun normalizeDigits(value: String): String {
+            val bengali = "০১২৩৪৫৬৭৮৯"
+            return value.map { char ->
+                val index = bengali.indexOf(char)
+                if (index >= 0) ('0'.code + index).toChar() else char
+            }.joinToString("")
+        }
+
         private val phone = Regex("\\+?[0-9][0-9 ()-]{5,19}")
 
         fun parse(raw: String): DeviceIntentRequest? {
