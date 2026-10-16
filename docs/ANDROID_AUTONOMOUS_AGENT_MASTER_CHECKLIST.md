@@ -18,7 +18,8 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Common Bengali app aliases.
 - [ ] Continuous hands-free session, wake/interrupt/stop, visible microphone state and robust cancellation.
 - [ ] **Text-to-speech result readout** — code and speak/stop UI are added in this work branch; verify via CI and a physical device.
-- [ ] Connect the agent to MOSHARROF AI's existing chat/AI engine without replacing or breaking Gemini or provider fallback.
+- [x] AI-assisted command normalization through the existing MOSHARROF chat Worker for locally unsupported requests; normalized output is re-parsed by the deterministic local planner and still requires the usual confirmation. CI/live endpoint verification pending.
+- [ ] Connect the agent to MOSHARROF AI's full conversational engine and multi-step planner without replacing or breaking Gemini or provider fallback.
 - [ ] Optional configurable Bengali voice, speed, voice style and speak/stop controls.
 
 ## B. App and screen control
