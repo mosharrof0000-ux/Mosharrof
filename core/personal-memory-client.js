@@ -62,7 +62,7 @@ function mountMemoryPanel(memory) {
   enabledLabel.append(enabled,safeText(document.createElement("span"),"প্রাসঙ্গিক স্মৃতি AI উত্তরে ব্যবহার করুন"));
   const heading = safeText(document.createElement("h3"), "ব্যক্তিগত স্মৃতি");
   heading.style.margin = "0 0 6px";
-  const description = safeText(document.createElement("p"), "স্মৃতি এই ডিভাইসের IndexedDB-তে থাকবে। চালু করলে প্রাসঙ্গিক অংশ AI সার্ভারে পাঠানো হবে; পছন্দ পরিবর্তন বা সব স্মৃতি মুছতে পারবেন।");
+  const description = safeText(document.createElement("p"), "স্মৃতি এই ডিভাইসের IndexedDB-তে থাকবে। স্মৃতি ব্যবহার চালু করলে প্রাসঙ্গিক অংশ AI সার্ভারে পাঠানো হবে; চাইলে বন্ধ করতে বা সব স্মৃতি মুছতে পারবেন। শুরুতে বন্ধ থাকে।");
   description.style.cssText = "font-size:12px;color:#aaa;margin:0 0 10px";
   const search = document.createElement("input"); search.type="search"; search.placeholder="স্মৃতি খুঁজুন"; search.setAttribute("aria-label","স্মৃতি খুঁজুন");
   search.style.cssText = "width:100%;padding:9px;margin:0 0 10px;border-radius:8px;background:#080808;color:white;border:1px solid #555";
