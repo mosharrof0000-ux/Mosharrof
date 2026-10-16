@@ -1,5 +1,6 @@
 import { buildChatContext } from "../core/chat-context.js";
-import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
+import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
+import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
@@ -19,7 +20,6 @@ function withRequestCors(response,request){
   responseHeaders.set("Vary","Origin");
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers:responseHeaders});
 }
-
 const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-2.5-flash"];
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
@@ -27,7 +27,6 @@ const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
 const TTS_PROVIDERS=["edge","gemini","azure","elevenlabs","sarvam"];
 function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
 function elevenLabsKeyExpired(env){const raw=String(env.ELEVENLABS_KEY_EXPIRES_AT||"").trim();if(!raw)return false;const t=Date.parse(raw);return Number.isFinite(t)&&Date.now()>=t;}
-
 async function generateWithEdge(text,body,env){
   const endpoint=String(env.EDGE_TTS_API_URL||"").trim();
   if(!endpoint)return {ok:false,provider:"edge",reason:"not_configured"};
@@ -57,7 +56,6 @@ async function generateWithEdge(text,body,env){
     return {ok:true,provider:"edge",model:"Edge-TTS",mime_type:type.split(";")[0]||"audio/mpeg",audio_data:bytesToBase64(bytes)};
   }catch(e){return {ok:false,provider:"edge",reason:String(e&&e.message||e)};}
 }
-
 
 function wavFromPcmBase64(pcmBase64,sampleRate=24000,channels=1,bitsPerSample=16){
   const binary=atob(pcmBase64),data=new Uint8Array(binary.length);
@@ -146,7 +144,6 @@ async function generateWithGeminiTTSWithFailover(text,body,env){
   const last=attempted[attempted.length-1];
   return {ok:false,provider:"gemini",reason:"all_gemini_tts_routes_failed",status:last?.status||null,attempted};
 }
-
 async function generateWithAzure(text,body,env){
   const key=String(env.AZURE_SPEECH_KEY||"").trim(),region=String(env.AZURE_SPEECH_REGION||"").trim();
   if(!key||!region)return {ok:false,provider:"azure",reason:"not_configured"};
@@ -165,7 +162,6 @@ async function generateWithAzure(text,body,env){
     return {ok:true,provider:"azure",model:"Azure AI Speech · "+voice,mime_type:"audio/mpeg",audio_data:bytesToBase64(bytes)};
   }catch(e){return {ok:false,provider:"azure",reason:String(e&&e.message||e)};}
 }
-
 async function generateWithSarvam(text,body,env){
   if(!env.SARVAM_API_KEY)return {ok:false,provider:"sarvam",reason:"not_configured"};
   try{
@@ -177,7 +173,6 @@ async function generateWithSarvam(text,body,env){
     return {ok:true,provider:"sarvam",model:"bulbul:v3",mime_type:"audio/mpeg",audio_data:audio};
   }catch(e){return {ok:false,provider:"sarvam",reason:String(e&&e.message||e)};}
 }
-
 async function generateWithElevenLabs(text,body,env){
   if(!env.ELEVENLABS_API_KEY)return {ok:false,provider:"elevenlabs",reason:"not_configured"};
   if(elevenLabsKeyExpired(env))return {ok:false,provider:"elevenlabs",reason:"credential_expired"};
@@ -199,7 +194,6 @@ async function generateWithElevenLabs(text,body,env){
     return {ok:true,provider:"elevenlabs",model:String(env.ELEVENLABS_MODEL||"eleven_v3"),mime_type:"audio/mpeg",audio_data:bytesToBase64(bytes)};
   }catch(e){return {ok:false,provider:"elevenlabs",reason:String(e&&e.message||e)};}
 }
-
 function splitTtsText(text,maxChars=2200){
   const parts=[];
   let rest=text.trim();
@@ -214,7 +208,6 @@ function splitTtsText(text,maxChars=2200){
   if(rest)parts.push(rest);
   return parts;
 }
-
 function concatBase64Audio(chunks){
   const bytes=[];
   for(const b64 of chunks){
@@ -223,7 +216,6 @@ function concatBase64Audio(chunks){
   }
   return bytesToBase64(new Uint8Array(bytes));
 }
-
 async function synthesizeWithProvider(provider,chunks,body,env){
   const audios=[];
   let model=null;
@@ -246,7 +238,6 @@ async function synthesizeWithProvider(provider,chunks,body,env){
   const isGemini=provider==="gemini";
   return {ok:true,provider,model,mime_type:isGemini?"audio/wav":"audio/mpeg",audio_data:isGemini?concatWavBase64(audios):concatBase64Audio(audios),chunks:chunks.length};
 }
-
 async function tts(request,env){
   const body=await request.json();
   const text=String(body.text||"").trim();
@@ -280,19 +271,7 @@ async function tts(request,env){
   return reply({error:"tts_provider_failed",free_first:true,paid_fallback_enabled:String(env.ELEVENLABS_ALLOW_PAID||"false").toLowerCase()==="true",chunks:chunks.length,attempted},502);
 }
 
-
 const CHAT_PROVIDER_TIMEOUT_MS=12000;
-
-async function withChatProviderTimeout(promise,ms,label){
-  let timer;
-  try{
-    return await Promise.race([
-      promise,
-      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+"_timeout")),ms);})
-    ]);
-  }finally{if(timer)clearTimeout(timer);}
-}
-
 async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
   const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
     method:"POST",
@@ -303,7 +282,6 @@ async function callGemini(env, model, body, apiKey=env.GEMINI_API_KEY){
   const data=await upstream.json().catch(()=>({}));
   return {upstream,data,model};
 }
-
 async function generateWithCloudflareChat(text,env,onStatus){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   const configured=String(env.CLOUDFLARE_CHAT_MODELS||env.CLOUDFLARE_CHAT_MODEL||"@cf/zai-org/glm-4.7-flash,@cf/meta/llama-3.3-70b-instruct-fp8-fast");
@@ -325,7 +303,6 @@ async function generateWithCloudflareChat(text,env,onStatus){
   }
   return {ok:false,provider:"cloudflare-workers-ai",model:last?.model||null,reason:last?.reason||"all_models_failed"};
 }
-
 async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,text,extraHeaders={},onStatus){
   if(!apiKey)return {ok:false,provider,reason:"not_configured"};
   if(onStatus)onStatus({stage:"trying",provider,model});
@@ -346,7 +323,6 @@ async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,t
     return {ok:true,provider,model,text:answer};
   }catch(e){if(onStatus)onStatus({stage:"failed",provider,model});return {ok:false,provider,model,reason:String(e&&e.message||e)};}
 }
-
 function bytesToBase64(bytes){
   let binary="";
   const chunk=0x8000;
@@ -355,7 +331,6 @@ function bytesToBase64(bytes){
   }
   return btoa(binary);
 }
-
 function nearestProviderRatio(ratio){
   const parts=String(ratio||"1:1").split(":").map(Number),target=(parts[0]||1)/(parts[1]||1);
   const supported=["1:1","3:2","2:3","4:3","3:4","16:9","9:16","4:5","5:4","21:9"];
@@ -364,7 +339,6 @@ function nearestProviderRatio(ratio){
   return best;
 }
 function simplifyImageRatio(w,h){let a=w,b=h;while(b){const t=b;b=a%b;a=t;}return (w/a)+":"+(h/a);}
-
 function parseImageSpec(prompt){
   const original=String(prompt||"");
   const p=original.toLowerCase();
@@ -430,7 +404,6 @@ function parseImageSpec(prompt){
   const imageSize=(Math.max(width,height)>=3500||quality==="4K")?"4K":(quality==="2K"||pixels>1800000||Math.max(width,height)>=2000)?"2K":"1K";
   return {intent,aspect_ratio:ratio,provider_aspect_ratio:nearestProviderRatio(ratio),width,height,format,transparent,max_bytes:maxBytes,quality,image_size:imageSize,explicit_dimensions:hasExplicitDimensions,explicit_ratio:hasExplicitRatio};
 }
-
 async function generateWithGemini(prompt,body,env){
   if(!env.GEMINI_API_KEY)return {ok:false,provider:"gemini",reason:"not_configured"};
   const preferred=env.GEMINI_IMAGE_MODEL ? [env.GEMINI_IMAGE_MODEL,...IMAGE_MODELS.filter(m=>m!==env.GEMINI_IMAGE_MODEL)] : IMAGE_MODELS;
@@ -450,7 +423,6 @@ async function generateWithGemini(prompt,body,env){
   }
   return {ok:false,provider:"gemini",reason:last?.data?.error?.message||last?.error||"no_image_returned",status:last?.upstream?.status||null};
 }
-
 async function generateWithCloudflare(prompt,env){
   if(!env.AI)return {ok:false,provider:"cloudflare-workers-ai",reason:"not_configured"};
   const models=[env.CLOUDFLARE_IMAGE_MODEL||"@cf/black-forest-labs/flux-1-schnell","@cf/bytedance/stable-diffusion-xl-lightning","@cf/lykon/dreamshaper-8-lcm"];
@@ -467,7 +439,6 @@ async function generateImage(request,env){
   const prompt=String(body.prompt||"").trim();
   if(!prompt)return reply({error:"prompt_required"},400);
   if(prompt.length>12000)return reply({error:"prompt_too_large"},413);
-
   let image_spec;
   try{image_spec=parseImageSpec(prompt);}
   catch(e){return reply({error:"invalid_image_spec",message:String(e&&e.message||e)},400);}
@@ -556,14 +527,12 @@ async function runChat(body,env,onStatus){
       report({stage:"failed",provider:"gemini",model});
     }
   }
-
   const cloudflare=await generateWithCloudflareChat(text,env,report);
   attempted.push({provider:cloudflare.provider,model:cloudflare.model||null,status:cloudflare.status||null,reason:cloudflare.ok?null:cloudflare.reason||"failed"});
   if(cloudflare.ok){
     report({stage:"answered",provider:cloudflare.provider,model:cloudflare.model});
     return {status:200,data:{ok:true,provider:cloudflare.provider,model:cloudflare.model,text:cloudflare.text,attempted}};
   }
-
   const groq=await generateWithOpenAICompatibleChat(
     "groq","https://api.groq.com/openai/v1/chat/completions",
     String(env.GROQ_API_KEY||"").trim(),
@@ -574,7 +543,6 @@ async function runChat(body,env,onStatus){
     report({stage:"answered",provider:groq.provider,model:groq.model});
     return {status:200,data:{ok:true,provider:groq.provider,model:groq.model,text:groq.text,attempted}};
   }
-
   const openrouter=await generateWithOpenAICompatibleChat(
     "openrouter","https://openrouter.ai/api/v1/chat/completions",
     String(env.OPENROUTER_API_KEY||"").trim(),
@@ -586,7 +554,6 @@ async function runChat(body,env,onStatus){
     report({stage:"answered",provider:openrouter.provider,model:openrouter.model});
     return {status:200,data:{ok:true,provider:openrouter.provider,model:openrouter.model,text:openrouter.text,attempted}};
   }
-
   return {status:502,data:{
     error:"chat_provider_failed",
     message:"AI providers unavailable. Please try again shortly.",
@@ -594,7 +561,6 @@ async function runChat(body,env,onStatus){
     chat_provider_order:["gemini","cloudflare-workers-ai","groq","openrouter"]
   }};
 }
-
 async function chat(request,env){
   const body=await request.json();
   if(body.stream_status!==true){
@@ -607,7 +573,7 @@ async function chat(request,env){
       const send=event=>{try{controller.enqueue(encoder.encode("data: "+JSON.stringify(event)+"\n\n"));}catch(e){}};
       (async()=>{
         try{
-          const result=await runChat(body,env,event=>send({type:"status",...event}));
+          const result=await runChatUntilAnswer(status=>runChat(body,env,status),event=>send({type:"status",...event}));
           send({type:"result",status:result.status,data:result.data});
         }catch(e){
           send({type:"result",status:500,data:{error:"chat_stream_failed",message:"Chat request failed."}});
@@ -617,7 +583,6 @@ async function chat(request,env){
   });
   return new Response(stream,{status:200,headers:{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache, no-transform","x-accel-buffering":"no"}});
 }
-
 async function handleRequest(request,env){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
@@ -648,7 +613,6 @@ async function handleRequest(request,env){
     return reply({error:"analysis_provider_failed"},502);
   }catch{return reply({error:"invalid_request"},400)}
 }
-
 export default {async fetch(request,env){
   const response=await handleRequest(request,env);
   return withRequestCors(response,request);
