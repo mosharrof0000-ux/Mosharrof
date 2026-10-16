@@ -27,6 +27,7 @@ class AgentNotificationListenerService : NotificationListenerService() {
         private val recent = mutableListOf<AgentNotification>()
 
         fun snapshot(): List<AgentNotification> = synchronized(lock) { recent.toList() }
+        fun clearLocalSnapshot() = synchronized(lock) { recent.clear() }
     }
 }
 
