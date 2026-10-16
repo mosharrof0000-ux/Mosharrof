@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
-const [ui, bridge, service, metadata, wrapper] = await Promise.all([
+const [ui, bridge, service, metadata, wrapper, installer] = await Promise.all([
   read("../core/android-accessibility-ui.js"),
   read("../native/android/AndroidAccessibilityPlugin.java"),
   read("../native/android/AgentAccessibilityService.java"),
   read("../native/android/agent_accessibility_service.xml"),
-  read("./android/prepare-wrapper.sh")
+  read("./android/prepare-wrapper.sh"),\n  read("./android/install-main-activity.sh")
 ]);
 
 assert.match(ui, /getAccessibilityStatus/);
