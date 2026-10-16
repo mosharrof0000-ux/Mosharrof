@@ -53,26 +53,8 @@ jobs:
       - name: Verify expanded Android settings hub actions and native contract v2
         run: node scripts/test_android_settings_hub.mjs
 
-      - name: Verify Bengali Android agent planner contract
-        run: node scripts/test_android_agent_planner.mjs
-
-      - name: Verify Android capability readiness registry
-        run: node scripts/test_android_agent_capabilities.mjs
-
-      - name: Verify user-mediated Android Accessibility UI bridge
-        run: node scripts/test_android_accessibility_ui.mjs
-
-      - name: Verify Android SAF file manager and duplicate scanner
-        run: node scripts/test_android_file_manager.mjs
-
-      - name: Verify Android file/media/diagnostics task planner
-        run: node scripts/test_android_agent_task_planner.mjs
-
-      - name: Verify opt-in local vector memory
-        run: node scripts/test_android_agent_memory.mjs
-
-      - name: Verify bounded self-healing recovery
-        run: node scripts/test_android_agent_recovery.mjs
+      - name: Verify Android autonomous-agent contracts
+        run: bash scripts/android/verify-agent-contracts.sh
 
       - name: Build debug APK
         working-directory: android
