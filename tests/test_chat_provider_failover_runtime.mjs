@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { loadWorker } from "./worker-loader.mjs";
 
 const worker = await loadWorker();
@@ -134,7 +135,15 @@ try {
   assert.equal(healthData.cloudflare_chat_configured, true);
   assert.equal(healthData.groq_chat_configured, true);
   assert.equal(JSON.stringify(healthData).includes("secret-must-not-leak"), false);
-  console.log("PASS: Gemini, Workers AI, Groq, OpenRouter failover and safe health configuration.");
+
+  // Chat UI keeps elapsed time running without a total deadline and retries transient server failures.
+  const appSource = await readFile(new URL("../web/index.html", import.meta.url), "utf8");
+  assert.match(appSource, /function coreReplyOnce\\(t,image\\)/);
+  assert.match(appSource, /function coreReply\\(t,image\\)\\{\\s*var attempt=0;/);
+  assert.match(appSource, /Math\\.min\\(30000,1000\\*Math\\.pow\\(2,Math\\.min\\(attempt-1,5\\)\\)\\)/);
+  assert.match(appSource, /return run\\(\\);/);
+  assert.match(appSource, /n\\._elapsedTimer=window\\.setInterval\\(refresh,100\\)/);
+  console.log("PASS: provider failover, safe health configuration, unlimited chat timer and transient retry policy.");
 } finally {
   globalThis.fetch = originalFetch;
 }
