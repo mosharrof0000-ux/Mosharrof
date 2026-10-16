@@ -40,7 +40,7 @@ if(!skipSave)''',
 # Let the native Android voice manager submit speech transcripts through the existing chat pipeline.
 bridge = '''function routeAndroidAgentCommand(command) {
   var api = window.MosharrofAndroidAgentCommandRouter;
-  if (!api) return false;
+  if (!api) return null;
   if (!window.mosharrofAndroidAgentRouterInstance) {
     window.mosharrofAndroidAgentRouterInstance = api.createCommandRouter();
   }
@@ -52,12 +52,19 @@ bridge = '''function routeAndroidAgentCommand(command) {
   });
   return true;
 }
+function deliverNativeVoiceCommand(text, attempt) {
+  var routed = routeAndroidAgentCommand(text);
+  if (routed === null && attempt < 20) {
+    window.setTimeout(function() { deliverNativeVoiceCommand(text, attempt + 1); }, 100);
+    return;
+  }
+  if (routed === true) return;
+  window.mosharrofAutoSpeakNext = true;
+  input.value = String(text || ""); resize(); send();
+}
 window.mosharrofNativeVoiceCommand = function (text) {
-  try {
-    if (routeAndroidAgentCommand(text)) return true;
-    window.mosharrofAutoSpeakNext = true;
-    input.value = String(text || ""); resize(); send(); return true;
-  } catch (error) {
+  try { deliverNativeVoiceCommand(String(text || ""), 0); return true; }
+  catch (error) {
     console.error("Native voice command could not be sent", error); return false;
   }
 };
