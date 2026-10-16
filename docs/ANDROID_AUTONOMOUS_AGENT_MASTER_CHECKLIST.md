@@ -51,7 +51,8 @@ This is the single source of truth for the Android device-control feature set re
 
 ## E. Vision, memory and AI planning
 - [x] Typed action model and deterministic policy gate; arbitrary shell commands are not representable.
-- [ ] On-device screen-understanding adapter with measured memory/latency/accuracy; image coordinates only as a last resort with revalidation.
+- [x] User-triggered Android Accessibility screenshot capture and in-app preview, with transient visible-label/node analysis; screenshots are not saved or uploaded automatically. Build/device verification pending.
+- [ ] AI vision model/backend adapter for semantic screenshot interpretation with measured memory/latency/accuracy; image coordinates only as a last resort with revalidation.
 - [ ] Bounded planner that proposes typed actions, not executable shell or unrestricted code.
 - [ ] Optional local retrieval/memory, encrypted and opt-in.
 - [ ] AI provider failover and connection to existing MOSHARROF/Gemini services, with no hard-coded secrets and clear offline fallback.
