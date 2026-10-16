@@ -38,7 +38,18 @@ jobs:
       - name: Install Chromium for candidate runtime smoke test
         run: python -m pip install playwright && python -m playwright install chromium
       - name: Start candidate Pages server
-        run: python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
+        shell: bash
+        run: |
+          nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
+          pid=$!
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0
+            kill -0 "$pid" 2>/dev/null || { cat /tmp/mosharrof-pages.log; exit 1; }
+            sleep 1
+          done
+          cat /tmp/mosharrof-pages.log
+          echo "Server readiness timed out."
+          exit 1
       - name: Test candidate organ runtime in Chromium
         env:
           PAGE_URL: http://127.0.0.1:4173/
