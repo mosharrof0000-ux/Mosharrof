@@ -12,11 +12,12 @@ const clean = (value, limit = 2000) => String(value ?? "").replace(/\u0000/g, ""
 const safeTime = value => { const parsed = Date.parse(value || ""); return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date(0).toISOString(); };
 const clone = value => JSON.parse(JSON.stringify(value));
 
-export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESPACE, now = () => new Date().toISOString() } = {}) {
-  if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") throw new TypeError("A persistent storage adapter is required.");
+export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT_NAMESPACE, now = () => new Date().toISOString(), makeId } = {}) {
+  const backingStorage = storage || (store ? { async getItem(key) { const item = await store.get(key); return item?.value ?? null; }, async setItem(key,value) { await store.put({id:key,value}); }, async removeItem(key) { await store.delete(key); } } : null);
+  if (!backingStorage || typeof backingStorage.getItem !== "function" || typeof backingStorage.setItem !== "function") throw new TypeError("A persistent storage adapter or store is required.");
   const key = clean(namespace, 160);
   async function readLedger() {
-    const raw = await storage.getItem(key);
+    const raw = await backingStorage.getItem(key);
     if (!raw) return { schema_version: SCHEMA_VERSION, revision: 0, memories: [] };
     try {
       const parsed = JSON.parse(raw);
@@ -27,14 +28,14 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
   async function save(ledger) {
     ledger.revision += 1;
     ledger.updated_at = safeTime(now());
-    await storage.setItem(key, JSON.stringify(ledger));
+    await backingStorage.setItem(key, JSON.stringify(ledger));
     return { revision: ledger.revision, count: ledger.memories.length };
   }
   async function remember(input) {
     if (!input || typeof input !== "object") throw new TypeError("Memory entry must be an object.");
     const content = clean(input.content, 4000);
     if (!content) throw new TypeError("Memory content is required.");
-    if (SECRET_LIKE.test(content)) throw new Error("Secret-like content is not stored in personal memory.");
+    if (SECRET_LIKE.test(content)) { const old = await readLedger(); return { saved:false, reason:"secret_like_content_rejected", revision:old.revision, count:old.memories.length }; }
     const category = CATEGORIES.has(input.category) ? input.category : "fact";
     const ledger = await readLedger();
     const timestamp = safeTime(now());
@@ -57,7 +58,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
       if (previous) previous.status = "superseded";
     }
     ledger.memories.push(entry);
-    return { ...await save(ledger), entry: clone(entry) };
+    return { saved:true, ...await save(ledger), entry: clone(entry) };
   }
   async function revise(id, patch = {}) {
     const ledger = await readLedger();
@@ -112,8 +113,8 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     return save(ledger);
   }
   async function clear() {
-    if (typeof storage.removeItem !== "function") throw new TypeError("Storage adapter does not support deletion.");
-    await storage.removeItem(key); return true;
+    if (typeof backingStorage.removeItem !== "function") throw new TypeError("Storage adapter does not support deletion.");
+    await backingStorage.removeItem(key); return true;
   }
   return Object.freeze({ remember, revise, recall, timeline, exportAll, importAll, clear });
 }
