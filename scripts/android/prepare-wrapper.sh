@@ -12,6 +12,7 @@ cp core/android-edge-to-edge.css android-web/edge-to-edge.css
 cp core/device-control.js android-web/device-control.js
 cp core/android-file-manager-ui.js android-web/android-file-manager-ui.js
 cp core/android-file-manager.js android-web/android-file-manager.js
+cp core/android-accessibility-ui.js android-web/android-accessibility-ui.js
 python - <<'PY'
 from pathlib import Path
 page = Path("android-web/index.html")
@@ -25,6 +26,9 @@ if file_tag not in html:
 ui_tag = '<script src="./android-file-manager-ui.js"></script>'
 if ui_tag not in html:
     html = html.replace("</body>", ui_tag + "\n</body>", 1)
+accessibility_tag = '<script src="./android-accessibility-ui.js"></script>'
+if accessibility_tag not in html:
+    html = html.replace("</body>", accessibility_tag + "\n</body>", 1)
 page.write_text(html, encoding="utf-8")
 PY
 python - <<'PY'
