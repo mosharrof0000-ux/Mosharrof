@@ -11,9 +11,14 @@ on:
   workflow_dispatch:
     inputs:
       test_url:
-        description: "MOSHARROF site URL; live mode sends two test chat requests"
+        description: "Site URL; a real live chat send requires explicit confirmation"
         required: true
         default: "https://mosharrof0000-ux.github.io/Mosharrof/"
+      confirm_send_test_message:
+        description: "Type SEND_TEST_MESSAGE to authorize one synthetic message to the real chat Worker"
+        required: true
+        type: string
+        default: "NO"
 
 permissions:
   contents: read
@@ -24,7 +29,7 @@ concurrency:
 
 jobs:
   browser-memory-roundtrip:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    if: ${{ (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') && (github.event_name != 'workflow_dispatch' || inputs.confirm_send_test_message == 'SEND_TEST_MESSAGE') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -60,4 +65,5 @@ jobs:
         env:
           MOSHARROF_TEST_URL: ${{ github.event_name == 'pull_request' && 'http://127.0.0.1:4173/' || (inputs.test_url || 'https://mosharrof0000-ux.github.io/Mosharrof/') }}
           MOSHARROF_TEST_TIMEOUT_MS: "45000"
+          MOSHARROF_MOCK_CHAT: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_send_test_message == 'SEND_TEST_MESSAGE' && '0' || '1' }}
         run: node tests/e2e/personal-memory-browser-smoke.mjs
