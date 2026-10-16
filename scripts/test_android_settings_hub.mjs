@@ -15,7 +15,7 @@ const pairs = {
 };
 for (const [action, method] of Object.entries(pairs)) {
   assert.ok(java.includes(method), `Native method missing: ${method}`);
-  assert.ok(ui.includes('["' + action + '"') || ui.includes(action + ':"'), `UI action missing: ${action}`);
+  assert.ok(ui.includes('[["' + action + '"') || ui.includes(action + ':"'), `UI action missing: ${action}`);
 }
 assert.ok(java.includes("getDeviceInfo"));
 assert.ok(java.includes("userMediated"));
@@ -29,7 +29,10 @@ assert.ok(composer.includes("initializeComposerStopControl(send)"), "Chat organ 
 assert.ok(stop.includes('stop.id = "stopBtn"'), "Composer stop button is missing");
 assert.ok(stop.includes("activeController.abort()"), "Stop action does not abort the active chat request");
 assert.ok(stop.includes('url.includes("/chat")'), "Stop action must target the chat request");
-assert.ok(stop.includes('মেসেজ থামানো হয়েছে'), "Cancellation should be reported without a generic connection failure");
+assert.ok(stop.includes("মেসেজ থামানো হয়েছে"), "Cancellation should be reported without a generic connection failure");
 const prep = readFileSync("scripts/prepare_web_organ_runtime.py", "utf8");
 assert.ok(prep.includes('"web/composer-stop.js"') && prep.includes('"web/core/composer-stop.js"'), "Pages build must copy the stop helper beside both composer entrypoints");
-console.log("Android settings hub and composer stop contract: PASS");
+assert.ok(ui.includes('data-device-action="selfTest"'), "Device-control self-test button is missing");
+assert.ok(ui.includes("Object.keys(methods).forEach"), "Self-test must inspect all native action methods");
+assert.ok(ui.includes("API সংযোগ মাত্র; ফোনে যাচাই নয়"), "Self-test must not claim physical device validation");
+console.log("Android settings hub, diagnostics and composer stop contract: PASS");
