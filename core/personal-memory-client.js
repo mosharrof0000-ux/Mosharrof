@@ -11,10 +11,10 @@ export function createBrowserPersonalMemory() {
     if (!value || SECRET_LIKE.test(value)) return;
     const candidates = inferMemoryCandidates(value);
     if (!candidates.length) return;
-    const ledger = await engine.all({ limit: 500 });
     for (const candidate of candidates) {
-      const duplicate = ledger.items.some(item => item.status !== "superseded" && item.content === candidate.content && item.category === candidate.category);
-      if (!duplicate) await engine.remember(candidate);
+      const matches = await engine.recall({ query: candidate.content, limit: 12, includeSuperseded: true });
+      const duplicate = matches.items.some(item => item.status !== "superseded" && item.content === candidate.content && item.category === candidate.category);
+      if (!duplicate) await engine.remember({ ...candidate, status: "pending_confirmation", source: "conversation_candidate", user_confirmed: false });
     }
   }
   async function context(text) { const result = await engine.recall({ query: String(text || ""), limit: 8 }); return buildPersonalMemoryContext(result.items, String(text || "")); }
