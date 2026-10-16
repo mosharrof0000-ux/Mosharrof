@@ -1,9 +1,9 @@
 package com.mosharrof.agent.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import android.util.Log
 
 data class ScreenSnapshot(
     val packageName: String,
@@ -11,7 +11,7 @@ data class ScreenSnapshot(
     val visibleLabels: List<String>
 )
 
-/** Read-only accessibility inspection; screen text is returned only on explicit request. */
+/** Bounded screen inspection runs only during an explicitly armed user scan. */
 class MosharrofAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -19,12 +19,13 @@ class MosharrofAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event == null) return
-        val root = rootInActiveWindow ?: return
-        try {
-            Log.d(TAG, "package=${event.packageName ?: "unknown"} event=${event.eventType} nodes=${countNodes(root, MAX_NODES)}")
-        } finally {
-            root.recycleCompat()
+        if (event == null || !scanArmed) return
+        if (event.packageName?.toString() == packageName) return
+        val snapshot = inspectWindow() ?: return
+        if (snapshot.packageName.isNotBlank() && snapshot.packageName != packageName) {
+            latestSnapshot = snapshot
+            Log.d(TAG, "User-armed scan captured package=" + snapshot.packageName +
+                ", nodes=" + snapshot.nodeCount)
         }
     }
 
@@ -42,7 +43,11 @@ class MosharrofAccessibilityService : AccessibilityService() {
         return try {
             val labels = mutableListOf<String>()
             val count = collectLabels(root, labels, MAX_NODES)
-            ScreenSnapshot(root.packageName?.toString().orEmpty(), count, labels.distinct().take(MAX_LABELS))
+            ScreenSnapshot(
+                root.packageName?.toString().orEmpty(),
+                count,
+                labels.distinct().take(MAX_LABELS)
+            )
         } finally {
             root.recycleCompat()
         }
@@ -71,21 +76,6 @@ class MosharrofAccessibilityService : AccessibilityService() {
         return count
     }
 
-    private fun countNodes(node: AccessibilityNodeInfo, budget: Int): Int {
-        if (budget <= 1) return 1
-        var count = 1
-        for (index in 0 until node.childCount) {
-            if (count >= budget) break
-            val child = node.getChild(index) ?: continue
-            try {
-                count += countNodes(child, budget - count)
-            } finally {
-                child.recycleCompat()
-            }
-        }
-        return count
-    }
-
     @Suppress("DEPRECATION")
     private fun AccessibilityNodeInfo.recycleCompat() = recycle()
 
@@ -95,7 +85,20 @@ class MosharrofAccessibilityService : AccessibilityService() {
         private const val MAX_LABELS = 40
         private const val MAX_LABEL_LENGTH = 80
         @Volatile private var activeService: MosharrofAccessibilityService? = null
+        @Volatile private var scanArmed = false
+        @Volatile private var latestSnapshot: ScreenSnapshot? = null
 
-        fun inspectActiveWindow(): ScreenSnapshot? = activeService?.inspectWindow()
+        fun startInspection() {
+            latestSnapshot = null
+            scanArmed = true
+        }
+
+        fun takeInspectionSnapshot(): ScreenSnapshot? {
+            scanArmed = false
+            return latestSnapshot.also { latestSnapshot = null }
+        }
+
+        fun isInspectionArmed(): Boolean = scanArmed
+        fun hasInspectionSnapshot(): Boolean = latestSnapshot != null
     }
 }
