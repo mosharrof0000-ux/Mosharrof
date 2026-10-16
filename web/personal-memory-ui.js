@@ -40,7 +40,6 @@ export function initializePersonalMemory() {
   const results = section.querySelector('[data-memory="results"]');
   const fileInput = section.querySelector('[data-memory="file"]');
   let engine = null;
-  let originalFetch = null;
   let enabled = false;
   const savedSetting = () => { try { return localStorage.getItem(CONSENT_KEY); } catch (_) { return null; } };
 
@@ -54,7 +53,6 @@ export function initializePersonalMemory() {
       enabledInput.checked = enabled;
       if (setting === null) localStorage.setItem(CONSENT_KEY, "disabled");
       setStatus(enabled ? "স্মৃতি চালু · এই ডিভাইসে সংরক্ষণ হচ্ছে" : "স্মৃতি বন্ধ · নতুন কিছু সংরক্ষণ হবে না");
-      if (!originalFetch) installChatBridge();
       await refresh();
     } catch (error) {
       enabledInput.checked = false;
@@ -96,46 +94,6 @@ export function initializePersonalMemory() {
     const result = await engine.recall({ query, folder: folderInput.value || undefined, limit: 40 });
     showRows(result.items);
     setStatus("মিল পাওয়া গেছে: " + result.items.length + "টি · মোট মিলে যাওয়া " + result.total);
-  }
-  function installChatBridge() {
-    originalFetch = window.fetch.bind(window);
-    window.fetch = async function (input, init) {
-      const url = typeof input === "string" ? input : (input && input.url) || "";
-      if (!enabled || !engine || !url.startsWith(CHAT_URL) || !init || typeof init.body !== "string") {
-        return originalFetch(input, init);
-      }
-      let body;
-      try { body = JSON.parse(init.body); } catch (_) { return originalFetch(input, init); }
-      const userText = String(body.text || "").trim();
-      if (!userText) return originalFetch(input, init);
-      try {
-        const memories = await engine.recall({ query: userText, limit: 8 });
-        body.memory_context = buildPersonalMemoryContext(memories.items, userText);
-        body.memory_revision = 1;
-        init = { ...init, body: JSON.stringify(body) };
-      } catch (error) { console.warn("[MOSHARROF Memory] retrieval skipped", error); }
-      const response = await originalFetch(input, init);
-      response.clone().text().then(async function (raw) {
-        try {
-          let answer = "";
-          if ((response.headers.get("content-type") || "").includes("text/event-stream")) {
-            const blocks = raw.split(/\r?\n\r?\n/);
-            for (const block of blocks) for (const line of block.split(/\r?\n/)) {
-              if (!line.startsWith("data:")) continue;
-              try { const event = JSON.parse(line.slice(5).trim()); if (event.type === "result" && event.status >= 200 && event.status < 300) answer = String(event.data && event.data.text || ""); } catch (_) {}
-            }
-          } else {
-            const data = JSON.parse(raw);
-            if (response.ok && data.ok !== false) answer = String(data.text || "");
-          }
-          if (answer.trim() && enabled) {
-            await engine.recordTurn(userText, answer, { conversation_id: "local-chat" });
-            refresh().catch(() => {});
-          }
-        } catch (error) { console.warn("[MOSHARROF Memory] save skipped", error); }
-      }).catch(() => {});
-      return response;
-    };
   }
 
   enabledInput.addEventListener("change", async function () {
