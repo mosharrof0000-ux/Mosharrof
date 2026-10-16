@@ -40,7 +40,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     const timestamp = safeTime(now());
     const entry = {
       id: clean(input.id, 120) || "mem-" + timestamp.replace(/[^0-9]/g,"").slice(0,14) + "-" + (ledger.revision + 1),
-      category, folder: category, content,
+      category, folder: clean(input.folder || category,120), content,
       confidence: Math.max(0, Math.min(1, Number(input.confidence ?? 0.65) || 0)),
       source: clean(input.source || "conversation", 80),
       status: ["active","pending_confirmation","superseded","resolved","archived"].includes(input.status) ? input.status : "active",
@@ -68,7 +68,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     ledger.memories.push({
       ...next, id: "mem-" + String(Date.parse(now()) || Date.now()) + "-" + (ledger.revision + 1),
       category: CATEGORIES.has(next.category) ? next.category : "fact",
-      folder: CATEGORIES.has(next.category) ? next.category : "fact",
+      folder: clean(next.folder || (CATEGORIES.has(next.category) ? next.category : "fact"),120),
       content: clean(next.content,4000), created_at: safeTime(now()), updated_at: safeTime(now()),
       confidence: Math.max(0,Math.min(1,Number(next.confidence ?? 0.65) || 0)),
       user_confirmed: next.user_confirmed === true
@@ -106,7 +106,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     const ledger=await readLedger(), known=new Set(ledger.memories.map(m=>m.id));
     for (const item of snapshot.memories) if (item && typeof item==="object" && item.id && !known.has(item.id) && !SECRET_LIKE.test(String(item.content||""))) {
       const category=CATEGORIES.has(item.category)?item.category:"fact";
-      ledger.memories.push({...item,content:clean(item.content,4000),category,folder:category});
+      ledger.memories.push({...item,content:clean(item.content,4000),category,folder:clean(item.folder || category,120)});
       known.add(item.id);
     }
     return save(ledger);
@@ -143,7 +143,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
     "USER PERSONAL MEMORY (local user-provided conversation history and preferences; may be incomplete or outdated):",
     "Retrieve only memories relevant to the current request. Current user instructions override older preferences and plans.",
     "Treat pending_confirmation entries as tentative hypotheses, not established facts. Confirm important or high-impact assumptions.",
-    "Consider chronological order: distinguish past events, current goals, future plans, and open questions. Older entries marked superseded must not be treated as current.",
+    "Consider chronological order: distinguish past events, current goals, future plans, and open questions. Use what happened before to understand the present; superseded entries are not current.",
     "Think ahead only as a grounded possibility from stated goals and events; explain uncertainty briefly and do not claim to know private thoughts.",
     ...selected
   ].join("\n");
