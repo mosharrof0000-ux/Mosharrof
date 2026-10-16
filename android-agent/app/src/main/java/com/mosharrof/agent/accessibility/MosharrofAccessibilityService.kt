@@ -2,7 +2,6 @@ package com.mosharrof.agent.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
-import android.graphics.Bitmap
 import android.graphics.Path
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
@@ -187,10 +186,6 @@ class MosharrofAccessibilityService : AccessibilityService() {
             activeService?.syncFloatingControl()
         }
 
-        fun captureScreenshot(callback: (Bitmap?, String?) -> Unit): Boolean =
-            activeService?.let { AccessibilityScreenshotCapture.capture(it, callback) }
-                ?: run { callback(null, "Accessibility service চালু নেই।"); false }
-
         fun performGlobalNavigation(destination: AgentAction.NavigationDestination): Boolean {
             val service = activeService ?: return false
             val action = when (destination) {
@@ -242,14 +237,12 @@ class MosharrofAccessibilityService : AccessibilityService() {
             pendingSwipe = null
             AccessibilityTextEntry.cancel()
         }
-
         fun armSwipe(targetPackage: String, direction: AgentAction.Direction): Boolean {
             if (activeService == null || targetPackage.isBlank() || pendingTap != null || pendingSwipe != null) return false
             latestActionResult = null
             pendingSwipe = PendingSwipe(targetPackage, direction)
             return true
         }
-
         fun takeActionResult(): String? = (latestActionResult ?: AccessibilityTextEntry.takeResult()).also { latestActionResult = null }
         fun isInspectionArmed(): Boolean = scanArmed
         fun hasInspectionSnapshot(): Boolean = latestSnapshot != null
