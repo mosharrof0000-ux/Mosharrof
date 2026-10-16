@@ -1,5 +1,4 @@
-package com.mosharrof.agent.execution
-
+package com.mosharrof.agent.execution.coordinator
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** A bounded, explicit task step. Platform-specific work is supplied by a trusted adapter. */
