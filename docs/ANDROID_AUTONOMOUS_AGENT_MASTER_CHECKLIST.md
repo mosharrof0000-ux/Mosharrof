@@ -35,7 +35,7 @@ This is the single source of truth for the Android device-control feature set re
 ## C. Android system settings and device health
 - [x] Open Android Settings, Wi-Fi, Bluetooth and Location settings pages; user makes changes in Android UI.
 - [ ] Additional Settings routes are coded for display, sound, battery saver, notifications and apps; verify in latest CI and on OEM devices. Accessibility Settings is already available; OEM fallback tests remain.
-- [ ] Device diagnostics: battery/storage/network/basic device info and explainable recommendations.
+- [x] On-demand, read-only device diagnostics for battery percentage/charging state, internal storage, and network transport/connectivity (wired into the Android UI); physical-device validation and broader memory/performance diagnostics remain pending.
 - [ ] Safe performance/storage assistance with before/after measurement and explicit confirmation for changes.
 - [ ] Alarm, timer and calendar intents with preview/confirmation.
 - [ ] No silent changes to protected settings; never bypass OS permission dialogs or lock screen.
