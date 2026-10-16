@@ -2,7 +2,8 @@
  * History is context, not evidence; the current user message remains last.
  */
 export function buildChatContext(currentText, historyInput) {
-  let historyBudget = 6000;
+  const current = String(currentText || "").trim();
+  let historyBudget = Math.max(0, Math.min(6000, 12000 - current.length - 200));
   const history = Array.isArray(historyInput) ? historyInput.slice(-12).map((item) => {
     if (!item || typeof item !== "object") return "";
     const role = item.role === "ai" || item.role === "model" ? "Mosharrof" : "User";
@@ -11,7 +12,6 @@ export function buildChatContext(currentText, historyInput) {
     historyBudget -= content.length;
     return content ? role + ": " + content : "";
   }).filter(Boolean) : [];
-  const current = String(currentText || "").trim();
   return (history.length
     ? "Recent conversation context (use as context, not as proof of facts):\n" +
       history.join("\n") + "\n\nCurrent user message:\n"
