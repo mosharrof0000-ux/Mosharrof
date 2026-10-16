@@ -23,23 +23,69 @@ export function installPersonalMemoryBridge(root = window) {
     title.className = "nav-family-title";
     title.textContent = "ব্যক্তিগত স্মৃতি";
     const note = root.document.createElement("p");
-    note.textContent = "এই ব্রাউজার/ডিভাইসে কথোপকথন থেকে শেখা পছন্দ ও প্রাসঙ্গিক স্মৃতি রাখা হয়।";
+    note.textContent = "বিষয়ভিত্তিক ফোল্ডার, সময়ক্রম ও প্রাসঙ্গিক স্মৃতি এই ডিভাইসে থাকে। বর্তমান নির্দেশ পুরোনো পছন্দের চেয়ে অগ্রাধিকার পাবে।";
     note.style.cssText = "font-size:12px;line-height:1.5;opacity:.8";
     const toggle = root.document.createElement("button");
     toggle.type = "button";
     toggle.style.cssText = "width:100%;padding:10px;margin:4px 0;border-radius:10px";
+    const folder = root.document.createElement("select");
+    folder.setAttribute("aria-label", "স্মৃতির বিষয়ভিত্তিক ফোল্ডার");
+    folder.style.cssText = "width:100%;padding:9px;margin:6px 0;border-radius:8px";
+    const search = root.document.createElement("input");
+    search.type = "search";
+    search.placeholder = "পুরোনো স্মৃতি খুঁজুন…";
+    search.style.cssText = "box-sizing:border-box;width:100%;padding:9px;margin:4px 0;border-radius:8px";
+    const results = root.document.createElement("div");
+    results.style.cssText = "max-height:220px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.5;margin:8px 0";
+    const exportButton = root.document.createElement("button");
+    exportButton.type = "button";
+    exportButton.textContent = "স্মৃতি রপ্তানি";
+    exportButton.style.cssText = "width:100%;padding:10px;margin:4px 0;border-radius:10px";
     const clear = root.document.createElement("button");
     clear.type = "button";
     clear.textContent = "সব স্মৃতি মুছুন";
     clear.style.cssText = toggle.style.cssText;
+    async function showRows(rows) {
+      results.textContent = rows.length ? rows.map(function (item) {
+        return "[" + new Date(item.createdAt).toLocaleString("bn-BD") + " · " + (item.folder?.label || item.kind) + "]\\n" + item.text;
+      }).join("\\n\\n") : "এই ফোল্ডারে এখনো কোনো স্মৃতি নেই।";
+    }
+    async function refreshFolders() {
+      const items = await engine.folders();
+      folder.textContent = "";
+      items.forEach(function (item) {
+        const option = root.document.createElement("option");
+        option.value = item.id;
+        option.textContent = item.label + " (" + item.count + ")";
+        folder.appendChild(option);
+      });
+      if (items.length) await showRows(await engine.listFolder(folder.value, 40));
+      else results.textContent = "এখনো কোনো স্মৃতি সংরক্ষিত নেই।";
+    }
     function refresh() { toggle.textContent = "স্মৃতি সংরক্ষণ: " + (engine.enabled() ? "চালু" : "বন্ধ"); }
     toggle.addEventListener("click", function () { engine.setEnabled(!engine.enabled()); refresh(); });
+    folder.addEventListener("change", async function () { await showRows(await engine.listFolder(folder.value, 40)); });
+    search.addEventListener("input", async function () {
+      const query = search.value.trim();
+      if (query) await showRows(await engine.search(query, 40));
+      else if (folder.value) await showRows(await engine.listFolder(folder.value, 40));
+    });
+    exportButton.addEventListener("click", async function () {
+      try {
+        const snapshot = await engine.exportAll();
+        const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+        const url = root.URL.createObjectURL(blob);
+        const link = root.document.createElement("a");
+        link.href = url; link.download = "mosharrof-personal-memory.json"; link.click();
+        root.URL.revokeObjectURL(url);
+      } catch (error) { console.error("[MOSHARROF Memory] Export failed:", error); }
+    });
     clear.addEventListener("click", async function () {
       if (!root.confirm("এই ডিভাইসে সংরক্ষিত সব ব্যক্তিগত স্মৃতি মুছে ফেলবেন?")) return;
-      try { await engine.clear(); if (root.MosharrofToast) root.MosharrofToast("ব্যক্তিগত স্মৃতি মুছে ফেলা হয়েছে"); }
+      try { await engine.clear(); await refreshFolders(); if (root.MosharrofToast) root.MosharrofToast("ব্যক্তিগত স্মৃতি মুছে ফেলা হয়েছে"); }
       catch (error) { console.error("[MOSHARROF Memory] Clear failed:", error); }
     });
-    section.append(title, note, toggle, clear);
+    section.append(title, note, toggle, folder, search, results, exportButton, clear);
     drawer.appendChild(section);
     refresh();
   }
@@ -47,7 +93,7 @@ export function installPersonalMemoryBridge(root = window) {
   else installMemoryControls();
   const originalFetch = root.fetch.bind(root);
   let sequence = Date.now();
-  let previousId = null;
+  let previousId = null;\n  let currentFolder = null;
   root.fetch = async function(input, init) {
     let outgoing = init;
     let requestBody = null;
@@ -57,12 +103,12 @@ export function installPersonalMemoryBridge(root = window) {
       if (init?.body && /\/chat(?:\?|$)/.test(new URL(target, root.location.href).pathname)) {
         requestBody = JSON.parse(init.body);
         if (requestBody && typeof requestBody.text === "string" && requestBody.text.trim()) {
-          const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
+          currentFolder = engine.classifyFolder(requestBody.text);\n          const memoryContext = await engine.buildContext(requestBody.text).catch(() => "");
           const saved = await engine.add({
-            kind: "user", text: requestBody.text, sessionId: "mosharrof-chat",
+            kind: "user", text: requestBody.text, folder: currentFolder, sessionId: "mosharrof-chat",
             sequence: ++sequence, previousId
           }).catch(() => ({ stored: false }));
-          if (saved.stored) previousId = saved.id;
+          if (saved.stored) previousId = saved.id;\n          installMemoryControls();
           outgoing = { ...init, body: JSON.stringify({ ...requestBody, memory_context: memoryContext }) };
         }
       }
@@ -88,7 +134,7 @@ export function installPersonalMemoryBridge(root = window) {
         } catch { /* incomplete or non-chat stream */ }
         if (answer) {
           const saved = await engine.add({
-            kind: "assistant", text: answer, sessionId: "mosharrof-chat",
+            kind: "assistant", text: answer, folder: currentFolder, sessionId: "mosharrof-chat",
             sequence: ++sequence, previousId
           }).catch(() => ({ stored: false }));
           if (saved.stored) previousId = saved.id;
