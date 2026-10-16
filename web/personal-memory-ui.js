@@ -33,14 +33,30 @@ function bridge(memory){
     const text=String(body.text||"").trim();let enabled=false;try{enabled=localStorage.getItem(CONSENT)==="enabled";}catch(_){}
     if(!text||!enabled)return nativeFetch(input,init);
     try{
-      const candidates=inferMemoryCandidates(text);
-      if(candidates.length){const archive=await memory.exportAll();for(const c of candidates){
-        if(!archive.memories.some(m=>m.status!=="superseded"&&m.category===c.category&&m.content===c.content))await memory.remember(c);
-      }}
       body.memory_context=buildPersonalMemoryContext(await memory.exportAll(),text);
       body.memory_suggestions_enabled=true;
     }catch(error){console.warn("MOSHARROF memory unavailable; chat continues without memory.",error);}
-    return nativeFetch(input,{...init,body:JSON.stringify(body)});
+    const response=await nativeFetch(input,{...init,body:JSON.stringify(body)});
+    response.clone().text().then(async raw=>{
+      try{
+        let answer="";
+        if((response.headers.get("content-type")||"").toLowerCase().includes("text/event-stream")){
+          for(const block of raw.split(/\\r?\\n\\r?\\n/))for(const line of block.split(/\\r?\\n/)){
+            if(!line.startsWith("data:"))continue;
+            try{const event=JSON.parse(line.slice(5).trim());if(event.type==="result"&&event.status>=200&&event.status<300)answer=String(event.data&&event.data.text||"");}catch(_){}
+          }
+        }else{
+          const data=JSON.parse(raw);if(response.ok&&data.ok!==false)answer=String(data.text||"");
+        }
+        if(response.ok&&answer.trim())await memory.recordTurn(text,answer,body.conversation_id);
+        if(response.ok&&body.memory_suggestions_enabled===true){
+          try{const data=raw.includes("data:")?JSON.parse(raw.split(/\\r?\\n/).find(line=>line.startsWith("data:")&&line.includes('"type":"result"')).slice(5).trim()).data:JSON.parse(raw);
+            for(const candidate of (data&&data.memory_candidates)||[])if(candidate&&candidate.content)await memory.remember({...candidate,status:"pending_confirmation",user_confirmed:false});
+          }catch(_){}
+        }
+      }catch(error){console.warn("MOSHARROF memory turn save skipped.",error);}
+    }).catch(()=>{});
+    return response;
   };
 }
 export function initializePersonalMemory(){
