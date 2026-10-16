@@ -99,8 +99,7 @@ class AgentTaskController(
     }
     fun cancelPending() {
         clearPending()
-        MosharrofAccessibilityService.cancelSemanticTap()
-        MosharrofAccessibilityService.cancelInspection()
+        MosharrofAccessibilityService.stopAllActions()
         confirmButton.isEnabled = false
         status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।"
     }
