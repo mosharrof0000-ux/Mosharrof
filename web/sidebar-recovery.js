@@ -122,6 +122,12 @@ import("./composer-enhancements.js")
   .then(function (module) { module.initializeComposerEnhancements(); })
   .catch(function (error) { console.error("Composer enhancement initialization failed:", error); });
 
+// Initialize browser-local topic-organized personal memory before the next chat request.
+window.__mosharrofMemoryReady = import("./personal-memory-engine.js")
+  .then(function (module) { return module.createPersonalMemoryEngine(); })
+  .then(function (engine) { window.MosharrofMemory = engine; return engine; })
+  .catch(function (error) { console.warn("[MOSHARROF Memory] unavailable; chat continues without saved memory", error); return null; });
+
  
 // Local-first personal memory engine. It augments chat requests with retrieved
 // context and never writes application code or stores provider credentials.
