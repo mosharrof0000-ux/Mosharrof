@@ -25,7 +25,7 @@
     var status = section.querySelector("#mosAccessibilityStatus");
     var labels = section.querySelector("#mosAccessibilityLabels");
     function plugin() {
-      var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DeviceControl;
+      var p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AndroidAccessibility;
       if (!p) throw new Error("এই সুবিধা সমর্থিত Android APK-তে উপলভ্য।");
       return p;
     }
