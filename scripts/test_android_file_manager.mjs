@@ -21,6 +21,9 @@ for (const marker of ["ACTION_OPEN_DOCUMENT_TREE", "takePersistableUriPermission
   "getSelectedDirectory(PluginCall call)", "confirmed", "safeName"]) {
   assert.ok(java.includes(marker), "native SAF contract missing: " + marker);
 }
+for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES"]) {
+  assert.ok(scanner.includes(marker), "duplicate scanner contract missing: " + marker);
+}
 for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES", "MAX_BYTES"]) {
   assert.ok(scanner.includes(marker), "bounded duplicate scanner contract missing: " + marker);
 }
@@ -30,6 +33,7 @@ assert.ok(wrapper.includes("cp core/android-file-manager-ui.js android-web/andro
 assert.ok(wrapper.includes('ui_tag = \'<script src="./android-file-manager-ui.js"></script>\''),
   "Android file-manager UI must be injected into the APK web entrypoint");
 assert.ok(installer.includes("registerPlugin(AndroidFileManagerPlugin.class)"));
+assert.ok(installer.includes("AndroidDuplicateScanner.java"), "scanner helper must be installed into APK");
 assert.ok(!installer.includes("registerPlugin(MosharrofFilesPlugin.class)"),
   "duplicate plugin registration must be removed");
 assert.ok(ui.includes("scanSelectedDirectoryDuplicates"));
