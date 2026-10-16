@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
         screenDetails = TextView(this).apply { textSize = 14f }
         commandInput = EditText(this).apply {
             hint = "যেমন: Open YouTube / ইউটিউব খুলুন"
-            singleLine = true
+            setSingleLine(true)
         }
         confirmButton = Button(this).apply {
             text = "নিশ্চিত করে অ্যাপ খুলুন"
