@@ -101,6 +101,12 @@ jobs:
 
       - name: Validate Worker JavaScript syntax
         run: node --check worker/screenshot-analysis.js
+      - name: Validate video Worker JavaScript syntax
+        run: node --check worker/video-generation/index.js
+
+      - name: Run safe video Worker contract tests
+        run: node tests/test_video_generation_worker.mjs
+
 
       - name: Deploy Worker
         working-directory: worker
@@ -378,3 +384,55 @@ jobs:
           echo "Trying alternate subdomain mosharrof000 ..."
           curl -sS "https://mosharrof-screenshot-analysis.mosharrof000.workers.dev/health" || true
           exit 1
+
+      - name: Deploy video generation Worker (disabled by default)
+        working-directory: worker/video-generation
+        run: npx --yes wrangler@3 deploy --config wrangler.toml
+
+      - name: Enable workers.dev subdomain for video script
+        shell: bash
+        run: |
+          set -euo pipefail
+          SCRIPT="mosharrof-video-generation"
+          RESP="$(curl -sS -w "\nHTTP:%{http_code}" -X POST \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"enabled":true,"previews_enabled":false}' \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$SCRIPT/subdomain" || true)"
+          echo "$RESP"
+
+      - name: Set optional FAL video secret
+        working-directory: worker/video-generation
+        env:
+          RAW_FAL_KEY: \${{ secrets.FAL_KEY }}
+        run: |
+          set -euo pipefail
+          FAL_KEY="$(printf '%s' "$RAW_FAL_KEY" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [ -n "$FAL_KEY" ]; then
+            printf '%s' "$FAL_KEY" | npx --yes wrangler@3 secret put FAL_KEY --config wrangler.toml
+            echo "FAL_KEY configured for the disabled video Worker (value hidden)."
+          else
+            echo "FAL_KEY is not configured; video generation remains disabled."
+          fi
+
+      - name: Verify video Worker is healthy and disabled by default
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://mosharrof-video-generation.mosharrof0000.workers.dev/health"
+          for i in {1..12}; do
+            if curl -fsS --connect-timeout 5 --max-time 10 "$URL" > /tmp/video-health.json \
+              && grep -q '"ok":true' /tmp/video-health.json \
+              && grep -q '"service":"mosharrof-video-generation"' /tmp/video-health.json \
+              && grep -q '"enabled":false' /tmp/video-health.json; then
+              cat /tmp/video-health.json
+              echo "Video Worker health verified; paid generation remains disabled."
+              exit 0
+            fi
+            echo "Video Worker health not ready (attempt $i/12); waiting 5s..."
+            sleep 5
+          done
+          echo "ERROR: video Worker health/disabled status could not be verified."
+          cat /tmp/video-health.json || true
+          exit 1
+
