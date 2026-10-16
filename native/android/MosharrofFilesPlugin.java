@@ -27,13 +27,13 @@ import java.nio.charset.StandardCharsets;
  * SAF-only file manager. It can access only a directory explicitly selected by
  * the device owner through Android's system document picker.
  */
-@CapacitorPlugin(name = "MosharrofFiles")
+@CapacitorPlugin(name = "AndroidFileManager")
 public class MosharrofFilesPlugin extends Plugin {
     private static final String PREFS = "mosharrof_saf";
     private static final String ROOT = "selected_tree_uri";
 
     @PluginMethod
-    public void pickDirectory(PluginCall call) {
+    public void chooseFolder(PluginCall call) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
                 | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -59,6 +59,7 @@ public class MosharrofFilesPlugin extends Plugin {
             JSObject out = new JSObject();
             out.put("selected", true);
             out.put("treeUri", tree.toString());
+            out.put("uri", tree.toString());
             out.put("name", queryDisplayName(tree));
             call.resolve(out);
         } catch (SecurityException error) {
@@ -73,13 +74,14 @@ public class MosharrofFilesPlugin extends Plugin {
         out.put("selected", root != null);
         if (root != null) {
             out.put("treeUri", root.toString());
+            out.put("uri", root.toString());
             out.put("name", queryDisplayName(root));
         }
         call.resolve(out);
     }
 
     @PluginMethod
-    public void listEntries(PluginCall call) {
+    public void listItems(PluginCall call) {
         Uri root = requireRoot(call);
         if (root == null) return;
         Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(
@@ -107,6 +109,7 @@ public class MosharrofFilesPlugin extends Plugin {
             }
             JSObject out = new JSObject();
             out.put("entries", entries);
+            out.put("items", entries);
             out.put("count", entries.length());
             call.resolve(out);
         } catch (Exception error) {
@@ -149,10 +152,10 @@ public class MosharrofFilesPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void renameEntry(PluginCall call) {
+    public void renameItem(PluginCall call) {
         Uri root = requireRoot(call);
         if (root == null) return;
-        String id = call.getString("id");
+        String id = call.getString("documentId", call.getString("id"));
         String name = safeName(call.getString("name"));
         if (!validDocumentId(root, id) || name == null) {
             call.reject("ফাইল বা ফোল্ডারের পরিচয়/নাম বৈধ নয়।");
@@ -173,7 +176,7 @@ public class MosharrofFilesPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void deleteEntry(PluginCall call) {
+    public void deleteItem(PluginCall call) {
         Uri root = requireRoot(call);
         if (root == null) return;
         String id = call.getString("id");
