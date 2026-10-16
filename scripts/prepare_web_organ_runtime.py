@@ -28,6 +28,8 @@ def main() -> int:
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
+        "core/personal-memory-engine.js": "web/core/personal-memory-engine.js",
+        "core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
         "core/device-control.js": "web/device-control.js",
