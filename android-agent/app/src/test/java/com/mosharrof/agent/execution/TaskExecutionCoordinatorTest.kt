@@ -1,5 +1,4 @@
-package com.mosharrof.agent.execution
-
+package com.mosharrof.agent.execution.coordinator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
