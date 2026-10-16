@@ -148,14 +148,19 @@ try {
   if (!followUpRequest) throw new Error("Follow-up chat request was not observed");
   const diagnostic = await page.evaluate(async query => {
     const rows = await window.MosharrofPersonalMemory.recall(query, 16);
-    return rows.map(row => ({
-      kind: row.kind,
-      text: String(row.text || "").slice(0, 500),
-      score: row.score,
-      overlap: row.overlap
-    }));
-  }, "আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?");
-  console.log("Direct recall diagnostics:", JSON.stringify(diagnostic));
+    const context = await window.MosharrofPersonalMemory.buildContext(query);
+    return {
+      rows: rows.map(row => ({
+        kind: row.kind,
+        text: String(row.text || "").slice(0, 500),
+        score: row.score,
+        overlap: row.overlap
+      })),
+      context: String(context || "").slice(0, 1600)
+    };
+  }, String(followUpRequest.text || ""));
+  console.log("Follow-up text:", String(followUpRequest.text || ""));
+  console.log("Direct recall diagnostics:", JSON.stringify(diagnostic)); 
   console.log("Follow-up payload keys:", JSON.stringify(Object.keys(followUpRequest)));
   console.log("Follow-up memory context:", String(followUpRequest.memory_context || "").slice(0, 1600));
   if (!String(followUpRequest.memory_context || "").includes(marker)) {
