@@ -1,6 +1,8 @@
 package com.mosharrof.agent.execution
 
 import android.app.Activity
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.TextView
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
@@ -190,6 +192,19 @@ class AgentTaskController(
         status.text = "অ্যাপ খুলছে। ৩০ সেকেন্ডের মধ্যে কাঙ্ক্ষিত ইনপুট ঘরে ট্যাপ করুন; লেখা বসবে, স্বয়ংক্রিয়ভাবে পাঠানো হবে না।"
         pendingText = null
         confirmButton.isEnabled = false
+    }
+    private fun verifyForegroundApp(app: com.mosharrof.agent.planner.InstalledApp, attempt: Int) {
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (activity.isFinishing || activity.isDestroyed) return@postDelayed
+            val foreground = MosharrofAccessibilityService.foregroundPackage()
+            if (foreground == app.packageName) {
+                status.text = "যাচাই সফল: ${app.label} সামনে খোলা আছে."
+            } else if (attempt < 2) {
+                verifyForegroundApp(app, attempt + 1)
+            } else {
+                status.text = "${app.label} খোলার অনুরোধ পাঠানো হয়েছে, কিন্তু সামনে খোলা নিশ্চিত করা যায়নি। বর্তমান প্যাকেজ: ${foreground.ifBlank { "অজানা" }}।"
+            }
+        }, 900L)
     }
     private fun launchConfirmedApp() {
         val app = pendingApp ?: return
