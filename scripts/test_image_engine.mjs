@@ -15,7 +15,7 @@ function extractFunction(startMarker, endMarker) {
 }
 
 const parseImageSpec = new Function(
-  extractFunction("  function parseImageSpec(prompt){", "  function imageReply(t){") +
+  extractFunction("  function parseImageSpec(prompt){", "  function looksLikeImagePrompt(t){") +
   "; return parseImageSpec;"
 )();
 const looksLikeImagePrompt = new Function(
