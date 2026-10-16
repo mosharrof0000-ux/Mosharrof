@@ -34,21 +34,20 @@ class IntentParser {
     }
 
     private fun parseTypeTextCommand(text: String): ParsedIntent.TypeText? {
-        val english = Regex("""^(?:type|enter|write)\s+(['"])(.{1,160}?)\1\s+(?:in|into)\s+(.+)$""", RegexOption.IGNORE_CASE).find(text)
+        val english = Regex("""^(?:type|enter|write)\\s+\"(.{1,160}?)\"\\s+(?:in|into)\\s+(.+)$""", RegexOption.IGNORE_CASE).find(text)
         if (english != null) {
-            val value = english.groupValues[2].trim()
-            val app = english.groupValues[3].trim().trim('"', '\'')
+            val value = english.groupValues[1].trim()
+            val app = english.groupValues[2].trim()
             if (value.isNotBlank() && app.isNotBlank()) return ParsedIntent.TypeText(value, app)
         }
-        val bengali = Regex("""^(.+?)(?:-এ| এ)\s+(['"])(.{1,160}?)\2\s+(?:লিখুন|লিখে দিন|টাইপ করুন)$""", RegexOption.IGNORE_CASE).find(text)
+        val bengali = Regex("""^(.+?)(?:-এ| এ)\\s+\"(.{1,160}?)\"\\s+(?:লিখুন|লিখে দিন|টাইপ করুন)$""", RegexOption.IGNORE_CASE).find(text)
         if (bengali != null) {
-            val app = bengali.groupValues[1].trim().trim('"', '\'')
-            val value = bengali.groupValues[3].trim()
+            val app = bengali.groupValues[1].trim()
+            val value = bengali.groupValues[2].trim()
             if (value.isNotBlank() && app.isNotBlank()) return ParsedIntent.TypeText(value, app)
         }
         return null
     }
-
     private fun parseSwipeCommand(text: String): ParsedIntent.Swipe? {
         val english = Regex("^(?:swipe|scroll)\\s+(up|down|left|right)\\s+(?:in|inside|on)\\s+(.+)$", RegexOption.IGNORE_CASE).find(text)
         if (english != null) {
