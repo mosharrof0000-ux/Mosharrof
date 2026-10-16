@@ -6,7 +6,7 @@ def test_worker_uses_bounded_conversation_history_for_all_chat_providers():
     helper = Path("core/chat-context.js").read_text(encoding="utf-8")
     chat = worker[worker.index("async function runChat(body,env,onStatus){"):worker.index("async function chat(request,env){")]
     assert 'import { buildChatContext } from "../core/chat-context.js"' in worker
-    assert "buildChatContext(body.text,body.history)" in chat
+    assert "buildChatContext(body.text,body.history,body.memory_context)" in chat
     assert "historyInput.slice(-12)" in helper
     assert "Math.min(6000, 12000 - current.length - 200)" in helper
     assert "historyInput.slice(-12)" in helper
@@ -24,3 +24,10 @@ def test_prepared_frontend_sends_prior_turns_without_current_message_as_history(
     assert "chat request shape changed" in prep
     wrapper = Path("scripts/android/prepare-wrapper.sh").read_text(encoding="utf-8")
     assert "python3 scripts/prepare_web_organ_runtime.py" in wrapper
+
+def test_personal_memory_is_inserted_before_current_request_and_keeps_current_request_last():
+    helper = Path("core/chat-context.js").read_text(encoding="utf-8")
+    assert "memoryInput = \"\"" in helper
+    assert "Current user message:" in helper
+    assert "const memoryText = memory ?" in helper
+    assert "return memoryText + historyText + \"Current user message:\\n\" + current;" in helper
