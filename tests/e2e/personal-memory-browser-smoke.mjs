@@ -1,6 +1,6 @@
 import { chromium } from "playwright";
 
-const baseURL = process.env.MOSHARROF_TEST_URL || "https://deploy-preview-678--bucolic-mooncake-c83372.netlify.app/";
+const baseURL = process.env.MOSHARROF_TEST_URL || "http://127.0.0.1:4173/";
 const timeoutMs = Number(process.env.MOSHARROF_TEST_TIMEOUT_MS || 45000);
 
 async function readMemoryEntries(page) {
@@ -47,6 +47,17 @@ const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext();
 const page = await context.newPage();
 page.setDefaultTimeout(timeoutMs);
+const chatRequests = [];
+await page.route("**/chat", async route => {
+  let payload = {};
+  try { payload = route.request().postDataJSON() || {}; } catch {}
+  chatRequests.push(payload);
+  await route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ ok: true, text: "Browser memory smoke test reply." })
+  });
+});
 page.on("console", message => {
   if (message.type() === "error") console.log("[browser console error]", message.text());
 });
@@ -91,6 +102,33 @@ try {
     throw new Error("Memory marker was not present after reload");
   }
   console.log("PASS: memory survived reload and is searchable in the UI");
+
+  // Send a follow-up after reload and assert the bridge injects the saved marker.
+  await page.locator("#input").fill("আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?");
+  await page.locator("#sendBtn").click();
+  await page.waitForFunction(async () => {
+    const request = indexedDB.open("mosharrof-personal-memory-v1");
+    const db = await new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    if (!db.objectStoreNames.contains("entries")) { db.close(); return false; }
+    const rows = await new Promise((resolve, reject) => {
+      const tx = db.transaction("entries", "readonly");
+      const get = tx.objectStore("entries").getAll();
+      get.onsuccess = () => resolve(get.result || []);
+      get.onerror = () => reject(get.error);
+    });
+    db.close();
+    return rows.some(row => row.kind === "user" && row.text.includes("শনাক্তকারীটি মনে রাখতে"));
+  }, null, { timeout: 20000 });
+
+  const followUpRequest = chatRequests.at(-1);
+  if (!followUpRequest) throw new Error("Follow-up chat request was not intercepted");
+  if (!String(followUpRequest.memory_context || "").includes(marker)) {
+    throw new Error("Stored marker was not recalled into the follow-up request after reload");
+  }
+  console.log("PASS: follow-up request received the stored memory context after reload");
   console.log("RESULT: PASS");
 } catch (error) {
   console.error("RESULT: FAIL", error?.stack || error);
