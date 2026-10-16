@@ -48,12 +48,12 @@ try {
   const request = new Request("https://worker.test/chat", {
     method: "POST",
     headers: { Origin: "https://mosharrof0000-ux.github.io", "Content-Type": "application/json" },
-    body: JSON.stringify({ text: "ভবিষ্যতে আমার পছন্দ মনে রাখবে", stream_status: false, personal_memory: await memory.exportAll(), memory_suggestions_enabled: true })
+    body: JSON.stringify({ text: "ভবিষ্যতে আমার পছন্দ মনে রাখবে; বিস্তারিত ঘটনা পূর্ণাঙ্গ সমাপ্তি চাই", stream_status: false, personal_memory: await memory.exportAll(), memory_suggestions_enabled: true })
   });
   const responseValue = await worker.fetch(request, { GEMINI_API_KEY: "test-key" });
   const result = await responseValue.json();
   assert.equal(responseValue.status, 200);
-  assert.match(geminiRequestBody.contents[0].parts[0].text, /USER PERSONAL MEMORY/);
+  assert.match(geminiRequestBody.contents[0].parts[0].text, /প্রাসঙ্গিক সংরক্ষিত স্মৃতি/);
   assert.match(geminiRequestBody.contents[0].parts[0].text, /পূর্ণাঙ্গ সমাপ্তি/);
   assert.equal(result.memory_candidates.length, 1);
   console.log("Personal memory worker integration: PASS");
