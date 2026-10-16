@@ -64,10 +64,15 @@ export function initializeComposerEnhancements() {
     });
   }
   function closeEditor(apply) {
+    let appliedValue = null;
     if (apply) {
-      input.value = largeInput.value;
+      appliedValue = String(largeInput.value || "");
+      input.value = appliedValue;
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
+      // Other composer listeners may update draft state; preserve the explicit
+      // user-approved value after those listeners have run.
+      input.value = appliedValue;
       syncVisibility();
     }
     editor.classList.remove("open");
@@ -75,12 +80,16 @@ export function initializeComposerEnhancements() {
     expand.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
     if (apply) input.focus();
+    return appliedValue;
   }
 
   input.addEventListener("input", syncVisibility);
   expand.addEventListener("click", openEditor);
   editor.querySelector("[data-expand-cancel]").addEventListener("click", () => closeEditor(false));
-  editor.querySelector("[data-expand-apply]").addEventListener("click", () => closeEditor(true));
+  editor.querySelector("[data-expand-apply]").addEventListener("click", event => {
+    event.preventDefault();
+    closeEditor(true);
+  });
   editor.addEventListener("click", event => {
     if (event.target === editor) closeEditor(false);
   });
