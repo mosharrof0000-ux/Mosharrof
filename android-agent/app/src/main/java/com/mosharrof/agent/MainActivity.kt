@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
             FloatingControlToggle.addTo(this@MainActivity, this, status)
             TaskControlButtons.addCancelButton(this@MainActivity, this) { taskController.cancelPending() }
             addView(inspectButton)
-            ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled)
+            ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled, ::prepareCommand)
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
