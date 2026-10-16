@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_composer_can_grow_beyond_the_old_120px_limit():
-    source = (ROOT / "core" / "composer-enhancements.js").read_text(encoding="utf-8")
+    source = (ROOT / "core" / "composer-autogrow.js").read_text(encoding="utf-8")
     assert "max-height:min(44dvh,360px)!important" in source
     assert "Math.min(visibleHeight * 0.44, 360)" in source
     assert "Math.min(input.scrollHeight, maxHeight) + \"px\"" in source
@@ -15,12 +15,12 @@ def test_composer_can_grow_beyond_the_old_120px_limit():
 
 
 def test_composer_keeps_latest_line_visible_when_it_grows():
-    source = (ROOT / "core" / "composer-enhancements.js").read_text(encoding="utf-8")
+    source = (ROOT / "core" / "composer-autogrow.js").read_text(encoding="utf-8")
     assert "input.scrollTop = input.scrollHeight" in source
 
 
 def test_composer_recalculates_for_keyboard_and_visible_viewport_changes():
-    source = (ROOT / "core" / "composer-enhancements.js").read_text(encoding="utf-8")
+    source = (ROOT / "core" / "composer-autogrow.js").read_text(encoding="utf-8")
     assert 'input.addEventListener("focus", syncComposerViewport)' in source
     assert 'window.visualViewport.addEventListener("resize", syncComposerViewport' in source
     assert 'window.visualViewport.addEventListener("scroll", syncComposerViewport' in source
