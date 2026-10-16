@@ -2,7 +2,7 @@
  * Local-first, append-only timeline with bounded retrieval. No fixed entry cap;
  * actual persistence remains subject to the browser/device's available storage quota.
  */
-const SECRET_PATTERN = /(password|passcode|one[- ]time password|api[_ -]?key|access[_ -]?token|private key|secret|\\botp\\b|\\bcvv\\b|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|গোপন কোড|এপিআই কি|টোকেন)/i;
+const SECRET_PATTERN = /(password|passcode|one[- ]time password|api[_ -]?key|access[_ -]?token|private key|secret|\botp\b|\bcvv\b|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|গোপন কোড|এপিআই কি|টোকেন)/i;
 const STOP = new Set(["আমি","আমার","তুমি","আপনি","এটা","সেটা","করে","করুন","করতে","হবে","হয়","হয়","যেন","যেটা","যে","কি","কী","একটা","একটি","এবং","the","this","that","with","from","have","want","please","make","can","will","your","you","for","and"]);
 function tokens(value) {
   return String(value || "").toLocaleLowerCase().match(/[\p{L}\p{N}]{2,}/gu)?.filter(t => !STOP.has(t)) || [];
