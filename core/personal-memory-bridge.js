@@ -52,8 +52,8 @@ export function installPersonalMemoryBridge(root = window) {
     clear.style.cssText = toggle.style.cssText;
     async function showRows(rows) {
       results.textContent = rows.length ? rows.map(function (item) {
-        return "[" + new Date(item.createdAt).toLocaleString("bn-BD") + " · " + (item.folder?.label || item.kind) + "]\\n" + item.text;
-      }).join("\\n\\n") : "এই ফোল্ডারে এখনো কোনো স্মৃতি নেই।";
+        return "[" + new Date(item.createdAt).toLocaleString("bn-BD") + " · " + (item.folder?.label || item.kind) + "]\n" + item.text;
+      }).join("\n\n") : "এই ফোল্ডারে এখনো কোনো স্মৃতি নেই।";
     }
     async function refreshFolders() {
       const items = await engine.folders();
@@ -67,7 +67,7 @@ export function installPersonalMemoryBridge(root = window) {
       if (items.length) await showRows(await engine.listFolder(folder.value, 40));
       else results.textContent = "এখনো কোনো স্মৃতি সংরক্ষিত নেই।";
     }
-    function refresh() { toggle.textContent = "স্মৃতি সংরক্ষণ: " + (engine.enabled() ? "চালু" : "বন্ধ"); }
+    root.__mosharrofRefreshMemoryFolders = refreshFolders;\n    function refresh() { toggle.textContent = "স্মৃতি সংরক্ষণ: " + (engine.enabled() ? "চালু" : "বন্ধ"); }
     toggle.addEventListener("click", function () { engine.setEnabled(!engine.enabled()); refresh(); });
     folder.addEventListener("change", async function () { await showRows(await engine.listFolder(folder.value, 40)); });
     search.addEventListener("input", async function () {
