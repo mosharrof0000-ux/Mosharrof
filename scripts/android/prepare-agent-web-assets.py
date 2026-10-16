@@ -13,6 +13,7 @@ assets = (
     "android-agent-executor.js",
     "android-agent-recovery.js",
     "android-agent-memory.js",
+    "android-agent-memory-ui.js",
     "android-agent-command-router.js",
 )
 for name in assets:
@@ -33,8 +34,8 @@ scripts = (
     "android-agent-executor.js",
     "android-agent-recovery.js",
     "android-agent-memory.js",
-    "android-agent-command-router.js",
-)
+    "android-agent-memory-ui.js",
+    "android-agent-command-router.js",)
 for script in scripts:
     tag = f'<script src="./{script}"></script>'
     if tag not in html:
