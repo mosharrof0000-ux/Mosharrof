@@ -30,6 +30,8 @@ assert.match(ui, /কোনো ফাইল মুছবে না/);
 assert.match(installer, /AndroidFileManagerPlugin\.class/);
 assert.doesNotMatch(installer, /MosharrofFilesPlugin\.class/, "duplicate plugin registration must be removed");
 assert.match(wrapper, /android-file-manager\.js/);
+assert.match(wrapper, /android-file-manager-ui\.js/, "Android file-manager UI must be copied into the APK bundle");
+assert.match(wrapper, /android-file-manager-ui\.js/, "Android file-manager UI must be injected into the web entrypoint");
 assert.match(ui, /Plugins\.AndroidFileManager/, "UI must use the registered native plugin name");
 assert.doesNotMatch(ui, /Plugins\.FileManager/, "stale plugin name must not remain");
 
