@@ -148,6 +148,7 @@ export function installPersonalMemoryBridge(root = window) {
             sequence: ++sequence, previousId
           }).catch(() => ({ stored: false }));
           if (saved.stored) previousId = saved.id;
+          await root.__mosharrofRefreshMemoryFolders?.();
         }
       }).catch(() => {});
     }
