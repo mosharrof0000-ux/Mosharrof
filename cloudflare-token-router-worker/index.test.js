@@ -238,6 +238,51 @@ test("wrong router credential is denied before parsing or contacting Cloudflare"
   }
 });
 
+test("authenticated zone.read uses only the allowlisted GET endpoint and returns secret-free audit data", async () => {
+  const env = {
+    ROUTER_ACCESS_TOKEN: "private-router-key",
+    CLOUDFLARE_TOKEN_PROFILES: JSON.stringify([
+      { token_id: "zone-read", secret_binding: "CF_ZONE_TOKEN", permissions: ["Zone Read"], resource_scopes: ["/zones/zone-1"], enabled: true },
+    ]),
+    CF_ZONE_TOKEN: "provider-secret",
+  };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (url, options) => {
+    calls += 1;
+    assert.equal(String(url), "https://api.cloudflare.com/client/v4/zones/zone-1");
+    assert.equal(options.method, "GET");
+    assert.equal(options.headers.Authorization, "Bearer provider-secret");
+    return new Response(JSON.stringify({ success: true, result: { id: "zone-1", name: "example.test" } }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  try {
+    const response = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST",
+      headers: { authorization: "Bearer private-router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "zone.read", zone_id: "zone-1" }),
+    }), env);
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.result, { id: "zone-1", name: "example.test" });
+    assert.deepEqual(body.audit, {
+      operation: "zone.read",
+      token_id: "zone-read",
+      permissions: ["Zone Read"],
+      resource_scope: "/zones/zone-1",
+      outcome: "success",
+      http_status: 200,
+    });
+    assert.equal(calls, 1);
+    assert.equal(JSON.stringify(body).includes("provider-secret"), false);
+    assert.equal(JSON.stringify(body).includes("private-router-key"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("missing or disabled matching token fails closed without upstream calls", async () => {
   const originalFetch = globalThis.fetch;
   let calls = 0;
