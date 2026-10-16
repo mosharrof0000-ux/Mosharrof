@@ -131,8 +131,7 @@
           "\n\nফাইল মুছবে না। কাজ চলাকালে ব্যর্থ হলে ইতিমধ্যে সরানো ফাইল ফেরানোর চেষ্টা করতে পারবেন.")) return;
       var existingFolders = new Map((listing.items || []).filter(function (item) { return item.isDirectory; })
         .map(function (item) { return [item.name, item.documentId]; }));
-      lastMoveBatch = [];
-      undoButton.disabled = true;
+      undoButton.disabled = lastMoveBatch.length === 0;
       for (var entry of groups.entries()) {
         var folderName = entry[0];
         var files = entry[1];
