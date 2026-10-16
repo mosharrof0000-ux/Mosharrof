@@ -30,6 +30,8 @@ def main() -> int:
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
+        "core/personal-memory-engine.js": "web/runtime/core/personal-memory-engine.js",
+        "core/personal-memory-bridge.js": "web/runtime/core/personal-memory-bridge.js",
         "core/device-control.js": "web/device-control.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
