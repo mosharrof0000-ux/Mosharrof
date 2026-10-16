@@ -23,6 +23,9 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] Explicit current-screen snapshot: package, bounded node count, and up to 40 short visible labels
 - [x] Deterministic Bengali/English text intent parsing
 - [x] Common Bengali app aliases and installed-app discovery
+- [x] Confirmed Back/Home/Notifications/Recent Apps commands; deterministic parser and policy tests added (emulator/physical-device verification pending)
+- [x] User-toggleable draggable Accessibility overlay with edge snapping, long-press expand/collapse, close control, and one-tap launch of the voice-command flow (latest CI and physical-device verification pending)
+- [x] On-demand read-only battery, internal storage, and network diagnostics displayed locally (physical-device verification pending)
 - [x] Voice command input through Android's speech-recognition activity (availability depends on device)
 - [ ] Result readout using Android TextToSpeech with explicit speak/stop controls (code added; CI/device verification pending)
 - [x] Visible cancel button clears pending app/settings/tap plans and cancels an armed screen inspection (not a general multi-step executor cancel)
@@ -34,8 +37,8 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 ## Not yet complete
 
 - [ ] General natural-language task planning across arbitrary apps
-- [ ] General semantic node locator and bounded UI action executor (exact-label tap and one-shot swipe are limited initial actions; arbitrary UI interaction is not enabled)
-- [ ] Per-task progress, interrupt, cancel, postcondition verification and recovery
+- [ ] General semantic node locator and bounded UI action executor (exact-label tap, one-shot swipe, and confirmed global navigation are limited initial actions; arbitrary UI interaction and text entry are not enabled)
+- [ ] Per-task progress, interrupt, cancel, deadlines, postcondition verification and recovery (current cancel only clears pending previews/armed actions)
 - [ ] Safe Settings command routing and system-setting confirmation (Wi-Fi, Bluetooth, Location, Display, Sound, Battery Saver, Notifications and Application Settings routes are coded; latest CI and OEM/physical-device verification pending)
 - [ ] Appium/UiAutomator2 device tests and real-device acceptance
 - [ ] Speech output and continuous, interruption-aware voice session
@@ -43,7 +46,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [ ] Encrypted, opt-in local memory/retrieval
 - [ ] Release signing, installation validation and distribution
 
-This milestone is **not** a completed fully autonomous agent. Current executable scope is intentionally narrow: resolve an explicit installed-app name, ask the user to confirm, then request Android to launch it; a single exact-label tap or directional swipe can be proposed for a named app and requires confirmation. These UI actions are bounded and still require CI and physical-device verification. Screen inspection is read-only and only runs when the user taps the inspection button; results stay in the UI and are not persisted. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
+This milestone is **not** a completed fully autonomous agent. Current executable scope is intentionally narrow: resolve an explicit installed-app name and request Android to launch it after confirmation; one exact-label tap, directional swipe, or global navigation action can be proposed and confirmed. The optional floating control only launches the app's voice-command flow; it does not silently listen in the background. These UI actions are bounded and still require CI and physical-device verification. Screen inspection is read-only and only runs when the user taps the inspection button; results stay in the UI and are not persisted. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
 
 ## Safety model
 
