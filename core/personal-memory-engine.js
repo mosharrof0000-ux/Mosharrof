@@ -14,7 +14,6 @@
   const DONT_STORE = /(মনে রেখো না|মনে রাখবে না|ভুলে যাও|স্মৃতি মুছে|forget (this|that|it|this message)|do not remember|don't remember|do not save|don't save)/i;
   let opening = null;
   let panelOpen = false;
-
   function enabled() {
     try { return root.localStorage.getItem(ENABLED_KEY) !== "false"; }
     catch (_) { return true; }
