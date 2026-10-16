@@ -1,4 +1,4 @@
-/* Bounded Android executor with explicit adapter and postcondition verification. */
+/* Verified Android executor. */
 (function (root) {
   "use strict";
 
