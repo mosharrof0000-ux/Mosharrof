@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { loadWorker } from "./worker-loader.mjs";
 
-const source = await readFile(new URL("../worker/screenshot-analysis.js", import.meta.url), "utf8");
-const worker = (await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"))).default;
+const worker = await loadWorker();
 const models = [
   "@cf/zai-org/glm-4.7-flash",
   "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
