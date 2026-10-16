@@ -76,6 +76,35 @@ public class DeviceControlPlugin extends Plugin {
         openSettings(call, Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
     }
 
+    @PluginMethod
+    public void swipeVisibleUi(PluginCall call) {
+        if (!AgentAccessibilityService.isConnected()) {
+            call.reject("প্রথমে Android Settings থেকে MOSHARROF AI Accessibility চালু করুন।");
+            return;
+        }
+        int startX = call.getInt("startX", -1);
+        int startY = call.getInt("startY", -1);
+        int endX = call.getInt("endX", -1);
+        int endY = call.getInt("endY", -1);
+        int durationMs = call.getInt("durationMs", 500);
+        if (startX < 0 || startY < 0 || endX < 0 || endY < 0
+                || durationMs < 100 || durationMs > 1500) {
+            call.reject("স্ক্রিনের বৈধ X/Y স্থানাঙ্ক এবং ১০০–১৫০০ ms সময় দিন।");
+            return;
+        }
+        AgentAccessibilityService.requestSwipe(startX, startY, endX, endY, durationMs, success -> {
+            if (!success) {
+                call.reject("সোয়াইপ নিরাপদভাবে সম্পন্ন হয়নি; স্থানাঙ্ক, স্ক্রিন বা সংবেদনশীল তথ্য যাচাই করুন।");
+                return;
+            }
+            JSObject result = new JSObject();
+            result.put("dispatched", true);
+            result.put("verified", false);
+            result.put("note", "সোয়াইপ পাঠানো হয়েছে; পরের ধাপে স্ক্রিনের ফলাফল যাচাই করুন।");
+            call.resolve(result);
+        });
+    }
+
     private void openSettings(PluginCall call, String action) {
         openSettings(call, action, null);
     }
