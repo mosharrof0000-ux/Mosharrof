@@ -37,14 +37,11 @@ class TaskPlanner(private val parser: IntentParser = IntentParser()) {
     }
 
     private fun normalizeAppName(value: String): String {
-        val normalized = normalizeCharacters(value)
+        val normalized = normalizeAliasKey(value)
         return BENGALI_ALIASES.entries.firstOrNull {
-            normalizeCharacters(it.key) == normalized
+            normalizeAliasKey(it.key) == normalized
         }?.value ?: normalized
     }
-
-    private fun normalizeCharacters(value: String): String =
-        value.trim().lowercase().replace(Regex("[^\\p{L}\\p{M}\\p{N}]"), "")
 
     private fun normalizeAliasKey(value: String): String =
         Normalizer.normalize(value, Normalizer.Form.NFC)
