@@ -81,6 +81,20 @@ object ScreenshotAnalysisControl {
         layout.addView(analysis)
     }
 
+    fun release() {
+        capturedBitmap?.recycle()
+        capturedBitmap = null
+        previewView?.setImageDrawable(null)
+        hostActivity = null
+        previewView = null
+        analysisView = null
+        statusView = null
+        analyzeButton = null
+        suggestionButton = null
+        commandSuggestion = null
+        suggestedCommand = null
+    }
+
     fun displayCapturedScreenshot(bitmap: Bitmap?, error: String?, packageName: String) {
         val status = statusView ?: return
         val preview = previewView ?: return
