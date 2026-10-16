@@ -186,28 +186,12 @@ class AgentTaskController(
     }
     private fun launchConfirmedTextInput() {
         val plan = pendingTextInput ?: return
-        if (!isServiceEnabled()) {
-            status.text = "Accessibility বন্ধ; লেখা প্রবেশ করানো হয়নি।"
-            return
+        val result = AgentTextEntryExecutor.launch(activity, plan, isServiceEnabled())
+        status.text = result.message
+        if (result.started) {
+            pendingTextInput = null
+            confirmButton.isEnabled = false
         }
-        val allowed = appCatalog.listLauncherApps().map { it.packageName }.toSet()
-        val decision = ActionPolicy(allowed).evaluate(AgentAction.TypeText(plan.app.packageName, plan.text), 0)
-        if (decision.decision == PolicyDecision.DENY) {
-            status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
-            return
-        }
-        if (!MosharrofAccessibilityService.armTextEntry(plan.app.packageName, plan.text)) {
-            status.text = "Text entry প্রস্তুত নয় বা অন্য লেখা অপেক্ষমাণ; লেখা প্রবেশ করানো হয়নি।"
-            return
-        }
-        if (!appCatalog.launch(plan.app.packageName)) {
-            MosharrofAccessibilityService.cancelSemanticTap()
-            status.text = "লক্ষ্য অ্যাপ খোলা যায়নি; লেখা প্রবেশ করানো হয়নি।"
-            return
-        }
-        status.text = "লক্ষ্য অ্যাপ খুলছে। ওই অ্যাপে ইনপুট ক্ষেত্র ফোকাসে এলে লেখা বসানো হবে; পাঠানো হবে না।"
-        pendingTextInput = null
-        confirmButton.isEnabled = false
     }
 
     private fun launchConfirmedTap() {
