@@ -20,9 +20,25 @@ class SystemSettingsLauncher(private val context: Context) {
         }.getOrElse { "Settings খোলা যায়নি: ${it.message ?: "অজানা সমস্যা"}" }
     }
 
+    fun label(setting: AgentAction.SupportedSetting): String = when (setting) {
+        AgentAction.SupportedSetting.WIFI_PANEL -> "Wi-Fi Settings"
+        AgentAction.SupportedSetting.BLUETOOTH_PANEL -> "Bluetooth Settings"
+        AgentAction.SupportedSetting.LOCATION_SETTINGS -> "Location Settings"
+        AgentAction.SupportedSetting.DISPLAY_SETTINGS -> "Display Settings"
+        AgentAction.SupportedSetting.SOUND_SETTINGS -> "Sound Settings"
+        AgentAction.SupportedSetting.BATTERY_SAVER_SETTINGS -> "Battery Saver Settings"
+        AgentAction.SupportedSetting.NOTIFICATION_SETTINGS -> "Notification Settings"
+        AgentAction.SupportedSetting.APPLICATION_SETTINGS -> "Application Settings"
+    }
+
     private fun settingsAction(setting: AgentAction.SupportedSetting): String = when (setting) {
         AgentAction.SupportedSetting.WIFI_PANEL -> Settings.ACTION_WIFI_SETTINGS
         AgentAction.SupportedSetting.BLUETOOTH_PANEL -> Settings.ACTION_BLUETOOTH_SETTINGS
         AgentAction.SupportedSetting.LOCATION_SETTINGS -> Settings.ACTION_LOCATION_SOURCE_SETTINGS
+        AgentAction.SupportedSetting.DISPLAY_SETTINGS -> Settings.ACTION_DISPLAY_SETTINGS
+        AgentAction.SupportedSetting.SOUND_SETTINGS -> Settings.ACTION_SOUND_SETTINGS
+        AgentAction.SupportedSetting.BATTERY_SAVER_SETTINGS -> Settings.ACTION_BATTERY_SAVER_SETTINGS
+        AgentAction.SupportedSetting.NOTIFICATION_SETTINGS -> Settings.ACTION_NOTIFICATION_SETTINGS
+        AgentAction.SupportedSetting.APPLICATION_SETTINGS -> Settings.ACTION_APPLICATION_SETTINGS
     }
 }
