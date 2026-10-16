@@ -13,6 +13,41 @@ const clean = (value, limit = 2000) => String(value ?? "").replace(/\u0000/g, ""
 const safeTime = value => { const parsed = Date.parse(value || ""); return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date(0).toISOString(); };
 const clone = value => JSON.parse(JSON.stringify(value));
 
+export function createIndexedDbMemoryStore(indexedDB = globalThis.indexedDB, dbName = "mosharrof-personal-memory-v1") {
+  if (!indexedDB) throw new Error("এই ব্রাউজারে IndexedDB পাওয়া যায়নি।");
+  const storeName = "memory-ledger";
+  let opening;
+  function database() {
+    if (!opening) opening = new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(storeName)) db.createObjectStore(storeName, { keyPath: "id" });
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("মেমোরি ডেটাবেস খোলা যায়নি।"));
+      request.onblocked = () => reject(new Error("মেমোরি ডেটাবেস আপডেট আটকে আছে; পৃষ্ঠা রিফ্রেশ করুন।"));
+    });
+    return opening;
+  }
+  async function transact(mode, action) {
+    const db = await database();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, mode), request = action(tx.objectStore(storeName));
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("মেমোরি ডেটাবেস অপারেশন ব্যর্থ।"));
+      tx.onabort = () => reject(tx.error || new Error("মেমোরি ডেটাবেস অপারেশন বাতিল হয়েছে।"));
+    });
+  }
+  return Object.freeze({
+    get: id => transact("readonly", store => store.get(id)),
+    put: item => transact("readwrite", store => store.put(item)),
+    delete: id => transact("readwrite", store => store.delete(id)),
+    list: () => transact("readonly", store => store.getAll()),
+    clear: () => transact("readwrite", store => store.clear())
+  });
+}
+
 export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT_NAMESPACE, now = () => new Date().toISOString(), makeId } = {}) {
   const backingStorage = storage || (store ? {
     async getItem(key) { const item = await store.get(key); return item?.value ?? null; },
