@@ -37,8 +37,11 @@
       return { status: "blocked", reason: "গোপন তথ্য বা আর্থিক কাজ স্বয়ংক্রিয়ভাবে করা যাবে না।", steps: [] };
     }
     // Repair intent must outrank generic diagnosis even when Bengali inflections vary.
-    const repairIntent = /(সমস্যা|ত্রুটি|error|bug|কাজ করছে না|সমাধানযোগ্য)/i.test(text) &&
-      /(ঠিক|সমাধান|মেরামত|repair|fix|সারাও)/i.test(text);
+    const repairIntent =
+      (/(সমস্যা|ত্রুটি|error|bug|কাজ করছে না|সমাধানযোগ্য)/i.test(text) &&
+       /(ঠিক|সমাধান|মেরামত|repair|fix|সারাও)/i.test(text)) ||
+      /(ঠিক|সমাধান|মেরামত|repair|fix|সারাও).*(সমস্যা|ত্রুটি|error|bug|অ্যাপ|সিস্টেম)/i.test(text) ||
+      /(সমস্যা|ত্রুটি|error|bug|অ্যাপ|সিস্টেম).*(ঠিক|সমাধান|মেরামত|repair|fix|সারাও)/i.test(text);
     const matched = repairIntent
       ? rules.find(rule => rule.action === "repair_plan")
       : rules.find(rule => rule.re.test(text));
