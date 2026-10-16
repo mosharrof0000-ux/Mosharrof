@@ -35,7 +35,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [ ] General natural-language task planning across arbitrary apps
 - [ ] Semantic node locator and bounded UI action executor
 - [ ] Per-task progress, interrupt, cancel, postcondition verification and recovery
-- [ ] Safe Settings command routing and system-setting confirmation
+- [ ] Safe Settings command routing and system-setting confirmation (Wi-Fi, Bluetooth, Location, Display, Sound, Battery Saver, Notifications and Application Settings routes are coded; latest CI and OEM/physical-device verification pending)
 - [ ] Appium/UiAutomator2 device tests and real-device acceptance
 - [ ] Speech output and continuous, interruption-aware voice session
 - [ ] Local vision model adapter and on-device benchmark
