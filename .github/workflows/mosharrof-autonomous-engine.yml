@@ -30,8 +30,8 @@ jobs:
           fetch-depth: 0
       - name: Run autonomous agent
         env:
-          GEMINI_API_KEY: \${{ secrets.GEMINI_API_KEY }}
-          GITHUB_TOKEN: \${{ github.token }}
-          REQUEST: \${{ inputs.request }}
-          REPOSITORY: \${{ github.repository }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          REQUEST: ${{ inputs.request }}
+          REPOSITORY: ${{ github.repository }}
         run: python3 scripts/mosharrof_autonomous_engine.py
