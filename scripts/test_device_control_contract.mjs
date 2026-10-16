@@ -17,17 +17,17 @@ for (const method of [
 assert.ok(plugin.includes('@CapacitorPlugin(name = "DeviceControl")'));
 assert.ok(plugin.includes("userMediated"));
 assert.ok(!plugin.includes("WRITE_SETTINGS"), "Must not request silent system-setting writes");
-assert.ok(!plugin.includes("AccessibilityService"), "Must not add broad accessibility control");
 assert.ok(ui.includes('section.id = "mosDeviceControls"'));
 assert.ok(ui.includes("window.Capacitor") && ui.includes("Plugins.DeviceControl"));
 assert.ok(ui.includes('data-device-action="wifi"'));
 assert.ok(ui.includes("ওয়েবসাইট একা ফোনের সেটিংস বদলাতে পারে না"));
 assert.ok(assets.includes('<script src="./device-control.js"></script>'));
-assert.ok(wrapper.includes('<script src="./device-control.js"></script>'));
+assert.ok(wrapper.includes("python3 scripts/android/prepare-agent-web-assets.py"));
+assert.ok(readFileSync("scripts/android/prepare-agent-web-assets.py", "utf8").includes("device-control.js"));
 assert.ok(wrapper.includes("cp core/device-control.js android-web/device-control.js"));
 assert.ok(activity.includes("cp native/android/DeviceControlPlugin.java"));
 assert.ok(activity.includes("registerPlugin(DeviceControlPlugin.class)"));
 assert.ok(assets.includes('"core/device-control.js": "web/device-control.js"'));
-assert.ok(workflow.includes("node scripts/test_device_control_contract.mjs"));
+assert.ok(workflow.includes("scripts/android/test-agent-contracts.sh"));
 
-console.log("Android device-control safety contract: PASS");
+console.log("Device-control safety: PASS");

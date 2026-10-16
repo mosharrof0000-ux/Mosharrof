@@ -1,0 +1,33 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const ui = readFileSync("core/device-control.js", "utf8");
+const capabilities = readFileSync("core/android-agent-capabilities.js", "utf8");
+const plan = readFileSync("docs/ANDROID_AGENTIC_AUTOMATION_PLAN.md", "utf8");
+const accessibility = readFileSync("native/android/AgentAccessibilityService.java", "utf8");
+const accessibilityXml = readFileSync("native/android/agent_accessibility_service.xml", "utf8");
+const accessibilityPlugin = readFileSync("native/android/AndroidAccessibilityPlugin.java", "utf8");
+const accessibilityUi = readFileSync("core/android-accessibility-ui.js", "utf8");
+const accessibilityInstaller = readFileSync("scripts/android/install-agent-accessibility.sh", "utf8");
+assert.ok(accessibility.includes("node.isPassword()"), "Accessibility inspection must exclude password fields");
+assert.ok(accessibility.includes("ACTION_CLICK"), "Accessibility tap capability is missing");
+assert.ok(accessibility.includes("ACTION_SCROLL_FORWARD"), "Accessibility scroll capability is missing");
+assert.ok(accessibility.includes("dispatchGesture("), "Bounded coordinate gesture dispatcher is missing");
+assert.ok(accessibility.includes("containsSensitiveNode"), "Gestures must stop on sensitive screens");
+assert.ok(accessibilityXml.includes('android:canPerformGestures="true"'), "Gesture capability must be declared in Accessibility metadata");
+assert.ok(accessibilityPlugin.includes("swipeVisibleUi"), "Native bridge must expose the bounded swipe action");
+assert.ok(accessibilityUi.includes("data-access=\"swipe\"") && accessibilityUi.includes("window.confirm"), "Swipe UI must be visible and user-confirmed");
+assert.ok(accessibilityInstaller.includes("BIND_ACCESSIBILITY_SERVICE"), "Service must use Android's protected service binding");
+assert.ok(accessibility.includes("AgentAccessibilityService.isConnected()") || readFileSync("native/android/AndroidAccessibilityPlugin.java", "utf8").includes("AgentAccessibilityService.isConnected()"), "Accessibility actions must require the explicitly enabled service");
+assert.ok(ui.includes("API সংযোগ মাত্র; ফোনে যাচাই নয়"), "Self-test must not confuse API wiring with physical-device verification");
+
+const composer = readFileSync("core/composer-enhancements.js", "utf8");
+const stop = readFileSync("core/composer-stop.js", "utf8");
+assert.ok(composer.includes("initializeComposerStopControl(send)"), "Chat organ does not initialize the stop control");
+assert.ok(stop.includes('stop.id = "stopBtn"'), "Composer stop button is missing");
+assert.ok(stop.includes("activeController.abort()"), "Stop action does not abort the active chat request");
+assert.ok(stop.includes('url.includes("/chat")'), "Stop action must target the chat request");
+assert.ok(stop.includes("মেসেজ থামানো হয়েছে"), "Cancellation should be reported without a generic connection failure");
+const prep = readFileSync("scripts/prepare_web_organ_runtime.py", "utf8");
+assert.ok(prep.includes('"web/composer-stop.js"') && prep.includes('"web/core/composer-stop.js"'), "Pages build must copy the stop helper beside both composer entrypoints");
+console.log("Android accessibility and composer stop contract: PASS");
