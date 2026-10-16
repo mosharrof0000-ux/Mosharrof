@@ -1,5 +1,5 @@
 import { buildChatContext } from "../core/chat-context.js";
-const ORIGIN="https://mosharrof0000-ux.github.io";
+import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
@@ -25,7 +25,6 @@ const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","g
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
 const TTS_PROVIDERS=["edge","gemini","azure","elevenlabs","sarvam"];
-
 function base64ToDataUrl(base64,mime){return "data:"+mime+";base64,"+base64;}
 function elevenLabsKeyExpired(env){const raw=String(env.ELEVENLABS_KEY_EXPIRES_AT||"").trim();if(!raw)return false;const t=Date.parse(raw);return Number.isFinite(t)&&Date.now()>=t;}
 
@@ -315,7 +314,7 @@ async function generateWithCloudflareChat(text,env,onStatus){
     if(onStatus)onStatus({stage:"trying",provider:"cloudflare-workers-ai",model});
     try{
       const result=await withChatProviderTimeout(env.AI.run(model,{messages:[
-        {role:"system",content:"You are Mosharrof AI. Help clearly; use Bengali when appropriate; never claim unperformed actions."},
+        {role:"system",content:buildReflectiveSystemPrompt()},
         {role:"user",content:text}
       ],max_tokens:1024,temperature:0.3}),CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
       const answer=String(result?.response||result?.choices?.[0]?.message?.content||"").trim();
@@ -335,7 +334,7 @@ async function generateWithOpenAICompatibleChat(provider,endpoint,apiKey,model,t
       method:"POST",
       headers:{"content-type":"application/json","authorization":"Bearer "+apiKey,...extraHeaders},
       body:JSON.stringify({model,messages:[
-        {role:"system",content:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform."},
+        {role:"system",content:buildReflectiveSystemPrompt()},
         {role:"user",content:text}
       ],temperature:0.3,max_tokens:1024}),
       signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)
@@ -529,7 +528,7 @@ async function runChat(body,env,onStatus){
   const preferred=env.GEMINI_CHAT_MODEL
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
-  const payload={contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\nUser:\n"+text}]}]};
+  const payload={contents:[{parts:[{text:buildReflectiveUserPrompt(text)}]}]};
   const geminiPlan=[];
   if(configuredKeys.length){
     for(const [slot,apiKey] of configuredKeys)geminiPlan.push({model:preferred[0],slot,apiKey});

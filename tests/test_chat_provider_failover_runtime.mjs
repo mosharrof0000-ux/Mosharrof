@@ -20,14 +20,21 @@ async function ask(env) {
   return { status: res.status, data: await res.json() };
 }
 try {
-  // Gemini primary success.
-  globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com")
-    ? response({ candidates: [{ content: { parts: [{ text: "Gemini answer" }] } }] })
-    : response({});
+  // Gemini primary success and reflective planning instructions reach the real provider payload.
+  let geminiRequestBody = null;
+  globalThis.fetch = async (url, options) => {
+    if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
+    geminiRequestBody = JSON.parse(options.body);
+    return response({ candidates: [{ content: { parts: [{ text: "Gemini answer" }] } }] });
+  };
   let result = await ask({ GEMINI_API_KEY: "test-key" });
   assert.equal(result.status, 200);
   assert.equal(result.data.provider, "gemini");
   assert.match(result.data.text, /Gemini answer/);
+  const geminiPrompt = geminiRequestBody.contents[0].parts[0].text;
+  assert.match(geminiPrompt, /Before answering/);
+  assert.match(geminiPrompt, /Before sending/);
+  assert.match(geminiPrompt, /Do not reveal private chain-of-thought/);
 
   // Credential rotation: a quota-limited first Gemini key must not block another key.
   const seenKeys = [];
@@ -65,15 +72,18 @@ try {
   assert.equal(result.data.model, "gemini-3.7-flash");
   assert.match(result.data.text, /Fallback Gemini model answer/);
 
-  // Exhausted Gemini must fall back to the keyless Workers AI binding.
+  // Exhausted Gemini falls back to Workers AI with the same reflective system contract.
   globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com") ? geminiQuota() : response({});
+  let workerAiMessages = [];
   result = await ask({
     GEMINI_API_KEY: "test-key",
-    AI: { run: async () => ({ response: "Workers AI answer" }) }
+    AI: { run: async (_model, input) => { workerAiMessages = input.messages; return { response: "Workers AI answer" }; } }
   });
   assert.equal(result.status, 200);
   assert.equal(result.data.provider, "cloudflare-workers-ai");
   assert.match(result.data.text, /Workers AI answer/);
+  assert.match(workerAiMessages[0].content, /Before answering/);
+  assert.match(workerAiMessages[0].content, /possible emotional needs/);
   assert.ok(result.data.attempted.some(x => x.provider === "gemini" && x.status === 429));
 
   // If Workers AI also fails, Groq must be attempted and can answer.

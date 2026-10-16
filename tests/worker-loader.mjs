@@ -1,13 +1,11 @@
 import { readFile } from "node:fs/promises";
-
 export async function loadWorker() {
-  const [source, helper] = await Promise.all([
-    readFile(new URL("../worker/screenshot-analysis.js", import.meta.url), "utf8"),
-    readFile(new URL("../core/chat-context.js", import.meta.url), "utf8")
+  const [source, context, reflection] = await Promise.all([
+    readFile(new URL("../worker/screenshot-analysis.js",import.meta.url),"utf8"),
+    readFile(new URL("../core/chat-context.js",import.meta.url),"utf8"),
+    readFile(new URL("../core/reflective-chat-prompt.js",import.meta.url),"utf8")
   ]);
-  const importLine = 'import { buildChatContext } from "../core/chat-context.js";';
-  if (!source.includes(importLine)) throw new Error("Worker chat-context import anchor missing");
-  const bundledSource = source.replace(importLine, helper);
-  const moduleUrl = "data:text/javascript;base64," + Buffer.from(bundledSource).toString("base64");
-  return (await import(moduleUrl)).default;
+  const bundled=source.replace('import { buildChatContext } from "../core/chat-context.js";',context).replace('import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";',reflection);
+  if(bundled.includes('from "../core/'))throw new Error("Unbundled worker helper");
+  return (await import("data:text/javascript;base64,"+Buffer.from(bundled).toString("base64"))).default;
 }
