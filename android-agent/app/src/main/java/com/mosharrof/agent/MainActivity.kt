@@ -14,16 +14,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
+import com.mosharrof.agent.execution.InstalledAppCatalog
 import com.mosharrof.agent.planner.AgentAction
 import com.mosharrof.agent.planner.InstalledApp
 import com.mosharrof.agent.planner.TaskPlan
 import com.mosharrof.agent.planner.TaskPlanner
 import com.mosharrof.agent.policy.ActionPolicy
 import com.mosharrof.agent.policy.PolicyDecision
-import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private val planner = TaskPlanner()
+    private val appCatalog by lazy { InstalledAppCatalog(this) }
     private var pendingApp: InstalledApp? = null
     private lateinit var status: TextView
     private lateinit var screenDetails: TextView
@@ -120,12 +121,10 @@ class MainActivity : ComponentActivity() {
             status.text = "নিরাপত্তা নীতিতে বাধা: ${decision.reason}"
             return
         }
-        val launchIntent = packageManager.getLaunchIntentForPackage(app.packageName)
-        if (launchIntent == null) {
+        if (!appCatalog.launch(app.packageName)) {
             status.text = "অ্যাপটি খোলা যায়নি; অ্যাপটি সরানো বা নিষ্ক্রিয় থাকতে পারে।"
             return
         }
-        startActivity(launchIntent)
         status.text = "${app.label} খোলার অনুরোধ পাঠানো হয়েছে।"
         pendingApp = null
         confirmButton.isEnabled = false
@@ -144,13 +143,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun installedApps(): List<InstalledApp> {
-        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        return packageManager.queryIntentActivities(intent, 0).mapNotNull { info ->
-            val pkg = info.activityInfo?.packageName ?: return@mapNotNull null
-            InstalledApp(info.loadLabel(packageManager).toString(), pkg)
-        }.distinctBy { it.packageName }.sortedBy { it.label.lowercase(Locale.ROOT) }
-    }
+    private fun installedApps(): List<InstalledApp> = appCatalog.listLauncherApps()
 
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
