@@ -19,6 +19,7 @@ await assert.rejects(() => files.createFolder("test"), /bridge unavailable/);
 await assert.rejects(() => files.deleteEntry("document-id", false), /নিশ্চিতকরণ/);
 assert.match(java, /ACTION_OPEN_DOCUMENT_TREE/);
 assert.match(java, /takePersistableUriPermission/);
+assert.match(java, /public void getSelectedDirectory\\(PluginCall call\\)/, "facade method must exist in native plugin");
 assert.match(java, /confirmed/);
 assert.match(java, /safeName/);
 assert.match(java, /scanDuplicates/);
