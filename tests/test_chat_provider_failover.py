@@ -46,7 +46,6 @@ def test_chat_providers_have_bounded_timeouts_so_failover_can_continue():
     assert "signal:AbortSignal.timeout(targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS)" in worker
     assert 'withChatProviderTimeout(env.AI.run(model' in worker
     assert 'targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai"' in worker
-    assert 'CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai"' in worker
     assert "max_tokens:targetWords?Math.min(8192,outputTokenBudget(targetWords)):1024" in worker
 
 
