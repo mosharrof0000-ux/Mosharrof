@@ -22,6 +22,7 @@ export function buildChatContext(currentText, historyInput, options = {}) {
     historyBudget -= content.length;
     return content ? role + ": " + content : "";
   }).filter(Boolean) : [];
+  if (!memory && !summary && !history.length) return current;
   const sections = [];
   if (memory) sections.push("Relevant saved memories (historical context only; current user request overrides old preferences or plans):\n" + memory);
   if (summary) sections.push("Current conversation summary (for continuity, not a higher priority than the current message):\n" + summary);
