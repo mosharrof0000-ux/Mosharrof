@@ -30,4 +30,6 @@ assert.ok(stop.includes('stop.id = "stopBtn"'), "Composer stop button is missing
 assert.ok(stop.includes("activeController.abort()"), "Stop action does not abort the active chat request");
 assert.ok(stop.includes('url.includes("/chat")'), "Stop action must target the chat request");
 assert.ok(stop.includes('মেসেজ থামানো হয়েছে'), "Cancellation should be reported without a generic connection failure");
+const prep = readFileSync("scripts/prepare_web_organ_runtime.py", "utf8");
+assert.ok(prep.includes('"web/composer-stop.js"') && prep.includes('"web/core/composer-stop.js"'), "Pages build must copy the stop helper beside both composer entrypoints");
 console.log("Android settings hub and composer stop contract: PASS");
