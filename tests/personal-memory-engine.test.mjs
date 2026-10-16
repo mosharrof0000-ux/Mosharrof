@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  createPersonalMemoryEngine, buildPersonalMemoryContext, classifyMemory,
-  inferMemoryCandidates
-} from "../core/personal-memory-engine.js";
+  createPersonalMemoryEngine, classifyMemory
+} from "../web/personal-memory-engine.js";
+import { buildPersonalMemoryContext, inferMemoryCandidates } from "../core/personal-memory-engine.js";
 
 function makeStore() {
   const rows = new Map();
@@ -47,27 +47,26 @@ test("turns are remembered and explicit preferences or corrections become learni
   assert.equal(result.saved,true);
   assert.ok(result.learned);
   assert.equal(result.learned.category,"preference");
-  assert.equal(inferMemoryCandidates("পরের বার আমার পছন্দ অনুযায়ী সংক্ষিপ্ত উত্তর দিও")[0].status,"active");
+  assert.equal(inferMemoryCandidates("পরের বার আমার পছন্দ অনুযায়ী সংক্ষিপ্ত উত্তর দিও")[0].status,"pending_confirmation");
   assert.equal(classifyMemory("আরও বড় করে লেখো").category,"correction");
 });
 
 test("secret-like content is not persisted",async()=>{
   const engine=makeEngine();
-  const result=await engine.remember({content:"আমার password is secret123"});
-  assert.equal(result.saved,false);
+  await assert.rejects(engine.remember({content:"আমার password is secret123"}),/not stored in personal memory/i);
   assert.equal((await engine.all()).total,0);
 });
 
 test("memory context includes relevant evidence and warns that current instructions win",()=>{
-  const context=buildPersonalMemoryContext([
+  const context=buildPersonalMemoryContext({memories:[
     {id:"1",content:"ব্যবহারকারী MOSHARROF AI প্রকল্পে main না ভেঙে branch, test, PR চায়",folder:"প্রকল্প ও প্রযুক্তি",category:"preference",status:"active",user_confirmed:true,created_at:"2026-01-01T00:00:00Z"},
     {id:"2",content:"ব্যবহারকারী কুরআনের আরবি শব্দমূল গবেষণা করছে",folder:"গবেষণা ও জ্ঞান",category:"fact",status:"active",created_at:"2026-01-01T00:00:00Z"},
     {id:"3",content:"পুরোনো পরিকল্পনা",folder:"প্রকল্প ও প্রযুক্তি",category:"project",status:"superseded",created_at:"2025-01-01T00:00:00Z"}
-  ],"MOSHARROF AI repository branch test PR");
+  ]},"MOSHARROF AI repository branch test PR");
   assert.match(context,/branch, test, PR/);
   assert.doesNotMatch(context,/পুরোনো পরিকল্পনা/);
-  assert.match(context,/বর্তমান ব্যবহারকারীর কথা পুরোনো স্মৃতির চেয়ে অগ্রাধিকার পাবে/);
-  assert.doesNotMatch(buildPersonalMemoryContext([{content:"unrelated cooking recipe",status:"active"}],"MOSHARROF repository deploy"),/cooking recipe/);
+  assert.match(context,/Current user instructions override older preferences and plans/);
+  assert.doesNotMatch(buildPersonalMemoryContext({memories:[{content:"unrelated cooking recipe",status:"active"}]},"MOSHARROF repository deploy"),/cooking recipe/);
 });
 
 test("memory export can be imported without duplicating ids",async()=>{
