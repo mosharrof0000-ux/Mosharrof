@@ -46,11 +46,13 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [ ] Speech output and continuous, interruption-aware voice session
 - [ ] Local vision model adapter and on-device benchmark
 - [ ] Encrypted, opt-in local memory/retrieval
+- [x] Initial capability/permission center for Accessibility, overlay, usage access, all-files access, microphone, contacts, calendar, media, notifications and exact-alarm access; user grants remain controlled by Android.
+- [ ] Full permission registry with risk tiers, audit/revocation and capability-by-capability device validation
 - [ ] Release signing, installation validation and distribution
 
 This milestone is **not** a completed fully autonomous agent. Current executable scope is intentionally narrow: resolve an explicit installed-app name and request Android to launch it after confirmation; one exact-label tap, directional swipe, or global navigation action can be proposed and confirmed. The optional floating control only launches the app's voice-command flow; it does not silently listen in the background. These UI actions are bounded and still require CI and physical-device verification. Screen inspection is read-only and only runs when the user taps the inspection button; results stay in the UI and are not persisted. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
 
-## Safety model
+## Capability and permission center\n\nUse “ডিভাইসের ক্ষমতা ও অনুমতি পরিচালনা করুন” in the app to inspect the initial capability inventory and open Android-owned permission screens. A granted permission means the OS permits that category; it does not mean every feature in that category has been implemented or tested. The inventory is a first step, not a claim of unrestricted device control.\n\n## Safety model
 
 The service remains off until the device owner enables it in Android Settings. Tasks must be user-directed. Ask for confirmation before externally visible or destructive actions (sending, deleting, purchasing, posting, changing security settings, or sharing data). Never store passwords, OTPs, payment credentials, or arbitrary screen contents by default. Do not bypass Android permission dialogs or platform security boundaries.
 
