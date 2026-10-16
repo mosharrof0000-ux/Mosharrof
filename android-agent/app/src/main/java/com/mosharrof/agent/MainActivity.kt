@@ -1,6 +1,7 @@
 package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
@@ -16,6 +17,7 @@ import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.execution.InstalledAppCatalog
 import com.mosharrof.agent.execution.SystemSettingsLauncher
 import com.mosharrof.agent.execution.TaskControlButtons
+import com.mosharrof.agent.overlay.FloatingControlService
 import com.mosharrof.agent.planner.AgentAction
 import com.mosharrof.agent.planner.InstalledApp
 import com.mosharrof.agent.planner.TaskPlan
@@ -31,6 +33,7 @@ class MainActivity : ComponentActivity() {
     private var pendingApp: InstalledApp? = null
     private var pendingSettings: TaskPlan? = null
     private var pendingTap: TaskPlan.TapVisibleText? = null
+    private var pendingOverlayPermission = false
     private lateinit var status: TextView
     private lateinit var speechStatus: TextView
     private lateinit var screenDetails: TextView
@@ -80,6 +83,10 @@ class MainActivity : ComponentActivity() {
             text = "কথা বলে কমান্ড দিন"
             setOnClickListener { startSpeechInput() }
         }
+        val floatingButton = Button(this).apply {
+            text = "ভাসমান MOSHARROF বোতাম চালু করুন"
+            setOnClickListener { enableFloatingControl() }
+        }
         val inspectButton = Button(this).apply {
             text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
             setOnClickListener { inspectCurrentScreen() }
@@ -100,6 +107,7 @@ class MainActivity : ComponentActivity() {
             addView(confirmButton)
             SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
             TaskControlButtons.addCancelButton(this@MainActivity, this) { pendingApp = null; pendingSettings = null; pendingTap = null; MosharrofAccessibilityService.cancelSemanticTap(); MosharrofAccessibilityService.cancelInspection(); confirmButton.isEnabled = false; status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।" }
+            addView(floatingButton)
             addView(inspectButton)
             addView(screenDetails)
             addView(accessibilityButton)
@@ -110,8 +118,28 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
-            val actionResult = MosharrofAccessibilityService.takeActionResult()
-            if (actionResult != null) status.text = actionResult else refreshServiceStatus()
+            if (pendingOverlayPermission) {
+                pendingOverlayPermission = false
+                if (Settings.canDrawOverlays(this)) {
+                    startService(Intent(this, FloatingControlService::class.java))
+                    status.text = "ভাসমান MOSHARROF বোতাম চালু হয়েছে। সরাতে টেনে ধরুন; বন্ধ করতে দীর্ঘক্ষণ চাপুন।"
+                } else {
+                    status.text = "ভাসমান বোতামের অনুমতি দেওয়া হয়নি; অন্য ফিচারগুলো অপরিবর্তিত আছে।"
+                }
+            } else {
+                val actionResult = MosharrofAccessibilityService.takeActionResult()
+                if (actionResult != null) status.text = actionResult else refreshServiceStatus()
+            }
+        }
+    }
+    private fun enableFloatingControl() {
+        if (Settings.canDrawOverlays(this)) {
+            startService(Intent(this, FloatingControlService::class.java))
+            status.text = "ভাসমান MOSHARROF বোতাম চালু করার অনুরোধ পাঠানো হয়েছে।"
+        } else {
+            pendingOverlayPermission = true
+            status.text = "ভাসমান বোতামের জন্য Android-এর Overlay অনুমতি দিন।"
+            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
         }
     }
     private fun prepareTask(command: String) {
