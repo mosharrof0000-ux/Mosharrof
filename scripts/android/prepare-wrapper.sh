@@ -10,6 +10,7 @@ cp -a web android-web
 test -s core/android-edge-to-edge.css
 cp core/android-edge-to-edge.css android-web/edge-to-edge.css
 cp core/device-control.js android-web/device-control.js
+cp core/device-communication-ui.js android-web/device-communication-ui.js
 python - <<'PY'
 from pathlib import Path
 page = Path("android-web/index.html")
