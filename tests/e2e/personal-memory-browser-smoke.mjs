@@ -143,6 +143,19 @@ try {
   const followUpRequest = chatRequests.at(-1);
   if (!followUpRequest) throw new Error("Follow-up chat request was not intercepted");
   if (!String(followUpRequest.memory_context || "").includes(marker)) {
+    const diagnostic = await page.evaluate(async (query) => {
+      const memory = window.MosharrofPersonalMemory;
+      const recalled = await memory.recall(query, 16);
+      return {
+        enabled: memory.enabled(),
+        recalled: recalled.map(row => ({ text: row.text, score: row.score, overlap: row.overlap, kind: row.kind, folder: row.folder?.id })),
+        searched: (await memory.search("MOSHARROF_MEMORY_SMOKE", 16)).map(row => row.text)
+      };
+    }, "আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?");
+    console.error("MEMORY RECALL DIAGNOSTIC:", JSON.stringify({
+      requestMemoryContext: String(followUpRequest.memory_context || ""),
+      diagnostic
+    }, null, 2));
     throw new Error("Stored marker was not recalled into the follow-up request after reload");
   }
   console.log("PASS: follow-up request received the stored memory context after reload");
