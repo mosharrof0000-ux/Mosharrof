@@ -75,7 +75,7 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     if (!input || typeof input !== "object") throw new TypeError("Memory entry must be an object.");
     const content = clean(input.content, 4000);
     if (!content) throw new TypeError("Memory content is required.");
-    if (SECRET_LIKE.test(content)) { const existing = await readLedger(); return { saved: false, reason: "secret_like_content_rejected", revision: existing.revision, count: existing.memories.length }; }
+    if (SECRET_LIKE.test(content)) throw new Error("Secret-like content rejected.");
     const category = CATEGORIES.has(input.category) ? input.category : "fact";
     const ledger = await readLedger();
     const timestamp = safeTime(now());
