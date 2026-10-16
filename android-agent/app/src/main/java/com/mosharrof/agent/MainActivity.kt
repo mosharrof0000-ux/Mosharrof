@@ -22,6 +22,7 @@ import com.mosharrof.agent.planner.TaskPlanner
 import com.mosharrof.agent.policy.ActionPolicy
 import com.mosharrof.agent.policy.PolicyDecision
 import com.mosharrof.agent.voice.AgentSpeechOutput
+import com.mosharrof.agent.voice.SpeechOutputControls
 class MainActivity : ComponentActivity() {
     private val planner = TaskPlanner()
     private val appCatalog by lazy { InstalledAppCatalog(this) }
@@ -76,14 +77,6 @@ class MainActivity : ComponentActivity() {
             text = "কথা বলে কমান্ড দিন"
             setOnClickListener { startSpeechInput() }
         }
-        val speakButton = Button(this).apply {
-            text = "ফলাফল পড়ে শোনান"
-            setOnClickListener { speechOutput?.speak(status.text.toString()) }
-        }
-        val stopSpeechButton = Button(this).apply {
-            text = "কণ্ঠ থামান"
-            setOnClickListener { speechOutput?.stop() }
-        }
         val inspectButton = Button(this).apply {
             text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
             setOnClickListener { inspectCurrentScreen() }
@@ -101,19 +94,14 @@ class MainActivity : ComponentActivity() {
             addView(voiceButton)
             addView(planButton)
             addView(confirmButton)
-            addView(speakButton)
-            addView(stopSpeechButton)
+            SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
             addView(inspectButton)
             addView(screenDetails)
             addView(accessibilityButton)
         })
         refreshServiceStatus()
     }
-    override fun onDestroy() {
-        speechOutput?.close()
-        speechOutput = null
-        super.onDestroy()
-    }
+    override fun onDestroy() { speechOutput?.close(); speechOutput = null; super.onDestroy() }
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
@@ -227,7 +215,7 @@ class MainActivity : ComponentActivity() {
             "এই স্ক্রিনে পড়ার মতো কোনো দৃশ্যমান লেবেল পাওয়া যায়নি।"
         }
     }
-    private fun installedApps(): List<InstalledApp> = appCatalog.listLauncherApps()
+    private fun installedApps() = appCatalog.listLauncherApps()
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
