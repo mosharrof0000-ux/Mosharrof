@@ -153,7 +153,11 @@ export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT
     const learned = candidates[0] || null;
     const turn = await remember({ content: "ব্যবহারকারীর বার্তা: " + clean(userText, 1800) + (assistantText ? "\nসহকারীর উত্তর: " + clean(assistantText, 1000) : ""), category: "event", source: "conversation_turn", confidence: 0.75, status: "active" });
     if (!turn.saved) return { ...turn, learned: null };
-    if (learned) await remember({ ...learned, status: "pending_confirmation" });
+    if (learned) {
+      const ledger = await readLedger();
+      const duplicate = ledger.memories.some(item => item.status !== "superseded" && item.category === learned.category && item.content === learned.content);
+      if (!duplicate) await remember({ ...learned, status: "pending_confirmation" });
+    }
     return { ...turn, learned };
   }
   async function exportAll() { return clone(await readLedger()); }
