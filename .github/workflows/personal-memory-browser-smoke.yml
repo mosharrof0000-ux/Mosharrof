@@ -9,7 +9,7 @@ on:
       test_url:
         description: "MOSHARROF site or deploy-preview URL"
         required: true
-        default: "https://deploy-preview-678--bucolic-mooncake-c83372.netlify.app/"
+        default: "https://mosharrof0000-ux.github.io/Mosharrof/"
 
 permissions:
   contents: read
