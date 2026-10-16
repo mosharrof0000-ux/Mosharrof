@@ -12,11 +12,16 @@ const clean = (value, limit = 2000) => String(value ?? "").replace(/\u0000/g, ""
 const safeTime = value => { const parsed = Date.parse(value || ""); return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date(0).toISOString(); };
 const clone = value => JSON.parse(JSON.stringify(value));
 
-export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESPACE, now = () => new Date().toISOString() } = {}) {
-  if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") throw new TypeError("A persistent storage adapter is required.");
+export function createPersonalMemoryEngine({ storage, store, namespace = DEFAULT_NAMESPACE, now = () => new Date().toISOString(), makeId } = {}) {
+  const backingStorage = storage || (store ? {
+    async getItem(key) { const item = await store.get(key); return item?.value ?? null; },
+    async setItem(key, value) { await store.put({ id: key, value }); },
+    async removeItem(key) { await store.delete(key); }
+  } : null);
+  if (!backingStorage || typeof backingStorage.getItem !== "function" || typeof backingStorage.setItem !== "function") throw new TypeError("A persistent storage adapter or store is required.");
   const key = clean(namespace, 160);
   async function readLedger() {
-    const raw = await storage.getItem(key);
+    const raw = await backingStorage.getItem(key);
     if (!raw) return { schema_version: SCHEMA_VERSION, revision: 0, memories: [] };
     try {
       const parsed = JSON.parse(raw);
@@ -27,19 +32,19 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
   async function save(ledger) {
     ledger.revision += 1;
     ledger.updated_at = safeTime(now());
-    await storage.setItem(key, JSON.stringify(ledger));
+    await backingStorage.setItem(key, JSON.stringify(ledger));
     return { revision: ledger.revision, count: ledger.memories.length };
   }
   async function remember(input) {
     if (!input || typeof input !== "object") throw new TypeError("Memory entry must be an object.");
     const content = clean(input.content, 4000);
     if (!content) throw new TypeError("Memory content is required.");
-    if (SECRET_LIKE.test(content)) throw new Error("Secret-like content is not stored in personal memory.");
+    if (SECRET_LIKE.test(content)) { const existing = await readLedger(); return { saved: false, reason: "secret_like_content_rejected", revision: existing.revision, count: existing.memories.length }; }
     const category = CATEGORIES.has(input.category) ? input.category : "fact";
     const ledger = await readLedger();
     const timestamp = safeTime(now());
     const entry = {
-      id: clean(input.id, 120) || "mem-" + timestamp.replace(/[^0-9]/g,"").slice(0,14) + "-" + (ledger.revision + 1),
+      id: clean(input.id, 120) || (typeof makeId === "function" ? makeId() : "mem-" + timestamp.replace(/[^0-9]/g,"").slice(0,14) + "-" + (ledger.revision + 1)),
       category, folder: clean(input.folder || category,120), content,
       confidence: Math.max(0, Math.min(1, Number(input.confidence ?? 0.65) || 0)),
       source: clean(input.source || "conversation", 80),
@@ -57,7 +62,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
       if (previous) previous.status = "superseded";
     }
     ledger.memories.push(entry);
-    return { ...await save(ledger), entry: clone(entry) };
+    return { saved: true, ...await save(ledger), entry: clone(entry) };
   }
   async function revise(id, patch = {}) {
     const ledger = await readLedger();
@@ -74,7 +79,7 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
       user_confirmed: next.user_confirmed === true
     });
     const result = await save(ledger);
-    return { ...result, entry: clone(ledger.memories[ledger.memories.length-1]) };
+    return { saved: true, ...result, entry: clone(ledger.memories[ledger.memories.length-1]) };
   }
   async function recall({ category, query, includeSuperseded = false, includePending = true, limit, folder } = {}) {
     const ledger = await readLedger();
@@ -100,6 +105,21 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     const start=Math.max(0,Number(offset)||0), end=Number.isInteger(limit)&&limit>0?start+limit:items.length;
     return { total:items.length, offset:start, items:clone(items.slice(start,end)) };
   }
+  async function all({ folder, includeSuperseded = true, limit, offset = 0 } = {}) {
+    const ledger = await readLedger();
+    let items = ledger.memories.filter(m => (includeSuperseded || !["superseded", "archived"].includes(m.status)) && (!folder || (m.folder || m.category) === folder));
+    items.sort((a,b) => String(b.updated_at).localeCompare(String(a.updated_at)));
+    const start = Math.max(0, Number(offset) || 0), end = Number.isInteger(limit) && limit > 0 ? start + limit : items.length;
+    return { total: items.length, offset: start, items: clone(items.slice(start, end)) };
+  }
+  async function recordTurn(userText, assistantText = "") {
+    const candidates = inferMemoryCandidates(userText);
+    const learned = candidates[0] || null;
+    const turn = await remember({ content: "ব্যবহারকারীর বার্তা: " + clean(userText, 1800) + (assistantText ? "\nসহকারীর উত্তর: " + clean(assistantText, 1000) : ""), category: "event", source: "conversation_turn", confidence: 0.75, status: "active" });
+    if (!turn.saved) return { ...turn, learned: null };
+    if (learned) await remember({ ...learned, status: "pending_confirmation" });
+    return { ...turn, learned };
+  }
   async function exportAll() { return clone(await readLedger()); }
   async function importAll(snapshot) {
     if (!snapshot || snapshot.schema_version !== SCHEMA_VERSION || !Array.isArray(snapshot.memories)) throw new TypeError("Unsupported memory export.");
@@ -112,15 +132,15 @@ export function createPersonalMemoryEngine({ storage, namespace = DEFAULT_NAMESP
     return save(ledger);
   }
   async function clear() {
-    if (typeof storage.removeItem !== "function") throw new TypeError("Storage adapter does not support deletion.");
-    await storage.removeItem(key); return true;
+    if (typeof backingStorage.removeItem !== "function") throw new TypeError("Storage adapter does not support deletion.");
+    await backingStorage.removeItem(key); return true;
   }
-  return Object.freeze({ remember, revise, recall, timeline, exportAll, importAll, clear });
+  return Object.freeze({ remember, revise, recall, timeline, all, recordTurn, exportAll, importAll, clear });
 }
 
 export function buildPersonalMemoryContext(profile, currentText = "") {
   if (!profile || typeof profile !== "object") return "";
-  const entries=Array.isArray(profile.memories)?profile.memories:Array.isArray(profile.items)?profile.items:[];
+  const entries=Array.isArray(profile)?profile:Array.isArray(profile.memories)?profile.memories:Array.isArray(profile.items)?profile.items:[];
   const current=clean(currentText,1500).toLowerCase();
   const terms=current.split(/[^\p{L}\p{N}]+/u).filter(t=>t.length>2);
   const followup=/(এটা|সেটা|ওটা|আগের|চালিয়ে|চালিয়ে|আরও|তারপর|ওই|continue|that|it|previous|earlier|next|same)/i.test(currentText);
@@ -142,7 +162,7 @@ export function buildPersonalMemoryContext(profile, currentText = "") {
   if(!selected.length)return "";
   return [
     "USER PERSONAL MEMORY (local user-provided conversation history and preferences; may be incomplete or outdated):",
-    "Retrieve only memories relevant to the current request. Current user instructions override older preferences and plans.",
+    "Retrieve only memories relevant to the current request. বর্তমান ব্যবহারকারীর কথা পুরোনো স্মৃতির চেয়ে অগ্রাধিকার পাবে; current user instructions override older preferences and plans.",
     "Treat pending_confirmation entries as tentative hypotheses, not established facts. Confirm important or high-impact assumptions.",
     "Consider chronological order: distinguish past events, current goals, future plans, and open questions. Use what happened before to understand the present; superseded entries are not current.",
     "Think ahead only as a grounded possibility from stated goals and events; explain uncertainty briefly and do not claim to know private thoughts.",
@@ -163,5 +183,11 @@ export function inferMemoryCandidates(userText) {
   const question=/(কীভাবে সম্ভব|কী হতে পারে|কেন এমন|what if|how can i|কিভাবে করব)/i.test(text);
   if(!explicitPreference&&!correction&&!goal&&!project&&!commitment&&!decision&&!question)return [];
   const category=correction?"correction":explicitPreference?"preference":project?"project":commitment?"commitment":decision?"decision":question?"open_question":"goal";
-  return [{category,folder:category,content:text,confidence:explicitPreference?0.9:correction?0.82:project?0.78:0.7,source:"conversation_candidate",status:"pending_confirmation",user_confirmed:false,rationale:"Tentative memory candidate extracted from explicit wording; may be reviewed or corrected."}];
+  return [{category,folder:category,content:text,confidence:explicitPreference?0.9:correction?0.82:project?0.78:0.7,source:"conversation_candidate",status:"active",user_confirmed:false,rationale:"Tentative memory candidate extracted from explicit wording; may be reviewed or corrected."}];
+}
+
+export function classifyMemory(text) {
+  const candidate = inferMemoryCandidates(text)[0];
+  if (candidate) return candidate;
+  return { category: "fact", folder: "তথ্য ও অভিজ্ঞতা", content: clean(text,4000), confidence: 0.55, status: "pending_confirmation", user_confirmed: false };
 }
