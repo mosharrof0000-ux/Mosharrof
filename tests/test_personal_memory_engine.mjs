@@ -56,6 +56,21 @@ test("memory retrieval ranks relevant dated items and excludes secret-like conte
   assert.equal((await store.list()).length, 2);
 });
 
+test("memories are organized into topic folders and export preserves the timeline", async () => {
+  const store = memoryStore();
+  let id = 0;
+  const engine = createPersonalMemoryEngine({ store, makeId: () => "folder-" + (++id), now: () => 1700000000000 + id * 1000 });
+  await engine.rememberTurn({ userText: "MOSHARROF AI-তে বাংলা গল্প আরও বিস্তারিত লিখবে", assistantText: "বিস্তারিত গল্পের উত্তর" });
+  await engine.rememberFact({ text: "কুরআনের আরবি শব্দমূল নিয়ে গবেষণা", tags: ["quran", "research"] });
+  const profile = await engine.profile();
+  assert.ok(profile.folders["projects/mosharrof-ai"] >= 1);
+  assert.ok(profile.folders["research/quran"] >= 1);
+  const exported = await engine.exportAll();
+  assert.equal(exported.schemaVersion, 1);
+  assert.equal(exported.memories.length, (await store.list()).length);
+  assert.ok(exported.memories.every(row => typeof row.folder === "string" && row.folder.includes("/")));
+});
+
 test("paused memory does not write; clear removes the local timeline", async () => {
   const store = memoryStore();
   const engine = createPersonalMemoryEngine({ store, enabled: false });
