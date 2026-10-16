@@ -64,15 +64,11 @@ export function initializeComposerEnhancements() {
     });
   }
   function closeEditor(apply) {
-    let appliedValue = null;
     if (apply) {
-      appliedValue = String(largeInput.value || "");
-      input.value = appliedValue;
+      input.value = largeInput.value;
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
-      // Other composer listeners may update draft state; preserve the explicit
-      // user-approved value after those listeners have run.
-      input.value = appliedValue;
+      input.value = largeInput.value;
       syncVisibility();
     }
     editor.classList.remove("open");
@@ -80,7 +76,6 @@ export function initializeComposerEnhancements() {
     expand.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
     if (apply) input.focus();
-    return appliedValue;
   }
 
   input.addEventListener("input", syncVisibility);
