@@ -607,8 +607,23 @@ async function chat(request,env){
       const send=event=>{try{controller.enqueue(encoder.encode("data: "+JSON.stringify(event)+"\n\n"));}catch(e){}};
       (async()=>{
         try{
-          const result=await runChat(body,env,event=>send({type:"status",...event}));
-          send({type:"result",status:result.status,data:result.data});
+          let retry=0,waitMs=1000;
+          while(true){
+            let result;
+            try{
+              result=await runChat(body,env,event=>send({type:"status",...event}));
+            }catch(e){
+              result={status:502,data:{error:"chat_stream_failed",message:"Transient chat failure; retrying."}};
+            }
+            if(result.status<500){
+              send({type:"result",status:result.status,data:result.data});
+              break;
+            }
+            retry++;
+            send({type:"status",stage:"failed",provider:"সব AI সার্ভার",model:"সব ব্যর্থ; পুনরায় চেষ্টা "+retry});
+            await new Promise(resolve=>setTimeout(resolve,waitMs));
+            waitMs=Math.min(30000,waitMs*2);
+          }
         }catch(e){
           send({type:"result",status:500,data:{error:"chat_stream_failed",message:"Chat request failed."}});
         }finally{try{controller.close();}catch(e){}}
