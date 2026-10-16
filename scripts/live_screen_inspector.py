@@ -305,7 +305,7 @@ async def main():
         # changing remote state. The route above prevents the real chat endpoint call.
         try:
             chat_input = page.locator("#input")
-            await chat_input.fill("MOSHARROF inspector safe chat test")
+            await chat_input.fill("MOSHARROFMEMORYCHECK731")
             await page.locator("#sendBtn").click()
             mock_answer = page.locator("#messages .message.ai").filter(
                 has_text="MOSHARROF inspector mock response: chat pipeline passed"
@@ -327,7 +327,7 @@ async def main():
                     const api = window.MosharrofPersonalMemory;
                     if (!api) return false;
                     const rows = await api.list(100);
-                    return rows.some(row => row.kind === "user" && row.text.includes("MOSHARROF inspector safe chat test"))
+                    return rows.some(row => row.kind === "user" && row.text.includes("MOSHARROFMEMORYCHECK731"))
                         && rows.some(row => row.kind === "assistant" && row.text.includes("MOSHARROF inspector mock response"));
                 }""",
                 timeout=10000,
@@ -335,7 +335,7 @@ async def main():
             rows_before_reload = await page.evaluate("async () => await window.MosharrofPersonalMemory.list(100)")
             record(
                 "memory_bridge_saves_user_and_assistant_turns",
-                any(row["kind"] == "user" and "MOSHARROF inspector safe chat test" in row["text"] for row in rows_before_reload)
+                any(row["kind"] == "user" and "MOSHARROFMEMORYCHECK731" in row["text"] for row in rows_before_reload)
                 and any(row["kind"] == "assistant" and "MOSHARROF inspector mock response" in row["text"] for row in rows_before_reload),
                 f"stored {len(rows_before_reload)} rows: " + json.dumps([{"kind": row.get("kind"), "text": row.get("text", "")[:100]} for row in rows_before_reload], ensure_ascii=False),
             )
@@ -348,19 +348,19 @@ async def main():
             await page.wait_for_function(
                 """async () => {
                     const rows = await window.MosharrofPersonalMemory.list(100);
-                    return rows.some(row => row.kind === "user" && row.text.includes("MOSHARROF inspector safe chat test"));
+                    return rows.some(row => row.kind === "user" && row.text.includes("MOSHARROFMEMORYCHECK731"));
                 }""",
                 timeout=10000,
             )
             rows_after_reload = await page.evaluate("async () => await window.MosharrofPersonalMemory.list(100)")
             record(
                 "memory_survives_page_reload",
-                any(row["kind"] == "user" and "MOSHARROF inspector safe chat test" in row["text"] for row in rows_after_reload),
+                any(row["kind"] == "user" and "MOSHARROFMEMORYCHECK731" in row["text"] for row in rows_after_reload),
                 f"reloaded browser found {len(rows_after_reload)} rows: " + json.dumps([{"kind": row.get("kind"), "text": row.get("text", "")[:100]} for row in rows_after_reload], ensure_ascii=False),
             )
 
             previous_answer_count = await page.locator("#messages .message.ai").count()
-            await page.locator("#input").fill("Continue from memory: MOSHARROF inspector safe chat test")
+            await page.locator("#input").fill("Continue from memory: MOSHARROFMEMORYCHECK731")
             await page.locator("#sendBtn").click()
             await page.wait_for_function(
                 "count => document.querySelectorAll('#messages .message.ai').length > count",
@@ -375,7 +375,7 @@ async def main():
             memory_context = str(followup_request.get("memory_context") or "")
             record(
                 "retrieved_memory_is_sent_to_chat_worker",
-                "MOSHARROF inspector safe chat test" in memory_context,
+                "MOSHARROFMEMORYCHECK731" in memory_context,
                 f"memory_context length={len(memory_context)}; mock requests={len(mock_requests)}; context={memory_context[:800]!r}",
             )
         except Exception as exc:
