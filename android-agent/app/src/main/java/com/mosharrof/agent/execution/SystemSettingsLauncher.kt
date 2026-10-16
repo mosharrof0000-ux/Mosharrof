@@ -38,7 +38,7 @@ class SystemSettingsLauncher(private val context: Context) {
         AgentAction.SupportedSetting.DISPLAY_SETTINGS -> Settings.ACTION_DISPLAY_SETTINGS
         AgentAction.SupportedSetting.SOUND_SETTINGS -> Settings.ACTION_SOUND_SETTINGS
         AgentAction.SupportedSetting.BATTERY_SAVER_SETTINGS -> Settings.ACTION_BATTERY_SAVER_SETTINGS
-        AgentAction.SupportedSetting.NOTIFICATION_SETTINGS -> Settings.ACTION_APP_NOTIFICATION_SETTINGS
+        AgentAction.SupportedSetting.NOTIFICATION_SETTINGS -> Intent.ACTION_NOTIFICATION_LISTENER_SETTINGS
         AgentAction.SupportedSetting.APPLICATION_SETTINGS -> Settings.ACTION_APPLICATION_SETTINGS
     }
 }
