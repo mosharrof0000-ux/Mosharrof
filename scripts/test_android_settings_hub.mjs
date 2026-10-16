@@ -21,6 +21,6 @@ assert.ok(java.includes("getDeviceInfo"));
 assert.ok(java.includes("userMediated"));
 assert.ok(!java.includes("WRITE_SETTINGS"));
 assert.ok(!java.includes("AccessibilityService"));
-assert.ok(ui.includes('data-device-action="'+'));
+assert.ok(ui.includes('data-device-action="'));
 assert.ok(ui.includes("Android সেটিংস খুলবে"));
 console.log("Android settings hub contract: PASS");
