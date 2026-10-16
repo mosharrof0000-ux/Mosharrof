@@ -30,7 +30,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
         if (eventPackage == packageName) return
 
         if (screenshotCaptureArmed && event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
-            isScreenshotTarget(eventPackage)) {
+            AccessibilityScreenshotCapture.isTargetPackage(eventPackage)) {
             screenshotCaptureArmed = false
             AccessibilityScreenshotCapture.capture(this) { bitmap, error ->
                 ScreenshotAnalysisControl.displayCapturedScreenshot(bitmap, error, eventPackage)
@@ -211,12 +211,6 @@ class MosharrofAccessibilityService : AccessibilityService() {
             screenshotCaptureArmed = true
             return true
         }
-
-        private fun isScreenshotTarget(packageName: String): Boolean =
-            packageName.isNotBlank() && packageName !in setOf(
-                "com.android.systemui", "com.android.launcher", "com.android.launcher3",
-                "com.google.android.apps.nexuslauncher", "com.oplus.launcher"
-            )
 
         fun inspectCurrentScreenNow(): ScreenSnapshot? = activeService?.inspectWindow()
 
