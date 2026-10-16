@@ -29,7 +29,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] On-demand read-only battery, internal storage, and network diagnostics displayed locally (physical-device verification pending)
 - [x] User-selected folder inventory and bounded SHA-256 duplicate scan; duplicates are only deleted after a separate confirmation (CI/device verification pending)
 - [x] User-triggered screen screenshot capture, in-app preview, and transient UI-label analysis
-- [x] Explicitly opt-in AI vision request to the screenshot-analysis Worker; API key remains server-side and the image is uploaded only after a separate user tap (CI/live endpoint/device verification pending)
+- [x] Explicitly opt-in Gemini Vision screenshot analysis; the API key is encrypted at rest with Android Keystore and the image is uploaded only after a separate user tap (CI/live API/device verification pending)
 - [x] Initial Android permission center for runtime and special app-access permissions, with grant-status review (latest CI and device/OEM verification pending)
 - [x] Declared HTTPS network permission for future AI-service connectivity; backend/API adapter is not yet connected
 - [x] Voice command input through Android's speech-recognition activity (availability depends on device)
