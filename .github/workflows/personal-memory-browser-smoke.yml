@@ -18,7 +18,7 @@ on:
         description: "Choose SEND_TEST_MESSAGE to authorize one synthetic message to the real chat Worker"
         required: true
         type: string
-        default: NO
+        default: "NO"
       confirm_send_test_message:
         description: "Choose SEND_TEST_MESSAGE to authorize one synthetic message to the real chat Worker"
         required: true
