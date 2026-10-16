@@ -179,6 +179,16 @@ class MosharrofAccessibilityService : AccessibilityService() {
             scanArmed = false
             latestSnapshot = null
         }
+
+        fun stopAllActions() {
+            scanArmed = false
+            screenshotCaptureArmed = false
+            latestSnapshot = null
+            pendingTap = null
+            pendingSwipe = null
+            FocusedTextEntry.cancel()
+            latestActionResult = "সব অপেক্ষমাণ ডিভাইস-অ্যাকশন থামানো হয়েছে।"
+        }
         fun startInspection() {
             latestSnapshot = null
             scanArmed = true
