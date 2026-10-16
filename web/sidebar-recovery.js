@@ -127,3 +127,7 @@ import("./composer-enhancements.js")
 // context and never writes application code or stores provider credentials.
 import("./personal-memory-bootstrap.js")
   .catch(function (error) { console.error("[MOSHARROF memory] bootstrap failed:", error); });
+
+
+// Connect the personal memory engine to the live chat request pipeline.
+import("./personal-memory-bridge.js").catch(function (error) { console.error("Personal memory engine initialization failed:", error); });
