@@ -19,7 +19,8 @@ export function installPersonalMemoryBridge(root = window) {
   });
   function installMemoryControls() {
     const drawer = root.document.getElementById("drawerRight") || root.document.getElementById("drawer-right");
-    if (!drawer || drawer.querySelector("[data-personal-memory-controls]")) return;
+    if (!drawer) return;
+    if (drawer.querySelector("[data-personal-memory-controls]")) { root.__mosharrofRefreshMemoryFolders?.(); return; }
     const section = root.document.createElement("section");
     section.className = "nav-family";
     section.dataset.personalMemoryControls = "true";
@@ -67,7 +68,8 @@ export function installPersonalMemoryBridge(root = window) {
       if (items.length) await showRows(await engine.listFolder(folder.value, 40));
       else results.textContent = "এখনো কোনো স্মৃতি সংরক্ষিত নেই।";
     }
-    root.__mosharrofRefreshMemoryFolders = refreshFolders;\n    function refresh() { toggle.textContent = "স্মৃতি সংরক্ষণ: " + (engine.enabled() ? "চালু" : "বন্ধ"); }
+    root.__mosharrofRefreshMemoryFolders = refreshFolders;
+    function refresh() { toggle.textContent = "স্মৃতি সংরক্ষণ: " + (engine.enabled() ? "চালু" : "বন্ধ"); }
     toggle.addEventListener("click", function () { engine.setEnabled(!engine.enabled()); refresh(); });
     folder.addEventListener("change", async function () { await showRows(await engine.listFolder(folder.value, 40)); });
     search.addEventListener("input", async function () {
