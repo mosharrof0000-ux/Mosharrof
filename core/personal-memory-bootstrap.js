@@ -114,19 +114,19 @@ import { createIndexedDbMemoryStore, createPersonalMemoryEngine } from "./person
 
   async function memoryCommand(text) {
     const value = String(text || "").trim();
-    if (/^(?:আমার\\s*)?(?:ব্যক্তিগত\\s*)?স্মৃতি\\s*(?:দেখাও|দেখান|তালিকা|list)$/i.test(value)) {
+    if (/^(?:আমার\s*)?(?:ব্যক্তিগত\s*)?স্মৃতি\s*(?:দেখাও|দেখান|তালিকা|list)$/i.test(value)) {
       const rows = await engine.timeline({ limit: 30 });
       const profile = await engine.profile();
       const folders = Object.entries(profile.folders || {}).map(([name,count]) => name + " (" + count + ")").join(", ");
-      const recent = rows.slice().reverse().map(row => "- [" + (row.folder || "topics/general") + "] " + String(row.summary || row.userText || "").slice(0,160)).join("\\n");
-      return "আপনার মোট " + profile.totalEntries + "টি স্মৃতি-রেকর্ড আছে।\\nফোল্ডার: " + (folders || "এখনও নেই") + "\\nসাম্প্রতিক স্মৃতি:\\n" + (recent || "এখনও কোনো স্মৃতি নেই");
+      const recent = rows.slice().reverse().map(row => "- [" + (row.folder || "topics/general") + "] " + String(row.summary || row.userText || "").slice(0,160)).join("\n");
+      return "আপনার মোট " + profile.totalEntries + "টি স্মৃতি-রেকর্ড আছে।\nফোল্ডার: " + (folders || "এখনও নেই") + "\nসাম্প্রতিক স্মৃতি:\n" + (recent || "এখনও কোনো স্মৃতি নেই");
     }
-    const explicit = value.match(/^(?:মনে রাখো|স্মৃতিতে রাখো|remember)\\s*[:：-]?\\s*(.{3,})$/i);
+    const explicit = value.match(/^(?:মনে রাখো|স্মৃতিতে রাখো|remember)\s*[:：-]?\s*(.{3,})$/i);
     if (explicit) {
       const saved = await engine.rememberFact({ text: explicit[1].trim(), kind: "explicit_memory", source: "explicit_user_command", confidence: "user-confirmed" });
       return saved.saved ? "আপনার কথাটি স্মৃতিতে রেখেছি। ফোল্ডার: " + (saved.folder || "বিষয়ভিত্তিক স্মৃতি") : "নিরাপত্তা বা খালি তথ্যের কারণে এই কথাটি সংরক্ষণ করা যায়নি।";
     }
-    if (/^(?:আমার\\s*)?(?:সব\\s*)?(?:ব্যক্তিগত\\s*)?স্মৃতি\\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)$/i.test(value)) {
+    if (/^(?:আমার\s*)?(?:সব\s*)?(?:ব্যক্তিগত\s*)?স্মৃতি\s*(?:মুছে ফেল|মুছে দাও|clear|delete all)$/i.test(value)) {
       if (!window.confirm("এই ডিভাইসের সব ব্যক্তিগত স্মৃতি মুছে ফেলবেন? চ্যাট ইতিহাস আলাদা থাকবে।")) return "স্মৃতি মোছা বাতিল করা হয়েছে।";
       const result = await engine.clear();
       status.count = 0; updateUI();
