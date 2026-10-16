@@ -10,11 +10,11 @@ function response(body, status = 200) {
 function geminiQuota() {
   return response({ error: { message: "quota exceeded" } }, 429);
 }
-async function ask(env) {
+async function ask(env, text = "বাংলায় একটি সংক্ষিপ্ত উত্তর দিন") {
   const request = new Request("https://worker.test/chat", {
     method: "POST",
     headers: { "Origin": "https://mosharrof0000-ux.github.io", "Content-Type": "application/json" },
-    body: JSON.stringify({ text: "বাংলায় একটি সংক্ষিপ্ত উত্তর দিন", stream_status: false })
+    body: JSON.stringify({ text, stream_status: false })
   });
   const res = await worker.fetch(request, env);
   return { status: res.status, data: await res.json() };
@@ -43,6 +43,23 @@ try {
   assert.match(geminiPrompt, /Before answering/);
   assert.match(geminiPrompt, /Before sending/);
   assert.match(geminiPrompt, /Do not reveal private chain-of-thought/);
+  assert.equal(geminiRequestBody.generationConfig, undefined, "normal replies keep the default output budget");
+
+  globalThis.fetch = async (url, options) => {
+    if (!String(url).includes("generativelanguage.googleapis.com")) return response({});
+    geminiRequestBody = JSON.parse(options.body);
+    return response({ candidates: [{ content: { parts: [{ text: "Long story opening" }] } }] });
+  };
+  result = await ask({ GEMINI_API_KEY: "test-key" }, "বাংলায় ৫০০০ শব্দের একটি গল্প লিখে দাও");
+  assert.equal(result.status, 200);
+  assert.equal(result.data.requested_words, 5000);
+  assert.ok(geminiRequestBody.generationConfig.maxOutputTokens >= 15000);
+  assert.match(geminiRequestBody.contents[0].parts[0].text, /approximately 5000 words/);
+
+  result = await ask({ GEMINI_API_KEY: "test-key" }, "Write a story of 20 thousand words");
+  assert.equal(result.status, 200);
+  assert.equal(result.data.requested_words, 20000);
+  assert.equal(geminiRequestBody.generationConfig.maxOutputTokens, 62512);
 
   const seenKeys = [];
   globalThis.fetch = async (url, options) => {
