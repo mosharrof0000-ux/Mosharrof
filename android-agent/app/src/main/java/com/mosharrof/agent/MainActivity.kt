@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
     ) { grants ->
         val granted = grants.count { it.value }
         val denied = grants.size - granted
-        status.text = "অনুমতি ফলাফল: $grantedটি অনুমোদিত, $deniedটি অননুমোদিত। বিশেষ অনুমতিগুলো নিচের Settings বোতাম থেকে চালু করুন।"
+        status.text = "অনুমতি ফলাফল: ${granted}টি অনুমোদিত, ${denied}টি অননুমোদিত। বিশেষ অনুমতিগুলো নিচের Settings বোতাম থেকে চালু করুন।"
     }
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
