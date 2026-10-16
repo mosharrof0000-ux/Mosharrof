@@ -20,8 +20,8 @@
     head.style.cssText = "font-weight:700;font-size:16px;margin-bottom:8px";
     const desc = el("p", "বিষয়ভিত্তিক স্মৃতি এই ডিভাইসের ব্রাউজারে থাকে। বর্তমান অনুরোধ সবসময় পুরোনো স্মৃতির চেয়ে অগ্রাধিকার পাবে।");
     desc.style.cssText = "font-size:12px;line-height:1.5;margin:0 0 10px";
-    const toggle = el("button", api.api.api.enabled() ? "স্মৃতি চালু আছে — বন্ধ করুন" : "স্মৃতি বন্ধ — চালু করুন");
-    toggle.type = "button"; toggle.onclick = function () { api.setEnabled(!api.api.enabled()); renderPanel(panel); };
+    const toggle = el("button", api.enabled() ? "স্মৃতি চালু আছে — বন্ধ করুন" : "স্মৃতি বন্ধ — চালু করুন");
+    toggle.type = "button"; toggle.onclick = function () { api.setEnabled(!api.enabled()); renderPanel(panel); };
     toggle.style.cssText = "padding:8px;border-radius:10px;border:1px solid #888;background:transparent;color:inherit;width:100%;margin-bottom:8px";
     panel.append(head, desc, toggle);
     let rows = [];
@@ -56,11 +56,11 @@
   }
   function updatePanel() {
     const button = document.getElementById("mosharrof-memory-toggle");
-    if (button) button.textContent = api.api.api.enabled() ? "🧠 স্মৃতি" : "🧠 স্মৃতি বন্ধ";
+    if (button) button.textContent = api.enabled() ? "🧠 স্মৃতি" : "🧠 স্মৃতি বন্ধ";
   }
   function mountUi() {
     if (!root.document || document.getElementById("mosharrof-memory-toggle")) return;
-    const button = el("button", api.api.api.enabled() ? "🧠 স্মৃতি" : "🧠 স্মৃতি বন্ধ");
+    const button = el("button", api.enabled() ? "🧠 স্মৃতি" : "🧠 স্মৃতি বন্ধ");
     button.id = "mosharrof-memory-toggle"; button.type = "button";
     button.style.cssText = "position:fixed;right:12px;top:70px;z-index:99990;border:1px solid #8888;border-radius:18px;padding:7px 10px;background:Canvas;color:CanvasText;font:12px system-ui;box-shadow:0 2px 8px #0002";
     const panel = el("section");
