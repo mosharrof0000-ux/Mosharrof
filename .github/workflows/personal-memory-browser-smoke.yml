@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Prepare candidate Pages runtime for pull requests
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/fix/load-personal-memory-bridge')
         run: python3 scripts/prepare_web_organ_runtime.py
       - name: Start candidate Pages server
         if: github.event_name == 'pull_request'
@@ -58,6 +58,6 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Test send, persistent storage, and recall after reload
         env:
-          MOSHARROF_TEST_URL: ${{ github.event_name == 'pull_request' && 'http://127.0.0.1:4173/' || (inputs.test_url || 'https://mosharrof0000-ux.github.io/Mosharrof/') }}
+          MOSHARROF_TEST_URL: ${{ (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/fix/load-personal-memory-bridge')) && 'http://127.0.0.1:4173/' || (inputs.test_url || 'https://mosharrof0000-ux.github.io/Mosharrof/') }}
           MOSHARROF_TEST_TIMEOUT_MS: "45000"
         run: node tests/e2e/personal-memory-browser-smoke.mjs
