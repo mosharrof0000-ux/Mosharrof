@@ -15,7 +15,7 @@ page = Path("android-web/index.html")
 html = page.read_text(encoding="utf-8")
 tag = '<script src="./device-control.js"></script>'
 if tag not in html:
-    html = html.replace("</body>", tag + "\\n</body>", 1)
+    html = html.replace("</body>", tag + "\n</body>", 1)
 page.write_text(html, encoding="utf-8")
 PY
 python - <<'PY'
