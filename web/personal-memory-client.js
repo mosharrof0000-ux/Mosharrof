@@ -162,24 +162,6 @@ export function installPersonalMemoryClient() {
       console.warn("MOSHARROF memory unavailable; continuing without saved context.",error);
     }
     const response=await nativeFetch(input,{...init,body:JSON.stringify(body)});
-    try {
-      const copy=response.clone();
-      void copy.text().then(async raw=>{
-        for(const line of raw.split(/\r?\n/)) {
-          if(!line.startsWith("data:"))continue;
-          try {
-            const event=JSON.parse(line.slice(5).trim());
-            const candidates=event?.type==="result"&&event.data?.memory_candidates;
-            if(Array.isArray(candidates))for(const item of candidates) {
-              if(item&&item.content&&!SECRET_LIKE.test(item.content)) {
-                const current=await memory.exportAll();
-                if(!current.memories.some(m=>m.content===item.content&&m.category===item.category&&m.status!=="superseded"))await memory.recall().then(()=>memory.command("")); // no-op safety barrier
-              }
-            }
-          } catch {}
-        }
-      }).catch(()=>{});
-    } catch {}
     return response;
   };
   if (document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>mountMemoryPanel(memory),{once:true});
