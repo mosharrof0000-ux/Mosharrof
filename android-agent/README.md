@@ -28,6 +28,8 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] User-toggleable draggable Accessibility overlay with edge snapping, long-press expand/collapse, close control, and one-tap launch of the voice-command flow (latest CI and physical-device verification pending)
 - [x] On-demand read-only battery, internal storage, and network diagnostics displayed locally (physical-device verification pending)
 - [ ] User-triggered screen screenshot capture, in-app preview, and transient UI-label analysis (code added; CI/device verification pending; AI vision is not connected yet)
+- [x] Initial Android permission center for runtime and special app-access permissions, with grant-status review (latest CI and device/OEM verification pending)
+- [x] Declared HTTPS network permission for future AI-service connectivity; backend/API adapter is not yet connected
 - [x] Voice command input through Android's speech-recognition activity (availability depends on device)
 - [ ] Result readout using Android TextToSpeech with explicit speak/stop controls (code added; CI/device verification pending)
 - [x] Visible cancel button clears pending app/settings/tap plans and cancels an armed screen inspection (not a general multi-step executor cancel)
