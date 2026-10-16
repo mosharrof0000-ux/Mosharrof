@@ -118,7 +118,7 @@
 })();
 
 // Load the composer enhancement and local-first personal memory integration.
-import("./personal-memory-bootstrap.js")
+import("./runtime/core/personal-memory-bootstrap.js")
   .catch(function (error) { console.error("Personal memory initialization failed:", error); });
 
 // Load the composer enhancement from a prepared root-level asset.
