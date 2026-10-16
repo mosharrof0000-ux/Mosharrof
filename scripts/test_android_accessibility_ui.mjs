@@ -7,7 +7,8 @@ const [ui, bridge, service, metadata, wrapper, installer] = await Promise.all([
   read("../native/android/AndroidAccessibilityPlugin.java"),
   read("../native/android/AgentAccessibilityService.java"),
   read("../native/android/agent_accessibility_service.xml"),
-  read("./android/prepare-wrapper.sh"),\n  read("./android/install-main-activity.sh")
+  read("./android/prepare-wrapper.sh"),
+  read("./android/install-main-activity.sh")
 ]);
 
 assert.match(ui, /getAccessibilityStatus/);
@@ -25,4 +26,6 @@ assert.match(service, /sensitive\(label\)/);
 assert.match(metadata, /canRetrieveWindowContent="true"/);
 assert.match(wrapper, /cp core\/android-accessibility-ui\.js android-web\/android-accessibility-ui\.js/);
 assert.match(wrapper, /android-accessibility-ui\.js/);
+assert.match(ui, /Plugins\.AndroidAccessibility/);
+assert.match(installer, /registerPlugin\(AndroidAccessibilityPlugin\.class\)/);
 console.log("Android Accessibility UI/native bridge contract: PASS");
