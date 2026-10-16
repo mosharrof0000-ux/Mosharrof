@@ -4,10 +4,14 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Bitmap
 import android.view.ViewGroup
+import android.text.InputType
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.mosharrof.agent.vision.SecureApiKeyStore
+import com.mosharrof.agent.vision.VisionAnalysisClient
 
 /** User-armed screenshot capture, local preview and explicitly approved remote AI analysis. */
 object ScreenshotAnalysisControl {
@@ -55,6 +59,10 @@ object ScreenshotAnalysisControl {
             setOnClickListener { requestRemoteAnalysis() }
         }
         analyzeButton = analyze
+        layout.addView(Button(activity).apply {
+            text = "Gemini API key সেট করুন / মুছুন"
+            setOnClickListener { configureApiKey(activity) }
+        })
         layout.addView(analyze)
         layout.addView(preview, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         layout.addView(analysis)
@@ -86,6 +94,41 @@ object ScreenshotAnalysisControl {
         status.text = "স্ক্রিনশট নেওয়া হয়েছে। স্থানীয় তথ্য দেখুন অথবা অনুমতি দিয়ে AI Vision চালান।"
     }
 
+    private fun configureApiKey(activity: Activity) {
+        val input = EditText(activity).apply {
+            hint = "Google AI Studio থেকে API key পেস্ট করুন"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setSingleLine(true)
+        }
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle("Gemini Vision API key")
+            .setMessage("Key এই ডিভাইসে Android Keystore দিয়ে encrypt করে রাখা হবে। কাউকে key পাঠাবেন না।")
+            .setView(input)
+            .setNegativeButton("বাতিল", null)
+            .setNeutralButton("সংরক্ষিত key মুছুন", null)
+            .setPositiveButton("নিরাপদে সংরক্ষণ", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val key = input.text.toString().trim()
+                if (key.isBlank()) {
+                    statusView?.text = "API key ফাঁকা; কিছু সংরক্ষণ করা হয়নি।"
+                } else {
+                    runCatching { SecureApiKeyStore.save(activity, key) }
+                        .onSuccess { statusView?.text = "Gemini API key Android Keystore-ভিত্তিক encryption দিয়ে সংরক্ষিত হয়েছে।" }
+                        .onFailure { statusView?.text = "API key সংরক্ষণ করা যায়নি: ${it.message ?: "অজানা সমস্যা"}" }
+                    dialog.dismiss()
+                }
+            }
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                SecureApiKeyStore.clear(activity)
+                statusView?.text = "এই অ্যাপের সংরক্ষিত Gemini API key মুছে ফেলা হয়েছে।"
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
+    }
+
     private fun requestRemoteAnalysis() {
         val activity = hostActivity ?: return
         val bitmap = capturedBitmap ?: run {
@@ -94,12 +137,12 @@ object ScreenshotAnalysisControl {
         }
         AlertDialog.Builder(activity)
             .setTitle("স্ক্রিনশট AI-তে পাঠাবেন?")
-            .setMessage("ছবিটি MOSHARROF-এর HTTPS screenshot-analysis Worker-এ পাঠানো হবে, যাতে Gemini Vision স্ক্রিন বুঝতে পারে। ছবিটি এই ফিচার থেকে ডিভাইসে সংরক্ষণ করা হয় না। সংবেদনশীল তথ্য থাকলে আগে স্ক্রিনটি বন্ধ করুন বা বাতিল করুন।")
+            .setMessage("ছবিটি HTTPS দিয়ে Google Gemini Vision API-তে পাঠানো হবে। API key Android Keystore দিয়ে encrypt করে এই ডিভাইসে রাখা হয়; repository-তে রাখা হয় না। ছবিটি এই ফিচার থেকে স্থায়ীভাবে সংরক্ষণ করা হয় না। স্ক্রিনে পাসওয়ার্ড, OTP, ব্যক্তিগত বার্তা বা আর্থিক তথ্য থাকলে আগে তা বন্ধ করুন বা বাতিল করুন।")
             .setNegativeButton("বাতিল", null)
             .setPositiveButton("পাঠিয়ে বিশ্লেষণ করুন") { _, _ ->
                 analyzeButton?.isEnabled = false
                 statusView?.text = "AI Vision বিশ্লেষণ চলছে…"
-                VisionAnalysisClient.analyze(bitmap) { result, error ->
+                VisionAnalysisClient.analyze(activity, bitmap) { result, error ->
                     activity.runOnUiThread {
                         if (activity.isFinishing || hostActivity !== activity) return@runOnUiThread
                         analyzeButton?.isEnabled = capturedBitmap != null
