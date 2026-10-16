@@ -48,6 +48,14 @@ test("natural language size inference respects explicit current request first", 
   assert.equal(inferResponseStyle("ছোট করে বলো", [{ folder: "preferences-and-style", userApproved: true, confidence: 0.8 }]).mode, "short");
   assert.equal(classifyMemoryFolder("একটা গল্প লিখো"), "writing-and-stories");
 });
+test("next-step ideas are tentative and never auto-execute", async () => {
+  const engine = createPersonalMemoryEngine({ store: memoryStore(), createId: (() => { let i = 0; return () => "n" + ++i; })() });
+  await engine.remember({ text: "MOSHARROF: next step is finish memory engine tests; this is still pending", folder: "mosharrof-project" });
+  const suggestions = await engine.suggestNextSteps("MOSHARROF memory engine tests");
+  assert.equal(suggestions.length, 1);
+  assert.equal(suggestions[0].requiresUserConfirmation, true);
+  assert.equal(suggestions[0].autoExecute, false);
+});
 test("conversation summaries are timestamped and exportable", async () => {
   const engine = createPersonalMemoryEngine({ store: memoryStore(), createId: () => "summary-1" });
   await engine.saveConversationSummary("c1", [{ role: "user", text: "I want a memory engine" }, { role: "assistant", text: "We can build topic folders" }]);
