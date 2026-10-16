@@ -8,4 +8,4 @@ def test_personal_memory_engine_persistence_retrieval_and_unbounded_ledger():
 
 
 def test_personal_memory_worker_integration():
-    subprocess.run(["node", "--test", "tests/personal-memory-worker-runtime.mjs"], check=True, timeout=30)
+    subprocess.run(["node", "tests/test_chat_memory_runtime.mjs"], check=True, timeout=30)
