@@ -152,8 +152,12 @@ try {
     throw new Error("Memory marker was not present after reload");
   }
   console.log("PASS: memory survived reload and is searchable in the UI");
+  // Check retrieval separately from request wiring so failures identify the broken layer.
+  const followUpText = "আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?";
+  const contextPreview = await page.evaluate(query => window.MosharrofPersonalMemory.buildContext(query), followUpText);
+  console.log("Memory context retrieval diagnostic:", JSON.stringify({hasMarker: contextPreview.includes(marker), length: contextPreview.length}));
   // Send a follow-up after reload and assert the bridge injects the saved marker.
-  await page.locator("#input").fill("আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?");
+  await page.locator("#input").fill(followUpText);
   await page.locator("#sendBtn").click();
   await page.waitForFunction(async () => {
     const request = indexedDB.open("mosharrof-personal-memory-v1");
