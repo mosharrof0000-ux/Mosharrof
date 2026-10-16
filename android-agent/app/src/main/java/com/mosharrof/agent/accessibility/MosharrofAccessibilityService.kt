@@ -1,9 +1,12 @@
 package com.mosharrof.agent.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.GestureDescription
+import android.graphics.Path
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.mosharrof.agent.planner.AgentAction
 
 data class ScreenSnapshot(
     val packageName: String,
@@ -16,6 +19,8 @@ private data class PendingSemanticTap(
     val visibleText: String,
     var targetEventsRemaining: Int = 20
 )
+
+private data class PendingSwipe(val targetPackage: String, val direction: AgentAction.Direction, var targetEventsRemaining: Int = 20)
 
 private class NodeBudget(var remaining: Int)
 
@@ -32,6 +37,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
         if (eventPackage == packageName) return
 
         pendingTap?.takeIf { it.targetPackage == eventPackage }?.let { processPendingTap(it) }
+        pendingSwipe?.takeIf { it.targetPackage == eventPackage }?.let { processPendingSwipe(it) }
         if (!scanArmed) return
 
         val snapshot = inspectWindow() ?: return
@@ -49,6 +55,52 @@ class MosharrofAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         if (activeService === this) activeService = null
         super.onDestroy()
+    }
+
+    private fun processPendingSwipe(swipe: PendingSwipe) {
+        val root = rootInActiveWindow
+        if (root == null) {
+            swipe.targetEventsRemaining -= 1
+            if (swipe.targetEventsRemaining <= 0) finishSwipe("লক্ষ্য স্ক্রিন পাওয়া যায়নি; স্ক্রল করা হয়নি।")
+            return
+        }
+        try {
+            if (root.packageName?.toString() != swipe.targetPackage) return
+            val metrics = resources.displayMetrics
+            val width = metrics.widthPixels.toFloat()
+            val height = metrics.heightPixels.toFloat()
+            val startX: Float
+            val startY: Float
+            val endX: Float
+            val endY: Float
+            when (swipe.direction) {
+                AgentAction.Direction.UP -> { startX = width * .5f; startY = height * .78f; endX = width * .5f; endY = height * .28f }
+                AgentAction.Direction.DOWN -> { startX = width * .5f; startY = height * .28f; endX = width * .5f; endY = height * .78f }
+                AgentAction.Direction.LEFT -> { startX = width * .78f; startY = height * .5f; endX = width * .22f; endY = height * .5f }
+                AgentAction.Direction.RIGHT -> { startX = width * .22f; startY = height * .5f; endX = width * .78f; endY = height * .5f }
+            }
+            val path = Path().apply { moveTo(startX, startY); lineTo(endX, endY) }
+            val gesture = GestureDescription.Builder()
+                .addStroke(GestureDescription.StrokeDescription(path, 0, 350))
+                .build()
+            pendingSwipe = null
+            val accepted = dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(description: GestureDescription?) {
+                    latestActionResult = "স্ক্রল gesture সম্পন্ন হয়েছে।"
+                }
+                override fun onCancelled(description: GestureDescription?) {
+                    latestActionResult = "Android gesture বাতিল করেছে; স্ক্রল সম্পন্ন হয়নি।"
+                }
+            }, null)
+            if (!accepted) latestActionResult = "Android gesture গ্রহণ করেনি; স্ক্রল করা হয়নি।"
+        } finally {
+            root.recycleCompat()
+        }
+    }
+
+    private fun finishSwipe(message: String) {
+        latestActionResult = message
+        pendingSwipe = null
     }
 
     private fun processPendingTap(tap: PendingSemanticTap) {
@@ -201,6 +253,7 @@ class MosharrofAccessibilityService : AccessibilityService() {
         @Volatile private var scanArmed = false
         @Volatile private var latestSnapshot: ScreenSnapshot? = null
         @Volatile private var pendingTap: PendingSemanticTap? = null
+        @Volatile private var pendingSwipe: PendingSwipe? = null
         @Volatile private var latestActionResult: String? = null
 
         fun cancelInspection() {
@@ -229,6 +282,14 @@ class MosharrofAccessibilityService : AccessibilityService() {
 
         fun cancelSemanticTap() {
             pendingTap = null
+            pendingSwipe = null
+        }
+
+        fun armSwipe(targetPackage: String, direction: AgentAction.Direction): Boolean {
+            if (activeService == null || targetPackage.isBlank() || pendingTap != null || pendingSwipe != null) return false
+            latestActionResult = null
+            pendingSwipe = PendingSwipe(targetPackage, direction)
+            return true
         }
 
         fun takeActionResult(): String? = latestActionResult.also { latestActionResult = null }
