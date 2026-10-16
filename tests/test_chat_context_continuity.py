@@ -8,10 +8,10 @@ def test_worker_uses_bounded_conversation_history_for_all_chat_providers():
     assert 'import { buildChatContext } from "../core/chat-context.js"' in worker
     assert "buildChatContext(body)" in chat
     assert "historyInput.slice(-12)" in helper
-    assert "Math.min(6000, 12000 - current.length - memory.length - summary.length - 500)" in helper
+    assert "let budget = Math.max(0, Math.min(6000, room - memory.length - summary.length));" in helper
     assert "historyInput.slice(-12)" in helper
     assert "Current user message:" in helper
-    assert "Current conversation summary (continuity only; current request takes priority)" in helper
+    assert "Current chat summary (context only)" in helper
     assert "generateWithCloudflareChat(text,env,report,targetWords)" in chat
     assert '"llama-3.1-8b-instant").trim(),text,{},report,targetWords' in chat
     assert '"meta-llama/llama-3.3-70b-instruct:free").trim(),text,' in chat
