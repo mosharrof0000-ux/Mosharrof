@@ -57,7 +57,6 @@ async function generateWithEdge(text,body,env){
     return {ok:true,provider:"edge",model:"Edge-TTS",mime_type:type.split(";")[0]||"audio/mpeg",audio_data:bytesToBase64(bytes)};
   }catch(e){return {ok:false,provider:"edge",reason:String(e&&e.message||e)};}
 }
-
 function wavFromPcmBase64(pcmBase64,sampleRate=24000,channels=1,bitsPerSample=16){
   const binary=atob(pcmBase64),data=new Uint8Array(binary.length);
   for(let i=0;i<binary.length;i++)data[i]=binary.charCodeAt(i);
