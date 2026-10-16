@@ -13,6 +13,7 @@ export function installPersonalMemoryBridge(root = (typeof window !== "undefined
     clear: engine.clear,
     recall: engine.recall,
     search: engine.search,
+    buildContext: engine.buildContext,
     timeline: engine.timeline,
     folders: engine.folders,
     listFolder: engine.listFolder,
