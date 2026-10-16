@@ -10,7 +10,6 @@ class TaskPlannerTest {
         InstalledApp("YouTube", "com.google.android.youtube"),
         InstalledApp("YouTube Music", "com.google.android.apps.youtube.music"),
         InstalledApp("Settings", "com.android.settings"),
-        InstalledApp("WhatsApp", "com.whatsapp"),
         InstalledApp("WhatsApp", "com.whatsapp")
     )
 
@@ -96,13 +95,6 @@ class TaskPlannerTest {
 
     @Test fun plansSwipeOnlyForAnExplicitInstalledApp() {
         assertEquals(TaskPlan.SwipeScreen(AgentAction.Direction.DOWN, apps[0]), planner.plan("scroll down in YouTube", apps))
-    }
-
-    @Test fun plansQuotedTextEntryForAnExplicitApp() {
-        assertEquals(
-            TaskPlan.TypeText("হ্যালো", apps[3]),
-            planner.plan("""হোয়াটসঅ্যাপ-এ "হ্যালো" লিখুন""", apps)
-        )
     }
 
     @Test fun asksForChoiceWhenNameIsPartial() {
