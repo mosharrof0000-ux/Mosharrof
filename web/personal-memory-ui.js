@@ -132,3 +132,5 @@ export function initializePersonalMemory() {
   folderInput.addEventListener("change", () => refresh().catch(() => {}));
   setup();
 }
+
+initializePersonalMemory();
