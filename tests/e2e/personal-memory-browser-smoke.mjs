@@ -120,8 +120,16 @@ try {
   // Close the drawer before submitting the follow-up question.
   await page.locator("#cR").click();
 
+  // Verify the engine can recall the marker before sending the follow-up.
+  const followUpQuestion = "আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?";
+  const preflightContext = await page.evaluate(async query => window.MosharrofPersonalMemory.buildContext(query), followUpQuestion);
+  console.log("PRE-FOLLOWUP CONTEXT:", preflightContext);
+  if (!String(preflightContext || "").includes(marker)) {
+    throw new Error("Memory engine buildContext could not recall the saved marker before follow-up");
+  }
+
   // Send a follow-up after reload and assert the bridge injects the saved marker.
-  await page.locator("#input").fill("আমি কোন শনাক্তকারীটি মনে রাখতে বলেছিলাম?");
+  await page.locator("#input").fill(followUpQuestion);
   await page.locator("#sendBtn").click();
   await page.waitForFunction(async () => {
     const request = indexedDB.open("mosharrof-personal-memory-v1");
