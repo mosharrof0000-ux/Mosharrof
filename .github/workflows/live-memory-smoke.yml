@@ -1,0 +1,40 @@
+name: Live Memory Persistence Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_live_test:
+        description: "This sends one labelled test message to the live chat and uses one chat request."
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: read
+
+jobs:
+  live-memory-smoke:
+    if: inputs.confirm_live_test == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Playwright
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Send a labelled live test message and verify persistence after reload
+        run: python3 scripts/live_memory_smoke.py --evidence artifacts/live-memory-smoke.txt
+      - name: Upload test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-memory-smoke-evidence
+          path: artifacts/live-memory-smoke.txt
+          if-no-files-found: warn
