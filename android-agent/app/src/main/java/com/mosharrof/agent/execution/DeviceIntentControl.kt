@@ -45,14 +45,14 @@ object DeviceIntentControl {
             DeviceIntentCommand.OpenCalendar -> Intent(Intent.ACTION_VIEW, CalendarContract.CONTENT_URI)
         }
         val preview = when (command) {
-            is DeviceIntentCommand.SetTimer -> "টাইমার: \${command.seconds} সেকেন্ড"
+            is DeviceIntentCommand.SetTimer -> "টাইমার: ${command.seconds} সেকেন্ড"
             is DeviceIntentCommand.SetAlarm -> "অ্যালার্ম: %02d:%02d".format(command.hour, command.minute)
-            is DeviceIntentCommand.CreateCalendarEvent -> "ক্যালেন্ডার ইভেন্ট: \${command.title}"
+            is DeviceIntentCommand.CreateCalendarEvent -> "ক্যালেন্ডার ইভেন্ট: ${command.title}"
             DeviceIntentCommand.OpenCalendar -> "ক্যালেন্ডার খুলবে"
         }
         AlertDialog.Builder(activity)
             .setTitle("MOSHARROF • কাজের অনুমতি")
-            .setMessage("\$preview\\n\\nAndroid-এর Clock/Calendar UI খুলবে। সেখানে প্রয়োজন হলে আবার নিশ্চিত করুন।")
+            .setMessage("$preview\n\nAndroid-এর Clock/Calendar UI খুলবে। সেখানে প্রয়োজন হলে আবার নিশ্চিত করুন।")
             .setNegativeButton("বাতিল", null)
             .setPositiveButton("চালিয়ে যান") { _, _ ->
                 try {
