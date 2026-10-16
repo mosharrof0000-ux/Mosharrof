@@ -30,7 +30,7 @@ assert.match(service, /sensitive\(label\)/);
 assert.match(service, /collectExactMatches/);
 assert.match(service, /matches\.size\(\) === 1/);
 assert.match(service, /containsSensitiveNode\(root, 0\)/);
-assert.ok(service.split("\\n").length <= 250, "Accessibility service must remain under the native file-size limit");
+assert.ok(service.split("\n").length <= 250, "Accessibility service must remain under the native file-size limit");
 assert.match(metadata, /canRetrieveWindowContent="true"/);
 assert.match(assetPrep, /android-accessibility-ui\.js/);
 assert.match(ui, /Plugins\.AndroidAccessibility/);
