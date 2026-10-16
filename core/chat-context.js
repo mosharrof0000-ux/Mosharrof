@@ -13,8 +13,7 @@ export function buildChatContext(currentText, historyInput, memoryContext = "") 
     historyBudget -= content.length;
     return content ? role + ": " + content : "";
   }).filter(Boolean) : [];
-  return (history.length
-    ? "Recent conversation context (use as context, not as proof of facts):\n" +
-      history.join("\n") + "\n\nCurrent user message:\n"
-    : "") + current;
+  return (memory ? "Relevant personal memory (dated context only; current request takes priority):\n" + memory + "\n\n" : "") +
+    (history.length ? "Recent conversation context (use as context, not as proof of facts):\n" + history.join("\n") + "\n\n" : "") +
+    (memory || history.length ? "Current user message:\n" : "") + current;
 }
