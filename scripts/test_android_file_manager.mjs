@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const files = require("../core/android-file-manager.js");
 const java = await readFile(new URL("../native/android/AndroidFileManagerPlugin.java", import.meta.url), "utf8");
+const scanner = await readFile(new URL("../native/android/AndroidDuplicateScanner.java", import.meta.url), "utf8");
 const installer = await readFile(new URL("./android/install-main-activity.sh", import.meta.url), "utf8");
 const wrapper = await readFile(new URL("./android/prepare-wrapper.sh", import.meta.url), "utf8");
 const ui = await readFile(new URL("../core/android-file-manager-ui.js", import.meta.url), "utf8");
