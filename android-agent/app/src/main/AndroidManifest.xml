@@ -81,6 +81,16 @@
         </activity>
 
         <service
+            android:name=".notifications.MosharrofNotificationListenerService"
+            android:label="MOSHARROF notification access"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <service
             android:name=".accessibility.MosharrofAccessibilityService"
             android:description="@string/accessibility_service_description"
             android:exported="true"
