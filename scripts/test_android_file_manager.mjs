@@ -21,15 +21,11 @@ for (const marker of ["ACTION_OPEN_DOCUMENT_TREE", "takePersistableUriPermission
   "getSelectedDirectory(PluginCall call)", "confirmed", "safeName"]) {
   assert.ok(java.includes(marker), "native SAF contract missing: " + marker);
 }
-for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES"]) {
-  assert.ok(scanner.includes(marker), "duplicate scanner contract missing: " + marker);
-}
-for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES"]) {
-  assert.ok(scanner.includes(marker), "duplicate scanner contract missing: " + marker);
-}
 for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES", "MAX_BYTES"]) {
   assert.ok(scanner.includes(marker), "bounded duplicate scanner contract missing: " + marker);
 }
+assert.ok(java.split("\n").length <= 250, "AndroidFileManagerPlugin must stay within the 250-line native-source budget");
+assert.ok(scanner.split("\n").length <= 250, "AndroidDuplicateScanner must stay within the 250-line native-source budget");
 assert.ok(wrapper.includes("cp core/device-control.js android-web/device-control.js"));
 assert.ok(wrapper.includes("cp core/android-file-manager.js android-web/android-file-manager.js"));
 assert.ok(wrapper.includes("cp core/android-file-manager-ui.js android-web/android-file-manager-ui.js"));
