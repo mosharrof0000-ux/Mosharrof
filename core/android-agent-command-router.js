@@ -114,7 +114,8 @@
           const lines = groups.map(group => "একই কনটেন্ট (" + group.files.length + "টি): " +
             group.files.map(file => file.name).join(", "));
           lines.unshift("স্ক্যান: " + scan.filesScanned + "টি ফাইল; " + groups.length + "টি ডুপ্লিকেট গ্রুপ।");
-          if (scan.truncated) lines.push("সীমার কারণে স্ক্যান অসম্পূর্ণ; কোনো ফাইল মুছেনি।");
+          lines.push("কোনো ফাইল মুছেনি।");
+          if (scan.truncated) lines.push("সীমার কারণে স্ক্যান অসম্পূর্ণ।");
           showFileOutput(lines.join("\n"));
           return { status: "completed", scanned: scan.filesScanned, groups: groups.length };
         }
