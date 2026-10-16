@@ -1,11 +1,14 @@
 package com.mosharrof.agent.diagnostics
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.BatteryManager
+import android.os.Build
+import android.os.SystemClock
 import android.os.Environment
 import android.os.StatFs
 import android.text.format.Formatter
@@ -16,9 +19,25 @@ class DeviceDiagnostics(private val context: Context) {
         val battery = batterySummary()
         val storage = storageSummary()
         val network = networkSummary()
-        return listOf("ডিভাইস পরীক্ষা", battery, storage, network).joinToString("\n")
+        val memory = memorySummary()
+        val device = deviceSummary()
+        return listOf("ডিভাইস পরীক্ষা", device, battery, storage, memory, network).joinToString("\n")
     }
 
+    private fun memorySummary(): String {
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+            ?: return "RAM: তথ্য পাওয়া যায়নি"
+        val info = ActivityManager.MemoryInfo()
+        manager.getMemoryInfo(info)
+        val state = if (info.lowMemory) "RAM কম; ব্যাকগ্রাউন্ড অ্যাপ বন্ধ করা লাগতে পারে" else "RAM চাপের সতর্কতা নেই"
+        return "RAM: ${Formatter.formatFileSize(context, info.availMem)} ফাঁকা / ${Formatter.formatFileSize(context, info.totalMem)} মোট • $state"
+    }
+
+    private fun deviceSummary(): String {
+        val model = listOf(Build.MANUFACTURER, Build.MODEL).filter { it.isNotBlank() }.joinToString(" ")
+        val uptimeMinutes = SystemClock.elapsedRealtime() / 60_000L
+        return "ডিভাইস: ${model.ifBlank { "Android device" }} • Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}) • রিবুটের পর চালু: ${uptimeMinutes / 60}ঘ ${uptimeMinutes % 60}মি"
+    }
     private fun batterySummary(): String {
         val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
             ?: return "ব্যাটারি: তথ্য পাওয়া যায়নি"
