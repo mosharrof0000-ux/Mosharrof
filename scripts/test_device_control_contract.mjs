@@ -22,7 +22,7 @@ assert.ok(ui.includes("window.Capacitor") && ui.includes("Plugins.DeviceControl"
 assert.ok(ui.includes('data-device-action="wifi"'));
 assert.ok(ui.includes("ওয়েবসাইট একা ফোনের সেটিংস বদলাতে পারে না"));
 assert.ok(assets.includes('<script src="./device-control.js"></script>'));
-assert.ok(wrapper.includes('<script src="./device-control.js"></script>'));
+assert.ok(readFileSync("scripts/android/prepare-agent-web-assets.py", "utf8").includes('<script src="./device-control.js"></script>'));
 assert.ok(wrapper.includes("cp core/device-control.js android-web/device-control.js"));
 assert.ok(activity.includes("cp native/android/DeviceControlPlugin.java"));
 assert.ok(activity.includes("registerPlugin(DeviceControlPlugin.class)"));
