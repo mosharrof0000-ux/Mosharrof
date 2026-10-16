@@ -275,7 +275,7 @@ const CHAT_PROVIDER_TIMEOUT_MS=12000;
 const LONG_CHAT_PROVIDER_TIMEOUT_MS=120000;
 function requestedWordCount(value){
   const text=String(value||"").replace(/[০-৯]/g,d=>String("০১২৩৪৫৬৭৮৯".indexOf(d))).replace(/,/g,"");
-  const unit="(?:words?|শব্দ|ওয়ার্ড|ওয়ার্ড)";
+  const unit="(?:words?|শব্দ|ওয়ার্ড|ওয়ার্ড)(?:ের|এর|ে)?";
   const patterns=[
     new RegExp("(\\d{1,6})\\s*(?:-|\\s)?"+unit,"i"),
     new RegExp("(\\d{1,3})\\s*(?:thousand|k)\\s*"+unit,"i"),
@@ -316,7 +316,7 @@ async function generateWithCloudflareChat(text,env,onStatus,targetWords=0){
       const result=await withChatProviderTimeout(env.AI.run(model,{messages:[
         {role:"system",content:buildReflectiveSystemPrompt()},
         {role:"user",content:text}
-      ],max_tokens:targetWords?Math.min(8192,maxOutputTokens):1024,temperature:0.3}),targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
+      ],max_tokens:targetWords?Math.min(8192,outputTokenBudget(targetWords)):1024,temperature:0.3}),targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai");
       const answer=String(result?.response||result?.choices?.[0]?.message?.content||"").trim();
       if(answer)return {ok:true,provider:"cloudflare-workers-ai",model,text:answer};
       last={model,reason:"empty_response"};
