@@ -39,7 +39,7 @@ const root = {
   setTimeout,
   crypto: { randomUUID: () => Math.random().toString(36).slice(2) }
 };
-vm.runInNewContext(source, { window: root, globalThis: root, console, Date, Math, Promise, Map, Set, Array, String, Number, JSON, RegExp, Object, URL, Blob, setTimeout, queueMicrotask });
+vm.runInNewContext(source, { window: root, globalThis: root, document: root.document, console, Date, Math, Promise, Map, Set, Array, String, Number, JSON, RegExp, Object, URL, Blob, setTimeout, queueMicrotask });
 const engine = root.MosharrofMemoryEngine;
 assert.ok(engine, "memory engine should initialize");
 for (let i = 0; i < 120; i++) {
