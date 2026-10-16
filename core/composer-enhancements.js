@@ -1,4 +1,5 @@
 import { initializeComposerStopControl } from "./composer-stop.js";
+import { initializeComposerAutoGrow } from "./composer-autogrow.js";
 
 export function initializeComposerEnhancements() {
   if (typeof document === "undefined") return;
@@ -8,6 +9,7 @@ export function initializeComposerEnhancements() {
   if (!input || !composer || !send) return;
 
   initializeComposerStopControl(send);
+  initializeComposerAutoGrow(input, composer);
   if (document.getElementById("composerExpandBtn")) return;
 
   const style = document.createElement("style");
