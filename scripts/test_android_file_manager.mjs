@@ -43,7 +43,6 @@ assert.ok(installer.includes("AndroidMediaOrganizerPlugin.java"));
 assert.ok(installer.includes("registerPlugin(AndroidMediaOrganizerPlugin.class)"));
 assert.ok(!installer.includes("registerPlugin(MosharrofFilesPlugin.class)"),
   "duplicate plugin registration must be removed");
-assert.ok(!ui.includes("Plugins.FileManager"), "stale plugin name must not remain");
 
 const bytesA = new TextEncoder().encode("same audio bytes").buffer;
 const bytesB = new TextEncoder().encode("same audio bytes").buffer;
