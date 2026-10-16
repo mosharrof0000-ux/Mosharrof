@@ -259,10 +259,10 @@ class MosharrofAccessibilityService : AccessibilityService() {
         fun performGlobalNavigation(destination: AgentAction.NavigationDestination): Boolean {
             val service = activeService ?: return false
             val action = when (destination) {
-                AgentAction.NavigationDestination.BACK -> GLOBAL_ACTION_BACK
-                AgentAction.NavigationDestination.HOME -> GLOBAL_ACTION_HOME
-                AgentAction.NavigationDestination.NOTIFICATIONS -> GLOBAL_ACTION_NOTIFICATIONS
-                AgentAction.NavigationDestination.RECENTS -> GLOBAL_ACTION_RECENTS
+                AgentAction.NavigationDestination.BACK -> AccessibilityService.GLOBAL_ACTION_BACK
+                AgentAction.NavigationDestination.HOME -> AccessibilityService.GLOBAL_ACTION_HOME
+                AgentAction.NavigationDestination.NOTIFICATIONS -> AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS
+                AgentAction.NavigationDestination.RECENTS -> AccessibilityService.GLOBAL_ACTION_RECENTS
             }
             return service.performGlobalAction(action)
         }
