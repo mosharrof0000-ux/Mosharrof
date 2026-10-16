@@ -23,6 +23,7 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [x] Bounded, read-only accessibility event inspection
 - [x] Explicit current-screen snapshot: package, bounded node count, and up to 40 short visible labels
 - [x] Deterministic Bengali/English text intent parsing
+- [x] Confirmed call/SMS intent support: uses CALL_PHONE/SEND_SMS only when the user has granted them; otherwise opens the Android Dialer/SMS draft. Outbound SMS is submitted only after the app's confirmation button; carrier delivery is not guaranteed.
 - [x] Common Bengali app aliases and installed-app discovery
 - [x] Confirmed Back/Home/Notifications/Recent Apps commands; deterministic parser and policy tests added (emulator/physical-device verification pending)
 - [x] User-toggleable draggable Accessibility overlay with edge snapping, long-press expand/collapse, close control, and one-tap launch of the voice-command flow (latest CI and physical-device verification pending)
