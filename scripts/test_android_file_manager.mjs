@@ -30,6 +30,10 @@ for (const marker of ["SHA-256", "MAX_FILES", "MAX_ENTRIES", "MAX_BYTES"]) {
 }
 assert.ok(java.split("\n").length <= 250, "AndroidFileManagerPlugin must stay within the 250-line native-source budget");
 assert.ok(scanner.split("\n").length <= 250, "AndroidDuplicateScanner must stay within the 250-line native-source budget");
+assert.ok(organizer.split("\n").length <= 250, "AndroidMediaOrganizerPlugin must stay within the 250-line native-source budget");
+for (const marker of ["DocumentsContract.moveDocument", "confirmed", "sourceParentId", "reversible"]) {
+  assert.ok(organizer.includes(marker), "SAF media move contract missing: " + marker);
+}
 assert.ok(wrapper.includes("cp core/device-control.js android-web/device-control.js"));
 assert.ok(assetPrep.includes('"android-file-manager.js"'));
 assert.ok(assetPrep.includes('"android-file-manager-ui.js"'));
