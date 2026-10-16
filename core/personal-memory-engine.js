@@ -2,7 +2,7 @@
  * Local-first, append-only timeline with bounded retrieval. No fixed entry cap;
  * actual persistence remains subject to the browser/device's available storage quota.
  */
-const SECRET_PATTERN = /(password|passcode|one[- ]time password|\botp\b|\bcvv\b|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর)/i;
+const SECRET_PATTERN = /(password|passcode|one[- ]time password|api[_ -]?key|access[_ -]?token|private key|secret|\\botp\\b|\\bcvv\\b|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|গোপন কোড|এপিআই কি|টোকেন)/i;
 const STOP = new Set(["আমি","আমার","তুমি","আপনি","এটা","সেটা","করে","করুন","করতে","হবে","হয়","হয়","যেন","যেটা","যে","কি","কী","একটা","একটি","এবং","the","this","that","with","from","have","want","please","make","can","will","your","you","for","and"]);
 function tokens(value) {
   return String(value || "").toLocaleLowerCase().match(/[\p{L}\p{N}]{2,}/gu)?.filter(t => !STOP.has(t)) || [];
@@ -14,7 +14,7 @@ function classifyFolder(text) {
   const value = String(text || "");
   if (/(কুরআন|কোরআন|কোরান|আয়াত|আয়াত|সূরা|তাফসির|quran|surah|ayah)/i.test(value)) return "research/quran";
   if (/(অ্যান্ড্রয়েড|অ্যান্ড্রয়েড|android|ফোন নিয়ন্ত্রণ|ডিভাইস নিয়ন্ত্রণ|automation|device control)/i.test(value)) return "projects/android-automation";
-  if (/(গল্প|উপন্যাস|কবিতা|প্রবন্ধ|লেখা|story|novel|poem|essay)/i.test(value)) return "writing/creative";
+  if (/(গল্প|উপন্যাস|কবিতা|প্রবন্ধ|লেখা|story|novel|poem|essay)/i.test(value) && !/(মোশাররফ|mosharrof|এআই|repository|github|প্রজেক্ট|প্রকল্প)/i.test(value)) return "writing/creative";
   if (/(ভয়েস|ভয়েস|কণ্ঠ|tts|speech|voice|audio)/i.test(value)) return "projects/voice-audio";
   if (/(মোশাররফ|mosharrof|এআই|ai|রিপোজিটরি|repository|github|প্রজেক্ট|প্রকল্প)/i.test(value)) return "projects/mosharrof-ai";
   if (/(পছন্দ|সবসময়|সবসময়|ভবিষ্যতে|পরের বার|মনে রাখ|উত্তর ছোট|বিস্তারিত উত্তর)/i.test(value)) return "profile/response-preferences";
