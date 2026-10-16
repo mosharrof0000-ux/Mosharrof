@@ -203,6 +203,11 @@ class MosharrofAccessibilityService : AccessibilityService() {
         @Volatile private var pendingTap: PendingSemanticTap? = null
         @Volatile private var latestActionResult: String? = null
 
+        fun cancelInspection() {
+            scanArmed = false
+            latestSnapshot = null
+        }
+
         fun startInspection() {
             latestSnapshot = null
             scanArmed = true
