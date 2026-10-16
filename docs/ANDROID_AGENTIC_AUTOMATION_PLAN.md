@@ -56,6 +56,18 @@ This is an implementation contract and phased foundation, **not a claim that uni
 - Publish a capability matrix naming what is supported, permission state, last verification, and known OEM limitations.
 - Do not call the system universal until all advertised actions pass end-to-end tests on the supported device matrix.
 
+### Phase F — user-authorized file and media management
+- Use Android Storage Access Framework (SAF) document/tree pickers so the owner chooses which folders the app may access; do not promise unrestricted filesystem access.
+- Implement list/create/rename/move/copy with path-boundary checks, collision previews, cancellation, and undo where possible.
+- For photos, group into proposed albums/folders without silently moving originals; show a review list before applying changes.
+- For duplicate audio/photos, first scan by size + cryptographic hash and then show exact matches; similar names or perceptual similarity alone must not trigger deletion. Deletion requires a fresh confirmation and recoverable trash where supported.
+- Add read-only diagnostics first (permission state, app/version/build, recent non-sensitive error codes). Repair plans must cite evidence, prefer reversible changes, and verify each postcondition.
+- Keep a capability registry with explicit `available_mediated`, `planned`, and `blocked` states. A granted permission never turns an unimplemented capability into a ready one.
+
+## Capability readiness registry
+
+`core/android-agent-capabilities.js` is a metadata contract, not an executor or permission grant. It currently lists 21 capability IDs across device navigation, accessibility, screen perception, files, media, diagnostics, apps, communications, and security. Only mediated settings navigation and user-reviewed communication drafts are marked available at this stage; file/media operations and cross-app automation remain planned. Security credential handling, autonomous payment submission, and security bypass are blocked.
+
 ## Current known baseline
 
 PR #632 adds a user-mediated DeviceControl plugin that opens Android-owned settings. PR #643 proposes user-confirmed dialer/SMS/email drafts. Neither is an AccessibilityService or a universal screen-tapping agent. This document keeps that distinction explicit.
