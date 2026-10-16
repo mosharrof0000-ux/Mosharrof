@@ -529,7 +529,16 @@ async function runChat(body,env,onStatus){
   const preferred=env.GEMINI_CHAT_MODEL
     ? [env.GEMINI_CHAT_MODEL,...CHAT_MODELS.filter(m=>m!==env.GEMINI_CHAT_MODEL)]
     : CHAT_MODELS;
-  const payload={contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\nUser:\n"+text}]}]};
+  let historyBudget=6000;
+  const history=Array.isArray(body.history)?body.history.slice(-12).map(item=>{
+    if(!item||typeof item!=="object")return "";
+    const role=item.role==="ai"||item.role==="model"?"Mosharrof":"User";
+    const content=String(item.text||"").replace(/\s+/g," ").trim().slice(0,Math.max(0,Math.min(900,historyBudget)));
+    historyBudget-=content.length;
+    return content?role+": "+content:"";
+  }).filter(Boolean):[];
+  const modelText=(history.length?"Recent conversation context (use as context, not as proof of facts):\n"+history.join("\n")+"\n\nCurrent user message:\n":"")+text;
+  const payload={contents:[{parts:[{text:"You are Mosharrof AI. Answer clearly and helpfully. Respond in Bengali when appropriate. Never claim an action you did not actually perform.\n\n"+modelText}]}]};
   const geminiPlan=[];
   if(configuredKeys.length){
     for(const [slot,apiKey] of configuredKeys)geminiPlan.push({model:preferred[0],slot,apiKey});
@@ -558,7 +567,7 @@ async function runChat(body,env,onStatus){
     }
   }
 
-  const cloudflare=await generateWithCloudflareChat(text,env,report);
+  const cloudflare=await generateWithCloudflareChat(modelText,env,report);
   attempted.push({provider:cloudflare.provider,model:cloudflare.model||null,status:cloudflare.status||null,reason:cloudflare.ok?null:cloudflare.reason||"failed"});
   if(cloudflare.ok){
     report({stage:"answered",provider:cloudflare.provider,model:cloudflare.model});
@@ -568,7 +577,7 @@ async function runChat(body,env,onStatus){
   const groq=await generateWithOpenAICompatibleChat(
     "groq","https://api.groq.com/openai/v1/chat/completions",
     String(env.GROQ_API_KEY||"").trim(),
-    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),text,{},report
+    String(env.GROQ_CHAT_MODEL||"llama-3.1-8b-instant").trim(),modelText,{},report
   );
   attempted.push({provider:groq.provider,model:groq.model||null,status:groq.status||null,reason:groq.ok?null:groq.reason||"failed"});
   if(groq.ok){
@@ -579,7 +588,7 @@ async function runChat(body,env,onStatus){
   const openrouter=await generateWithOpenAICompatibleChat(
     "openrouter","https://openrouter.ai/api/v1/chat/completions",
     String(env.OPENROUTER_API_KEY||"").trim(),
-    String(env.OPENROUTER_CHAT_MODEL||"meta-llama/llama-3.3-70b-instruct:free").trim(),text,
+    String(env.OPENROUTER_CHAT_MODEL||"meta-llama/llama-3.3-70b-instruct:free").trim(),modelText,
     {"HTTP-Referer":"https://mosharrof0000-ux.github.io/Mosharrof/","X-Title":"MOSHARROF AI"},report
   );
   attempted.push({provider:openrouter.provider,model:openrouter.model||null,status:openrouter.status||null,reason:openrouter.ok?null:openrouter.reason||"failed"});
