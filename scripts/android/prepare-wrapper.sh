@@ -10,6 +10,7 @@ cp -a web android-web
 test -s core/android-edge-to-edge.css
 cp core/android-edge-to-edge.css android-web/edge-to-edge.css
 cp core/device-control.js android-web/device-control.js
+cp core/android-file-manager.js android-web/android-file-manager.js
 python - <<'PY'
 from pathlib import Path
 page = Path("android-web/index.html")
@@ -17,6 +18,9 @@ html = page.read_text(encoding="utf-8")
 tag = '<script src="./device-control.js"></script>'
 if tag not in html:
     html = html.replace("</body>", tag + "\n</body>", 1)
+file_tag = '<script src="./android-file-manager.js"></script>'
+if file_tag not in html:
+    html = html.replace("</body>", file_tag + "\n</body>", 1)
 page.write_text(html, encoding="utf-8")
 PY
 python - <<'PY'
