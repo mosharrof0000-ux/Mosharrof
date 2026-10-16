@@ -33,6 +33,8 @@ def main() -> int:
         "core/device-control.js": "web/device-control.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
+        "core/personal-memory-engine.js": "web/core/personal-memory-engine.js",
+        "core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
@@ -100,6 +102,7 @@ def main() -> int:
         dst.write_text(content, encoding="utf-8")
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
+        "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js",
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
         "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js")]
     if not all(p.is_file() for p in required):

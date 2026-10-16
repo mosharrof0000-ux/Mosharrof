@@ -1,6 +1,3 @@
-/** Build a bounded context string shared by every chat provider.
- * History is context, not evidence; the current user message remains last.
- */
 export function buildChatContext(currentText, historyInput, memoryContext = "") {
   const current = String(currentText || "").trim();
   const memory = String(memoryContext || "").trim().slice(0, Math.max(0, Math.min(4000, 12000 - current.length - 1200)));
