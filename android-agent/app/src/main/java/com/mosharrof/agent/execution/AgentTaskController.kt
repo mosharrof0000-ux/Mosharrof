@@ -9,7 +9,6 @@ import com.mosharrof.agent.planner.TaskPlan
 import com.mosharrof.agent.planner.TaskPlanner
 import com.mosharrof.agent.policy.ActionPolicy
 import com.mosharrof.agent.policy.PolicyDecision
-
 /** Owns pending task state and performs only explicitly confirmed, bounded actions. */
 class AgentTaskController(
     private val activity: Activity,
@@ -27,7 +26,6 @@ class AgentTaskController(
     private var pendingText: TaskPlan.TypeText? = null
     private var pendingNavigation: AgentAction.NavigationDestination? = null
     private var pendingSystemIntent: TaskPlan.SystemIntent? = null
-
     fun prepareTask(command: String) {
         clearPending()
         confirmButton.isEnabled = false
@@ -88,7 +86,6 @@ class AgentTaskController(
             is TaskPlan.Rejected -> status.text = "কমান্ড চালানো হয়নি: ${plan.reason}"
         }
     }
-
     fun confirmPending() {
         when {
             pendingApp != null -> launchConfirmedApp()
@@ -100,7 +97,6 @@ class AgentTaskController(
             pendingSystemIntent != null -> launchConfirmedSystemIntent()
         }
     }
-
     fun cancelPending() {
         clearPending()
         MosharrofAccessibilityService.cancelSemanticTap()
@@ -108,7 +104,6 @@ class AgentTaskController(
         confirmButton.isEnabled = false
         status.text = "অপেক্ষমাণ কাজ বাতিল হয়েছে।"
     }
-
     private fun clearPending() {
         pendingApp = null
         pendingSettings = null
@@ -118,27 +113,23 @@ class AgentTaskController(
         pendingNavigation = null
         pendingSystemIntent = null
     }
-
     private fun prepareSettings(plan: TaskPlan, label: String) {
         pendingSettings = plan
         status.text = "পরিকল্পনা: $label খোলা হবে। চালানোর আগে নিশ্চিত করুন।"
         confirmButton.isEnabled = true
     }
-
     private fun launchConfirmedSettings() {
         val plan = pendingSettings ?: return
         status.text = settingsLauncher.launch(plan)
         pendingSettings = null
         confirmButton.isEnabled = false
     }
-
     private fun launchConfirmedSystemIntent() {
         val request = pendingSystemIntent ?: return
         status.text = DeviceIntentLauncher(activity).launch(request)
         pendingSystemIntent = null
         confirmButton.isEnabled = false
     }
-
     private fun launchConfirmedNavigation() {
         val destination = pendingNavigation ?: return
         if (!isServiceEnabled()) {
@@ -156,7 +147,6 @@ class AgentTaskController(
         pendingNavigation = null
         confirmButton.isEnabled = false
     }
-
     private fun launchConfirmedSwipe() {
         val plan = pendingSwipe ?: return
         if (!isServiceEnabled()) {
@@ -182,7 +172,6 @@ class AgentTaskController(
         pendingSwipe = null
         confirmButton.isEnabled = false
     }
-
     private fun launchConfirmedTap() {
         val plan = pendingTap ?: return
         if (!isServiceEnabled()) {
@@ -210,7 +199,6 @@ class AgentTaskController(
         pendingTap = null
         confirmButton.isEnabled = false
     }
-
     private fun launchConfirmedText() {
         val plan = pendingText ?: return
         if (!isServiceEnabled()) {
@@ -238,7 +226,6 @@ class AgentTaskController(
         pendingText = null
         confirmButton.isEnabled = false
     }
-
     private fun launchConfirmedApp() {
         val app = pendingApp ?: return
         val allowed = appCatalog.listLauncherApps().map { it.packageName }.toSet()
