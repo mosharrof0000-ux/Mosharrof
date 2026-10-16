@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const { createMemory } = require("../core/android-agent-memory.js");
+const memoryUi = readFileSync("core/android-agent-memory-ui.js", "utf8");
+const assetManifest = readFileSync("scripts/android/prepare-agent-web-assets.py", "utf8");
 const records = new Map();
 const store = {
   async put(record) { records.set(record.id, record); },
@@ -25,4 +28,11 @@ assert.equal(found[0].text, "প্রিয় ভাষা বাংলা");
 assert.ok(found[0].score > found[1].score);
 await memory.forget("m1");
 assert.equal(records.has("m1"), false);
+assert.equal((await memory.list()).length, 2);
+assert.ok(memoryUi.includes("localStorage") && memoryUi.includes("window.confirm"));
+assert.ok(memoryUi.includes("memory.clear()") && memoryUi.includes("memory.forget(record.id)"));
+assert.ok(assetManifest.includes("\"android-agent-memory-ui.js\""));
+const cleared = await memory.clear();
+assert.equal(cleared.deleted, 2);
+assert.equal(records.size, 0);
 console.log("Android agent local memory contract: PASS");
