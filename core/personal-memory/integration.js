@@ -58,7 +58,7 @@ export function initializePersonalMemory() {
     try {
       retrieved = await engine.contextFor(userText, { conversationId: SESSION_ID, limit: 8, maxChars: 5000 });
       intent = inferResponseStyle(userText, retrieved.memories);
-      body.memory_context = formatRetrievedMemory(retrieved.text);
+      body.memory_context = retrieved.text;
       body.memory_response_style = intent;
       await engine.remember({ text: userText, role: "user", kind: "message", conversationId: SESSION_ID, source: "live-chat" });
       turns.push({ role: "user", text: userText });
