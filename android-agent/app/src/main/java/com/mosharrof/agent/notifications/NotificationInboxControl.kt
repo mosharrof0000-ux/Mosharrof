@@ -12,14 +12,14 @@ object NotificationInboxControl {
         layout.addView(Button(activity).apply {
             text = "অনুমোদিত নোটিফিকেশন দেখুন"
             setOnClickListener {
-                output.text = MosharrofNotificationListenerService.snapshot()
+                output.text = AgentNotificationListenerService.snapshot().joinToString("\n") { "${it.packageName}: ${it.title} — ${it.text}" }.ifBlank { "কোনো সাম্প্রতিক নোটিফিকেশন নেই।" }
                 status.text = "লোকাল নোটিফিকেশন ইনবক্স আপডেট হয়েছে।"
             }
         })
         layout.addView(Button(activity).apply {
             text = "লোকাল নোটিফিকেশন তালিকা মুছুন"
             setOnClickListener {
-                MosharrofNotificationListenerService.clearLocalSnapshot()
+                AgentNotificationListenerService.clearLocalSnapshot()
                 output.text = "লোকাল তালিকা মুছে ফেলা হয়েছে।"
                 status.text = "MOSHARROF-এর অস্থায়ী নোটিফিকেশন তালিকা মুছে ফেলা হয়েছে।"
             }
