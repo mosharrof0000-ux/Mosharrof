@@ -135,6 +135,7 @@ export function createPersonalMemoryEngine(options = {}) {
   async function recall(query, limit = 8) {
     if (!enabled()) return [];
     const q = new Set(tokenize(query));
+    const queryFolder = inferFolder(query);
     const rows = await allRows();
     return rows.map(row => {
       const words = tokenize([row.text, row.folder, ...(row.tags || [])].join(" "));
