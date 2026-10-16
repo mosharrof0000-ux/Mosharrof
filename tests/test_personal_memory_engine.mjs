@@ -35,9 +35,8 @@ assert.ok(timeline.every((row, index) => index === 0 || row.sequence >= timeline
 const combined = buildChatContext("বর্তমান প্রশ্ন", [], "পুরোনো প্রাসঙ্গিক স্মৃতি");
 assert.ok(combined.indexOf("পুরোনো প্রাসঙ্গিক স্মৃতি") < combined.indexOf("বর্তমান প্রশ্ন"));
 assert.match(combined, /Current user message/);
-const folders = await memory.folders();
-assert.equal(folders.find(folder => folder.id === "writing")?.count, 2);
-assert.equal((await memory.listFolder("writing")).length, 2);
+assert.equal(folders.find(folder => folder.id === "writing")?.count, 3);
+assert.equal((await memory.listFolder("writing")).length, 3);
 assert.ok((await memory.search("response_length")).some(row => row.kind === "preference"));
 assert.ok((await memory.exportAll()).entries.length >= 4);
 const secret = await memory.add({ kind: "user", text: "আমার password is secret123" });
