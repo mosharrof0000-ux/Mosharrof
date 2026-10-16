@@ -55,7 +55,7 @@ function extractStablePreference(text) {
   if (/(বর্তমানকে.{0,30}(ফলো|অগ্রাধিকার)|অতীতকে.{0,30}চাপিয়ে|current.{0,40}(override|priority)|old memories.{0,40}current)/i.test(value)) {
     return { key: "memory.current-first", value: "Latest user message and current conversation override older memories", scope: "interaction", source: "explicit", confidence: 1 };
   }
-  if (/(বিষয়ভিত্তিক|বিষয়ভিত্তিক|ফোল্ডার ভিত্তিক|topic[- ]based).{0,50}(ফোল্ডার|folder|স্মৃতি|memory)/i.test(value)) {
+  if (/(বিষয়.*ফোল্ডার|বিষয়.*ফোল্ডার|ফোল্ডার ভিত্তিক|topic[- ]based).{0,50}(ফোল্ডার|folder|স্মৃতি|memory)/i.test(value)) {
     return { key: "memory.topic-folders", value: "Organize long-term memories by topic and timeline", scope: "interaction", source: "explicit", confidence: 1 };
   }
   const durable = /(আমার পছন্দ|আমি চাই তুমি|আমি চাই যে|সবসময়|সবসময়|always|i prefer|i want you to)/i.test(value);
