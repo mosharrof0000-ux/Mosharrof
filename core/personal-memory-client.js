@@ -126,16 +126,7 @@ export function installPersonalMemoryClient() {
       // Memory failure must never block ordinary chat; the app continues without memory.
       console.warn("MOSHARROF memory unavailable; continuing without saved context.",error);
     }
-    const response=await nativeFetch(input,{...init,body:JSON.stringify(body)});
-    try {
-      const copy=response.clone();
-      copy.text().then(async raw=>{
-        const events=raw.split(/\\n/).filter(line=>line.startsWith("data: ")).map(line=>{try{return JSON.parse(line.slice(6));}catch{return null;}}).filter(Boolean);
-        const final=events.find(event=>event.type==="result"&&event.status===200&&event.data&&typeof event.data.text==="string");
-        if(final && final.data.provider!=="local-memory") await memory.recordTurn(text,final.data.text,body.conversation_id||"current-chat");
-      }).catch(()=>{});
-    } catch {}
-    return response;
+    return nativeFetch(input,{...init,body:JSON.stringify(body)});
   };
   // The accessible sidebar UI is mounted by personal-memory-ui.js; avoid a duplicate floating panel.
   if (navigator.storage?.persist) navigator.storage.persist().catch(()=>false);
