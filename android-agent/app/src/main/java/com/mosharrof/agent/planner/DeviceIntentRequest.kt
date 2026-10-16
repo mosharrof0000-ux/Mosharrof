@@ -28,7 +28,7 @@ data class DeviceIntentRequest(
                 if (!phone.matches(number) || message.isBlank() || message.length > 500) return null
                 return DeviceIntentRequest(Kind.COMPOSE_SMS, target = number, text = message)
             }
-            val timer = Regex("(?i)^(?:timer|set timer|টাইমার)\\s+(\\d{1,3})\\s*(seconds?|secs?|minutes?|mins?|hours?|ঘণ্টা|মিনিট|সেকেন্ড)?$").matchEntire(command)
+            val timer = Regex("(?i)^(?:timer|set timer|টাইমার)\\s+([0-9]{1,3}|এক|দুই|তিন|চার|পাঁচ|ছয়|ছয়|সাত|আট|নয়|নয়|দশ|পনেরো|বিশ|ত্রিশ|ষাট)\\s*(seconds?|secs?|minutes?|mins?|hours?|ঘণ্টা|মিনিট|সেকেন্ড)?$").matchEntire(command)
             if (timer != null) {
                 val amount = timer.groupValues[1].toIntOrNull() ?: when (timer.groupValues[1]) {
                     "এক" -> 1; "দুই" -> 2; "তিন" -> 3; "চার" -> 4; "পাঁচ" -> 5
