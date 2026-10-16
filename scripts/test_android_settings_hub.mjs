@@ -20,7 +20,13 @@ for (const [action, method] of Object.entries(pairs)) {
 assert.ok(java.includes("getDeviceInfo"));
 assert.ok(java.includes("userMediated"));
 assert.ok(!java.includes("WRITE_SETTINGS"));
-assert.ok(!java.includes("AccessibilityService"));
+assert.ok(java.includes("AgentAccessibilityService.isConnected()"), "Accessibility actions must require the explicitly enabled service");
+const accessibility = readFileSync("native/android/AgentAccessibilityService.java", "utf8");
+const accessibilityInstaller = readFileSync("scripts/android/install-agent-accessibility.sh", "utf8");
+assert.ok(accessibility.includes("node.isPassword()"), "Accessibility inspection must exclude password fields");
+assert.ok(accessibility.includes("ACTION_CLICK"), "Accessibility tap capability is missing");
+assert.ok(accessibility.includes("ACTION_SCROLL_FORWARD"), "Accessibility scroll capability is missing");
+assert.ok(accessibilityInstaller.includes("BIND_ACCESSIBILITY_SERVICE"), "Service must use Android's protected service binding");
 assert.ok(ui.includes('data-device-action="'));
 assert.ok(ui.includes("Android সেটিংস খুলবে"));
 const composer = readFileSync("core/composer-enhancements.js", "utf8");
