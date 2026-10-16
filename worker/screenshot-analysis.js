@@ -513,7 +513,6 @@ async function transcribeAudio(request,env){
   }
   return reply({error:"audio_transcription_failed",attempted},502);
 }
-
 async function runChat(body,env,onStatus){
   const text=buildChatContext(body.text,body.history);
   if(!text)return {status:400,data:{error:"text_required"}};
