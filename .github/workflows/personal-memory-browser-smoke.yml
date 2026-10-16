@@ -1,6 +1,8 @@
 name: Personal Memory Browser Smoke Test
 
 on:
+  push:
+    branches: ["fix/load-personal-memory-bridge"]
   pull_request:
     branches: ["main"]
     types: [opened, synchronize, reopened, ready_for_review]
@@ -28,7 +30,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Prepare candidate Pages runtime for pull requests
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'workflow_dispatch'
         run: python3 scripts/prepare_web_organ_runtime.py
       - name: Start candidate Pages server
         if: github.event_name == 'pull_request'
@@ -53,6 +55,6 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Test send, persistent storage, and recall after reload
         env:
-          MOSHARROF_TEST_URL: ${{ github.event_name == 'pull_request' && 'http://127.0.0.1:4173/' || inputs.test_url }}
+          MOSHARROF_TEST_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.test_url || 'http://127.0.0.1:4173/' }}
           MOSHARROF_TEST_TIMEOUT_MS: "45000"
         run: node tests/e2e/personal-memory-browser-smoke.mjs
