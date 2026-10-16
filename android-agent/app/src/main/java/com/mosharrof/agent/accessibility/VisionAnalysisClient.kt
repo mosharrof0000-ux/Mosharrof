@@ -52,7 +52,7 @@ object VisionAnalysisClient {
                     connection.disconnect()
                 }
             } catch (error: Exception) {
-                callback(null, "স্ক্রিন বিশ্লেষণ সংযোগ ব্যর্থ: \${error.message ?: "অজানা ত্রুটি"}")
+                callback(null, "স্ক্রিন বিশ্লেষণ সংযোগ ব্যর্থ: ${error.message ?: "অজানা ত্রুটি"}")
             }
         }.start()
     }
