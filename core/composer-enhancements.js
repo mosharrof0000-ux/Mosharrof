@@ -54,12 +54,17 @@ export function initializeComposerEnhancements() {
   document.body.appendChild(editor);
   const largeInput = editor.querySelector("textarea");
 
+  function currentInput() {
+    return document.getElementById("input") || input;
+  }
   function syncVisibility() {
-    expand.classList.toggle("visible", !!String(input.value || "").trim());
+    const activeInput = currentInput();
+    expand.classList.toggle("visible", !!String(activeInput.value || "").trim());
   }
   function openEditor() {
-    if (!String(input.value || "").trim()) return;
-    largeInput.value = input.value;
+    const activeInput = currentInput();
+    if (!String(activeInput.value || "").trim()) return;
+    largeInput.value = activeInput.value;
     editor.classList.add("open");
     editor.setAttribute("aria-hidden", "false");
     expand.setAttribute("aria-expanded", "true");
@@ -70,21 +75,25 @@ export function initializeComposerEnhancements() {
     });
   }
   function closeEditor(apply) {
+    const activeInput = currentInput();
     if (apply) {
-      input.value = largeInput.value;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-      input.value = largeInput.value;
+      const value = String(largeInput.value || "");
+      activeInput.value = value;
+      activeInput.dispatchEvent(new Event("input", { bubbles: true }));
+      activeInput.dispatchEvent(new Event("change", { bubbles: true }));
+      activeInput.value = value;
       syncVisibility();
     }
     editor.classList.remove("open");
     editor.setAttribute("aria-hidden", "true");
     expand.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
-    if (apply) input.focus();
+    if (apply) activeInput.focus();
   }
 
-  input.addEventListener("input", syncVisibility);
+  document.addEventListener("input", event => {
+    if (event.target?.id === "input") syncVisibility();
+  });
   expand.addEventListener("click", openEditor);
   editor.querySelector("[data-expand-cancel]").addEventListener("click", () => closeEditor(false));
   editor.querySelector("[data-expand-apply]").addEventListener("click", event => {
