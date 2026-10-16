@@ -22,6 +22,7 @@ import com.mosharrof.agent.permissions.DeviceCapabilityCenter
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
+import com.mosharrof.agent.execution.DeviceIntentControl
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
@@ -50,7 +51,7 @@ class MainActivity : ComponentActivity() {
         result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             ?.firstOrNull()?.takeIf { it.isNotBlank() }?.let {
                 commandInput.setText(it)
-                taskController.prepareTask(it)
+                if (!DeviceIntentControl.handle(this@MainActivity, it, status)) taskController.prepareTask(it)
             }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +77,10 @@ class MainActivity : ComponentActivity() {
         confirmButton.setOnClickListener { taskController.confirmPending() }
         val planButton = Button(this).apply {
             text = "কমান্ড যাচাই করুন"
-            setOnClickListener { taskController.prepareTask(commandInput.text.toString()) }
+            setOnClickListener {
+                val command = commandInput.text.toString()
+                if (!DeviceIntentControl.handle(this@MainActivity, command, status)) taskController.prepareTask(command)
+            }
         }
         val voiceButton = Button(this).apply {
             text = "কথা বলে কমান্ড দিন"
