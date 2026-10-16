@@ -71,6 +71,17 @@ public class AndroidFileManagerPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void getSelectedDirectory(PluginCall call) {
+        Uri tree = getTreeUri(call);
+        if (tree == null) return;
+        JSObject out = new JSObject();
+        out.put("selected", true);
+        out.put("uri", tree.toString());
+        out.put("scope", "user_selected_folder_only");
+        call.resolve(out);
+    }
+
+    @PluginMethod
     public void listItems(PluginCall call) {
         Uri tree = getTreeUri(call);
         if (tree == null) return;
