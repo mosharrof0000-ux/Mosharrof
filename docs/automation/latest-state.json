@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T10:54:53+00:00",
+  "timestamp_utc": "2026-10-17T10:55:15+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39026650768",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39026650768",
-  "source_run_id": "39026636852",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39026636852",
+  "run_id": "39026655361",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39026655361",
+  "source_run_id": "39026636850",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39026636850",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "agent/auto-scheduled-mosharrof-maintenance-audit-inspect-fo-39026525315",
   "sha": "dbd3892dfe3eae3b5e75a74dfc5acdb98a71392b",
   "checked": [
-    "Completed workflow result: Mosharrof Verification Gate = failure",
+    "Completed workflow result: Build MOSHARROF Android APK = failure",
     "Source commit: dbd3892dfe3eae3b5e75a74dfc5acdb98a71392b",
-    "Job: Verify before promotion — completed/failure"
+    "Job: build-apk — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: Verify before promotion. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof Verification Gate",
+  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Build MOSHARROF Android APK",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Verify before promotion",
+      "job": "build-apk",
       "status": "completed",
       "conclusion": "failure",
       "steps": [
@@ -33,11 +33,23 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout proposed version",
+          "name": "Checkout MOSHARROF",
           "conclusion": "success"
         },
         {
-          "name": "Verify Pages entrypoint",
+          "name": "Setup Node",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify edge-to-edge web contract",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare Android full-screen voice manager",
           "conclusion": "success"
         },
         {
@@ -45,35 +57,35 @@
           "conclusion": "failure"
         },
         {
-          "name": "Run project tests",
+          "name": "Verify Android agent contract suite",
           "conclusion": "skipped"
         },
         {
-          "name": "Start browser test server",
+          "name": "Build debug APK",
           "conclusion": "skipped"
         },
         {
-          "name": "Install Playwright and Chromium",
+          "name": "Verify APK",
           "conclusion": "skipped"
         },
         {
-          "name": "Capture mobile and desktop screenshots",
+          "name": "Upload APK artifact",
           "conclusion": "skipped"
         },
         {
-          "name": "Verify screenshots are valid",
+          "name": "Publish GitHub Release",
           "conclusion": "skipped"
         },
         {
-          "name": "Upload visual evidence",
+          "name": "Post Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Node",
           "conclusion": "skipped"
         },
         {
-          "name": "Promotion decision",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Checkout proposed version",
+          "name": "Post Checkout MOSHARROF",
           "conclusion": "success"
         },
         {
@@ -85,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T10:54:58+00:00",
+  "finished_at_utc": "2026-10-17T10:55:20+00:00",
   "outcome": "success"
 }
