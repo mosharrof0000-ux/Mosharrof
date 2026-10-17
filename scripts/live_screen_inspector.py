@@ -267,6 +267,41 @@ async def main():
         }""")
         await page.wait_for_timeout(150)
 
+        # Verify the exact two user-reported composer defects in the real browser layout.
+        try:
+            input_box = page.locator("#input")
+            server_button = page.locator("#composerServerBtn")
+            server_count = await server_button.count()
+            record("composer_server_button_visible", server_count == 1 and await server_button.is_visible(),
+                   f"selector=#composerServerBtn; count={server_count}")
+            dimensions = await page.locator("#composer .composer-input-row").evaluate(
+                """row => {
+                  const input = row.querySelector('#input');
+                  const box = row.getBoundingClientRect();
+                  const composer = document.querySelector('#composer').getBoundingClientRect();
+                  const rect = input.getBoundingClientRect();
+                  return {rowWidth: Math.round(box.width), composerWidth: Math.round(composer.width),
+                          inputWidth: Math.round(rect.width), inputHeight: Math.round(rect.height),
+                          widthRatio: rect.width / Math.max(1, composer.width)};
+                }"""
+            )
+            record("composer_input_uses_full_width_and_readable_height",
+                   dimensions["widthRatio"] >= 0.90 and dimensions["inputHeight"] >= 80,
+                   json.dumps(dimensions, ensure_ascii=False))
+            if server_count == 1 and await server_button.is_visible():
+                await server_button.click()
+                menu = page.locator(".manual-provider-menu")
+                await menu.wait_for(state="visible", timeout=3000)
+                menu_items = await menu.locator('[role="menuitemradio"]').count()
+                record("composer_server_button_opens_provider_menu", menu_items >= 5,
+                       f"visible provider/model choices={menu_items}")
+                await menu.locator('[role="menuitemradio"]').first.click()
+                record("composer_server_menu_closes_after_selection",
+                       await page.locator(".manual-provider-menu").count() == 0,
+                       "provider selection menu closes after choosing a route")
+        except Exception as exc:
+            record("composer_layout_and_server_button", False, repr(exc))
+
         # Composer expansion is safe: only a temporary draft in this browser context.
         # Assert draft copy, cancel preservation, and explicit apply; never submit this draft.
         try:
