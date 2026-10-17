@@ -1,29 +1,37 @@
 {
-  "timestamp_utc": "2026-10-17T11:49:15+00:00",
+  "timestamp_utc": "2026-10-17T11:46:37+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028882794",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028882794",
-  "source_run_id": "39028843489",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028843489",
+  "run_id": "39028885677",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028885677",
+  "source_run_id": "39028874923",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028874923",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "cff33ab18412216d17df77c2f37cf7e5356312d2",
+  "sha": "200ead75e7296195b929b9858c48c8a4401fb3d7",
   "checked": [
-    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = cancelled",
-    "Source commit: cff33ab18412216d17df77c2f37cf7e5356312d2"
+    "Completed workflow result: Mosharrof Verification Gate = cancelled",
+    "Source commit: 200ead75e7296195b929b9858c48c8a4401fb3d7",
+    "Job: Verify before promotion — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof Verification Gate",
   "source_conclusion": "cancelled",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "Verify before promotion",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    }
+  ],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T11:49:15+00:00",
+  "finished_at_utc": "2026-10-17T11:49:17+00:00",
   "outcome": "failure"
 }
