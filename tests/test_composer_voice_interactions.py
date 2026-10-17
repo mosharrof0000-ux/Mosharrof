@@ -17,6 +17,7 @@ PREP_SCRIPT = (ROOT / "scripts" / "prepare_web_organ_runtime.py").read_text(enco
 class ComposerVoiceInteractionContractTests(unittest.TestCase):
     def test_text_area_is_moved_above_bottom_action_row_at_runtime(self):
         self.assertIn('input.closest(".row")', LAYOUT)
+        self.assertIn('min-height:88px!important;height:88px', LAYOUT)
         self.assertIn('inputRow.appendChild(input)', LAYOUT)
         self.assertIn('existingRow.classList.add("composer-actions-row")', LAYOUT)
         self.assertIn('#composer .composer-input-row .input', LAYOUT)
@@ -30,12 +31,14 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         for provider in ("auto", "gemini", "cloudflare-workers-ai", "groq", "openrouter"):
             self.assertIn(provider, MANUAL_PROVIDER)
 
-    def test_long_press_opens_server_menu_without_a_separate_server_button(self):
-        self.assertIn('target.closest("#sendBtn,.response-route")', MANUAL_PROVIDER)
+    def test_dedicated_server_button_is_visible_and_send_remains_a_send_action(self):
+        self.assertIn('id = "composerServerBtn"', ENHANCEMENTS)
+        self.assertIn('insertBefore(serverButton, voice', ENHANCEMENTS)
+        self.assertIn('target.closest("#composerServerBtn")', MANUAL_PROVIDER)
+        self.assertIn('menuFor(target,"chat")', MANUAL_PROVIDER)
         self.assertIn("},520);", MANUAL_PROVIDER)
         self.assertIn("e.stopImmediatePropagation()", MANUAL_PROVIDER)
-        self.assertNotIn("manualChatModeBtn", MANUAL_PROVIDER)
-        self.assertNotIn('id="serverBtn"', HTML)
+        self.assertNotIn('target.closest("#sendBtn,.response-route")', MANUAL_PROVIDER)
 
     def test_provider_color_changes_only_send_icon_stroke(self):
         self.assertIn('#sendBtn svg{stroke:var(--chat-provider-accent,#f2f2f2)!important}', MANUAL_PROVIDER)
