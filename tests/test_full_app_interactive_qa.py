@@ -9,7 +9,7 @@ def test_qa_runner_defaults_to_read_only():
     tree = ast.parse(SOURCE.read_text(encoding="utf-8"))
     source = SOURCE.read_text(encoding="utf-8")
     assert 'os.environ.get("MOSHARROF_QA_SEND_MESSAGE", "0")' in source
-    assert 'os.environ.get("PAGE_URL"' in source
+    assert '"PAGE_URL"' in source and 'https://mosharrof0000-ux.github.io/Mosharrof/' in source
     assert "if SEND_MESSAGE:" in source
 
 
