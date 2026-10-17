@@ -2,23 +2,23 @@
   "timestamp_utc": "2026-10-17T11:34:53+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028496552",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028496552",
-  "source_run_id": "39028401018",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028401018",
+  "run_id": "39028537218",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028537218",
+  "source_run_id": "39028485004",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028485004",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128",
+  "sha": "d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
   "checked": [
-    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
-    "Source commit: a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128"
+    "Completed workflow result: Mosharrof CI = failure",
+    "Source commit: d0e389d62b2d02f677f4a53ce19f1e55cc871b42"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_workflow": "Mosharrof CI",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [],
