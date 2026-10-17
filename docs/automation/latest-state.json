@@ -1,157 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T11:42:59+00:00",
+  "timestamp_utc": "2026-10-17T11:43:10+00:00",
   "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029588593",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029588593",
+  "run_id": "39029427721",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029427721",
   "source_run_id": null,
   "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "f275417323984635db2dd9b305f388f6d0e5dd37",
+  "sha": "ad87f98264c233e034cdbf43e45b4f5f0fff1b6a",
   "checked": [
-    "Push commit: test: follow extracted manual provider runtime patch",
-    "Commit SHA: f275417323984635db2dd9b305f388f6d0e5dd37",
-    "Check: Redirect rules - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: interaction-qa — queued/pending",
-    "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: Mandatory Organ Isolation — queued/pending",
-    "Check: browser-memory-roundtrip — queued/pending",
-    "Check: test — queued/pending",
-    "Check: Leave the repo clean — queued/pending",
-    "Check: Verify before promotion — queued/pending",
-    "Check: Component awareness heartbeat — queued/pending",
-    "Check: test — queued/pending",
-    "Check: test — queued/pending",
-    "Check: visual-qa — queued/pending",
-    "Check: verify-ecosystem — queued/pending",
-    "Check: build-apk — in_progress/pending",
-    "Check: validate — completed/skipped",
-    "Check: record — in_progress/pending",
-    "Check: test — completed/failure"
+    "Push commit: test: bundle manual chat routing in worker harness",
+    "Commit SHA: ad87f98264c233e034cdbf43e45b4f5f0fff1b6a"
   ],
   "planned": [
     "Record the commit message, changed paths and available checks.",
     "Run the work-engine contract tests and validate the run metadata.",
     "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Resume at failed check: test. Open its run logs and repair on a safe feature branch.",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
   "source_workflow": null,
   "source_conclusion": null,
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "Redirect rules - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "interaction-qa",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Header rules - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "Pages changed - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "Mandatory Organ Isolation",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "browser-memory-roundtrip",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Leave the repo clean",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Verify before promotion",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Component awareness heartbeat",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "visual-qa",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "verify-ecosystem",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "build-apk",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "validate",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "failure",
-      "steps": []
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:43:04+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:43:10+00:00",
+  "outcome": "failure"
 }
