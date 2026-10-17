@@ -112,6 +112,13 @@ def main() -> int:
             raise SystemExit("ORGAN ASSET PREP: transcription request shape changed; manual STT selection requires review")
         index_html = index_html.replace(old_stt_request, new_stt_request, 1)
 
+    old_tts_fallback = 'button.disabled=false;hideV();speakWithBrowser(spokenText,button);toast("সার্ভার ভয়েস ব্যর্থ: "+detail+" · Browser Voice ব্যবহার হচ্ছে",6000);'
+    new_tts_fallback = 'button.disabled=false;hideV();if(preference==="auto"){speakWithBrowser(spokenText,button);toast("সার্ভার ভয়েস ব্যর্থ: "+detail+" · Browser Voice ব্যবহার হচ্ছে",6000);}else{resetSpeakButton(button);toast("নির্বাচিত ভয়েস ইঞ্জিন ব্যর্থ: "+detail+" · অন্য ইঞ্জিনে যাওয়া হয়নি",6000);}'
+    if new_tts_fallback not in index_html:
+        if old_tts_fallback not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: TTS fallback shape changed; manual provider policy requires review")
+        index_html = index_html.replace(old_tts_fallback, new_tts_fallback, 1)
+
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
