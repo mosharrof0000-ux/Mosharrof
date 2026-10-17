@@ -253,7 +253,6 @@ async function tts(request,env){
     const expressive=/^(song|poem|lyrics|emotional)$/.test(genre);
     providers=expressive?["elevenlabs","edge","gemini","azure","sarvam"]:["edge","gemini","azure","sarvam"];
   }else{
-    /* Explicit manual choice means exactly this provider; no silent provider switching. */
     providers=[valid];
   }
   const attempted=[];
