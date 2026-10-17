@@ -5,12 +5,13 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
 ENHANCEMENTS = (ROOT / "core" / "composer-enhancements.js").read_text(encoding="utf-8")
+VOICE_METER = (ROOT / "core" / "composer-voice-meter.js").read_text(encoding="utf-8")
 MANUAL_PROVIDER = (ROOT / "core" / "manual-provider-controls.js").read_text(encoding="utf-8")
 
 
 class ComposerVoiceInteractionContractTests(unittest.TestCase):
     def test_text_area_is_above_bottom_action_row(self):
-        textarea = HTML.index('class="composer-input-row"')
+        textarea = HTML.index('id="input"')
         actions = HTML.index('class="row composer-actions-row"')
         self.assertLess(textarea, actions)
         self.assertLess(actions, HTML.index('id="composerVoiceBtn"'))
@@ -24,7 +25,7 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
     def test_long_press_opens_server_menu_without_a_separate_server_button(self):
         self.assertIn('target.closest("#sendBtn,.response-route")', MANUAL_PROVIDER)
         self.assertIn("},520);", MANUAL_PROVIDER)
-        self.assertIn("event.stopImmediatePropagation()", MANUAL_PROVIDER)
+        self.assertIn("e.stopImmediatePropagation()", MANUAL_PROVIDER)
         self.assertNotIn("manualChatModeBtn", MANUAL_PROVIDER)
         self.assertNotIn('id="serverBtn"', HTML)
 
@@ -34,14 +35,14 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertNotIn('#sendBtn{background:', MANUAL_PROVIDER)
 
     def test_microphone_activity_uses_live_audio_level(self):
-        self.assertIn("createAnalyser()", HTML)
-        self.assertIn("getByteTimeDomainData(samples)", HTML)
-        self.assertIn("rms>=0.025", HTML)
-        self.assertIn('classList.toggle("has-voice-activity",active)', HTML)
-        self.assertIn('#composerVoiceBtn.has-voice-activity{background:#080808', HTML)
+        self.assertIn("createAnalyser()", VOICE_METER)
+        self.assertIn("getByteTimeDomainData(samples)", VOICE_METER)
+        self.assertIn("Math.sqrt(energy / samples.length) >= 0.025", VOICE_METER)
+        self.assertIn('classList.toggle("has-voice-activity", Math.sqrt(energy / samples.length) >= 0.025)', VOICE_METER)
+        self.assertIn('#composerVoiceBtn.has-voice-activity{background:#080808', ENHANCEMENTS)
 
     def test_send_resets_size_and_restores_failed_draft(self):
-        self.assertIn('input.style.height="40px";input.scrollTop=0;resize();', HTML)
+        self.assertIn('input.value="";resize();', HTML)
         self.assertIn('if(!input.value.trim()&&raw)input.value=raw;resize();', HTML)
 
     def test_fullscreen_editor_remains_available(self):
