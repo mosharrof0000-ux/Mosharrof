@@ -34,6 +34,7 @@ def main() -> int:
         "core/composer-voice-meter.js": "web/composer-voice-meter.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
         "core/composer-line-limit.js": "web/composer-line-limit.js",
+        "core/composer-line-limit.js": "web/core/composer-line-limit.js",
         "core/device-control.js": "web/device-control.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
