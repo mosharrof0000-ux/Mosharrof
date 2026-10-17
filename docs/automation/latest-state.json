@@ -1,16 +1,16 @@
 {
-  "timestamp_utc": "2026-10-17T11:21:57+00:00",
+  "timestamp_utc": "2026-10-17T11:22:01+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028248470",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028248470",
-  "source_run_id": "39028238776",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238776",
+  "run_id": "39028252888",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028252888",
+  "source_run_id": "39028238790",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238790",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "bf8ab44bc1bafb3fce655737c4678ac530e2041b",
   "checked": [
-    "Completed workflow result: Mosharrof Component Consciousness = success",
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = failure",
     "Source commit: bf8ab44bc1bafb3fce655737c4678ac530e2041b"
   ],
   "planned": [
@@ -18,12 +18,12 @@
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Mosharrof Component Consciousness",
-  "source_conclusion": "success",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T11:21:57+00:00",
+  "finished_at_utc": "2026-10-17T11:22:01+00:00",
   "outcome": "failure"
 }
