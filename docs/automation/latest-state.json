@@ -1,37 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T11:23:54+00:00",
+  "timestamp_utc": "2026-10-17T11:24:00+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028404036",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028404036",
-  "source_run_id": "39028396336",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028396336",
+  "run_id": "39028222742",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028222742",
+  "source_run_id": "39028205521",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028205521",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "35826462b6bcc3d56f51d143b92a85c0f3a11590",
+  "sha": "21720d3daf50e2a908b23b0a42099645a749e817",
   "checked": [
-    "Completed workflow result: Personal Memory Browser Smoke Test = cancelled",
-    "Source commit: 35826462b6bcc3d56f51d143b92a85c0f3a11590",
-    "Job: browser-memory-roundtrip — completed/cancelled"
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: 21720d3daf50e2a908b23b0a42099645a749e817"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: browser-memory-roundtrip. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Personal Memory Browser Smoke Test",
-  "source_conclusion": "cancelled",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Tests",
+  "source_conclusion": "failure",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "browser-memory-roundtrip",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:23:59+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:24:00+00:00",
+  "outcome": "failure"
 }
