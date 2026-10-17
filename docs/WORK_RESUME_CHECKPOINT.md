@@ -81,3 +81,13 @@ Start by reading this file and PR #692, then inspect the latest commit on the br
 - The initial ledger entry from run `39015878146` persisted successfully, but it used the earlier recorder version and did not contain the later job-level check inventory. Treat that as a smoke proof of persistence only.
 - Current acceptance state: **pending**. Latest PR checks on PR #693 are queued; do not call the corrected recorder fully green until the current-head contract tests and the engine run complete successfully and a new ledger entry is inspected.
 - Resume from PR #693's latest head, inspect the `MOSHARROF Automatic Work Engine` push run and `Mosharrof Tests` run, then inspect `automation-work-log/docs/automation/latest-state.json`. Only after all relevant checks pass should the isolated PR be considered for merge. Merging this workflow into default branch is required before its `workflow_run` trigger can record completed runs for all named workflows.
+
+
+## Latest automatic-engine verification update — 2026-10-17
+
+- PR #692 branch now includes the corrected recorder and test assertion. Recorder smoke run `39016092459` completed **SUCCESS** on SHA `5d6bda4c3aa7ca5260a3f609f027d35fe76c7455`: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39016092459
+- The ledger's latest-state file now records changed paths and available check statuses for that run: https://github.com/mosharrof0000-ux/Mosharrof/blob/automation-work-log/docs/automation/latest-state.json
+- A concurrent-write retry improvement was added to the work-ledger persistence step after that successful smoke run. It still needs validation on the latest workflow revision; current revision on this branch was commit `86b1397a74a3b6f342483b77429db5ca69646b0f`.
+- Isolated automatic-engine PR #693 is OPEN at head `ad40999088113fd107a89d9f90cb64f1314d46cc`: https://github.com/mosharrof0000-ux/Mosharrof/pull/693
+- Latest PR #693 engine push run `39016174502` was QUEUED at last check: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39016174502
+- Next: wait for and inspect the current-head engine contract test and recorder run, then verify the latest-state ledger was updated from that exact run. Do not merge PR #693 until required checks pass; its workflow_run trigger only becomes globally active after the workflow is merged to default branch.
