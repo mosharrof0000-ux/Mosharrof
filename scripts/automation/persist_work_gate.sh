@@ -36,7 +36,7 @@ cat > "$LOG_REPO/docs/automation/gates/README.md" <<'EOF'
 Each run has a per-run state.json latest checkpoint and events.jsonl event history. latest-state.json points to the most recently persisted gate state. The active PR/main branch is not changed by these operational records.
 EOF
 git -C "$LOG_REPO" add docs/automation/gates
-for ATTEMPT in 1 2 3 4 5; do
+for ATTEMPT in $(seq 1 12); do
   if git -C "$LOG_REPO" diff --cached --quiet; then
     echo "Gate ledger already current."
     exit 0
@@ -45,7 +45,7 @@ for ATTEMPT in 1 2 3 4 5; do
   if git -C "$LOG_REPO" push origin HEAD:refs/heads/automation-work-log; then
     exit 0
   fi
-  echo "Gate ledger push raced; refreshing before retry $ATTEMPT/5."
+  echo "Gate ledger push raced; refreshing before retry $ATTEMPT/12."
   git fetch origin automation-work-log
   git -C "$LOG_REPO" reset --hard origin/automation-work-log
   mkdir -p "$LOG_REPO/docs/automation/gates/runs/$RUN_ID"
@@ -61,7 +61,7 @@ if not previous.get("updated_at_utc") or current.get("updated_at_utc", "") >= pr
     target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 PY
   git -C "$LOG_REPO" add docs/automation/gates
-  sleep "$ATTEMPT"
+  sleep "$((ATTEMPT + RANDOM % 4))"
 done
-echo "Failed to persist gate checkpoint after five attempts." >&2
+echo "Failed to persist gate checkpoint after twelve attempts." >&2
 exit 1
