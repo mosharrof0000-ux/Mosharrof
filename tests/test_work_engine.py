@@ -57,7 +57,7 @@ class WorkEngineTests(unittest.TestCase):
             state = json.loads((out / "state.json").read_text(encoding="utf-8"))
             log = (out / "entry.md").read_text(encoding="utf-8")
             self.assertEqual(state["outcome"], "failure")
-            self.assertIn("Inspect this run's logs", state["next_step"])
+            self.assertIn("Inspect this work-engine run's logs", state["next_step"])
             self.assertIn("FINISHED", log)
             self.assertIn("FAILURE", log)
             self.assertIn("FINISHED", summary.read_text(encoding="utf-8"))
