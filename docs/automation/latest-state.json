@@ -1,75 +1,79 @@
 {
-  "timestamp_utc": "2026-10-17T10:54:34+00:00",
+  "timestamp_utc": "2026-10-17T10:54:53+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39026671521",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39026671521",
-  "source_run_id": "39026636773",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39026636773",
+  "run_id": "39026650768",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39026650768",
+  "source_run_id": "39026636852",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39026636852",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "agent/auto-scheduled-mosharrof-maintenance-audit-inspect-fo-39026525315",
   "sha": "dbd3892dfe3eae3b5e75a74dfc5acdb98a71392b",
   "checked": [
-    "Completed workflow result: Personal Memory Browser Smoke Test = success",
+    "Completed workflow result: Mosharrof Verification Gate = failure",
     "Source commit: dbd3892dfe3eae3b5e75a74dfc5acdb98a71392b",
-    "Job: browser-memory-roundtrip — completed/success"
+    "Job: Verify before promotion — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Personal Memory Browser Smoke Test",
-  "source_conclusion": "success",
+  "next_step": "Resume at failed workflow/job: Verify before promotion. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "browser-memory-roundtrip",
+      "job": "Verify before promotion",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v4",
+          "name": "Checkout proposed version",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v5",
+          "name": "Verify Pages entrypoint",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages runtime for pull requests",
-          "conclusion": "success"
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "failure"
         },
         {
-          "name": "Start candidate Pages server",
-          "conclusion": "success"
+          "name": "Run project tests",
+          "conclusion": "skipped"
         },
         {
-          "name": "Run actions/setup-node@v4",
-          "conclusion": "success"
+          "name": "Start browser test server",
+          "conclusion": "skipped"
         },
         {
-          "name": "Install Chromium browser test runner",
-          "conclusion": "success"
+          "name": "Install Playwright and Chromium",
+          "conclusion": "skipped"
         },
         {
-          "name": "Test send, persistent storage, and recall after reload",
-          "conclusion": "success"
+          "name": "Capture mobile and desktop screenshots",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Run actions/setup-node@v4",
-          "conclusion": "success"
+          "name": "Verify screenshots are valid",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Run actions/setup-python@v5",
-          "conclusion": "success"
+          "name": "Upload visual evidence",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Run actions/checkout@v4",
+          "name": "Promotion decision",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout proposed version",
           "conclusion": "success"
         },
         {
@@ -81,6 +85,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T10:54:40+00:00",
+  "finished_at_utc": "2026-10-17T10:54:58+00:00",
   "outcome": "success"
 }
