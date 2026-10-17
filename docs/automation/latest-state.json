@@ -1,82 +1,73 @@
 {
-  "timestamp_utc": "2026-10-17T08:44:40+00:00",
+  "timestamp_utc": "2026-10-17T08:39:56+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018200325",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018200325",
+  "run_id": "39018089771",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018089771",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "fix/work-engine-ledger-contention-2026-10-17",
-  "sha": "d0dbdbb2a6b03e32a952b872039fcf1e61435807",
+  "branch": "fix/work-ledger-concurrency-recovery-2026-10-17",
+  "sha": "25273ee9d56be9d2678fda1f002f2cd413ac4038",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = failure",
-    "Source commit: d0dbdbb2a6b03e32a952b872039fcf1e61435807",
-    "Job: test — completed/failure",
-    "Job: deploy — completed/skipped"
+    "Completed workflow result: Personal Memory Browser Smoke Test = success",
+    "Source commit: 25273ee9d56be9d2678fda1f002f2cd413ac4038",
+    "Job: browser-memory-roundtrip — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
-  "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "failure",
+  "source_workflow": "Personal Memory Browser Smoke Test",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "test",
+      "job": "browser-memory-roundtrip",
       "status": "completed",
-      "conclusion": "failure",
+      "conclusion": "success",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v6",
+          "name": "Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v6",
+          "name": "Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Run python -m pip install -r requirements.txt",
+          "name": "Prepare candidate Pages runtime for pull requests",
           "conclusion": "success"
-        },
-        {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Run python -m pytest -q",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Verify Pages artifact",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Prepare candidate organ runtime assets",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Install Chromium for candidate runtime smoke test",
-          "conclusion": "skipped"
         },
         {
           "name": "Start candidate Pages server",
-          "conclusion": "skipped"
+          "conclusion": "success"
         },
         {
-          "name": "Test candidate organ runtime in Chromium",
-          "conclusion": "skipped"
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
         },
         {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "skipped"
+          "name": "Install Chromium browser test runner",
+          "conclusion": "success"
         },
         {
-          "name": "Post Run actions/checkout@v6",
+          "name": "Test send, persistent storage, and recall after reload",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
@@ -84,16 +75,10 @@
           "conclusion": "success"
         }
       ]
-    },
-    {
-      "job": "deploy",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T08:46:29+00:00",
+  "finished_at_utc": "2026-10-17T08:46:27+00:00",
   "outcome": "failure"
 }
