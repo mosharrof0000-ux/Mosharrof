@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-10-17T12:01:42+00:00",
+  "timestamp_utc": "2026-10-17T12:02:04+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029570874",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029570874",
-  "source_run_id": "39029392977",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029392977",
+  "run_id": "39029653194",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029653194",
+  "source_run_id": "39029436353",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029436353",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "3fb8e59cbb119e7f3e8e644ef0ab4c99e073686d",
+  "sha": "2768d0b7f31ba7eff25a287064c7e022f5fcb646",
   "checked": [
     "Completed workflow result: Mosharrof Tests = failure",
-    "Source commit: 3fb8e59cbb119e7f3e8e644ef0ab4c99e073686d"
+    "Source commit: 2768d0b7f31ba7eff25a287064c7e022f5fcb646"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
@@ -24,6 +24,6 @@
   "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T12:01:42+00:00",
+  "finished_at_utc": "2026-10-17T12:02:04+00:00",
   "outcome": "failure"
 }
