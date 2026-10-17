@@ -1,52 +1,90 @@
 {
-  "timestamp_utc": "2026-10-17T11:05:22+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-17T11:05:36+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39027352976",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027352976",
-  "source_run_id": null,
-  "source_run_url": null,
+  "run_id": "39027335989",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027335989",
+  "source_run_id": "39027317136",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027317136",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/smart-visual-intelligence-engine-2026-10-17",
-  "sha": "8626a94fd656050babcfa34da1bea89f26bcc512",
+  "sha": "1a1c905ec02955384c7bdb37b4485701c2d13206",
   "checked": [
-    "Push commit: fix(ui): inject design intelligence assets with valid newlines",
-    "Commit SHA: 8626a94fd656050babcfa34da1bea89f26bcc512",
-    "Check: validate — completed/skipped",
-    "Check: test — in_progress/pending",
-    "Check: record — in_progress/pending"
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: 1a1c905ec02955384c7bdb37b4485701c2d13206",
+    "Job: test — completed/failure"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Wait for pending checks (test, record); then inspect their results and artifacts.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof Tests",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "validate",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
       "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify image engine prompt parsing",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test personal memory engine",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test memory retrieval and timeline regressions",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check memory bridge syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/run_organ_checks.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:05:26+00:00",
+  "finished_at_utc": "2026-10-17T11:05:42+00:00",
   "outcome": "success"
 }
