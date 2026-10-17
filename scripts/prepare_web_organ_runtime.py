@@ -37,6 +37,7 @@ def main() -> int:
         "core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js",
         "core/design-intelligence.js": "web/core/design-intelligence.js",
         "core/design-intelligence.css": "web/design-intelligence.css",
+        "organs/chat-manual-controls/index.js": "web/organs/chat-manual-controls/index.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
@@ -85,18 +86,32 @@ def main() -> int:
             raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for design intelligence engine")
         index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + design_script_tag, 1)
 
+    manual_controls_tag = '<script src="./organs/chat-manual-controls/index.js"></script>'
+    if manual_controls_tag not in index_html:
+        anchor_tag = '<script src="./core/design-intelligence.js"></script>'
+        if anchor_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: design intelligence script anchor missing for manual provider controls")
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\\n" + manual_controls_tag, 1)
+
     memory_bridge_tag = '<script type="module">import "./runtime/core/personal-memory-bridge.js";</script>'
     if memory_bridge_tag not in index_html:
         if video_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: video script anchor missing for memory bridge")
         index_html = index_html.replace(video_tag, video_tag + "\n" + memory_bridge_tag, 1)
 
-    old_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true,provider:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[0];}catch(e){return "auto";}})(),model:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[1]||"";}catch(e){return "";}})()})'
+    old_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
     new_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),history:(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};}),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true,provider:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[0];}catch(e){return "auto";}})(),model:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[1]||"";}catch(e){return "";}})()})'
     if new_chat_request not in index_html:
         if old_chat_request not in index_html:
             raise SystemExit("ORGAN ASSET PREP: chat request shape changed; history injection requires review")
         index_html = index_html.replace(old_chat_request, new_chat_request, 1)
+    old_stt_request = 'body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage()})'
+    new_stt_request = 'body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage(),model:(function(){try{return localStorage.getItem("mosharrof_stt_model_v1")||"auto";}catch(e){return "auto";}})()})'
+    if new_stt_request not in index_html:
+        if old_stt_request not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: transcription request shape changed; manual STT selection requires review")
+        index_html = index_html.replace(old_stt_request, new_stt_request, 1)
+
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
     composer_source = ROOT / "core/composer-enhancements.js"
@@ -130,7 +145,7 @@ def main() -> int:
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
-        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js", "web/core/design-intelligence.js", "web/design-intelligence.css")]
+        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js", "web/core/design-intelligence.js", "web/design-intelligence.css", "web/organs/chat-manual-controls/index.js")]
     if not all(p.is_file() for p in required):
         raise SystemExit("ORGAN ASSET PREP: required browser files are missing")
     print(f"ORGAN ASSET PREP: PASS — {len(ui_ids)} UI organs prepared")
