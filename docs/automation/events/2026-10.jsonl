@@ -9922,3 +9922,12 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T08:51:40+00:00",
+  "finished_at_utc": "2026-10-17T08:51:40+00:00",
+  "phase": "FINISHED",
+  "status": "failure",
+  "outcome": "failure",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks."
+}
+
