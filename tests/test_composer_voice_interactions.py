@@ -1,6 +1,8 @@
 from pathlib import Path
 import unittest
 
+from scripts.manual_provider_runtime_patch import apply_manual_provider_patches
+
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
@@ -20,13 +22,11 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn('#composer .composer-input-row .input', LAYOUT)
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
-        # Tests run before Pages preparation, so the source HTML keeps the stable anchor.
-        # The preparation patch must transform it to include the selected provider/model.
-        self.assertIn('body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})', HTML)
+        # Exercise the deploy-time transform itself; pytest suites may prepare web/index.html first.
+        patched_html = apply_manual_provider_patches(HTML)
         self.assertIn("apply_manual_provider_patches(index_html)", PREP_SCRIPT)
-        self.assertIn('new_chat_request = ', PROVIDER_PATCH)
-        self.assertIn('provider:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[0];}', PROVIDER_PATCH)
-        self.assertIn('model:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[1]||"";}', PROVIDER_PATCH)
+        self.assertIn('provider:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[0];}', patched_html)
+        self.assertIn('model:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[1]||"";}', patched_html)
         for provider in ("auto", "gemini", "cloudflare-workers-ai", "groq", "openrouter"):
             self.assertIn(provider, MANUAL_PROVIDER)
 
