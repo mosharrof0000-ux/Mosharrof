@@ -18,16 +18,18 @@ LIVE_INSPECTOR = (ROOT / "scripts" / "live_screen_inspector.py").read_text(encod
 class ComposerVoiceInteractionContractTests(unittest.TestCase):
     def test_text_area_is_moved_above_bottom_action_row_at_runtime(self):
         self.assertIn('input.closest(".row")', LAYOUT)
-        self.assertIn('min-height:88px!important;height:88px', LAYOUT)
+        self.assertIn('min-height:44px!important;height:44px', LAYOUT)
+        self.assertIn('width:100%;max-width:100%', LAYOUT)
+        self.assertIn('lineHeight * 8', (ROOT / 'core' / 'composer-line-limit.js').read_text(encoding='utf-8'))
         self.assertIn('inputRow.appendChild(input)', LAYOUT)
         self.assertIn('existingRow.classList.add("composer-actions-row")', LAYOUT)
         self.assertIn('#composer .composer-input-row .input', LAYOUT)
 
     def test_live_inspector_checks_composer_space_and_server_menu(self):
-        self.assertIn('composer_server_button_visible', LIVE_INSPECTOR)
+        self.assertIn('composer_expand_hidden_through_eight_lines', LIVE_INSPECTOR)
         self.assertIn('composer_input_uses_full_width_and_readable_height', LIVE_INSPECTOR)
-        self.assertIn('composer_server_button_opens_provider_menu', LIVE_INSPECTOR)
-        self.assertIn('composer_server_menu_closes_after_selection', LIVE_INSPECTOR)
+        self.assertIn('composer_send_long_press_opens_provider_menu', LIVE_INSPECTOR)
+        self.assertIn('composer_expander_appears_on_ninth_line', LIVE_INSPECTOR)
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
         # Exercise the deploy-time transform itself; pytest suites may prepare web/index.html first.
@@ -38,14 +40,14 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         for provider in ("auto", "gemini", "cloudflare-workers-ai", "groq", "openrouter"):
             self.assertIn(provider, MANUAL_PROVIDER)
 
-    def test_dedicated_server_button_is_visible_and_send_remains_a_send_action(self):
-        self.assertIn('id = "composerServerBtn"', ENHANCEMENTS)
-        self.assertIn('insertBefore(serverButton, voice', ENHANCEMENTS)
-        self.assertIn('target.closest("#composerServerBtn")', MANUAL_PROVIDER)
+    def test_provider_picker_uses_send_long_press_without_a_server_pill(self):
+        self.assertNotIn('id = "composerServerBtn"', ENHANCEMENTS)
+        self.assertNotIn('insertBefore(serverButton, voice', ENHANCEMENTS)
+        self.assertIn('target.closest("#sendBtn")', MANUAL_PROVIDER)
         self.assertIn('menuFor(target,"chat")', MANUAL_PROVIDER)
         self.assertIn("},520);", MANUAL_PROVIDER)
         self.assertIn("e.stopImmediatePropagation()", MANUAL_PROVIDER)
-        self.assertNotIn('target.closest("#sendBtn,.response-route")', MANUAL_PROVIDER)
+        self.assertNotIn('target.closest("#composerServerBtn")', MANUAL_PROVIDER)
 
     def test_provider_color_changes_only_send_icon_stroke(self):
         self.assertIn('#sendBtn svg{stroke:var(--chat-provider-accent,#f2f2f2)!important}', MANUAL_PROVIDER)
