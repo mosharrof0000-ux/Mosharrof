@@ -35,6 +35,8 @@ def main() -> int:
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
         "core/personal-memory-engine.js": "web/core/personal-memory-engine.js",
         "core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js",
+        "core/design-intelligence.js": "web/core/design-intelligence.js",
+        "core/design-intelligence.css": "web/design-intelligence.css",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
@@ -69,6 +71,19 @@ def main() -> int:
         if device_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: device-control script anchor missing for video UI")
         index_html = index_html.replace(device_tag, device_tag + "\n" + video_tag, 1)
+
+    design_css_tag = '<link rel="stylesheet" href="./design-intelligence.css">'
+    if design_css_tag not in index_html:
+        if "</head>" not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: HTML head anchor missing for design intelligence stylesheet")
+        index_html = index_html.replace("</head>", "  " + design_css_tag + "\n</head>", 1)
+
+    design_script_tag = '<script src="./core/design-intelligence.js"></script>'
+    if design_script_tag not in index_html:
+        anchor_tag = '<script src="./sidebar-recovery.js"></script>'
+        if anchor_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for design intelligence engine")
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + design_script_tag, 1)
 
     memory_bridge_tag = '<script type="module">import "./runtime/core/personal-memory-bridge.js";</script>'
     if memory_bridge_tag not in index_html:
@@ -115,7 +130,7 @@ def main() -> int:
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
-        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js")]
+        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js", "web/core/design-intelligence.js", "web/design-intelligence.css")]
     if not all(p.is_file() for p in required):
         raise SystemExit("ORGAN ASSET PREP: required browser files are missing")
     print(f"ORGAN ASSET PREP: PASS — {len(ui_ids)} UI organs prepared")
