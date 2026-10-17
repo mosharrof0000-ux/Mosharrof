@@ -1,37 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T12:06:01+00:00",
+  "timestamp_utc": "2026-10-17T12:06:10+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030128826",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030128826",
-  "source_run_id": "39030112145",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030112145",
+  "run_id": "39030109364",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030109364",
+  "source_run_id": "39030013235",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030013235",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "ac5ca7b97c981471ad264e0896f084906ad3bfd3",
+  "sha": "e6b185b1bf48fe6d38d2cf1be0f5db32b34f64db",
   "checked": [
     "Completed workflow result: Personal Memory Browser Smoke Test = cancelled",
-    "Source commit: ac5ca7b97c981471ad264e0896f084906ad3bfd3",
-    "Job: browser-memory-roundtrip — completed/cancelled"
+    "Source commit: e6b185b1bf48fe6d38d2cf1be0f5db32b34f64db"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: browser-memory-roundtrip. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
   "source_workflow": "Personal Memory Browser Smoke Test",
   "source_conclusion": "cancelled",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "browser-memory-roundtrip",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T12:06:06+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:06:10+00:00",
+  "outcome": "failure"
 }
