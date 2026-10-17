@@ -23,6 +23,9 @@ def test_manual_chat_provider_does_not_silently_fall_back():
     assert "runSelectedChat(body,env,report,fallbackText,targetWords,maxOutputTokens)" in WORKER
     assert 'error:"selected_provider_failed"' in WORKER
     assert "automatic fallback was not used" in WORKER
+    assert "old_tts_fallback" in PREP
+    assert 'preference==="auto"' in PREP
+    assert "অন্য ইঞ্জিনে যাওয়া হয়নি" in PREP
 
 
 def test_manual_tts_uses_only_selected_provider_and_auto_keeps_free_first():
