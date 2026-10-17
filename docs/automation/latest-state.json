@@ -1,29 +1,70 @@
 {
-  "timestamp_utc": "2026-10-17T12:14:12+00:00",
+  "timestamp_utc": "2026-10-17T12:11:50+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030273480",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030273480",
-  "source_run_id": "39030117808",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030117808",
+  "run_id": "39030280416",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030280416",
+  "source_run_id": "39030117848",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030117848",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "d192687b477e333a18421692de71525fc45eb09d",
   "checked": [
-    "Completed workflow result: Mosharrof Component Consciousness = success",
-    "Source commit: d192687b477e333a18421692de71525fc45eb09d"
+    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
+    "Source commit: d192687b477e333a18421692de71525fc45eb09d",
+    "Job: verify-ecosystem — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Mosharrof Component Consciousness",
-  "source_conclusion": "success",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_conclusion": "failure",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "verify-ecosystem",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout Code",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Python 3.12",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install test dependencies",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run Integration Tests",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Set up Python 3.12",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout Code",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T12:14:12+00:00",
+  "finished_at_utc": "2026-10-17T12:14:19+00:00",
   "outcome": "failure"
 }
