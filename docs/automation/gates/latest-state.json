@@ -9,13 +9,16 @@
   "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030260576",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "47a4569b3f9f3c6208962e982495e0330a83b218",
-  "status": "in_progress",
+  "status": "completed",
   "completed_steps": [
-    "Recorder start entry written"
+    "Recorder start entry written",
+    "Python compilation and contract tests"
   ],
   "interruption": null,
-  "resume_from": "next: run Python compilation and both contract test suites",
-  "updated_at_utc": "2026-10-17T12:00:19Z",
+  "resume_from": null,
+  "updated_at_utc": "2026-10-17T12:00:22Z",
   "last_checkpoint_utc": "2026-10-17T12:00:19Z",
-  "last_completed_step": "Recorder start entry written"
+  "last_completed_step": "Python compilation and contract tests",
+  "finished_at_utc": "2026-10-17T12:00:22Z",
+  "exit_details": "All focused tests passed; inspect workflow result and artifacts next."
 }
