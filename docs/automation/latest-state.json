@@ -1,101 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T12:18:07+00:00",
+  "timestamp_utc": "2026-10-17T12:18:19+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030997253",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030997253",
-  "source_run_id": "39030698203",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030698203",
+  "run_id": "39030690866",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030690866",
+  "source_run_id": "39030264032",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030264032",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "090835df09db01efaf9a44c6106b4e2a7e3c89c3",
+  "sha": "47a4569b3f9f3c6208962e982495e0330a83b218",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
-    "Source commit: 090835df09db01efaf9a44c6106b4e2a7e3c89c3",
-    "Job: test — completed/cancelled",
-    "Job: deploy — completed/cancelled"
+    "Completed workflow result: Personal Memory Browser Smoke Test = success",
+    "Source commit: 47a4569b3f9f3c6208962e982495e0330a83b218"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "cancelled",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Personal Memory Browser Smoke Test",
+  "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pip install -r requirements.txt",
-          "conclusion": "success"
-        },
-        {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Run python -m pytest -q",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Verify Pages artifact",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Prepare candidate organ runtime assets",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Install Chromium for candidate runtime smoke test",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Start candidate Pages server",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Test candidate organ runtime in Chromium",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    },
-    {
-      "job": "deploy",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T12:18:12+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:18:19+00:00",
+  "outcome": "failure"
 }
