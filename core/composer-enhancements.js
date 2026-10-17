@@ -41,7 +41,8 @@ export function initializeComposerEnhancements() {
   expand.setAttribute("aria-controls", "mosharrofExpandEditor");
   expand.setAttribute("aria-expanded", "false");
   expand.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8h8v8H8z"/></svg>';
-  send.parentNode.insertBefore(expand, send);
+  // Preserve the established live composer order: expand action before the stop action.
+  send.parentNode.insertBefore(expand, document.getElementById("stopBtn") || send);
 
   const editor = document.createElement("section");
   editor.className = "mosharrof-expand-editor";
