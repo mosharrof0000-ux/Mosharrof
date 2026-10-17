@@ -1,83 +1,79 @@
 {
-  "timestamp_utc": "2026-10-17T11:35:05+00:00",
+  "timestamp_utc": "2026-10-17T11:37:29+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028712964",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028712964",
-  "source_run_id": "39028684003",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028684003",
+  "run_id": "39028778887",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028778887",
+  "source_run_id": "39028753561",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028753561",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "42ffa14e4886546ea8fa09fbceb55def4515b9b4",
+  "sha": "e68598860c2c68a4f6f216e2d7b077ca2531b234",
   "checked": [
-    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = success",
-    "Source commit: 42ffa14e4886546ea8fa09fbceb55def4515b9b4",
-    "Job: Mandatory Organ Isolation — completed/success"
+    "Completed workflow result: Mosharrof Verification Gate = failure",
+    "Source commit: e68598860c2c68a4f6f216e2d7b077ca2531b234",
+    "Job: Verify before promotion — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
-  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
-  "source_conclusion": "success",
+  "next_step": "Resume at failed workflow/job: Verify before promotion. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Mandatory Organ Isolation",
+      "job": "Verify before promotion",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Checkout proposed commit and history",
+          "name": "Checkout proposed version",
           "conclusion": "success"
         },
         {
-          "name": "Setup Python",
+          "name": "Verify Pages entrypoint",
           "conclusion": "success"
         },
         {
-          "name": "Prove the gate blocks invalid replacements",
-          "conclusion": "success"
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "failure"
         },
         {
-          "name": "Validate registry and safe organ scaffolding",
-          "conclusion": "success"
+          "name": "Run project tests",
+          "conclusion": "skipped"
         },
         {
-          "name": "Validate manifests and generated browser registry",
-          "conclusion": "success"
+          "name": "Start browser test server",
+          "conclusion": "skipped"
         },
         {
-          "name": "Setup Node.js for runtime contract tests",
-          "conclusion": "success"
+          "name": "Install Playwright and Chromium",
+          "conclusion": "skipped"
         },
         {
-          "name": "Test organ runtime and UI contracts",
-          "conclusion": "success"
+          "name": "Capture mobile and desktop screenshots",
+          "conclusion": "skipped"
         },
         {
-          "name": "Fetch target branch",
-          "conclusion": "success"
+          "name": "Verify screenshots are valid",
+          "conclusion": "skipped"
         },
         {
-          "name": "Enforce organ isolation, link caps, and file-size limits",
-          "conclusion": "success"
+          "name": "Upload visual evidence",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Setup Node.js for runtime contract tests",
-          "conclusion": "success"
+          "name": "Promotion decision",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Setup Python",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Checkout proposed commit and history",
+          "name": "Post Checkout proposed version",
           "conclusion": "success"
         },
         {
@@ -88,7 +84,7 @@
     }
   ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T11:37:35+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:37:43+00:00",
+  "outcome": "success"
 }
