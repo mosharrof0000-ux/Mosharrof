@@ -21,7 +21,15 @@ fi
 mkdir -p "$LOG_REPO/docs/automation/gates/runs/$RUN_ID"
 cp "$GATE_DIR/gate-state.json" "$LOG_REPO/docs/automation/gates/runs/$RUN_ID/state.json"
 cp "$GATE_DIR/gate-events.jsonl" "$LOG_REPO/docs/automation/gates/runs/$RUN_ID/events.jsonl"
-cp "$GATE_DIR/gate-state.json" "$LOG_REPO/docs/automation/gates/latest-state.json"
+python - "$GATE_DIR/gate-state.json" "$LOG_REPO/docs/automation/gates/latest-state.json" <<'PY'
+import json, sys
+from pathlib import Path
+source, target = map(Path, sys.argv[1:])
+current = json.loads(source.read_text(encoding="utf-8"))
+previous = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
+if not previous.get("updated_at_utc") or current.get("updated_at_utc", "") >= previous.get("updated_at_utc", ""):
+    target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+PY
 cat > "$LOG_REPO/docs/automation/gates/README.md" <<'EOF'
 # Work Gate Ledger
 
