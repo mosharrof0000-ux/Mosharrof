@@ -12,13 +12,14 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "Where to run safe, non-destructive UI checks"
+        description: "Choose safe mock checks or one real live chat test (uses provider quota)"
         type: choice
         required: true
         default: live
         options:
           - live
           - candidate
+          - live-real-chat
 
 permissions:
   contents: read
@@ -84,8 +85,13 @@ jobs:
           fi
 
       - name: Run safe mobile interaction inspection
+        if: github.event_name != 'workflow_dispatch' || inputs.target != 'live-real-chat'
         run: |
           python3 scripts/live_screen_inspector.py --url "${{ steps.target.outputs.url }}" --output-dir artifacts/live-screen-inspector
+
+      - name: Run one real live chat round-trip
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'live-real-chat'
+        run: python3 scripts/live_real_chat_smoke.py --url https://mosharrof0000-ux.github.io/Mosharrof/ --output-dir artifacts/live-screen-inspector
 
       - name: Upload inspection evidence
         if: always()
