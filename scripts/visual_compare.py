@@ -1,6 +1,6 @@
 import argparse,base64,json,os,urllib.request,urllib.error
 from pathlib import Path
-from scripts.visual_pr_context import pull_request_context
+from visual_pr_context import pull_request_context
 p=argparse.ArgumentParser(); p.add_argument("--candidate",required=True); p.add_argument("--live",required=True); p.add_argument("--report",required=True); a=p.parse_args()
 key=os.environ.get("GEMINI_API_KEY")
 
