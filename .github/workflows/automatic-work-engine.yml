@@ -1,8 +1,9 @@
 name: MOSHARROF Automatic Work Engine
 
 on:
+  # Only main writes to the shared ledger; feature branches are validated by PR checks.
   push:
-    branches: [main, "feature/**", "feat/**", "agent/**"]
+    branches: [main]
     paths-ignore:
       - "docs/automation/**"
   pull_request:
@@ -15,20 +16,10 @@ on:
       - ".github/workflows/automatic-work-engine.yml"
   workflow_dispatch:
   workflow_run:
+    # Avoid a recorder storm from every supporting workflow; these are the two release-critical outcomes.
     workflows:
-      - Build MOSHARROF Android APK
-      - MOSHARROF Full App Interactive QA
-      - Mosharrof CI
-      - Mosharrof Tests
-      - Mosharrof Visual QA
-      - Mosharrof Verification Gate
-      - MOSHARROF Mandatory Architecture Gate
-      - Personal Memory Browser Smoke Test
-      - Mosharrof AI Ecosystem Verification
-      - Mosharrof Component Consciousness
-      - MOSHARROF Full-System Interaction QA
       - Deploy Mosharrof Pages
-      - Cleanup Discipline Reminder
+      - Build MOSHARROF Android APK
     types: [completed]
 
 permissions:
@@ -37,10 +28,9 @@ permissions:
   pull-requests: read
 
 concurrency:
-  # Every recorder writes to the same operational ledger branch, so all events must share one lock.
-  # Per-source-branch groups allow concurrent writers from different branches and cause non-fast-forward push storms.
-  # GitHub retains only the newest pending run; the ledger remains best-effort for intermediate events.
-  group: mosharrof-work-engine-ledger
+  # Only main and the two release-critical workflow completions write to the shared ledger.
+  # Keep same-branch writers serialized while avoiding collisions from unrelated feature branches.
+  group: mosharrof-work-engine-${{ github.event.workflow_run.head_branch || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
