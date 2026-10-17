@@ -21,6 +21,8 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn('min-height:44px!important;height:44px', LAYOUT)
         self.assertIn('width:100%;max-width:100%', LAYOUT)
         self.assertIn('lineHeight * 8', (ROOT / 'core' / 'composer-line-limit.js').read_text(encoding='utf-8'))
+        self.assertIn('.mosharrof-stop-action:disabled{display:none!important}', (ROOT / 'core' / 'composer-stop.js').read_text(encoding='utf-8'))
+        self.assertIn('toolsMenu.appendChild(button)', (ROOT / 'core' / 'video-generation-ui.js').read_text(encoding='utf-8'))
         self.assertIn('inputRow.appendChild(input)', LAYOUT)
         self.assertIn('existingRow.classList.add("composer-actions-row")', LAYOUT)
         self.assertIn('#composer .composer-input-row .input', LAYOUT)
@@ -30,6 +32,8 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn('composer_input_uses_full_width_and_readable_height', LIVE_INSPECTOR)
         self.assertIn('composer_send_long_press_opens_provider_menu', LIVE_INSPECTOR)
         self.assertIn('composer_expander_appears_on_ninth_line', LIVE_INSPECTOR)
+        self.assertIn('composer_stop_hidden_when_idle', LIVE_INSPECTOR)
+        self.assertIn('composer_video_tool_is_inside_plus_menu', LIVE_INSPECTOR)
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
         # Exercise the deploy-time transform itself; pytest suites may prepare web/index.html first.
