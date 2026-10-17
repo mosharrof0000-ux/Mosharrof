@@ -18,7 +18,10 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn('#composer .composer-input-row .input', LAYOUT)
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
-        self.assertIn('stream_status:true})', HTML)
+        # The Pages preparation step intentionally patches the request payload, so
+        # the original stream_status:true}) anchor is expected to be absent afterward.
+        self.assertIn('provider:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[0];}', HTML)
+        self.assertIn('model:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[1]||"";}', HTML)
         for provider in ("auto", "gemini", "cloudflare-workers-ai", "groq", "openrouter"):
             self.assertIn(provider, MANUAL_PROVIDER)
 
