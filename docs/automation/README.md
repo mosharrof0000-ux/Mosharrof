@@ -6,4 +6,4 @@ The automation-work-log branch is a dedicated operational ledger. It is intentio
 - logs/YYYY-MM.md: readable start/finish history.
 - events/YYYY-MM.jsonl: one JSON record per workflow event.
 
-The engine records its own run plus completed GitHub Actions workflows. A green workflow is not automatically proof of a real physical-device test; inspect its artifacts and logs. The first run may create this branch.
+The engine records its own run plus completed GitHub Actions workflows. A green workflow is not automatically proof of a real physical-device test; inspect its artifacts and logs.
