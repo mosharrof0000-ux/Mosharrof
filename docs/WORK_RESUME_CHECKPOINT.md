@@ -58,3 +58,14 @@ Start by reading this file and PR #692, then inspect the latest commit on the br
 - APK build success is not full device-control capability.
 - Do not mark version-to-version upgrade complete until an older release APK is actually installed and upgraded to the candidate.
 - Report exact pass/fail/pending state and link to evidence.
+
+
+## Automatic work engine milestone — 2026-10-17
+
+- Added `scripts/automation/work_engine.py`: records work start, preflight checks, planned work, finish status and a resume instruction.
+- Added `tests/test_work_engine.py`: verifies start metadata and failure/finish recording.
+- Added `.github/workflows/automatic-work-engine.yml`: runs the recorder on supported branch pushes/manual runs, validates on PR, and records completed workflow outcomes.
+- Added `docs/AUTOMATIC_WORK_ENGINE.md`: documents the automatic event ledger and resume procedure.
+- The engine writes its permanent event ledger to a dedicated `automation-work-log` branch to avoid changing the active PR head or touching production files.
+- Initial implementation is not yet proven until the new workflow's own run and tests pass. The completed-workflow trigger starts processing other workflow results only after this workflow is present on the default branch.
+- Next: inspect the new workflow run and contract-test results on this PR; repair any failure on this branch; then verify the generated ledger branch/artifact once the workflow is eligible to run.
