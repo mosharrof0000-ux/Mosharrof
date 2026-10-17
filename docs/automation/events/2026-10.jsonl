@@ -33793,3 +33793,74 @@
   "outcome": "success"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:46:12+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39028877687",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028877687",
+  "source_run_id": "39028833247",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028833247",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "88f0cd1908e4a8f0b0bffa3bef49646ab4c73f0d",
+  "checked": [
+    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
+    "Source commit: 88f0cd1908e4a8f0b0bffa3bef49646ab4c73f0d",
+    "Job: verify-ecosystem — completed/failure"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "verify-ecosystem",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout Code",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Python 3.12",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install test dependencies",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run Integration Tests",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Set up Python 3.12",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout Code",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:51:07+00:00",
+  "outcome": "failure"
+}
+
