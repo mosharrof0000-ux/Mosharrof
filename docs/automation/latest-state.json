@@ -1,91 +1,79 @@
 {
-  "timestamp_utc": "2026-10-17T11:22:41+00:00",
+  "timestamp_utc": "2026-10-17T11:22:56+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028335918",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028335918",
-  "source_run_id": "39028272371",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028272371",
+  "run_id": "39028339788",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028339788",
+  "source_run_id": "39028272315",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028272315",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "8d10ccc672e1ffe0bac084fbe24e019c6b59bfe0",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = failure",
+    "Completed workflow result: Mosharrof Visual QA = success",
     "Source commit: 8d10ccc672e1ffe0bac084fbe24e019c6b59bfe0",
-    "Job: build-apk — completed/failure"
+    "Job: visual-qa — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Build MOSHARROF Android APK",
-  "source_conclusion": "failure",
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "source_workflow": "Mosharrof Visual QA",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "build-apk",
+      "job": "visual-qa",
       "status": "completed",
-      "conclusion": "failure",
+      "conclusion": "success",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Checkout MOSHARROF",
+          "name": "Run actions/checkout@v6",
           "conclusion": "success"
         },
         {
-          "name": "Setup Node",
+          "name": "Run actions/setup-python@v6",
           "conclusion": "success"
         },
         {
-          "name": "Setup Java",
+          "name": "Run python -m pip install playwright",
           "conclusion": "success"
         },
         {
-          "name": "Verify edge-to-edge web contract",
+          "name": "Prepare candidate Pages assets",
           "conclusion": "success"
         },
         {
-          "name": "Prepare Android full-screen voice manager",
+          "name": "Run python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &",
           "conclusion": "success"
         },
         {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Verify Android agent contract suite",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Build debug APK",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Verify APK",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload APK artifact",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Publish GitHub Release",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Setup Java",
+          "name": "Run python3 scripts/visual_qa.py --url http://127.0.0.1:4173/ --output artifacts/candidate.png",
           "conclusion": "success"
         },
         {
-          "name": "Post Setup Node",
-          "conclusion": "skipped"
+          "name": "Run python3 scripts/visual_qa.py --url https://mosharrof0000-ux.github.io/Mosharrof/ --output artifacts/live.png",
+          "conclusion": "success"
         },
         {
-          "name": "Post Checkout MOSHARROF",
+          "name": "Gemini visual comparison",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
           "conclusion": "success"
         },
         {
@@ -97,6 +85,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:22:45+00:00",
+  "finished_at_utc": "2026-10-17T11:23:02+00:00",
   "outcome": "success"
 }
