@@ -8,6 +8,8 @@ ENHANCEMENTS = (ROOT / "core" / "composer-enhancements.js").read_text(encoding="
 LAYOUT = (ROOT / "core" / "composer-layout.js").read_text(encoding="utf-8")
 VOICE_METER = (ROOT / "core" / "composer-voice-meter.js").read_text(encoding="utf-8")
 MANUAL_PROVIDER = (ROOT / "core" / "manual-provider-controls.js").read_text(encoding="utf-8")
+PROVIDER_PATCH = (ROOT / "scripts" / "manual_provider_runtime_patch.py").read_text(encoding="utf-8")
+PREP_SCRIPT = (ROOT / "scripts" / "prepare_web_organ_runtime.py").read_text(encoding="utf-8")
 
 
 class ComposerVoiceInteractionContractTests(unittest.TestCase):
@@ -18,10 +20,13 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn('#composer .composer-input-row .input', LAYOUT)
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
-        # The Pages preparation step intentionally patches the request payload, so
-        # the original stream_status:true}) anchor is expected to be absent afterward.
-        self.assertIn('provider:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[0];}', HTML)
-        self.assertIn('model:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[1]||"";}', HTML)
+        # Tests run before Pages preparation, so the source HTML keeps the stable anchor.
+        # The preparation patch must transform it to include the selected provider/model.
+        self.assertIn('body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})', HTML)
+        self.assertIn("apply_manual_provider_patches(index_html)", PREP_SCRIPT)
+        self.assertIn('new_chat_request = ', PROVIDER_PATCH)
+        self.assertIn('provider:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[0];}', PROVIDER_PATCH)
+        self.assertIn('model:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[1]||"";}', PROVIDER_PATCH)
         for provider in ("auto", "gemini", "cloudflare-workers-ai", "groq", "openrouter"):
             self.assertIn(provider, MANUAL_PROVIDER)
 
