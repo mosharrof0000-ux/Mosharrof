@@ -1,91 +1,79 @@
 {
-  "timestamp_utc": "2026-10-17T12:13:35+00:00",
+  "timestamp_utc": "2026-10-17T12:13:56+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030409540",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030409540",
-  "source_run_id": "39030157434",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030157434",
+  "run_id": "39030536200",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030536200",
+  "source_run_id": "39030157394",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030157394",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "ed77234c283e699de43db0de62f3f83bf9ba0410",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = failure",
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
     "Source commit: ed77234c283e699de43db0de62f3f83bf9ba0410",
-    "Job: build-apk — completed/failure"
+    "Job: interaction-qa — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Build MOSHARROF Android APK",
-  "source_conclusion": "failure",
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "build-apk",
+      "job": "interaction-qa",
       "status": "completed",
-      "conclusion": "failure",
+      "conclusion": "success",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Checkout MOSHARROF",
+          "name": "Checkout candidate",
           "conclusion": "success"
         },
         {
-          "name": "Setup Node",
+          "name": "Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Setup Java",
+          "name": "Install Playwright with transient-network retries",
           "conclusion": "success"
         },
         {
-          "name": "Verify edge-to-edge web contract",
+          "name": "Prepare candidate Pages assets",
           "conclusion": "success"
         },
         {
-          "name": "Prepare Android full-screen voice manager",
+          "name": "Start candidate Pages server",
           "conclusion": "success"
         },
         {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Verify Android agent contract suite",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Build debug APK",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Verify APK",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload APK artifact",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Publish GitHub Release",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Setup Java",
+          "name": "Select safe inspection target",
           "conclusion": "success"
         },
         {
-          "name": "Post Setup Node",
+          "name": "Run safe mobile interaction inspection",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run one real live chat round-trip",
           "conclusion": "skipped"
         },
         {
-          "name": "Post Checkout MOSHARROF",
+          "name": "Upload inspection evidence",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout candidate",
           "conclusion": "success"
         },
         {
@@ -97,6 +85,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T12:13:40+00:00",
+  "finished_at_utc": "2026-10-17T12:14:01+00:00",
   "outcome": "success"
 }
