@@ -111,7 +111,7 @@ def main() -> int:
           role: el.getAttribute('role'),
           label: (el.getAttribute('aria-label') || el.innerText ||
                   el.getAttribute('title') || el.getAttribute('placeholder') || '')
-                    .trim().replace(/\\s+/g, ' ').slice(0, 160),
+                    .trim().replace(/\s+/g, ' ').slice(0, 160),
           disabled: !!el.disabled,
           visible: !!(el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'),
           href: el.tagName === 'A' ? el.getAttribute('href') : null
@@ -159,7 +159,7 @@ def main() -> int:
             """els => els.map(el => ({
               id: el.getAttribute('data-module') || '',
               label: (el.innerText || el.getAttribute('aria-label') || '').trim()
-                .replace(/\\s+/g, ' ').slice(0, 100)
+                .replace(/\s+/g, ' ').slice(0, 100)
             })).filter(item => item.id)"""
         )
         report["module_interactions"] = []
