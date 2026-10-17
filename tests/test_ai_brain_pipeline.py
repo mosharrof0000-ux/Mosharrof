@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_live_worker_applies_reflective_brain_contract_to_every_chat_provider():
     worker = (ROOT / "worker/screenshot-analysis.js").read_text(encoding="utf-8")
+    router = (ROOT / "core/manual-chat-routing.js").read_text(encoding="utf-8")
     prompt = (ROOT / "core/reflective-chat-prompt.js").read_text(encoding="utf-8")
     assert 'import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js"' in worker
     assert "buildReflectiveSystemPrompt()" in worker
