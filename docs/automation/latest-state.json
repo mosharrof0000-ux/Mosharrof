@@ -1,70 +1,37 @@
 {
-  "timestamp_utc": "2026-10-17T11:52:53+00:00",
+  "timestamp_utc": "2026-10-17T11:50:24+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029259440",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029259440",
-  "source_run_id": "39028940738",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028940738",
+  "run_id": "39028954450",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028954450",
+  "source_run_id": "39028882732",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028882732",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "fdfb87d4c83423718876f470facde73d38b2a846",
+  "sha": "6403bab35d533eea83ed8af84974a592c6353055",
   "checked": [
-    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
-    "Source commit: fdfb87d4c83423718876f470facde73d38b2a846",
-    "Job: verify-ecosystem — completed/failure"
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = cancelled",
+    "Source commit: 6403bab35d533eea83ed8af84974a592c6353055",
+    "Job: Mandatory Organ Isolation — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: verify-ecosystem. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof AI Ecosystem Verification",
-  "source_conclusion": "failure",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
+  "source_conclusion": "cancelled",
   "changed_files": [],
   "check_results": [
     {
-      "job": "verify-ecosystem",
+      "job": "Mandatory Organ Isolation",
       "status": "completed",
-      "conclusion": "failure",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout Code",
-          "conclusion": "success"
-        },
-        {
-          "name": "Set up Python 3.12",
-          "conclusion": "success"
-        },
-        {
-          "name": "Install test dependencies",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run Integration Tests",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Post Set up Python 3.12",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Checkout Code",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
+      "conclusion": "cancelled",
+      "steps": []
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:52:58+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:53:04+00:00",
+  "outcome": "failure"
 }
