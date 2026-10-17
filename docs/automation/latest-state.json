@@ -1,19 +1,19 @@
 {
-  "timestamp_utc": "2026-10-17T17:32:52+00:00",
+  "timestamp_utc": "2026-10-17T17:33:12+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39054226575",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39054226575",
-  "source_run_id": "39054203637",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39054203637",
+  "run_id": "39054245419",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39054245419",
+  "source_run_id": "39054216956",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39054216956",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/composer-eight-line-full-width-2026-10-17",
-  "sha": "9a2703b530f7074d94668ab2891c7907bf5a9f79",
+  "sha": "70515468285f5683810749852b096702879fa19e",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
-    "Source commit: 9a2703b530f7074d94668ab2891c7907bf5a9f79",
-    "Job: test — completed/cancelled",
-    "Job: deploy — completed/cancelled"
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: 70515468285f5683810749852b096702879fa19e",
+    "Job: test — completed/failure",
+    "Job: deploy — completed/skipped"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
@@ -21,13 +21,13 @@
   ],
   "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
   "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "cancelled",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "cancelled",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
@@ -47,11 +47,11 @@
         },
         {
           "name": "Enforce file and folder size budgets",
-          "conclusion": "failure"
+          "conclusion": "success"
         },
         {
           "name": "Run python -m pytest -q",
-          "conclusion": "skipped"
+          "conclusion": "failure"
         },
         {
           "name": "Verify Pages artifact",
@@ -90,12 +90,12 @@
     {
       "job": "deploy",
       "status": "completed",
-      "conclusion": "cancelled",
+      "conclusion": "skipped",
       "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T17:32:56+00:00",
+  "finished_at_utc": "2026-10-17T17:33:19+00:00",
   "outcome": "success"
 }
