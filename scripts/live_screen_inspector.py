@@ -267,7 +267,7 @@ async def main():
         }""")
         await page.wait_for_timeout(150)
 
-        # Verify the exact two user-reported composer defects in the real browser layout.
+        # Verify full-width composer and the requested eight-line expansion behavior.
         try:
             input_box = page.locator("#input")
             server_button = page.locator("#composerServerBtn")
