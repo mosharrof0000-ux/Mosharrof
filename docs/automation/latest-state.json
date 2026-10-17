@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-10-17T14:11:07+00:00",
+  "timestamp_utc": "2026-10-17T14:11:28+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39039640962",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39039640962",
-  "source_run_id": "39039610941",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39039610941",
+  "run_id": "39039666150",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39039666150",
+  "source_run_id": "39039643112",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39039643112",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/composer-voice-longpress-2026-10-17",
-  "sha": "1ea2f38f91bee7c4c29e173e619bf809dc176a66",
+  "sha": "fbf5ddb124c861f7a3d839d27953790c4787a727",
   "checked": [
     "Completed workflow result: Build MOSHARROF Android APK = failure",
-    "Source commit: 1ea2f38f91bee7c4c29e173e619bf809dc176a66",
+    "Source commit: fbf5ddb124c861f7a3d839d27953790c4787a727",
     "Job: build-apk — completed/failure"
   ],
   "planned": [
@@ -97,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T14:11:12+00:00",
+  "finished_at_utc": "2026-10-17T14:11:33+00:00",
   "outcome": "success"
 }
