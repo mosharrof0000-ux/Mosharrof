@@ -1,29 +1,62 @@
 {
-  "timestamp_utc": "2026-10-17T11:47:36+00:00",
+  "timestamp_utc": "2026-10-17T11:47:42+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028844754",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028844754",
-  "source_run_id": "39028783173",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028783173",
+  "run_id": "39028899093",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028899093",
+  "source_run_id": "39028828343",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028828343",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "435c2b819c63da26b5085f359cf39b51d629e182",
+  "sha": "9a7f9f79d8af12173be3c591f5de1a8ba9265c7c",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = failure",
-    "Source commit: 435c2b819c63da26b5085f359cf39b51d629e182"
+    "Completed workflow result: Mosharrof Component Consciousness = success",
+    "Source commit: 9a7f9f79d8af12173be3c591f5de1a8ba9265c7c",
+    "Job: Component awareness heartbeat — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Build MOSHARROF Android APK",
-  "source_conclusion": "failure",
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "source_workflow": "Mosharrof Component Consciousness",
+  "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "Component awareness heartbeat",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run full component consciousness audit",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify autonomous engine is protected",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T11:47:36+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:47:46+00:00",
+  "outcome": "success"
 }
