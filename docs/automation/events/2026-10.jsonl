@@ -42523,3 +42523,33 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T12:14:54+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39030355352",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030355352",
+  "source_run_id": "39030151945",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030151945",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "08bbcf0955158a1e530c2120e45c3f94edfc4928",
+  "checked": [
+    "Completed workflow result: Build MOSHARROF Android APK = failure",
+    "Source commit: 08bbcf0955158a1e530c2120e45c3f94edfc4928"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Build MOSHARROF Android APK",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:14:54+00:00",
+  "outcome": "failure"
+}
+
