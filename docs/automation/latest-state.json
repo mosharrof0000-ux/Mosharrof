@@ -1,73 +1,94 @@
 {
-  "timestamp_utc": "2026-10-17T11:26:15+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-17T11:21:23+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028675974",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028675974",
-  "source_run_id": null,
-  "source_run_url": null,
+  "run_id": "39028323386",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028323386",
+  "source_run_id": "39028272351",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028272351",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "f3bfe3e9e886867c2cb787ec6b04dfffc8d1aaea",
+  "sha": "8d10ccc672e1ffe0bac084fbe24e019c6b59bfe0",
   "checked": [
-    "Push commit: fix(build): require only generated provider-control assets",
-    "Commit SHA: f3bfe3e9e886867c2cb787ec6b04dfffc8d1aaea",
-    "Check: Redirect rules - bucolic-mooncake-c83372 — in_progress/pending",
-    "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: validate — completed/skipped",
-    "Check: test — queued/pending",
-    "Check: record — in_progress/pending"
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = failure",
+    "Source commit: 8d10ccc672e1ffe0bac084fbe24e019c6b59bfe0",
+    "Job: Mandatory Organ Isolation — completed/failure"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Wait for pending checks (Redirect rules - bucolic-mooncake-c83372, test, record); then inspect their results and artifacts.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Redirect rules - bucolic-mooncake-c83372",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Header rules - bucolic-mooncake-c83372",
+      "job": "Mandatory Organ Isolation",
       "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "Pages changed - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "validate",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout proposed commit and history",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prove the gate blocks invalid replacements",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate registry and safe organ scaffolding",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate manifests and generated browser registry",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Node.js for runtime contract tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test organ runtime and UI contracts",
+          "conclusion": "success"
+        },
+        {
+          "name": "Fetch target branch",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce organ isolation, link caps, and file-size limits",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Setup Node.js for runtime contract tests",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Setup Python",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout proposed commit and history",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:26:19+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:26:21+00:00",
+  "outcome": "failure"
 }
