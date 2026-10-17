@@ -62,7 +62,7 @@ jobs:
       - name: Checkout source branch for this work event
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref_name }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -147,7 +147,17 @@ jobs:
             cat "$OUT/entry.md" >> "$LOG_FILE"
             cat "$OUT/state.json" >> "$EVENTS_FILE"
             printf '\n' >> "$EVENTS_FILE"
-            cp "$OUT/state.json" "$LOG_REPO/docs/automation/latest-state.json"
+            python - "$OUT/state.json" "$LOG_REPO/docs/automation/latest-state.json" <<'PY'
+          import json, sys
+          from pathlib import Path
+          source, target = map(Path, sys.argv[1:])
+          current = json.loads(source.read_text(encoding="utf-8"))
+          previous = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
+          current_time = current.get("finished_at_utc") or current.get("updated_at_utc") or current.get("timestamp_utc", "")
+          previous_time = previous.get("finished_at_utc") or previous.get("updated_at_utc") or previous.get("timestamp_utc", "")
+          if not previous_time or current_time >= previous_time:
+              target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+          PY
             cat > "$LOG_REPO/docs/automation/README.md" <<'EOF'
           # Automatic Work Engine Ledger
 
