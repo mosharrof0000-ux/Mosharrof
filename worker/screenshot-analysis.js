@@ -2,7 +2,7 @@ import { buildChatContext } from "../core/chat-context.js";
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
 import { parseImageSpec } from "../core/image-spec.js";
-import { runSelectedChat } from "../core/manual-chat-routing.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
+import { CHAT_MODELS, runSelectedChat } from "../core/manual-chat-routing.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-16-cf-v5";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
@@ -22,7 +22,6 @@ function withRequestCors(response,request){
   responseHeaders.set("Vary","Origin");
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers:responseHeaders});
 }
-const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-2.5-flash"];
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
@@ -450,7 +449,7 @@ async function runChat(body,env,onStatus){
     : CHAT_MODELS;
   const userPrompt=buildReflectiveUserPrompt(text,{targetWords});
   const fallbackText=targetWords?text+"\n\nOUTPUT LENGTH REQUIREMENT: Aim for approximately "+targetWords+" words; continue fully and do not claim completion if cut off.":text;
-  const selected=await runSelectedChat(body,env,report,fallbackText,targetWords,maxOutputTokens,{CHAT_MODELS,buildReflectiveUserPrompt,callGemini,LONG_CHAT_PROVIDER_TIMEOUT_MS,CHAT_PROVIDER_TIMEOUT_MS,buildReflectiveSystemPrompt,withChatProviderTimeout,generateWithOpenAICompatibleChat,outputTokenBudget});
+  const selected=await runSelectedChat(body,env,report,fallbackText,targetWords,maxOutputTokens,{callGemini,generateWithOpenAICompatibleChat,LONG_CHAT_PROVIDER_TIMEOUT_MS,CHAT_PROVIDER_TIMEOUT_MS});
   if(selected)return selected;
   const payload={contents:[{parts:[{text:userPrompt}]}]};
   if(targetWords)payload.generationConfig={temperature:0.3,maxOutputTokens};
