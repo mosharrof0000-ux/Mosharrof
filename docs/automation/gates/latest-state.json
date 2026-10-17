@@ -1,24 +1,21 @@
 {
-  "timestamp_utc": "2026-10-17T11:50:35Z",
+  "timestamp_utc": "2026-10-17T11:48:23Z",
   "action": "enter",
   "task": "Automatic work-engine verification",
   "purpose": "Validate recorder and durable resume behavior",
   "step": "Run work-engine and work-gate contract tests",
   "reason": null,
-  "details": "next: run Python compilation and both contract test suites",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028970271",
+  "details": "",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028912676",
   "branch": "main",
   "sha": "08949242b48817c6fed078b86387c4bfe6698ebc",
-  "status": "completed",
-  "completed_steps": [
-    "Recorder start entry written",
-    "Python compilation and contract tests"
-  ],
-  "interruption": null,
-  "resume_from": null,
-  "updated_at_utc": "2026-10-17T11:50:42Z",
-  "last_checkpoint_utc": "2026-10-17T11:50:39Z",
-  "last_completed_step": "Python compilation and contract tests",
-  "finished_at_utc": "2026-10-17T11:50:42Z",
-  "exit_details": "All focused tests passed; inspect workflow result and artifacts next."
+  "status": "interrupted",
+  "completed_steps": [],
+  "interruption": {
+    "reason": "unknown",
+    "details": "Job ended with status failure; exact cause must be determined from Actions logs."
+  },
+  "resume_from": "Run work-engine and work-gate contract tests",
+  "updated_at_utc": "2026-10-17T11:50:52Z",
+  "interrupted_at_utc": "2026-10-17T11:50:52Z"
 }
