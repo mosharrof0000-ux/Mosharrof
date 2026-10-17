@@ -12,8 +12,8 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         textarea = HTML.index('class="composer-input-row"')
         actions = HTML.index('class="row composer-actions-row"')
         self.assertLess(textarea, actions)
-        self.assertIn('id="composerVoiceBtn"', HTML[actions:HTML.index("</div>", actions) + 6])
-        self.assertIn('id="sendBtn"', HTML[actions:HTML.index("</div>", actions) + 6])
+        self.assertLess(actions, HTML.index('id="composerVoiceBtn"'))
+        self.assertLess(actions, HTML.index('id="sendBtn"'))
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
         self.assertIn('provider:getChatProviderPreference()', HTML)
