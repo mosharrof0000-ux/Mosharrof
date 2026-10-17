@@ -1,90 +1,37 @@
 {
-  "timestamp_utc": "2026-10-17T12:10:51+00:00",
+  "timestamp_utc": "2026-10-17T12:11:04+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030264034",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030264034",
-  "source_run_id": "39030112159",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030112159",
+  "run_id": "39030266866",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030266866",
+  "source_run_id": "39030157414",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030157414",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "ac5ca7b97c981471ad264e0896f084906ad3bfd3",
+  "sha": "ed77234c283e699de43db0de62f3f83bf9ba0410",
   "checked": [
-    "Completed workflow result: Mosharrof Visual QA = success",
-    "Source commit: ac5ca7b97c981471ad264e0896f084906ad3bfd3",
-    "Job: visual-qa — completed/success"
+    "Completed workflow result: Mosharrof Verification Gate = cancelled",
+    "Source commit: ed77234c283e699de43db0de62f3f83bf9ba0410",
+    "Job: Verify before promotion — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Visual QA",
-  "source_conclusion": "success",
+  "next_step": "Resume at failed workflow/job: Verify before promotion. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "cancelled",
   "changed_files": [],
   "check_results": [
     {
-      "job": "visual-qa",
+      "job": "Verify before promotion",
       "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pip install playwright",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare candidate Pages assets",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 scripts/visual_qa.py --url http://127.0.0.1:4173/ --output artifacts/candidate.png",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 scripts/visual_qa.py --url https://mosharrof0000-ux.github.io/Mosharrof/ --output artifacts/live.png",
-          "conclusion": "success"
-        },
-        {
-          "name": "Gemini visual comparison",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/upload-artifact@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
+      "conclusion": "cancelled",
+      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T12:10:56+00:00",
+  "finished_at_utc": "2026-10-17T12:11:08+00:00",
   "outcome": "success"
 }
