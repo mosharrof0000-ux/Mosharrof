@@ -1,51 +1,59 @@
 {
-  "timestamp_utc": "2026-10-17T11:30:56+00:00",
+  "timestamp_utc": "2026-10-17T11:31:13+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028525939",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028525939",
-  "source_run_id": "39028435047",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028435047",
+  "run_id": "39028532372",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028532372",
+  "source_run_id": "39028472014",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028472014",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "463c2644f7b82fe9d26260f19231c34460ff6857",
+  "sha": "38c6990003032a09c0ce7d7e1beb07d07312ba25",
   "checked": [
-    "Completed workflow result: Mosharrof Component Consciousness = success",
-    "Source commit: 463c2644f7b82fe9d26260f19231c34460ff6857",
-    "Job: Component awareness heartbeat — completed/success"
+    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
+    "Source commit: 38c6990003032a09c0ce7d7e1beb07d07312ba25",
+    "Job: verify-ecosystem — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Component Consciousness",
-  "source_conclusion": "success",
+  "next_step": "Resume at failed workflow/job: verify-ecosystem. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Component awareness heartbeat",
+      "job": "verify-ecosystem",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v6",
+          "name": "Checkout Code",
           "conclusion": "success"
         },
         {
-          "name": "Run full component consciousness audit",
+          "name": "Set up Python 3.12",
           "conclusion": "success"
         },
         {
-          "name": "Verify autonomous engine is protected",
+          "name": "Install test dependencies",
           "conclusion": "success"
         },
         {
-          "name": "Post Run actions/checkout@v6",
+          "name": "Run Integration Tests",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Set up Python 3.12",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout Code",
           "conclusion": "success"
         },
         {
@@ -57,6 +65,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:31:01+00:00",
+  "finished_at_utc": "2026-10-17T11:31:19+00:00",
   "outcome": "success"
 }
