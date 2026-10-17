@@ -1,29 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T11:27:10+00:00",
-  "event_name": "workflow_run",
+  "timestamp_utc": "2026-10-17T11:27:25+00:00",
+  "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028437699",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028437699",
-  "source_run_id": "39028401115",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028401115",
+  "run_id": "39028482019",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028482019",
+  "source_run_id": null,
+  "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128",
+  "sha": "d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = cancelled",
-    "Source commit: a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128"
+    "Push commit: fix(runtime): remove stale manual organ path and verify core asset",
+    "Commit SHA: d0e389d62b2d02f677f4a53ce19f1e55cc871b42"
   ],
   "planned": [
-    "Record the completed workflow result, job-level checks and evidence URL.",
-    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
   ],
   "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
-  "source_conclusion": "cancelled",
+  "source_workflow": null,
+  "source_conclusion": null,
   "changed_files": [],
   "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T11:27:10+00:00",
+  "finished_at_utc": "2026-10-17T11:27:25+00:00",
   "outcome": "failure"
 }
