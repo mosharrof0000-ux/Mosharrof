@@ -1,22 +1,6 @@
 import argparse,base64,json,os,urllib.request,urllib.error
 from pathlib import Path
-
-
-def pull_request_context():
-    """Include the actual PR request so intentional UI changes are not flagged as regressions."""
-    event_path = os.environ.get("GITHUB_EVENT_PATH")
-    if not event_path:
-        return ""
-    try:
-        event = json.loads(Path(event_path).read_text(encoding="utf-8"))
-        pr = event.get("pull_request") or {}
-        title = str(pr.get("title") or "").strip()
-        body = str(pr.get("body") or "").strip()
-        if not title and not body:
-            return ""
-        return "\nRequested pull request changes (use to distinguish intentional changes from regressions):\n" + title + "\n" + body[:12000]
-    except (OSError, ValueError, TypeError):
-        return ""
+from scripts.visual_pr_context import pull_request_context
 p=argparse.ArgumentParser(); p.add_argument("--candidate",required=True); p.add_argument("--live",required=True); p.add_argument("--report",required=True); a=p.parse_args()
 key=os.environ.get("GEMINI_API_KEY")
 
