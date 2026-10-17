@@ -1,29 +1,37 @@
 {
-  "timestamp_utc": "2026-10-17T11:55:56+00:00",
+  "timestamp_utc": "2026-10-17T11:56:08+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029287605",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029287605",
-  "source_run_id": "39028940760",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028940760",
+  "run_id": "39029489194",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029489194",
+  "source_run_id": "39029436294",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029436294",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "fdfb87d4c83423718876f470facde73d38b2a846",
+  "sha": "2768d0b7f31ba7eff25a287064c7e022f5fcb646",
   "checked": [
-    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = success",
-    "Source commit: fdfb87d4c83423718876f470facde73d38b2a846"
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = cancelled",
+    "Source commit: 2768d0b7f31ba7eff25a287064c7e022f5fcb646",
+    "Job: Mandatory Organ Isolation — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "next_step": "Resume at failed workflow/job: Mandatory Organ Isolation. Open the linked run logs, fix on a safe feature branch, then rerun.",
   "source_workflow": "MOSHARROF Mandatory Architecture Gate",
-  "source_conclusion": "success",
+  "source_conclusion": "cancelled",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "Mandatory Organ Isolation",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    }
+  ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T11:55:56+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:56:12+00:00",
+  "outcome": "success"
 }
