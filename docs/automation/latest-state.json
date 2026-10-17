@@ -1,90 +1,157 @@
 {
-  "timestamp_utc": "2026-10-17T11:34:18+00:00",
-  "event_name": "workflow_run",
+  "timestamp_utc": "2026-10-17T11:34:36+00:00",
+  "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028572009",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028572009",
-  "source_run_id": "39028484994",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028484994",
+  "run_id": "39028935540",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028935540",
+  "source_run_id": null,
+  "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
+  "sha": "fdfb87d4c83423718876f470facde73d38b2a846",
   "checked": [
-    "Completed workflow result: Mosharrof Visual QA = failure",
-    "Source commit: d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
-    "Job: visual-qa — completed/failure"
+    "Push commit: fix(test): follow extracted manual router module",
+    "Commit SHA: fdfb87d4c83423718876f470facde73d38b2a846",
+    "Check: interaction-qa — queued/pending",
+    "Check: test — queued/pending",
+    "Check: Redirect rules - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: Verify before promotion — queued/pending",
+    "Check: Mandatory Organ Isolation — queued/pending",
+    "Check: Leave the repo clean — queued/pending",
+    "Check: browser-memory-roundtrip — queued/pending",
+    "Check: test — queued/pending",
+    "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: test — queued/pending",
+    "Check: visual-qa — queued/pending",
+    "Check: verify-ecosystem — queued/pending",
+    "Check: Component awareness heartbeat — queued/pending",
+    "Check: build-apk — queued/pending",
+    "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: test — queued/pending",
+    "Check: validate — completed/skipped",
+    "Check: record — in_progress/pending"
   ],
   "planned": [
-    "Record the completed workflow result, job-level checks and evidence URL.",
-    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Resume at failed workflow/job: visual-qa. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof Visual QA",
-  "source_conclusion": "failure",
+  "next_step": "Wait for pending checks (interaction-qa, test, Verify before promotion, Mandatory Organ Isolation, Leave the repo clean); then inspect their results and artifacts.",
+  "source_workflow": null,
+  "source_conclusion": null,
   "changed_files": [],
   "check_results": [
     {
-      "job": "visual-qa",
+      "job": "interaction-qa",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Redirect rules - bucolic-mooncake-c83372",
       "status": "completed",
-      "conclusion": "failure",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pip install playwright",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare candidate Pages assets",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Run python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Run python3 scripts/visual_qa.py --url http://127.0.0.1:4173/ --output artifacts/candidate.png",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Run python3 scripts/visual_qa.py --url https://mosharrof0000-ux.github.io/Mosharrof/ --output artifacts/live.png",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Gemini visual comparison",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Run actions/upload-artifact@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "Verify before promotion",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Mandatory Organ Isolation",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Leave the repo clean",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "browser-memory-roundtrip",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Header rules - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "visual-qa",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "verify-ecosystem",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Component awareness heartbeat",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "build-apk",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Pages changed - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "validate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "job": "record",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:34:22+00:00",
+  "finished_at_utc": "2026-10-17T11:34:40+00:00",
   "outcome": "success"
 }
