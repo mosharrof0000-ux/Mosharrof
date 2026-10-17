@@ -10,12 +10,11 @@ MANUAL_PROVIDER = (ROOT / "core" / "manual-provider-controls.js").read_text(enco
 
 
 class ComposerVoiceInteractionContractTests(unittest.TestCase):
-    def test_text_area_is_above_bottom_action_row(self):
-        textarea = HTML.index('id="input"')
-        actions = HTML.index('class="row composer-actions-row"')
-        self.assertLess(textarea, actions)
-        self.assertLess(actions, HTML.index('id="composerVoiceBtn"'))
-        self.assertLess(actions, HTML.index('id="sendBtn"'))
+    def test_text_area_is_moved_above_bottom_action_row_at_runtime(self):
+        self.assertIn('input.closest(".row")', ENHANCEMENTS)
+        self.assertIn('inputRow.appendChild(input)', ENHANCEMENTS)
+        self.assertIn('existingRow.classList.add("composer-actions-row")', ENHANCEMENTS)
+        self.assertIn('#composer .composer-input-row .input', ENHANCEMENTS)
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
         self.assertIn('stream_status:true})', HTML)
@@ -41,11 +40,12 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn("Math.sqrt(energy / samples.length) >= 0.025", VOICE_METER)
         self.assertIn('classList.toggle("has-voice-activity", Math.sqrt(energy / samples.length) >= 0.025)', VOICE_METER)
         self.assertIn('#composerVoiceBtn.has-voice-activity{background:#080808', ENHANCEMENTS)
-        self.assertIn('#composerVoiceBtn.has-voice-activity{background:#080808', ENHANCEMENTS)
 
     def test_send_resets_size_and_restores_failed_draft(self):
         self.assertIn('input.value="";resize();', HTML)
-        self.assertIn('if(!input.value.trim()&&raw)input.value=raw;resize();', HTML)
+        self.assertIn('let submittedDraft = ""', ENHANCEMENTS)
+        self.assertIn('input.value = submittedDraft', ENHANCEMENTS)
+        self.assertIn('.response-timer.is-error', ENHANCEMENTS)
 
     def test_fullscreen_editor_remains_available(self):
         self.assertIn("mosharrofExpandEditor", ENHANCEMENTS)
