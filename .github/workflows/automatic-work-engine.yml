@@ -131,17 +131,8 @@ jobs:
             git -C "$LOG_REPO" rm -rf . >/dev/null 2>&1 || true
           fi
 
-          MONTH="$(python - "$OUT/state.json" <<'PY'
-import json, sys
-from datetime import datetime, timezone
-try:
-    data = json.load(open(sys.argv[1], encoding="utf-8"))
-except (FileNotFoundError, json.JSONDecodeError):
-    data = {}
-stamp = data.get("timestamp_utc") or data.get("finished_at_utc")
-print(stamp[:7] if stamp else datetime.now(timezone.utc).strftime("%Y-%m"))
-PY
-)"
+          MONTH="$(python -c 'import json,os,sys; p=sys.argv[1]; d=json.load(open(p, encoding="utf-8")) if os.path.isfile(p) else {}; s=d.get("timestamp_utc") or d.get("finished_at_utc"); print(s[:7] if s else "")' "$OUT/state.json")"
+          MONTH="${MONTH:-$(date -u +%Y-%m)}"
           for ATTEMPT in $(seq 1 12); do
             if [ "$ATTEMPT" -gt 1 ] && git ls-remote --exit-code --heads origin automation-work-log >/dev/null 2>&1; then
               git fetch origin automation-work-log
