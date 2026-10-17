@@ -1,5 +1,6 @@
 import { initializeComposerStopControl } from "./composer-stop.js";
 import { initializeComposerAutoGrow } from "./composer-autogrow.js";
+import { initializeComposerLayout } from "./composer-layout.js";
 import { initializeComposerVoiceMeter } from "./composer-voice-meter.js";
 
 export function initializeComposerEnhancements() {
@@ -9,85 +10,17 @@ export function initializeComposerEnhancements() {
   const send = document.getElementById("sendBtn");
   if (!input || !composer || !send) return;
 
-  // Build the two-tier composer at runtime so the legacy Pages shell stays frozen.
-  let inputRow = composer.querySelector(".composer-input-row");
-  let actionsRow = composer.querySelector(".composer-actions-row");
-  if (!inputRow || !actionsRow) {
-    const existingRow = input.closest(".row");
-    if (!existingRow || existingRow.parentElement !== composer) return;
-    inputRow = document.createElement("div");
-    inputRow.className = "composer-input-row";
-    composer.insertBefore(inputRow, existingRow);
-    inputRow.appendChild(input);
-    existingRow.classList.add("composer-actions-row");
-    actionsRow = existingRow;
-  }
-
   initializeComposerStopControl(send);
+  initializeComposerLayout(input, composer, send);
   initializeComposerAutoGrow(input, composer);
   initializeComposerVoiceMeter(document.getElementById("composerVoiceBtn"));
-
-  // Long-press the existing Send control to choose a provider; a normal tap still sends.
-  const providers = [
-    {value:"auto",label:"স্বয়ংক্রিয় fallback",color:"#f2f2f2"},
-    {value:"gemini",label:"Gemini",color:"#8ab4f8"},
-    {value:"cloudflare-workers-ai",label:"Cloudflare Workers AI",color:"#f38020"},
-    {value:"groq",label:"Groq",color:"#ff6b6b"},
-    {value:"openrouter",label:"OpenRouter",color:"#b6a0ff"}
-  ];
-  const providerKey = "mosharrof_chat_provider_v1";
-  const getProvider = () => { try { const v=localStorage.getItem(providerKey)||"auto"; return providers.some(p=>p.value===v)?v:"auto"; } catch { return "auto"; } };
-  let serverMenu=document.getElementById("composerServerMenu");
-  if(!serverMenu){
-    serverMenu=document.createElement("div");serverMenu.id="composerServerMenu";serverMenu.className="composer-server-menu";serverMenu.setAttribute("role","menu");serverMenu.setAttribute("aria-label","সার্ভার নির্বাচন");
-    const heading=document.createElement("div");heading.className="composer-server-menu-title";heading.textContent="সার্ভার নির্বাচন";serverMenu.appendChild(heading);
-    providers.forEach(p=>{const b=document.createElement("button");b.type="button";b.className="composer-server-option";b.dataset.provider=p.value;b.setAttribute("role","menuitemradio");b.innerHTML='<span class="composer-server-dot"></span><span class="composer-server-label"></span><span class="composer-server-check">✓</span>';b.querySelector(".composer-server-label").textContent=p.label;b.querySelector(".composer-server-dot").style.background=p.color;b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();try{localStorage.setItem(providerKey,p.value);}catch{}applyProvider(p.value);closeServerMenu();window.dispatchEvent(new CustomEvent("mosharrof:chat-provider-change",{detail:{provider:p.value}}));});serverMenu.appendChild(b);});
-    composer.appendChild(serverMenu);
-  }
-  function applyProvider(value){const p=providers.find(x=>x.value===value)||providers[0];send.style.setProperty("--server-accent",p.color);send.title="মেসেজ পাঠান · সার্ভার: "+p.label;send.setAttribute("aria-label","মেসেজ পাঠান · সার্ভার: "+p.label);serverMenu.querySelectorAll("[data-provider]").forEach(b=>{const active=b.dataset.provider===p.value;b.setAttribute("aria-checked",active?"true":"false");b.classList.toggle("selected",active);});}
-  function openServerMenu(){applyProvider(getProvider());serverMenu.classList.add("open");send.setAttribute("aria-expanded","true");}
-  function closeServerMenu(){serverMenu.classList.remove("open");send.setAttribute("aria-expanded","false");}
-  applyProvider(getProvider());
-  if(send.dataset.serverLongPressReady!=="true"){
-    send.dataset.serverLongPressReady="true";let timer=0,startX=0,startY=0,suppress=false;
-    const cancel=()=>{if(timer)window.clearTimeout(timer);timer=0;};
-    send.addEventListener("pointerdown",e=>{if(e.button!==undefined&&e.button!==0)return;startX=e.clientX;startY=e.clientY;cancel();timer=window.setTimeout(()=>{timer=0;suppress=true;openServerMenu();},520);},{passive:true});
-    send.addEventListener("pointermove",e=>{if(Math.abs(e.clientX-startX)>10||Math.abs(e.clientY-startY)>10)cancel();},{passive:true});
-    send.addEventListener("pointerup",()=>{cancel();window.setTimeout(()=>{suppress=false;},0);},{passive:true});
-    send.addEventListener("pointercancel",()=>{cancel();window.setTimeout(()=>{suppress=false;},0);},{passive:true});
-    send.addEventListener("click",e=>{if(suppress){e.preventDefault();e.stopImmediatePropagation();suppress=false;}},true);
-    send.addEventListener("contextmenu",e=>{e.preventDefault();openServerMenu();});
-    document.addEventListener("click",e=>{if(!serverMenu.contains(e.target)&&e.target!==send&&!send.contains(e.target))closeServerMenu();});
-    document.addEventListener("keydown",e=>{if(e.key==="Escape")closeServerMenu();});
-  }
-  if(!document.getElementById("composer-server-menu-styles")){const st=document.createElement("style");st.id="composer-server-menu-styles";st.textContent="#composerServerMenu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:20001;display:none;flex-direction:column;gap:3px;width:min(280px,calc(100vw - 28px));padding:8px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:#101010;box-shadow:0 12px 36px rgba(0,0,0,.55)}#composerServerMenu.open{display:flex}.composer-server-menu-title{padding:5px 8px 8px;color:#a1a1aa;font-size:11px;font-weight:700}.composer-server-option{display:flex;align-items:center;gap:9px;min-height:40px;width:100%;padding:7px 9px;border:1px solid transparent;border-radius:9px;background:transparent;color:#f5f5f5;text-align:left;font-size:13px}.composer-server-option.selected{border-color:rgba(255,255,255,.18);background:#1b1b1b}.composer-server-dot{width:9px;height:9px;flex:none;border-radius:50%}.composer-server-label{flex:1}.composer-server-check{visibility:hidden}.composer-server-option.selected .composer-server-check{visibility:visible}#sendBtn svg{stroke:var(--server-accent,#f2f2f2)!important}";document.head.appendChild(st);}
-
-  if (!document.getElementById("composer-layout-styles")) {
-    const layoutStyle = document.createElement("style");
-    layoutStyle.id = "composer-layout-styles";
-    layoutStyle.textContent = [
-      "#composer{display:flex;flex-direction:column;gap:7px}",
-      
-      "#composer .composer-input-row{display:flex;align-items:stretch;width:100%;min-width:0}",
-      "#composer .composer-input-row .input{display:block;width:100%;flex:1;min-width:0;min-height:40px;max-height:min(44dvh,360px);padding:8px 6px;line-height:1.5;overflow-y:auto;overscroll-behavior:contain}",
-      "#composer .composer-actions-row{display:flex;align-items:center;gap:6px;min-height:36px}",
-      "#composerTools{margin-right:auto}",
-      "#composerVoiceBtn.is-listening{background:#080808;border-color:rgba(255,255,255,.16);color:#f2f2f2;box-shadow:none}",
-      "#composerVoiceBtn.is-listening svg{animation:none}",
-      "#composerVoiceBtn.has-voice-activity svg{stroke:#4ade80;filter:drop-shadow(0 0 2px rgba(74,222,128,.35));transform-origin:50% 50%;animation:voice-mic-bob .24s ease-in-out infinite alternate}",
-      "#composerVoiceBtn.has-voice-activity{background:#080808;border-color:rgba(255,255,255,.16);box-shadow:none}",
-      "@media(max-width:480px){#composer{left:10px;right:10px;padding:8px 9px}#composer .composer-input-row .input{padding-left:4px;padding-right:4px}}"
-    ].join("\n");
-    document.head.appendChild(layoutStyle);
-  }
-
   if (document.getElementById("composerExpandBtn")) return;
 
   const style = document.createElement("style");
   style.id = "chat-composer-expand-styles";
   style.textContent = [
     "#composer .row{gap:6px;align-items:flex-end}",
-    "#composer .input{min-height:40px!important;padding-top:8px!important;padding-bottom:8px!important;max-height:min(44dvh,360px)!important}",
+    "#composer .input{min-height:34px!important;padding-top:6px!important;padding-bottom:6px!important}",
     "#composerExpandBtn{display:none}",
     "#composerExpandBtn.visible{display:inline-grid}",
     ".mosharrof-expand-editor{position:fixed;inset:0;z-index:20000;display:none;flex-direction:column;background:#050505;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));color:#f5f5f5}",
@@ -201,32 +134,5 @@ export function initializeComposerEnhancements() {
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && editor.classList.contains("open")) closeEditor(false);
   });
-
-  // Save the submitted draft before the existing send handler clears the textarea.
-  let submittedDraft = "";
-  send.addEventListener("click", () => {
-    if (input.value.trim()) submittedDraft = input.value;
-  }, true);
-  const messages = document.getElementById("messages");
-  if (messages && typeof MutationObserver !== "undefined") {
-    const failureObserver = new MutationObserver(records => {
-      if (!submittedDraft || input.value.trim()) return;
-      const added = records.flatMap(record => Array.from(record.addedNodes))
-        .filter(node => node.nodeType === 1);
-      const failed = added.some(node =>
-        (node.matches && node.matches(".message.ai")) &&
-        node.querySelector(".response-timer.is-error")
-      );
-      if (failed) {
-        input.value = submittedDraft;
-        submittedDraft = "";
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        input.focus();
-      } else if (added.some(node => node.matches && node.matches(".message.ai") && !node.querySelector(".response-timer.is-error"))) {
-        submittedDraft = "";
-      }
-    });
-    failureObserver.observe(messages, { childList: true, subtree: true });
-  }
   syncVisibility();
 }
