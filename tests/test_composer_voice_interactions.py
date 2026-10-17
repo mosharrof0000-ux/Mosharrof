@@ -5,16 +5,17 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
 ENHANCEMENTS = (ROOT / "core" / "composer-enhancements.js").read_text(encoding="utf-8")
+LAYOUT = (ROOT / "core" / "composer-layout.js").read_text(encoding="utf-8")
 VOICE_METER = (ROOT / "core" / "composer-voice-meter.js").read_text(encoding="utf-8")
 MANUAL_PROVIDER = (ROOT / "core" / "manual-provider-controls.js").read_text(encoding="utf-8")
 
 
 class ComposerVoiceInteractionContractTests(unittest.TestCase):
     def test_text_area_is_moved_above_bottom_action_row_at_runtime(self):
-        self.assertIn('input.closest(".row")', ENHANCEMENTS)
-        self.assertIn('inputRow.appendChild(input)', ENHANCEMENTS)
-        self.assertIn('existingRow.classList.add("composer-actions-row")', ENHANCEMENTS)
-        self.assertIn('#composer .composer-input-row .input', ENHANCEMENTS)
+        self.assertIn('input.closest(".row")', LAYOUT)
+        self.assertIn('inputRow.appendChild(input)', LAYOUT)
+        self.assertIn('existingRow.classList.add("composer-actions-row")', LAYOUT)
+        self.assertIn('#composer .composer-input-row .input', LAYOUT)
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
         self.assertIn('stream_status:true})', HTML)
@@ -39,13 +40,13 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn("getByteTimeDomainData(samples)", VOICE_METER)
         self.assertIn("Math.sqrt(energy / samples.length) >= 0.025", VOICE_METER)
         self.assertIn('classList.toggle("has-voice-activity", Math.sqrt(energy / samples.length) >= 0.025)', VOICE_METER)
-        self.assertIn('#composerVoiceBtn.has-voice-activity{background:#080808', ENHANCEMENTS)
+        self.assertIn('#composerVoiceBtn.has-voice-activity{background:#080808', LAYOUT)
 
     def test_send_resets_size_and_restores_failed_draft(self):
         self.assertIn('input.value="";resize();', HTML)
-        self.assertIn('let submittedDraft = ""', ENHANCEMENTS)
-        self.assertIn('input.value = submittedDraft', ENHANCEMENTS)
-        self.assertIn('.response-timer.is-error', ENHANCEMENTS)
+        self.assertIn('let submittedDraft = ""', LAYOUT)
+        self.assertIn('input.value = submittedDraft', LAYOUT)
+        self.assertIn('.response-timer.is-error', LAYOUT)
 
     def test_fullscreen_editor_remains_available(self):
         self.assertIn("mosharrofExpandEditor", ENHANCEMENTS)
