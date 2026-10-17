@@ -1,0 +1,17 @@
+{
+  "timestamp_utc": "2026-10-17T11:34:34Z",
+  "action": "enter",
+  "task": "Automatic work-engine verification",
+  "purpose": "Validate recorder and durable resume behavior",
+  "step": "Run work-engine and work-gate contract tests",
+  "reason": null,
+  "details": "",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028935540",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "fdfb87d4c83423718876f470facde73d38b2a846",
+  "status": "in_progress",
+  "completed_steps": [],
+  "interruption": null,
+  "resume_from": "Run work-engine and work-gate contract tests",
+  "updated_at_utc": "2026-10-17T11:34:34Z"
+}
