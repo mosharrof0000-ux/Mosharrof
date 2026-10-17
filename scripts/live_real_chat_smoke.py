@@ -66,7 +66,7 @@ async def main() -> int:
         await page.wait_for_selector("#sendBtn", state="visible", timeout=10000)
         await page.screenshot(path=str(out / "real-chat-before.png"), full_page=True)
 
-        baseline = await page.locator("#messages .message.ai").count()
+        baseline = await page.locator("#messages .message.ai:not(.typing)").count()
         await page.locator("#input").fill(prompt)
         await page.locator("#sendBtn").click()
         record("real_chat_prompt_submitted", True, "One synthetic Bengali prompt submitted through the visible UI")
@@ -74,16 +74,19 @@ async def main() -> int:
         try:
             await page.wait_for_function(
                 """baseline => {
-                  const nodes = [...document.querySelectorAll('#messages .message.ai')];
-                  return nodes.length > baseline &&
-                    nodes[nodes.length - 1].innerText.trim().length > 0 &&
-                    !/loading|চিন্তা করছি|উত্তর তৈরি হচ্ছে/i.test(nodes[nodes.length - 1].innerText.trim());
+                  const send = document.querySelector('#sendBtn');
+                  const typing = document.querySelector('#typing');
+                  const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
+                  const last = nodes[nodes.length - 1];
+                  const body = last && last.querySelector('.rich-content');
+                  return !!send && !send.disabled && !typing &&
+                    nodes.length > baseline && !!body && body.innerText.trim().length > 0;
                 }""",
                 arg=baseline,
                 timeout=args.timeout_ms,
             )
-            nodes = page.locator("#messages .message.ai")
-            answer = (await nodes.last.inner_text()).strip()
+            nodes = page.locator("#messages .message.ai:not(.typing)")
+            answer = (await nodes.last.locator(".rich-content").inner_text()).strip()
             lower = answer.lower()
             failed_phrases = [
                 "এই মুহূর্তে gemini সংযোগে সমস্যা",
@@ -116,8 +119,9 @@ async def main() -> int:
             )
             rows = await page.evaluate("async () => window.MosharrofPersonalMemory.list(100)")
             saved_prompt = any(row.get("kind") == "user" and prompt in row.get("text", "") for row in rows)
-            record("synthetic_prompt_saved_to_browser_memory", saved_prompt,
-                   f"memory_rows={len(rows)}")
+            saved_answer = bool(answer) and any(row.get("kind") == "assistant" and answer[:80] in row.get("text", "") for row in rows)
+            record("synthetic_prompt_and_real_answer_saved_to_browser_memory", saved_prompt and saved_answer,
+                   f"memory_rows={len(rows)}; prompt_saved={saved_prompt}; answer_saved={saved_answer}")
         except Exception as exc:
             record("synthetic_prompt_saved_to_browser_memory", False,
                    f"{type(exc).__name__}: {str(exc)[:250]}")
