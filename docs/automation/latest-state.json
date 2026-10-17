@@ -1,29 +1,74 @@
 {
-  "timestamp_utc": "2026-10-17T10:19:53+00:00",
+  "timestamp_utc": "2026-10-17T10:17:21+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39024318652",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39024318652",
-  "source_run_id": "39024308049",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39024308049",
+  "run_id": "39024317745",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39024317745",
+  "source_run_id": "39024308018",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39024308018",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "main",
   "sha": "a63f8579858a87a419a935ed040005b064a473c1",
   "checked": [
-    "Completed workflow result: Mosharrof Component Consciousness = success",
-    "Source commit: a63f8579858a87a419a935ed040005b064a473c1"
+    "Completed workflow result: Cleanup Discipline Reminder = success",
+    "Source commit: a63f8579858a87a419a935ed040005b064a473c1",
+    "Job: Leave the repo clean — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Mosharrof Component Consciousness",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Cleanup Discipline Reminder",
   "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "Leave the repo clean",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run cleanup check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Print discipline reminder",
+          "conclusion": "success"
+        },
+        {
+          "name": "Comment on pull request",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T10:19:53+00:00",
+  "finished_at_utc": "2026-10-17T10:19:54+00:00",
   "outcome": "failure"
 }
