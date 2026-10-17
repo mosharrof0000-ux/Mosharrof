@@ -1,29 +1,73 @@
 {
-  "timestamp_utc": "2026-10-17T11:25:58+00:00",
-  "event_name": "workflow_run",
+  "timestamp_utc": "2026-10-17T11:26:15+00:00",
+  "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028474910",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028474910",
-  "source_run_id": "39028435022",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028435022",
+  "run_id": "39028675974",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028675974",
+  "source_run_id": null,
+  "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "463c2644f7b82fe9d26260f19231c34460ff6857",
+  "sha": "f3bfe3e9e886867c2cb787ec6b04dfffc8d1aaea",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = cancelled",
-    "Source commit: 463c2644f7b82fe9d26260f19231c34460ff6857"
+    "Push commit: fix(build): require only generated provider-control assets",
+    "Commit SHA: f3bfe3e9e886867c2cb787ec6b04dfffc8d1aaea",
+    "Check: Redirect rules - bucolic-mooncake-c83372 — in_progress/pending",
+    "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: validate — completed/skipped",
+    "Check: test — queued/pending",
+    "Check: record — in_progress/pending"
   ],
   "planned": [
-    "Record the completed workflow result, job-level checks and evidence URL.",
-    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Resume at failed workflow/job: MOSHARROF Full-System Interaction QA. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
-  "source_conclusion": "cancelled",
+  "next_step": "Wait for pending checks (Redirect rules - bucolic-mooncake-c83372, test, record); then inspect their results and artifacts.",
+  "source_workflow": null,
+  "source_conclusion": null,
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "Redirect rules - bucolic-mooncake-c83372",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Header rules - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "Pages changed - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "validate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "record",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    }
+  ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:26:03+00:00",
+  "finished_at_utc": "2026-10-17T11:26:19+00:00",
   "outcome": "success"
 }
