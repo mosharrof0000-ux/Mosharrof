@@ -186,8 +186,10 @@ def main() -> int:
             *[f"  - {item}" for item in details["checked"]],
             "- Planned work:",
             *[f"  - {item}" for item in details["planned"]],
-            "- Detected changes/checks:",
-            *[f"  - {item}" for item in details.get("checked", [])],
+            "- Changed paths:",
+            *([f"  - {item}" for item in details.get("changed_files", [])] or ["  - No changed paths were provided by this event."]),
+            "- Available check results:",
+            *([f"  - {item.get('job')}: {item.get('status')}/{item.get('conclusion') or 'pending'}" for item in details.get("check_results", [])] or ["  - No check results were available at start."]),
             "- Current state: in progress; no success claim is made at start.",
             "",
         ]
