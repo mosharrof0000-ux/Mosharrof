@@ -1,178 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T11:48:58+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-17T11:49:15+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030009204",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030009204",
-  "source_run_id": null,
-  "source_run_url": null,
+  "run_id": "39028882794",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028882794",
+  "source_run_id": "39028843489",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028843489",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "e6b185b1bf48fe6d38d2cf1be0f5db32b34f64db",
+  "sha": "cff33ab18412216d17df77c2f37cf7e5356312d2",
   "checked": [
-    "Push commit: fix(automation): coalesce work-engine runs per branch",
-    "Commit SHA: e6b185b1bf48fe6d38d2cf1be0f5db32b34f64db",
-    "Check: deploy — completed/cancelled",
-    "Check: Redirect rules - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: record — completed/skipped",
-    "Check: Mandatory Organ Isolation — completed/cancelled",
-    "Check: visual-qa — queued/pending",
-    "Check: Leave the repo clean — completed/cancelled",
-    "Check: browser-memory-roundtrip — completed/cancelled",
-    "Check: interaction-qa — queued/pending",
-    "Check: verify-ecosystem — queued/pending",
-    "Check: test — completed/cancelled",
-    "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: Component awareness heartbeat — queued/pending",
-    "Check: test — queued/pending",
-    "Check: test — queued/pending",
-    "Check: build-apk — queued/pending",
-    "Check: validate — queued/pending",
-    "Check: Verify before promotion — completed/cancelled",
-    "Check: validate — completed/skipped",
-    "Check: test — in_progress/pending",
-    "Check: record — in_progress/pending"
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = cancelled",
+    "Source commit: cff33ab18412216d17df77c2f37cf7e5356312d2"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed check: deploy. Open its run logs and repair on a safe feature branch.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
+  "source_conclusion": "cancelled",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "deploy",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    },
-    {
-      "job": "Redirect rules - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "Header rules - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "Mandatory Organ Isolation",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    },
-    {
-      "job": "visual-qa",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Leave the repo clean",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    },
-    {
-      "job": "browser-memory-roundtrip",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    },
-    {
-      "job": "interaction-qa",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "verify-ecosystem",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    },
-    {
-      "job": "Pages changed - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "Component awareness heartbeat",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "build-apk",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "validate",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Verify before promotion",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    },
-    {
-      "job": "validate",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:49:03+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:49:15+00:00",
+  "outcome": "failure"
 }
