@@ -41,7 +41,8 @@ export function initializeComposerEnhancements() {
   expand.setAttribute("aria-controls", "mosharrofExpandEditor");
   expand.setAttribute("aria-expanded", "false");
   expand.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8h8v8H8z"/></svg>';
-  send.parentNode.insertBefore(expand, send);
+  // Preserve the established live composer order: expand action before the stop action.
+  send.parentNode.insertBefore(expand, document.getElementById("stopBtn") || send);
 
   const editor = document.createElement("section");
   editor.className = "mosharrof-expand-editor";
@@ -78,11 +79,34 @@ export function initializeComposerEnhancements() {
     const activeInput = currentInput();
     if (apply) {
       const value = String(largeInput.value || "");
+      const previousValue = String(activeInput.value || "");
       activeInput.value = value;
       activeInput.dispatchEvent(new Event("input", { bubbles: true }));
       activeInput.dispatchEvent(new Event("change", { bubbles: true }));
-      activeInput.value = value;
+
+      // Some UI listeners may replace the composer input while handling the input event.
+      // Reacquire by ID instead of writing a second time to a detached node.
+      let latestInput = currentInput();
+      if (latestInput !== activeInput) {
+        latestInput.value = value;
+        latestInput.dispatchEvent(new Event("input", { bubbles: true }));
+        latestInput = currentInput();
+      }
+      latestInput.value = value;
       syncVisibility();
+
+      // If a listener schedules a DOM refresh, restore only while the draft is still unchanged.
+      // Never overwrite text the user has typed after applying the expanded draft.
+      requestAnimationFrame(() => {
+        let current = currentInput();
+        if (current.value === value || current.value === previousValue || !current.value) {
+          current.value = value;
+          current.dispatchEvent(new Event("input", { bubbles: true }));
+          current = currentInput();
+          if (current.value === previousValue || !current.value) current.value = value;
+        }
+        syncVisibility();
+      });
     }
     editor.classList.remove("open");
     editor.setAttribute("aria-hidden", "true");
