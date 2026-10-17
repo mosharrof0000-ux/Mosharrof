@@ -1,29 +1,90 @@
 {
-  "timestamp_utc": "2026-10-17T12:02:04+00:00",
+  "timestamp_utc": "2026-10-17T12:02:00+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029653194",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029653194",
-  "source_run_id": "39029436353",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029436353",
+  "run_id": "39029791525",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029791525",
+  "source_run_id": "39029591814",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029591814",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "2768d0b7f31ba7eff25a287064c7e022f5fcb646",
+  "sha": "f275417323984635db2dd9b305f388f6d0e5dd37",
   "checked": [
-    "Completed workflow result: Mosharrof Tests = failure",
-    "Source commit: 2768d0b7f31ba7eff25a287064c7e022f5fcb646"
+    "Completed workflow result: Mosharrof Verification Gate = failure",
+    "Source commit: f275417323984635db2dd9b305f388f6d0e5dd37",
+    "Job: Verify before promotion — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Mosharrof Tests",
+  "next_step": "Resume at failed workflow/job: Verify before promotion. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof Verification Gate",
   "source_conclusion": "failure",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "Verify before promotion",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout proposed version",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Pages entrypoint",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Run project tests",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Start browser test server",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Install Playwright and Chromium",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Capture mobile and desktop screenshots",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify screenshots are valid",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload visual evidence",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Promotion decision",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout proposed version",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T12:02:04+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T12:02:16+00:00",
+  "outcome": "success"
 }
