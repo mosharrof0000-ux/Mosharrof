@@ -1,18 +1,22 @@
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+CONTROLS = (ROOT / "core" / "manual-provider-controls.js").read_text(encoding="utf-8")
+PREP = (ROOT / "scripts" / "prepare_web_organ_runtime.py").read_text(encoding="utf-8")
 WORKER = (ROOT / "worker" / "screenshot-analysis.js").read_text(encoding="utf-8")
 
 
-def test_manual_menus_are_connected_to_chat_tts_and_stt_controls():
-    assert 'id="manualChatModeBtn"' in HTML
-    assert 'data-manual-menu="tts"' in HTML
-    assert 'RECORDING / SPEECH TO TEXT' in HTML
-    assert 'AI MODEL / CONNECTION' in HTML
-    assert 'localStorage.getItem("mosharrof_chat_route_v1")' in HTML
-    assert 'localStorage.getItem("mosharrof_stt_model_v1")' in HTML
+def test_manual_menus_are_isolated_in_a_dedicated_runtime_module():
+    assert 'core/manual-provider-controls.js' in PREP
+    assert 'manualChatModeBtn' in CONTROLS
+    assert 'AI MODEL / CONNECTION' in CONTROLS
+    assert 'RECORDING / SPEECH TO TEXT' in CONTROLS
+    assert 'localStorage.getItem("mosharrof_chat_route_v1")' in CONTROLS
+    assert 'localStorage.getItem("mosharrof_stt_model_v1")' in PREP
+    assert 'data-manual-menu="tts"' in CONTROLS or '.message-speak-shortcut' in CONTROLS
+    assert 'web/organs/chat-manual-controls/index.js' not in PREP
+    assert '<script src="./core/manual-provider-controls.js"></script>' in PREP
 
 
 def test_manual_chat_provider_does_not_silently_fall_back():
