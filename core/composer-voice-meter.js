@@ -67,6 +67,5 @@ export function initializeComposerVoiceMeter(button) {
     }
   }
 
-  document.addEventListener("vm:start", event => start(event.stream));
-  document.addEventListener("vm:stop", stop);
+  document.addEventListener("vm", event => start(event.detail));
 }
