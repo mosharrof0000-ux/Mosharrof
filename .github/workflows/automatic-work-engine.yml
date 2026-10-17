@@ -13,6 +13,20 @@ on:
       - ".github/workflows/automatic-work-engine.yml"
   workflow_dispatch:
   workflow_run:
+    workflows:
+      - Build MOSHARROF Android APK
+      - MOSHARROF Full App Interactive QA
+      - Mosharrof CI
+      - Mosharrof Tests
+      - Mosharrof Visual QA
+      - Mosharrof Verification Gate
+      - MOSHARROF Mandatory Architecture Gate
+      - Personal Memory Browser Smoke Test
+      - Mosharrof AI Ecosystem Verification
+      - Mosharrof Component Consciousness
+      - MOSHARROF Full-System Interaction QA
+      - Deploy Mosharrof Pages
+      - Cleanup Discipline Reminder
     types: [completed]
 
 permissions:
