@@ -249,7 +249,7 @@ header.top{
   </main>
   <div class="composer" id="composer">
     <div class="image-preview" id="imagePreview"><img id="previewImage" alt="Screenshot preview"><span id="previewName">Screenshot attached</span><button id="removeImage" aria-label="Remove screenshot">×</button></div>
-    <div class="composer-input-row"><textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea></div>
+    <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
     <div class="row composer-actions-row"><div class="composer-tools" id="composerTools"><button class="composer-tool-toggle" id="plusBtn" type="button" aria-label="আরও টুল দেখান" aria-expanded="false" aria-controls="composerToolsMenu">+</button><div class="composer-tools-menu" id="composerToolsMenu" role="group" aria-label="কম্পোজার টুল"><label class="composer-action attach" aria-label="ক্যামেরা বা ছবি যোগ করুন" title="ক্যামেরা / ছবি"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.5h4.6L15.5 5h2A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12" r="3.2"/></svg><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"></label></div></div><button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button><button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button></div>
   </div>
   <div class="voice-bar" id="voiceStatus" role="status" aria-live="polite">Voice ready</div>
@@ -1086,7 +1086,7 @@ header.top{
   var busy=false;
   function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
   function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
-  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";input.style.height="40px";input.scrollTop=0;resize();
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
     if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
       session.messages=session.messages.slice(0,editTargetIndex);
       msgEl.innerHTML="";
@@ -1155,7 +1155,7 @@ header.top{
   function finishVoiceProcessingTimer(success){if(!voiceProcessingStartedAt)return;var elapsed=((Date.now()-voiceProcessingStartedAt)/1000).toFixed(1);if(voiceTimerInterval){clearInterval(voiceTimerInterval);voiceTimerInterval=null;}composerVoiceBtn.classList.remove("is-processing","is-listening");composerVoiceBtn.classList.add(success?"is-transcription-success":"is-transcription-error");composerVoiceBtn.innerHTML=success?("✓ "+elapsed+"s"):("! "+elapsed+"s");composerVoiceBtn.setAttribute("aria-label",success?"অডিও থেকে লেখা তৈরি হয়েছে, "+elapsed+" সেকেন্ডে":"অডিও থেকে লেখা তৈরি ব্যর্থ, "+elapsed+" সেকেন্ডে");composerVoiceBtn.title=success?"লেখা তৈরি সম্পন্ন":"লেখা তৈরি ব্যর্থ";voiceTimerRestoreTimeout=setTimeout(function(){if(voiceWanted||voiceProcessing)return;composerVoiceBtn.innerHTML=voiceMicMarkup||composerVoiceBtn.innerHTML;composerVoiceBtn.classList.remove("is-processing","is-transcription-success","is-transcription-error","is-listening");composerVoiceBtn.setAttribute("aria-label","ভয়েস ইনপুট");composerVoiceBtn.title="ভয়েস ইনপুট";voiceProcessingStartedAt=0;},2200);}
   function showVoiceMessage(message){showV(message);if(voiceEndTimer)clearTimeout(voiceEndTimer);voiceEndTimer=setTimeout(hideV,5000);}
   function audioErrorMessage(error){var name=String(error&&error.name||"");if(name==="NotAllowedError"||name==="PermissionDeniedError")return "মাইক্রোফোনের অনুমতি দিন, তারপর আবার চেষ্টা করুন।";if(name==="NotFoundError"||name==="DevicesNotFoundError")return "মাইক্রোফোন পাওয়া যায়নি।";if(name==="NotReadableError"||name==="TrackStartError")return "অন্য অ্যাপ মাইক্রোফোন ব্যবহার করছে।";return "অডিও রেকর্ড করা যায়নি। আবার চেষ্টা করুন।";}
-  function releaseVoiceStream(){document.dispatchEvent(new CustomEvent("mosharrof:voice-stream-stop"));if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
+  function releaseVoiceStream(){if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
   function normalizeVoiceTranscript(value,language){
     var text=String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
     if(!text)return "";
@@ -1216,20 +1216,20 @@ header.top{
     if(voiceProcessing)return;
     if(voiceWanted){
       voiceWanted=false;setVoiceButtonState(false);
-      if(voiceRecorder&&voiceRecorder.state!=="inactive"){document.dispatchEvent(new CustomEvent("mosharrof:voice-stream-stop"));try{voiceRecorder.stop();}catch(e){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("রেকর্ডিং বন্ধ করা যায়নি।");}}
+      if(voiceRecorder&&voiceRecorder.state!=="inactive"){try{voiceRecorder.stop();}catch(e){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("রেকর্ডিং বন্ধ করা যায়নি।");}}
       return;
     }
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){var unsupported="এই ব্রাউজারে অডিও রেকর্ডিং সমর্থিত নয়। আপডেটেড Chrome ব্যবহার করুন।";toast(unsupported,4000);showVoiceMessage(unsupported);return;}
     voiceBaseText=input.value.trim();voiceChunks=[];voiceWanted=true;setVoiceButtonState(true);showV("শুনছি… পুরো গান/কথা বলুন; শেষ হলে মাইক্রোফোনে চাপুন");
     try{
       voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
-      document.dispatchEvent(new CustomEvent("mosharrof:voice-stream-start",{detail:{stream:voiceStream}}));
+      var voiceMeterEvent=new Event("vm:start");voiceMeterEvent.stream=voiceStream;document.dispatchEvent(voiceMeterEvent);
       var types=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"];
       var mime=types.find(function(type){return MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(type);});
       voiceRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
       voiceRecorder.ondataavailable=function(event){if(event.data&&event.data.size)voiceChunks.push(event.data);};
       voiceRecorder.onerror=function(){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();voiceProcessing=false;showVoiceMessage("অডিও রেকর্ডিংয়ে সমস্যা হয়েছে। আবার চেষ্টা করুন।");};
-      voiceRecorder.onstop=function(){voiceWanted=false;document.dispatchEvent(new CustomEvent("mosharrof:voice-stream-stop"));setVoiceButtonState(false);var blob=new Blob(voiceChunks,{type:voiceRecorder.mimeType||"audio/webm"});transcribeAudioBlob(blob);};
+      voiceRecorder.onstop=function(){voiceWanted=false;document.dispatchEvent(new Event("vm:stop"));setVoiceButtonState(false);var blob=new Blob(voiceChunks,{type:voiceRecorder.mimeType||"audio/webm"});transcribeAudioBlob(blob);};
       voiceRecorder.start(1000);
     }catch(error){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();showVoiceMessage(audioErrorMessage(error));}
   }
