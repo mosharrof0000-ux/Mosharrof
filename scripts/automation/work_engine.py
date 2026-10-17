@@ -219,6 +219,15 @@ def main() -> int:
                 previous = {}
         status = args.job_status
         finished_at = utc_now()
+        if not previous.get("timestamp_utc"):
+            # A failed start/checkpoint must still produce a valid, self-describing finish record.
+            previous = {
+                **details,
+                "timestamp_utc": utc_now(),
+                "phase": "STARTED_RECOVERY",
+                "status": "interrupted",
+                "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+            }
         result = {
             **previous,
             "finished_at_utc": finished_at,
