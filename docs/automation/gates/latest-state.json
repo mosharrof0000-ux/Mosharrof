@@ -1,24 +1,21 @@
 {
-  "timestamp_utc": "2026-10-17T11:42:54Z",
+  "timestamp_utc": "2026-10-17T11:40:42Z",
   "action": "enter",
   "task": "Automatic work-engine verification",
   "purpose": "Validate recorder and durable resume behavior",
   "step": "Run work-engine and work-gate contract tests",
   "reason": null,
-  "details": "next: run Python compilation and both contract test suites",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029588593",
+  "details": "",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029427721",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "f275417323984635db2dd9b305f388f6d0e5dd37",
-  "status": "completed",
-  "completed_steps": [
-    "Recorder start entry written",
-    "Python compilation and contract tests"
-  ],
-  "interruption": null,
-  "resume_from": null,
-  "updated_at_utc": "2026-10-17T11:43:02Z",
-  "last_checkpoint_utc": "2026-10-17T11:42:59Z",
-  "last_completed_step": "Python compilation and contract tests",
-  "finished_at_utc": "2026-10-17T11:43:02Z",
-  "exit_details": "All focused tests passed; inspect workflow result and artifacts next."
+  "sha": "ad87f98264c233e034cdbf43e45b4f5f0fff1b6a",
+  "status": "interrupted",
+  "completed_steps": [],
+  "interruption": {
+    "reason": "unknown",
+    "details": "Job ended with status failure; exact cause must be determined from Actions logs."
+  },
+  "resume_from": "Run work-engine and work-gate contract tests",
+  "updated_at_utc": "2026-10-17T11:43:08Z",
+  "interrupted_at_utc": "2026-10-17T11:43:08Z"
 }
