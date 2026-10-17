@@ -236,7 +236,10 @@ def main() -> int:
             "outcome": "success" if status == "success" else ("failure" if status == "failure" else status),
         }
         if status != "success":
-            result["next_step"] = "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks."
+            if previous.get("phase") == "STARTED_RECOVERY":
+                result["next_step"] = previous.get("next_step", "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.")
+            else:
+                result["next_step"] = "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks."
         elif previous.get("event_name") == "workflow_run" and previous.get("source_conclusion") != "success":
             result["next_step"] = previous.get("next_step", "Inspect the failed source workflow logs and resume at its first failed job.")
         elif previous.get("event_name") == "workflow_run":
