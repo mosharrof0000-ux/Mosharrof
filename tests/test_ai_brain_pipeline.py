@@ -12,8 +12,8 @@ def test_live_worker_applies_reflective_brain_contract_to_every_chat_provider():
     assert "buildReflectiveSystemPrompt()" in worker
     assert "buildReflectiveUserPrompt(text,{targetWords})" in worker
     assert "generateWithCloudflareChat(fallbackText,env,report,targetWords)" in worker
-    assert 'generateWithOpenAICompatibleChat(\n    "groq"' in worker
-    assert 'generateWithOpenAICompatibleChat(\n    "openrouter"' in worker
+    assert 'generateWithOpenAICompatibleChat(\n    "groq"' in router
+    assert 'generateWithOpenAICompatibleChat(\n    "openrouter"' in router
     assert "dated, potentially incomplete context" in prompt
     assert "current request overrides older preferences" in prompt
     assert "Never invent sources, links, test results, capabilities, or completed actions" in prompt
