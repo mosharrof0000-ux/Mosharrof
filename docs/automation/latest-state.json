@@ -1,29 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T12:08:02+00:00",
+  "timestamp_utc": "2026-10-17T12:08:13+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030120678",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030120678",
-  "source_run_id": "39030112057",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030112057",
+  "run_id": "39030121226",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030121226",
+  "source_run_id": "39030106271",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030106271",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "ac5ca7b97c981471ad264e0896f084906ad3bfd3",
+  "sha": "d47b9853624e4ec54fd00be651f4ebf37eaeb6a6",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = cancelled",
-    "Source commit: ac5ca7b97c981471ad264e0896f084906ad3bfd3"
+    "Completed workflow result: Cleanup Discipline Reminder = cancelled",
+    "Source commit: d47b9853624e4ec54fd00be651f4ebf37eaeb6a6"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_workflow": "Cleanup Discipline Reminder",
   "source_conclusion": "cancelled",
   "changed_files": [],
   "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T12:08:02+00:00",
+  "finished_at_utc": "2026-10-17T12:08:13+00:00",
   "outcome": "failure"
 }
