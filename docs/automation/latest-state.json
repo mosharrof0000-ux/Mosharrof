@@ -1,59 +1,83 @@
 {
-  "timestamp_utc": "2026-10-17T11:39:05+00:00",
+  "timestamp_utc": "2026-10-17T11:36:48+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028808054",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028808054",
-  "source_run_id": "39028783206",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028783206",
+  "run_id": "39028763817",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028763817",
+  "source_run_id": "39028737046",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028737046",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "435c2b819c63da26b5085f359cf39b51d629e182",
+  "sha": "aab3624bfc66fe4257a676bd97524ad4252720fd",
   "checked": [
-    "Completed workflow result: Mosharrof CI = failure",
-    "Source commit: 435c2b819c63da26b5085f359cf39b51d629e182",
-    "Job: test — completed/failure"
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = cancelled",
+    "Source commit: aab3624bfc66fe4257a676bd97524ad4252720fd",
+    "Job: Mandatory Organ Isolation — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof CI",
-  "source_conclusion": "failure",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
+  "source_conclusion": "cancelled",
   "changed_files": [],
   "check_results": [
     {
-      "job": "test",
+      "job": "Mandatory Organ Isolation",
       "status": "completed",
-      "conclusion": "failure",
+      "conclusion": "cancelled",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v4",
+          "name": "Checkout proposed commit and history",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v5",
+          "name": "Setup Python",
           "conclusion": "success"
         },
         {
-          "name": "Run python -m pip install -r requirements.txt",
+          "name": "Prove the gate blocks invalid replacements",
           "conclusion": "success"
         },
         {
-          "name": "Run python -m pytest -q",
-          "conclusion": "failure"
+          "name": "Validate registry and safe organ scaffolding",
+          "conclusion": "success"
         },
         {
-          "name": "Post Run actions/setup-python@v5",
-          "conclusion": "skipped"
+          "name": "Validate manifests and generated browser registry",
+          "conclusion": "success"
         },
         {
-          "name": "Post Run actions/checkout@v4",
+          "name": "Setup Node.js for runtime contract tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test organ runtime and UI contracts",
+          "conclusion": "success"
+        },
+        {
+          "name": "Fetch target branch",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce organ isolation, link caps, and file-size limits",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Node.js for runtime contract tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout proposed commit and history",
           "conclusion": "success"
         },
         {
@@ -64,7 +88,7 @@
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:39:09+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:39:19+00:00",
+  "outcome": "failure"
 }
