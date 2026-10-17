@@ -91,7 +91,7 @@ def main() -> int:
         anchor_tag = '<script src="./core/design-intelligence.js"></script>'
         if anchor_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: design intelligence script anchor missing for manual provider controls")
-        index_html = index_html.replace(anchor_tag, anchor_tag + "\\n" + manual_controls_tag, 1)
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + manual_controls_tag, 1)
 
     memory_bridge_tag = '<script type="module">import "./runtime/core/personal-memory-bridge.js";</script>'
     if memory_bridge_tag not in index_html:
