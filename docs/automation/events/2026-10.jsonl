@@ -37390,3 +37390,33 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T12:00:57+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39029626665",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029626665",
+  "source_run_id": "39029430608",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029430608",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "ad87f98264c233e034cdbf43e45b4f5f0fff1b6a",
+  "checked": [
+    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
+    "Source commit: ad87f98264c233e034cdbf43e45b4f5f0fff1b6a"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:00:57+00:00",
+  "outcome": "failure"
+}
+
