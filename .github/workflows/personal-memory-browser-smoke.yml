@@ -15,7 +15,7 @@ on:
         required: true
         default: "https://mosharrof0000-ux.github.io/Mosharrof/"
       confirm_send_test_message:
-        description: "Type SEND_TEST_MESSAGE to authorize one synthetic message to the real chat Worker"
+        description: "Type SEND_TEST_MESSAGE to send one live test"
         required: true
         type: string
         default: "NO"
