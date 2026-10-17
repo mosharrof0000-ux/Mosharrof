@@ -1,157 +1,74 @@
 {
-  "timestamp_utc": "2026-10-17T11:34:36+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-17T11:29:52+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028935540",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028935540",
-  "source_run_id": null,
-  "source_run_url": null,
+  "run_id": "39028511355",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028511355",
+  "source_run_id": "39028484948",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028484948",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "fdfb87d4c83423718876f470facde73d38b2a846",
+  "sha": "d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
   "checked": [
-    "Push commit: fix(test): follow extracted manual router module",
-    "Commit SHA: fdfb87d4c83423718876f470facde73d38b2a846",
-    "Check: interaction-qa — queued/pending",
-    "Check: test — queued/pending",
-    "Check: Redirect rules - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: Verify before promotion — queued/pending",
-    "Check: Mandatory Organ Isolation — queued/pending",
-    "Check: Leave the repo clean — queued/pending",
-    "Check: browser-memory-roundtrip — queued/pending",
-    "Check: test — queued/pending",
-    "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: test — queued/pending",
-    "Check: visual-qa — queued/pending",
-    "Check: verify-ecosystem — queued/pending",
-    "Check: Component awareness heartbeat — queued/pending",
-    "Check: build-apk — queued/pending",
-    "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: test — queued/pending",
-    "Check: validate — completed/skipped",
-    "Check: record — in_progress/pending"
+    "Completed workflow result: Cleanup Discipline Reminder = success",
+    "Source commit: d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
+    "Job: Leave the repo clean — completed/success"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Wait for pending checks (interaction-qa, test, Verify before promotion, Mandatory Organ Isolation, Leave the repo clean); then inspect their results and artifacts.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Cleanup Discipline Reminder",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "interaction-qa",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Redirect rules - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "Verify before promotion",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Mandatory Organ Isolation",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
       "job": "Leave the repo clean",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "browser-memory-roundtrip",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Header rules - bucolic-mooncake-c83372",
       "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "visual-qa",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "verify-ecosystem",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Component awareness heartbeat",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "build-apk",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Pages changed - bucolic-mooncake-c83372",
-      "status": "completed",
-      "conclusion": "neutral",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "validate",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run cleanup check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Print discipline reminder",
+          "conclusion": "success"
+        },
+        {
+          "name": "Comment on pull request",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:34:40+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:34:44+00:00",
+  "outcome": "failure"
 }
