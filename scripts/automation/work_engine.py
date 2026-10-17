@@ -105,7 +105,14 @@ def event_details(event_name: str, event: dict[str, Any], env: dict[str, str]) -
         )
         planned = ["Record the completed workflow result, job-level checks and evidence URL.",
                    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."]
-        next_step = "Inspect the workflow logs and artifacts; fix failures on a safe feature branch."
+        failed_jobs = [item["job"] for item in checked_runs if item.get("conclusion") not in (None, "success", "skipped", "neutral")]
+        if conclusion != "success":
+            first_failed = failed_jobs[0] if failed_jobs else completed_name
+            next_step = f"Resume at failed workflow/job: {first_failed}. Open the linked run logs, fix on a safe feature branch, then rerun."
+        elif failed_jobs:
+            next_step = f"Inspect failed job {failed_jobs[0]} despite the workflow-level result; verify logs before proceeding."
+        else:
+            next_step = "Workflow passed. Inspect its artifacts and then continue from the project's first pending checkpoint item."
     elif event_name == "push":
         commit = (event.get("head_commit") or {})
         message = commit.get("message", "commit message unavailable").splitlines()[0]
@@ -119,7 +126,14 @@ def event_details(event_name: str, event: dict[str, Any], env: dict[str, str]) -
         planned = ["Record the commit message, changed paths and available checks.",
                    "Run the work-engine contract tests and validate the run metadata.",
                    "Publish a durable log entry and a machine-readable latest state."]
-        next_step = "Review the checks attached to this commit; continue from the first failed or pending check."
+        failed_checks = [item["job"] for item in checked_runs if item.get("conclusion") not in (None, "success", "skipped", "neutral")]
+        pending_checks = [item["job"] for item in checked_runs if item.get("status") != "completed"]
+        if failed_checks:
+            next_step = f"Resume at failed check: {failed_checks[0]}. Open its run logs and repair on a safe feature branch."
+        elif pending_checks:
+            next_step = f"Wait for pending checks ({', '.join(pending_checks[:5])}); then inspect their results and artifacts."
+        else:
+            next_step = "Review the checks attached to this commit and continue from the project's first pending checkpoint item."
     elif event_name == "pull_request":
         checked = [f"Pull request #{pr.get('number', 'unknown')}: {pr.get('title', 'unknown')}",
                    f"PR head SHA: {head_sha}"]
@@ -212,11 +226,14 @@ def main() -> int:
             "status": status,
             "outcome": "success" if status == "success" else ("failure" if status == "failure" else status),
         }
-        result["next_step"] = (
-            "Review artifacts and required checks for this exact SHA; do not infer device acceptance from build success."
-            if status == "success"
-            else "Inspect this run's logs, fix the first failure on a safe feature branch, and rerun focused checks."
-        )
+        if status != "success":
+            result["next_step"] = "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks."
+        elif previous.get("event_name") == "workflow_run" and previous.get("source_conclusion") != "success":
+            result["next_step"] = previous.get("next_step", "Inspect the failed source workflow logs and resume at its first failed job.")
+        elif previous.get("event_name") == "workflow_run":
+            result["next_step"] = "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance."
+        else:
+            result["next_step"] = previous.get("next_step", "Review this SHA's checks and continue from the first pending checkpoint item.")
         lines = [
             f"## FINISHED — {result.get('workflow', 'MOSHARROF Automatic Work Engine')}",
             f"- Time (UTC): {finished_at}",
