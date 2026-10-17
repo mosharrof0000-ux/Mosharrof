@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T10:18:45+00:00",
+  "timestamp_utc": "2026-10-17T10:18:51+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39024405061",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39024405061",
-  "source_run_id": "39024368110",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39024368110",
+  "run_id": "39024409586",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39024409586",
+  "source_run_id": "39024368104",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39024368104",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "main",
   "sha": "a63f8579858a87a419a935ed040005b064a473c1",
   "checked": [
-    "Completed workflow result: Personal Memory Browser Smoke Test = success",
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
     "Source commit: a63f8579858a87a419a935ed040005b064a473c1",
-    "Job: browser-memory-roundtrip — completed/success"
+    "Job: interaction-qa — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Personal Memory Browser Smoke Test",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "browser-memory-roundtrip",
+      "job": "interaction-qa",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -33,15 +33,19 @@
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v4",
+          "name": "Checkout candidate",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v5",
+          "name": "Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages runtime for pull requests",
+          "name": "Install Playwright with transient-network retries",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare candidate Pages assets",
           "conclusion": "skipped"
         },
         {
@@ -49,27 +53,27 @@
           "conclusion": "skipped"
         },
         {
-          "name": "Run actions/setup-node@v4",
+          "name": "Select safe inspection target",
           "conclusion": "success"
         },
         {
-          "name": "Install Chromium browser test runner",
+          "name": "Run safe mobile interaction inspection",
           "conclusion": "success"
         },
         {
-          "name": "Test send, persistent storage, and recall after reload",
+          "name": "Run one real live chat round-trip",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload inspection evidence",
           "conclusion": "success"
         },
         {
-          "name": "Post Run actions/setup-node@v4",
+          "name": "Post Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Post Run actions/setup-python@v5",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v4",
+          "name": "Post Checkout candidate",
           "conclusion": "success"
         },
         {
@@ -81,6 +85,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T10:18:52+00:00",
+  "finished_at_utc": "2026-10-17T10:18:57+00:00",
   "outcome": "success"
 }
