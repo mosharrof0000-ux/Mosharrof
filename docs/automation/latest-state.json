@@ -1,29 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T12:04:23+00:00",
+  "timestamp_utc": "2026-10-17T12:04:37+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030115259",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030115259",
-  "source_run_id": "39030106295",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030106295",
+  "run_id": "39029794972",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029794972",
+  "source_run_id": "39029591999",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029591999",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "d47b9853624e4ec54fd00be651f4ebf37eaeb6a6",
+  "sha": "f275417323984635db2dd9b305f388f6d0e5dd37",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = cancelled",
-    "Source commit: d47b9853624e4ec54fd00be651f4ebf37eaeb6a6"
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = success",
+    "Source commit: f275417323984635db2dd9b305f388f6d0e5dd37"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: MOSHARROF Full-System Interaction QA. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
-  "source_conclusion": "cancelled",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T12:04:28+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:04:37+00:00",
+  "outcome": "failure"
 }
