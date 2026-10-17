@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T11:11:26+00:00",
+  "timestamp_utc": "2026-10-17T11:06:32+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39027732543",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027732543",
-  "source_run_id": "39027704367",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027704367",
+  "run_id": "39027388907",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027388907",
+  "source_run_id": "39027366737",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027366737",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "main",
-  "sha": "08949242b48817c6fed078b86387c4bfe6698ebc",
+  "branch": "feature/smart-visual-intelligence-engine-2026-10-17",
+  "sha": "8626a94fd656050babcfa34da1bea89f26bcc512",
   "checked": [
-    "Completed workflow result: Personal Memory Browser Smoke Test = success",
-    "Source commit: 08949242b48817c6fed078b86387c4bfe6698ebc",
-    "Job: browser-memory-roundtrip — completed/success"
+    "Completed workflow result: Mosharrof Tests = success",
+    "Source commit: 8626a94fd656050babcfa34da1bea89f26bcc512",
+    "Job: test — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Personal Memory Browser Smoke Test",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof Tests",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "browser-memory-roundtrip",
+      "job": "test",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -37,31 +37,35 @@
           "conclusion": "success"
         },
         {
+          "name": "Verify image engine prompt parsing",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test personal memory engine",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test memory retrieval and timeline regressions",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check memory bridge syntax",
+          "conclusion": "success"
+        },
+        {
           "name": "Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages runtime for pull requests",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Start candidate Pages server",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Run actions/setup-node@v4",
+          "name": "Run python -m pip install -r requirements.txt",
           "conclusion": "success"
         },
         {
-          "name": "Install Chromium browser test runner",
+          "name": "Run python3 scripts/run_organ_checks.py",
           "conclusion": "success"
         },
         {
-          "name": "Test send, persistent storage, and recall after reload",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-node@v4",
+          "name": "Run python -m pytest -q",
           "conclusion": "success"
         },
         {
@@ -80,7 +84,7 @@
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:11:30+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:11:43+00:00",
+  "outcome": "failure"
 }
