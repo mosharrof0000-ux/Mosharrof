@@ -1,99 +1,68 @@
 {
-  "timestamp_utc": "2026-10-17T08:33:21+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-17T08:33:38+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39017797624",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39017797624",
+  "run_id": "39017797595",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39017797595",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "main",
   "sha": "261aa50c8eaf4e131da775806292c85f8037fe57",
   "checked": [
-    "Push commit: feat: add work gate and interruption recovery",
-    "Commit SHA: 261aa50c8eaf4e131da775806292c85f8037fe57",
-    "Check: validate — completed/skipped",
-    "Check: test — in_progress/pending",
-    "Check: Leave the repo clean — in_progress/pending",
-    "Check: record — in_progress/pending",
-    "Check: Component awareness heartbeat — completed/success",
-    "Check: test — in_progress/pending",
-    "Check: checkpoint — in_progress/pending",
-    "Check: verify-ecosystem — in_progress/pending",
-    "Check: test — in_progress/pending",
-    "Check: build-apk — in_progress/pending"
+    "Completed workflow result: Mosharrof AI Ecosystem Verification = success",
+    "Source commit: 261aa50c8eaf4e131da775806292c85f8037fe57",
+    "Job: verify-ecosystem — completed/success"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Wait for pending checks (test, Leave the repo clean, record, test, checkpoint); then inspect their results and artifacts.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "validate",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Leave the repo clean",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Component awareness heartbeat",
+      "job": "verify-ecosystem",
       "status": "completed",
       "conclusion": "success",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "checkpoint",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "verify-ecosystem",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "build-apk",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout Code",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Python 3.12",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install test dependencies",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run Integration Tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Python 3.12",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout Code",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:33:25+00:00",
+  "finished_at_utc": "2026-10-17T08:33:42+00:00",
   "outcome": "success"
 }
