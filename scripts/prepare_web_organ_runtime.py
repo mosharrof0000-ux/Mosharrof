@@ -68,7 +68,7 @@ def main() -> int:
     if memory_bridge_tag not in index_html:
         if video_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: video script anchor missing for memory bridge")
-        index_html = index_html.replace(video_tag, video_tag + "\\n" + memory_bridge_tag, 1)
+        index_html = index_html.replace(video_tag, video_tag + "\n" + memory_bridge_tag, 1)
 
     old_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
     new_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),history:(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};}),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
