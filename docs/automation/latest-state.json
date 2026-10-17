@@ -1,37 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T12:05:36+00:00",
+  "timestamp_utc": "2026-10-17T12:05:47+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030120784",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030120784",
-  "source_run_id": "39030112069",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030112069",
+  "run_id": "39030123785",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030123785",
+  "source_run_id": "39030106231",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030106231",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "ac5ca7b97c981471ad264e0896f084906ad3bfd3",
+  "sha": "d47b9853624e4ec54fd00be651f4ebf37eaeb6a6",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
-    "Source commit: ac5ca7b97c981471ad264e0896f084906ad3bfd3",
-    "Job: test — completed/cancelled",
-    "Job: deploy — completed/cancelled"
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = cancelled",
+    "Source commit: d47b9853624e4ec54fd00be651f4ebf37eaeb6a6",
+    "Job: Mandatory Organ Isolation — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Deploy Mosharrof Pages",
+  "next_step": "Resume at failed workflow/job: Mandatory Organ Isolation. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
   "source_conclusion": "cancelled",
   "changed_files": [],
   "check_results": [
     {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    },
-    {
-      "job": "deploy",
+      "job": "Mandatory Organ Isolation",
       "status": "completed",
       "conclusion": "cancelled",
       "steps": []
@@ -39,6 +32,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T12:05:41+00:00",
+  "finished_at_utc": "2026-10-17T12:05:53+00:00",
   "outcome": "success"
 }
