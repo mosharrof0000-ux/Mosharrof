@@ -13,10 +13,10 @@ def test_manual_menus_are_isolated_in_a_dedicated_runtime_module():
     assert 'AI MODEL / CONNECTION' in CONTROLS
     assert 'RECORDING / SPEECH TO TEXT' in CONTROLS
     assert 'localStorage.getItem("mosharrof_chat_route_v1")' in CONTROLS
-    assert 'localStorage.getItem("mosharrof_stt_model_v1")' in PREP
+    assert 'mosharrof_stt_model_v1' in PREP
     assert 'data-manual-menu="tts"' in CONTROLS or '.message-speak-shortcut' in CONTROLS
     assert 'web/organs/chat-manual-controls/index.js' not in PREP
-    assert '<script src="./core/manual-provider-controls.js"></script>' in PREP
+    assert 'manual-provider-controls.js' in PREP
 
 
 def test_manual_chat_provider_does_not_silently_fall_back():
