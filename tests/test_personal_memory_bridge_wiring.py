@@ -11,5 +11,7 @@ def test_chat_organ_loads_personal_memory_bridge_and_pages_bundles_dependencies(
     assert "installPersonalMemoryBridge();" in chat
     assert '"core/personal-memory-engine.js": "web/core/personal-memory-engine.js"' in prepare
     assert '"core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js"' in prepare
+    assert '"web/runtime/core" / name' in prepare
+    assert '<script type="module">import "./runtime/core/personal-memory-bridge.js";</script>' in prepare
     assert "timeline: engine.timeline" in bridge
     assert "timeline" in engine
