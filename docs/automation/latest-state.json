@@ -1,90 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T11:34:34+00:00",
+  "timestamp_utc": "2026-10-17T11:37:30+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028578934",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028578934",
-  "source_run_id": "39028482018",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028482018",
+  "run_id": "39028539933",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028539933",
+  "source_run_id": "39028472053",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028472053",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
+  "sha": "38c6990003032a09c0ce7d7e1beb07d07312ba25",
   "checked": [
-    "Completed workflow result: Mosharrof Tests = failure",
-    "Source commit: d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
-    "Job: test — completed/failure"
+    "Completed workflow result: Mosharrof Component Consciousness = success",
+    "Source commit: 38c6990003032a09c0ce7d7e1beb07d07312ba25"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
-  "source_workflow": "Mosharrof Tests",
-  "source_conclusion": "failure",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Component Consciousness",
+  "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "failure",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify image engine prompt parsing",
-          "conclusion": "success"
-        },
-        {
-          "name": "Test personal memory engine",
-          "conclusion": "success"
-        },
-        {
-          "name": "Test memory retrieval and timeline regressions",
-          "conclusion": "success"
-        },
-        {
-          "name": "Check memory bridge syntax",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v5",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pip install -r requirements.txt",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 scripts/run_organ_checks.py",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Run python -m pytest -q",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/setup-python@v5",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/checkout@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T11:37:09+00:00",
+  "finished_at_utc": "2026-10-17T11:37:30+00:00",
   "outcome": "failure"
 }
