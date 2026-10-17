@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-10-17T09:00:19+00:00",
+  "timestamp_utc": "2026-10-17T08:59:32+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39019386137",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39019386137",
+  "run_id": "39019386000",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39019386000",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/work-engine-ledger-contention-v2-2026-10-17",
   "sha": "68dd0e82d2829e9f034ac2a9c59f9292d97d60c5",
   "checked": [
-    "Completed workflow result: Mosharrof Verification Gate = success",
+    "Completed workflow result: Mosharrof CI = success",
     "Source commit: 68dd0e82d2829e9f034ac2a9c59f9292d97d60c5",
-    "Job: Verify before promotion — completed/success"
+    "Job: test — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Verification Gate",
+  "source_workflow": "Mosharrof CI",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Verify before promotion",
+      "job": "test",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -31,47 +31,27 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout proposed version",
+          "name": "Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
-          "name": "Verify Pages entrypoint",
+          "name": "Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Enforce file and folder size budgets",
+          "name": "Run python -m pip install -r requirements.txt",
           "conclusion": "success"
         },
         {
-          "name": "Run project tests",
+          "name": "Run python -m pytest -q",
           "conclusion": "success"
         },
         {
-          "name": "Start browser test server",
+          "name": "Post Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Install Playwright and Chromium",
-          "conclusion": "success"
-        },
-        {
-          "name": "Capture mobile and desktop screenshots",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify screenshots are valid",
-          "conclusion": "success"
-        },
-        {
-          "name": "Upload visual evidence",
-          "conclusion": "success"
-        },
-        {
-          "name": "Promotion decision",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Checkout proposed version",
+          "name": "Post Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
@@ -83,6 +63,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T09:00:24+00:00",
+  "finished_at_utc": "2026-10-17T09:00:41+00:00",
   "outcome": "success"
 }
