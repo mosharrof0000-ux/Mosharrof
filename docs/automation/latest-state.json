@@ -1,102 +1,164 @@
 {
-  "timestamp_utc": "2026-10-17T11:30:19+00:00",
-  "event_name": "workflow_run",
+  "timestamp_utc": "2026-10-17T11:30:36+00:00",
+  "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028520758",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028520758",
-  "source_run_id": "39028401159",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028401159",
+  "run_id": "39028871823",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028871823",
+  "source_run_id": null,
+  "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128",
+  "sha": "200ead75e7296195b929b9858c48c8a4401fb3d7",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = failure",
-    "Source commit: a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128",
-    "Job: build-apk — completed/failure"
+    "Push commit: fix(tts): prevent silent browser fallback in manual mode",
+    "Commit SHA: 200ead75e7296195b929b9858c48c8a4401fb3d7",
+    "Check: deploy — completed/cancelled",
+    "Check: Redirect rules - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: test — completed/cancelled",
+    "Check: Verify before promotion — completed/cancelled",
+    "Check: Leave the repo clean — completed/cancelled",
+    "Check: browser-memory-roundtrip — completed/cancelled",
+    "Check: Mandatory Organ Isolation — completed/cancelled",
+    "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: interaction-qa — queued/pending",
+    "Check: visual-qa — queued/pending",
+    "Check: Component awareness heartbeat — in_progress/pending",
+    "Check: test — in_progress/pending",
+    "Check: build-apk — in_progress/pending",
+    "Check: verify-ecosystem — completed/failure",
+    "Check: test — completed/failure",
+    "Check: validate — completed/skipped",
+    "Check: record — in_progress/pending",
+    "Check: test — completed/failure"
   ],
   "planned": [
-    "Record the completed workflow result, job-level checks and evidence URL.",
-    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Build MOSHARROF Android APK",
-  "source_conclusion": "failure",
+  "next_step": "Resume at failed check: deploy. Open its run logs and repair on a safe feature branch.",
+  "source_workflow": null,
+  "source_conclusion": null,
   "changed_files": [],
   "check_results": [
     {
+      "job": "deploy",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "Redirect rules - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "Header rules - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "Verify before promotion",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "Leave the repo clean",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "browser-memory-roundtrip",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "Mandatory Organ Isolation",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "Pages changed - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "interaction-qa",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "visual-qa",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Component awareness heartbeat",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
       "job": "build-apk",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "verify-ecosystem",
       "status": "completed",
       "conclusion": "failure",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout MOSHARROF",
-          "conclusion": "success"
-        },
-        {
-          "name": "Setup Node",
-          "conclusion": "success"
-        },
-        {
-          "name": "Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify edge-to-edge web contract",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare Android full-screen voice manager",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Verify Android agent contract suite",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Build debug APK",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Verify APK",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload APK artifact",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Publish GitHub Release",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Node",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Checkout MOSHARROF",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": []
+    },
+    {
+      "job": "validate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "job": "record",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:30:25+00:00",
+  "finished_at_utc": "2026-10-17T11:30:41+00:00",
   "outcome": "success"
 }
