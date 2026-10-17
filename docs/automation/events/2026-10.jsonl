@@ -35813,3 +35813,33 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:57:29+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39029595428",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029595428",
+  "source_run_id": "39029485750",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029485750",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "ea375c5f0b0704d7ca1b45ef4612d0b2ffaa260b",
+  "checked": [
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = cancelled",
+    "Source commit: ea375c5f0b0704d7ca1b45ef4612d0b2ffaa260b"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume at failed workflow/job: MOSHARROF Full-System Interaction QA. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_conclusion": "cancelled",
+  "changed_files": [],
+  "check_results": [],
+  "phase": "FINISHED",
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:57:34+00:00",
+  "outcome": "success"
+}
+
