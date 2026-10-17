@@ -64,7 +64,7 @@ jobs:
       - name: Checkout source branch for this work event
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref_name }}
           fetch-depth: 0
           persist-credentials: true
 
