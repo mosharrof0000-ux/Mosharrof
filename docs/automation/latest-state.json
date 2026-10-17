@@ -1,61 +1,77 @@
 {
-  "timestamp_utc": "2026-10-17T08:52:52+00:00",
+  "timestamp_utc": "2026-10-17T08:53:09+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018931662",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018931662",
+  "run_id": "39018931837",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018931837",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/work-engine-ledger-contention-v2-2026-10-17",
   "sha": "f31784e9c11e61326fd62a73a870227f047d8d97",
   "checked": [
-    "Completed workflow result: Cleanup Discipline Reminder = success",
+    "Completed workflow result: Mosharrof Verification Gate = failure",
     "Source commit: f31784e9c11e61326fd62a73a870227f047d8d97",
-    "Job: Leave the repo clean — completed/success"
+    "Job: Verify before promotion — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Cleanup Discipline Reminder",
-  "source_conclusion": "success",
+  "next_step": "Resume at failed workflow/job: Verify before promotion. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Leave the repo clean",
+      "job": "Verify before promotion",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v4",
+          "name": "Checkout proposed version",
           "conclusion": "success"
         },
         {
-          "name": "Setup Python",
+          "name": "Verify Pages entrypoint",
           "conclusion": "success"
         },
         {
-          "name": "Run cleanup check",
-          "conclusion": "success"
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "failure"
         },
         {
-          "name": "Print discipline reminder",
-          "conclusion": "success"
+          "name": "Run project tests",
+          "conclusion": "skipped"
         },
         {
-          "name": "Comment on pull request",
-          "conclusion": "success"
+          "name": "Start browser test server",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Setup Python",
-          "conclusion": "success"
+          "name": "Install Playwright and Chromium",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Run actions/checkout@v4",
+          "name": "Capture mobile and desktop screenshots",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify screenshots are valid",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload visual evidence",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Promotion decision",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout proposed version",
           "conclusion": "success"
         },
         {
@@ -67,6 +83,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:52:57+00:00",
+  "finished_at_utc": "2026-10-17T08:53:14+00:00",
   "outcome": "success"
 }
