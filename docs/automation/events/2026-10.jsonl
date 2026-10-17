@@ -35325,3 +35325,94 @@
   "outcome": "success"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:53:42+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39029292191",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029292191",
+  "source_run_id": "39028940736",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028940736",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "fdfb87d4c83423718876f470facde73d38b2a846",
+  "checked": [
+    "Completed workflow result: Mosharrof Verification Gate = failure",
+    "Source commit: fdfb87d4c83423718876f470facde73d38b2a846",
+    "Job: Verify before promotion — completed/failure"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "Verify before promotion",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout proposed version",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Pages entrypoint",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Run project tests",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Start browser test server",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Install Playwright and Chromium",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Capture mobile and desktop screenshots",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify screenshots are valid",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload visual evidence",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Promotion decision",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout proposed version",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:56:19+00:00",
+  "outcome": "failure"
+}
+
