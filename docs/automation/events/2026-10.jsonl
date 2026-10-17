@@ -27568,3 +27568,33 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:36:59+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39028537053",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028537053",
+  "source_run_id": "39028484999",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028484999",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
+  "checked": [
+    "Completed workflow result: Mosharrof Verification Gate = failure",
+    "Source commit: d0e389d62b2d02f677f4a53ce19f1e55cc871b42"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:36:59+00:00",
+  "outcome": "failure"
+}
+
