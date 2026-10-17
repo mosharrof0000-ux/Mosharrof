@@ -32,3 +32,10 @@ def test_composer_recalculates_for_keyboard_and_visible_viewport_changes():
     assert 'window.visualViewport.addEventListener("resize", syncComposerViewport' in source
     assert 'window.visualViewport.addEventListener("scroll", syncComposerViewport' in source
     assert 'composer.style.bottom = keyboardGap > 100 ? (keyboardGap + 8) + "px" : ""' in source
+
+
+def test_runtime_preparation_copies_isolated_voice_meter_to_both_import_paths():
+    prep = (ROOT / "scripts" / "prepare_web_organ_runtime.py").read_text(encoding="utf-8")
+    assert '"core/composer-voice-meter.js": "web/composer-voice-meter.js"' in prep
+    assert 'meter_source = ROOT / "core/composer-voice-meter.js"' in prep
+    assert '"web/composer-voice-meter.js", "web/core/composer-voice-meter.js"' in prep
