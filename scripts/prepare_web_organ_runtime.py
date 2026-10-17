@@ -38,7 +38,6 @@ def main() -> int:
         "core/design-intelligence.js": "web/core/design-intelligence.js",
         "core/manual-provider-controls.js": "web/core/manual-provider-controls.js",
         "core/design-intelligence.css": "web/design-intelligence.css",
-        "organs/chat-manual-controls/index.js": "web/core/manual-provider-controls.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
