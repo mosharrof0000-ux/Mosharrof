@@ -33,17 +33,26 @@ export function initializeComposerLayout(input, composer, send) {
     document.head.appendChild(style);
   }
   let submittedDraft = "";
-  send.addEventListener("click", () => {
-    if (input.value.trim()) submittedDraft = input.value;
+  let draftVersion = 0;
+  let submittedDraftVersion = 0;
+  input.addEventListener("input", () => { draftVersion += 1; }, true);
+  function rememberDraft() {
+    if (!input.value.trim()) return;
+    submittedDraft = input.value;
+    submittedDraftVersion = draftVersion;
+  }
+  send.addEventListener("click", rememberDraft, true);
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey) rememberDraft();
   }, true);
   const messages = document.getElementById("messages");
   if (messages && typeof MutationObserver !== "undefined") {
     const observer = new MutationObserver(records => {
       if (!submittedDraft || input.value.trim()) return;
       const added = records.flatMap(record => Array.from(record.addedNodes)).filter(node => node.nodeType === 1);
-      const error = added.some(node => node.matches?.(".message.ai") && node.querySelector(".response-timer.is-error"));
-      const answer = added.some(node => node.matches?.(".message.ai") && !node.querySelector(".response-timer.is-error"));
-      if (error) {
+      const error = added.some(node => node.matches?.(".message.ai:not(.typing)") && node.querySelector(".response-timer.is-error"));
+      const answer = added.some(node => node.matches?.(".message.ai:not(.typing)") && !node.querySelector(".response-timer.is-error"));
+      if (error && draftVersion === submittedDraftVersion) {
         input.value = submittedDraft;
         submittedDraft = "";
         input.dispatchEvent(new Event("input", { bubbles: true }));
