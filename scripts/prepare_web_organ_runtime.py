@@ -36,8 +36,9 @@ def main() -> int:
         "core/personal-memory-engine.js": "web/core/personal-memory-engine.js",
         "core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js",
         "core/design-intelligence.js": "web/core/design-intelligence.js",
+        "core/manual-provider-controls.js": "web/core/manual-provider-controls.js",
         "core/design-intelligence.css": "web/design-intelligence.css",
-        "organs/chat-manual-controls/index.js": "web/organs/chat-manual-controls/index.js",
+        "organs/chat-manual-controls/index.js": "web/core/manual-provider-controls.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
@@ -86,7 +87,7 @@ def main() -> int:
             raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for design intelligence engine")
         index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + design_script_tag, 1)
 
-    manual_controls_tag = '<script src="./organs/chat-manual-controls/index.js"></script>'
+    manual_controls_tag = '<script src="./core/manual-provider-controls.js"></script>'
     if manual_controls_tag not in index_html:
         anchor_tag = '<script src="./core/design-intelligence.js"></script>'
         if anchor_tag not in index_html:
