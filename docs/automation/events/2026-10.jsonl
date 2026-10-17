@@ -45030,3 +45030,33 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T12:21:14+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39031040847",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39031040847",
+  "source_run_id": "39030698261",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030698261",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "090835df09db01efaf9a44c6106b4e2a7e3c89c3",
+  "checked": [
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
+    "Source commit: 090835df09db01efaf9a44c6106b4e2a7e3c89c3"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_conclusion": "success",
+  "changed_files": [],
+  "check_results": [],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:21:14+00:00",
+  "outcome": "failure"
+}
+
