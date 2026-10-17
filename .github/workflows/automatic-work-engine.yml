@@ -35,7 +35,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: mosharrof-work-engine-ledger-${{ github.repository }}
+  group: mosharrof-work-engine-run-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:
