@@ -1223,13 +1223,13 @@ header.top{
     voiceBaseText=input.value.trim();voiceChunks=[];voiceWanted=true;setVoiceButtonState(true);showV("শুনছি… পুরো গান/কথা বলুন; শেষ হলে মাইক্রোফোনে চাপুন");
     try{
       voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
-      var voiceMeterEvent=new Event("vm:start");voiceMeterEvent.stream=voiceStream;document.dispatchEvent(voiceMeterEvent);
+      document.dispatchEvent(new CustomEvent("vm",{detail:voiceStream}));
       var types=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"];
       var mime=types.find(function(type){return MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(type);});
       voiceRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
       voiceRecorder.ondataavailable=function(event){if(event.data&&event.data.size)voiceChunks.push(event.data);};
       voiceRecorder.onerror=function(){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();voiceProcessing=false;showVoiceMessage("অডিও রেকর্ডিংয়ে সমস্যা হয়েছে। আবার চেষ্টা করুন।");};
-      voiceRecorder.onstop=function(){voiceWanted=false;document.dispatchEvent(new Event("vm:stop"));setVoiceButtonState(false);var blob=new Blob(voiceChunks,{type:voiceRecorder.mimeType||"audio/webm"});transcribeAudioBlob(blob);};
+      voiceRecorder.onstop=function(){voiceWanted=false;setVoiceButtonState(false);var blob=new Blob(voiceChunks,{type:voiceRecorder.mimeType||"audio/webm"});releaseVoiceStream();transcribeAudioBlob(blob);};
       voiceRecorder.start(1000);
     }catch(error){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();showVoiceMessage(audioErrorMessage(error));}
   }
