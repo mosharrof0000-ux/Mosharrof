@@ -62,7 +62,7 @@ jobs:
       - name: Checkout source branch for this work event
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref_name }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -132,7 +132,7 @@ jobs:
           fi
 
           MONTH="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["timestamp_utc"][:7])' "$OUT/state.json")"
-          for ATTEMPT in 1 2 3 4 5; do
+          for ATTEMPT in $(seq 1 12); do
             if [ "$ATTEMPT" -gt 1 ] && git ls-remote --exit-code --heads origin automation-work-log >/dev/null 2>&1; then
               git fetch origin automation-work-log
               git -C "$LOG_REPO" reset --hard origin/automation-work-log
@@ -147,7 +147,17 @@ jobs:
             cat "$OUT/entry.md" >> "$LOG_FILE"
             cat "$OUT/state.json" >> "$EVENTS_FILE"
             printf '\n' >> "$EVENTS_FILE"
-            cp "$OUT/state.json" "$LOG_REPO/docs/automation/latest-state.json"
+            python - "$OUT/state.json" "$LOG_REPO/docs/automation/latest-state.json" <<'PY'
+          import json, sys
+          from pathlib import Path
+          source, target = map(Path, sys.argv[1:])
+          current = json.loads(source.read_text(encoding="utf-8"))
+          previous = json.loads(target.read_text(encoding="utf-8")) if target.exists() else {}
+          current_time = current.get("finished_at_utc") or current.get("updated_at_utc") or current.get("timestamp_utc", "")
+          previous_time = previous.get("finished_at_utc") or previous.get("updated_at_utc") or previous.get("timestamp_utc", "")
+          if not previous_time or current_time >= previous_time:
+              target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+          PY
             cat > "$LOG_REPO/docs/automation/README.md" <<'EOF'
           # Automatic Work Engine Ledger
 
@@ -169,10 +179,10 @@ jobs:
             if git -C "$LOG_REPO" push origin HEAD:refs/heads/automation-work-log; then
               exit 0
             fi
-            echo "Ledger push raced with another run; retrying (attempt $ATTEMPT/5)."
-            sleep "$ATTEMPT"
+            echo "Ledger push raced with another run; refreshing and retrying (attempt $ATTEMPT/12)."
+            sleep "$((ATTEMPT + RANDOM % 5))"
           done
-          echo "Could not persist ledger after five retries."
+          echo "Could not persist ledger after twelve retries."
           exit 1
 
       - name: Upload machine-readable work record
