@@ -1,51 +1,91 @@
 {
-  "timestamp_utc": "2026-10-17T11:30:09+00:00",
+  "timestamp_utc": "2026-10-17T11:30:19+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028519391",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028519391",
-  "source_run_id": "39028401039",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028401039",
+  "run_id": "39028520758",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028520758",
+  "source_run_id": "39028401159",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028401159",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128",
   "checked": [
-    "Completed workflow result: Mosharrof Component Consciousness = success",
+    "Completed workflow result: Build MOSHARROF Android APK = failure",
     "Source commit: a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128",
-    "Job: Component awareness heartbeat — completed/success"
+    "Job: build-apk — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Component Consciousness",
-  "source_conclusion": "success",
+  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Build MOSHARROF Android APK",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Component awareness heartbeat",
+      "job": "build-apk",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v6",
+          "name": "Checkout MOSHARROF",
           "conclusion": "success"
         },
         {
-          "name": "Run full component consciousness audit",
+          "name": "Setup Node",
           "conclusion": "success"
         },
         {
-          "name": "Verify autonomous engine is protected",
+          "name": "Setup Java",
           "conclusion": "success"
         },
         {
-          "name": "Post Run actions/checkout@v6",
+          "name": "Verify edge-to-edge web contract",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare Android full-screen voice manager",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify Android agent contract suite",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build debug APK",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify APK",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload APK artifact",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Publish GitHub Release",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Node",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout MOSHARROF",
           "conclusion": "success"
         },
         {
@@ -57,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:30:14+00:00",
+  "finished_at_utc": "2026-10-17T11:30:25+00:00",
   "outcome": "success"
 }
