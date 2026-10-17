@@ -1,27 +1,27 @@
 {
-  "timestamp_utc": "2026-10-17T08:59:27+00:00",
+  "timestamp_utc": "2026-10-17T08:59:30+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018993943",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018993943",
+  "run_id": "39018988588",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018988588",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/work-engine-ledger-contention-v2-2026-10-17",
-  "sha": "e7cdc646a46348ea30b213224b29dcaf94833419",
+  "sha": "cd44626749cf7a05c75c810f58f0844c0c20c2fe",
   "checked": [
-    "Completed workflow result: Cleanup Discipline Reminder = success",
-    "Source commit: e7cdc646a46348ea30b213224b29dcaf94833419"
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = cancelled",
+    "Source commit: cd44626749cf7a05c75c810f58f0844c0c20c2fe"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Cleanup Discipline Reminder",
-  "source_conclusion": "success",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_conclusion": "cancelled",
   "changed_files": [],
   "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T08:59:27+00:00",
+  "finished_at_utc": "2026-10-17T08:59:30+00:00",
   "outcome": "failure"
 }
