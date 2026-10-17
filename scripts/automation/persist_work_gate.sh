@@ -7,7 +7,7 @@ git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 if git ls-remote --exit-code --heads origin automation-work-log >/dev/null 2>&1; then
   git fetch origin automation-work-log
-  if [ -d "$LOG_REPO/.git" ]; then
+  if [ -e "$LOG_REPO/.git" ]; then
     git -C "$LOG_REPO" fetch origin automation-work-log
     git -C "$LOG_REPO" reset --hard origin/automation-work-log
   else
