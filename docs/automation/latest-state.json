@@ -1,74 +1,52 @@
 {
-  "timestamp_utc": "2026-10-17T11:20:46+00:00",
-  "event_name": "workflow_run",
+  "timestamp_utc": "2026-10-17T11:18:39+00:00",
+  "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028290785",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028290785",
-  "source_run_id": "39028272321",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028272321",
+  "run_id": "39028195897",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028195897",
+  "source_run_id": null,
+  "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "8d10ccc672e1ffe0bac084fbe24e019c6b59bfe0",
+  "sha": "2f957ec6bdf43279e64d32c3ac0d339db1baa59a",
   "checked": [
-    "Completed workflow result: Cleanup Discipline Reminder = success",
-    "Source commit: 8d10ccc672e1ffe0bac084fbe24e019c6b59bfe0",
-    "Job: Leave the repo clean — completed/success"
+    "Push commit: feat(ui): add long-press manual provider menus",
+    "Commit SHA: 2f957ec6bdf43279e64d32c3ac0d339db1baa59a",
+    "Check: validate — completed/skipped",
+    "Check: record — in_progress/pending",
+    "Check: test — in_progress/pending"
   ],
   "planned": [
-    "Record the completed workflow result, job-level checks and evidence URL.",
-    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Cleanup Discipline Reminder",
-  "source_conclusion": "success",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": null,
+  "source_conclusion": null,
   "changed_files": [],
   "check_results": [
     {
-      "job": "Leave the repo clean",
+      "job": "validate",
       "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Setup Python",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run cleanup check",
-          "conclusion": "success"
-        },
-        {
-          "name": "Print discipline reminder",
-          "conclusion": "success"
-        },
-        {
-          "name": "Comment on pull request",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Python",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "job": "record",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:21:03+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:21:10+00:00",
+  "outcome": "failure"
 }
