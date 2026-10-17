@@ -5,8 +5,8 @@ from playwright.sync_api import Page
 def check_composer_expansion(page: Page) -> None:
     message_input = page.locator("#input")
     expand_button = page.locator("#composerExpandBtn")
-    eight = "\\n".join(["x"] * 8)
-    nine = "\\n".join(["x"] * 9)
+    eight = "\n".join(["x"] * 8)
+    nine = "\n".join(["x"] * 9)
     message_input.fill(eight)
     assert not expand_button.is_visible(), "expander must stay hidden through eight lines"
     message_input.fill(nine)
