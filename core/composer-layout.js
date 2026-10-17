@@ -33,7 +33,7 @@ export function initializeComposerLayout(input, composer, send) {
       "#composerVoiceBtn.has-voice-activity svg{stroke:#4ade80;filter:drop-shadow(0 0 2px rgba(74,222,128,.35));transform-origin:50% 50%;animation:voice-mic-bob .24s ease-in-out infinite alternate}",
       "#composerVoiceBtn.has-voice-activity{background:#080808;border-color:rgba(255,255,255,.16);box-shadow:none}",
       "#sendBtn svg{stroke:var(--chat-provider-accent,#f2f2f2)!important}",
-      "@media(max-width:480px){#composer{left:10px;right:10px;padding:8px 9px}#composer .composer-input-row .input{padding-left:8px;padding-right:8px}#composerTools button,#composer .composer-action,#composer .send{width:36px;height:36px;min-width:36px;min-height:36px}}"
+      "@media(max-width:480px){#composer{left:10px;right:10px;padding:8px 9px}#composer .composer-input-row .input{padding-left:8px;padding-right:8px}#plusBtn,#composer .composer-action,#composer .send{width:36px;height:36px;min-width:36px;min-height:36px}}"
     ].join("\n");
     document.head.appendChild(style);
   }
