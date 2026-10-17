@@ -7,6 +7,13 @@ def apply_manual_provider_patches(index_html: str) -> str:
         if old_chat_request not in index_html:
             raise SystemExit("ORGAN ASSET PREP: chat request shape changed; history injection requires review")
         index_html = index_html.replace(old_chat_request, new_chat_request, 1)
+    old_voice_stream = 'voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});'
+    new_voice_stream = old_voice_stream + 'document.dispatchEvent(new CustomEvent("vm",{detail:voiceStream}));'
+    if new_voice_stream not in index_html:
+        if old_voice_stream not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: voice stream anchor changed; microphone activity meter requires review")
+        index_html = index_html.replace(old_voice_stream, new_voice_stream, 1)
+
     old_stt_request = 'body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage()})'
     new_stt_request = 'body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage(),model:(function(){try{return localStorage.getItem("mosharrof_stt_model_v1")||"auto";}catch(e){return "auto";}})()})'
     if new_stt_request not in index_html:

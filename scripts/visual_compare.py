@@ -1,5 +1,6 @@
 import argparse,base64,json,os,urllib.request,urllib.error
 from pathlib import Path
+from visual_pr_context import pull_request_context
 p=argparse.ArgumentParser(); p.add_argument("--candidate",required=True); p.add_argument("--live",required=True); p.add_argument("--report",required=True); a=p.parse_args()
 key=os.environ.get("GEMINI_API_KEY")
 
@@ -12,7 +13,7 @@ if not key:
     write_advisory("Gemini visual comparison skipped: GEMINI_API_KEY is not configured; deterministic visual checks remain authoritative.")
     raise SystemExit(0)
 def enc(x): return base64.b64encode(Path(x).read_bytes()).decode()
-prompt='Compare candidate and live screenshots. Detect missing existing UI, broken layout/overflow, regressions, and new requested features. Return JSON: {"pass":true,"confidence":0,"regressions":[],"missing_features":[],"new_features":[],"notes":[]}. Be conservative.'
+prompt=('Compare candidate and live screenshots. Detect missing existing UI, broken layout/overflow, regressions, and new requested features. Use the pull-request context below: changes explicitly requested there (including removal/repositioning of controls) are intentional, not regressions; still report unrelated missing controls or layout problems. Return JSON: {"pass":true,"confidence":0,"regressions":[],"missing_features":[],"new_features":[],"notes":[]}. Be conservative.\n' + pull_request_context())
 payload=json.dumps({"contents":[{"parts":[{"text":prompt},{"inline_data":{"mime_type":"image/png","data":enc(a.candidate)}},{"inline_data":{"mime_type":"image/png","data":enc(a.live)}}]}],"generationConfig":{"temperature":0,"responseMimeType":"application/json"}}).encode()
 req=urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",data=payload,headers={"Content-Type":"application/json","x-goog-api-key":key})
 try:

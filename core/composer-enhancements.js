@@ -1,5 +1,7 @@
 import { initializeComposerStopControl } from "./composer-stop.js";
 import { initializeComposerAutoGrow } from "./composer-autogrow.js";
+import { initializeComposerLayout } from "./composer-layout.js";
+import { initializeComposerVoiceMeter } from "./composer-voice-meter.js";
 
 export function initializeComposerEnhancements() {
   if (typeof document === "undefined") return;
@@ -9,7 +11,9 @@ export function initializeComposerEnhancements() {
   if (!input || !composer || !send) return;
 
   initializeComposerStopControl(send);
+  initializeComposerLayout(input, composer, send);
   initializeComposerAutoGrow(input, composer);
+  initializeComposerVoiceMeter(document.getElementById("composerVoiceBtn"));
   if (document.getElementById("composerExpandBtn")) return;
 
   const style = document.createElement("style");
