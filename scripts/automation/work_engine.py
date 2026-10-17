@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -22,6 +24,20 @@ def load_event() -> dict[str, Any]:
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def github_api_json(url: str, token: str) -> dict[str, Any] | None:
+    request = urllib.request.Request(
+        url,
+        headers={"Accept": "application/vnd.github+json", "Authorization": f"Bearer {token}",
+                 "X-GitHub-Api-Version": "2022-11-28"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=8) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            return payload if isinstance(payload, dict) else None
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError):
+        return None
 
 
 def event_details(event_name: str, event: dict[str, Any], env: dict[str, str]) -> dict[str, Any]:
@@ -44,19 +60,63 @@ def event_details(event_name: str, event: dict[str, Any], env: dict[str, str]) -
         f"{env.get('GITHUB_SERVER_URL', 'https://github.com')}/"
         f"{env.get('GITHUB_REPOSITORY', 'unknown')}/actions/runs/{run_id}"
     )
+    changed_files: list[str] = []
+    for commit_item in event.get("commits", []) or []:
+        for key in ("added", "modified", "removed"):
+            changed_files.extend(str(path) for path in commit_item.get(key, []) or [])
+    changed_files = sorted(set(changed_files))
+    checked_runs: list[dict[str, Any]] = []
+    token = env.get("GH_TOKEN") or env.get("GITHUB_TOKEN")
+    api_root = f"https://api.github.com/repos/{env.get('GITHUB_REPOSITORY', '')}"
+    if token and event_name == "workflow_run" and workflow_run.get("id"):
+        jobs_payload = github_api_json(
+            f"{api_root}/actions/runs/{workflow_run['id']}/jobs?per_page=100", token
+        ) or {}
+        for job in jobs_payload.get("jobs", []) or []:
+            checked_runs.append({
+                "job": job.get("name", "unknown"),
+                "status": job.get("status", "unknown"),
+                "conclusion": job.get("conclusion"),
+                "steps": [
+                    {"name": step.get("name", "unknown"), "conclusion": step.get("conclusion")}
+                    for step in (job.get("steps", []) or [])
+                ],
+            })
+    elif token and head_sha != "unknown":
+        checks_payload = github_api_json(
+            f"{api_root}/commits/{head_sha}/check-runs?per_page=100", token
+        ) or {}
+        for check in checks_payload.get("check_runs", []) or []:
+            checked_runs.append({
+                "job": check.get("name", "unknown"),
+                "status": check.get("status", "unknown"),
+                "conclusion": check.get("conclusion"),
+                "steps": [],
+            })
+
     if event_name == "workflow_run":
         completed_name = workflow_run.get("name", "unknown workflow")
         conclusion = workflow_run.get("conclusion") or "unknown"
         checked = [f"Completed workflow result: {completed_name} = {conclusion}",
                    f"Source commit: {head_sha}"]
-        planned = ["Record the completed workflow result and evidence URL.",
+        checked.extend(
+            f"Job: {item['job']} — {item['status']}/{item['conclusion'] or 'pending'}"
+            for item in checked_runs
+        )
+        planned = ["Record the completed workflow result, job-level checks and evidence URL.",
                    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."]
         next_step = "Inspect the workflow logs and artifacts; fix failures on a safe feature branch."
     elif event_name == "push":
         commit = (event.get("head_commit") or {})
         message = commit.get("message", "commit message unavailable").splitlines()[0]
         checked = [f"Push commit: {message}", f"Commit SHA: {head_sha}"]
-        planned = ["Record the change that started this automation run.",
+        if changed_files:
+            checked.append("Changed paths: " + ", ".join(changed_files))
+        checked.extend(
+            f"Check: {item['job']} — {item['status']}/{item['conclusion'] or 'pending'}"
+            for item in checked_runs
+        )
+        planned = ["Record the commit message, changed paths and available checks.",
                    "Run the work-engine contract tests and validate the run metadata.",
                    "Publish a durable log entry and a machine-readable latest state."]
         next_step = "Review the checks attached to this commit; continue from the first failed or pending check."
@@ -86,6 +146,8 @@ def event_details(event_name: str, event: dict[str, Any], env: dict[str, str]) -
         "next_step": next_step,
         "source_workflow": workflow_run.get("name"),
         "source_conclusion": workflow_run.get("conclusion"),
+        "changed_files": changed_files,
+        "check_results": checked_runs,
     }
 
 
@@ -124,6 +186,8 @@ def main() -> int:
             *[f"  - {item}" for item in details["checked"]],
             "- Planned work:",
             *[f"  - {item}" for item in details["planned"]],
+            "- Detected changes/checks:",
+            *[f"  - {item}" for item in details.get("checked", [])],
             "- Current state: in progress; no success claim is made at start.",
             "",
         ]
@@ -157,6 +221,12 @@ def main() -> int:
             f"- Result: **{status.upper()}**",
             f"- Branch/SHA: `{result.get('branch', 'unknown')}` / `{result.get('sha', 'unknown')}`",
             f"- Run: {result.get('run_url', 'unknown')}",
+            "- What was checked/detected:",
+            *[f"  - {item}" for item in result.get("checked", [])],
+            "- Changed paths:",
+            *[f"  - {item}" for item in result.get("changed_files", [])] or ["  - No changed-path list was provided by this event."],
+            "- Job/check results:",
+            *[f"  - {item.get('job')}: {item.get('status')}/{item.get('conclusion') or 'pending'}" for item in result.get("check_results", [])] or ["  - No API check details were available for this event."],
             f"- Next resume point: {result['next_step']}",
             "",
         ]
