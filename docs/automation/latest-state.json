@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T12:16:46+00:00",
+  "timestamp_utc": "2026-10-17T12:17:05+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030965685",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030965685",
-  "source_run_id": "39030698110",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030698110",
+  "run_id": "39030977268",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030977268",
+  "source_run_id": "39030698082",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030698082",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "090835df09db01efaf9a44c6106b4e2a7e3c89c3",
   "checked": [
-    "Completed workflow result: Mosharrof Visual QA = success",
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = success",
     "Source commit: 090835df09db01efaf9a44c6106b4e2a7e3c89c3",
-    "Job: visual-qa — completed/success"
+    "Job: Mandatory Organ Isolation — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Visual QA",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "visual-qa",
+      "job": "Mandatory Organ Isolation",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -33,47 +33,51 @@
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v6",
+          "name": "Checkout proposed commit and history",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v6",
+          "name": "Setup Python",
           "conclusion": "success"
         },
         {
-          "name": "Run python -m pip install playwright",
+          "name": "Prove the gate blocks invalid replacements",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages assets",
+          "name": "Validate registry and safe organ scaffolding",
           "conclusion": "success"
         },
         {
-          "name": "Run python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &",
+          "name": "Validate manifests and generated browser registry",
           "conclusion": "success"
         },
         {
-          "name": "Run python3 scripts/visual_qa.py --url http://127.0.0.1:4173/ --output artifacts/candidate.png",
+          "name": "Setup Node.js for runtime contract tests",
           "conclusion": "success"
         },
         {
-          "name": "Run python3 scripts/visual_qa.py --url https://mosharrof0000-ux.github.io/Mosharrof/ --output artifacts/live.png",
+          "name": "Test organ runtime and UI contracts",
           "conclusion": "success"
         },
         {
-          "name": "Gemini visual comparison",
+          "name": "Fetch target branch",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/upload-artifact@v4",
+          "name": "Enforce organ isolation, link caps, and file-size limits",
           "conclusion": "success"
         },
         {
-          "name": "Post Run actions/setup-python@v6",
+          "name": "Post Setup Node.js for runtime contract tests",
           "conclusion": "success"
         },
         {
-          "name": "Post Run actions/checkout@v6",
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout proposed commit and history",
           "conclusion": "success"
         },
         {
@@ -85,6 +89,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T12:16:51+00:00",
+  "finished_at_utc": "2026-10-17T12:17:09+00:00",
   "outcome": "success"
 }
