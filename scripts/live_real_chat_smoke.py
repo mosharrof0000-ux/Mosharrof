@@ -70,6 +70,7 @@ async def main() -> int:
         await page.locator("#input").fill(prompt)
         await page.locator("#sendBtn").click()
         record("real_chat_prompt_submitted", True, "One synthetic Bengali prompt submitted through the visible UI")
+        answer = ""
 
         try:
             await page.wait_for_function(
