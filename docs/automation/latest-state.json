@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T11:06:32+00:00",
+  "timestamp_utc": "2026-10-17T11:11:39+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39027388907",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027388907",
-  "source_run_id": "39027366737",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027366737",
+  "run_id": "39027746876",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027746876",
+  "source_run_id": "39027704401",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027704401",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "feature/smart-visual-intelligence-engine-2026-10-17",
-  "sha": "8626a94fd656050babcfa34da1bea89f26bcc512",
+  "branch": "main",
+  "sha": "08949242b48817c6fed078b86387c4bfe6698ebc",
   "checked": [
-    "Completed workflow result: Mosharrof Tests = success",
-    "Source commit: 8626a94fd656050babcfa34da1bea89f26bcc512",
-    "Job: test — completed/success"
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
+    "Source commit: 08949242b48817c6fed078b86387c4bfe6698ebc",
+    "Job: interaction-qa — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
-  "source_workflow": "Mosharrof Tests",
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "test",
+      "job": "interaction-qa",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -33,47 +33,47 @@
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v4",
+          "name": "Checkout candidate",
           "conclusion": "success"
         },
         {
-          "name": "Verify image engine prompt parsing",
+          "name": "Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Test personal memory engine",
+          "name": "Install Playwright with transient-network retries",
           "conclusion": "success"
         },
         {
-          "name": "Test memory retrieval and timeline regressions",
+          "name": "Prepare candidate Pages assets",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Start candidate Pages server",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Select safe inspection target",
           "conclusion": "success"
         },
         {
-          "name": "Check memory bridge syntax",
+          "name": "Run safe mobile interaction inspection",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v5",
+          "name": "Run one real live chat round-trip",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload inspection evidence",
           "conclusion": "success"
         },
         {
-          "name": "Run python -m pip install -r requirements.txt",
+          "name": "Post Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Run python3 scripts/run_organ_checks.py",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pytest -q",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-python@v5",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v4",
+          "name": "Post Checkout candidate",
           "conclusion": "success"
         },
         {
@@ -84,7 +84,7 @@
     }
   ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T11:11:43+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:11:44+00:00",
+  "outcome": "success"
 }
