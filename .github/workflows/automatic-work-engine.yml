@@ -10,6 +10,7 @@ on:
     paths:
       - "scripts/automation/**"
       - "tests/test_work_engine.py"
+      - "tests/test_work_engine_recovery.py"
       - "tests/test_work_gate.py"
       - ".github/workflows/automatic-work-engine.yml"
   workflow_dispatch:
@@ -52,6 +53,7 @@ jobs:
         run: |
           python -m py_compile scripts/automation/work_engine.py
           python -m unittest discover -s tests -p 'test_work_engine.py' -v
+          python -m unittest discover -s tests -p 'test_work_engine_recovery.py' -v
           python -m unittest discover -s tests -p 'test_work_gate.py' -v
 
   record:
