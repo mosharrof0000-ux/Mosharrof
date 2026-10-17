@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-10-17T11:26:42+00:00",
+  "timestamp_utc": "2026-10-17T11:26:46+00:00",
   "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028460248",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028460248",
+  "run_id": "39028431699",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028431699",
   "source_run_id": null,
   "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "b53a8394f61454b3746c9fbcdc8f99120d6a521c",
+  "sha": "463c2644f7b82fe9d26260f19231c34460ff6857",
   "checked": [
-    "Push commit: feat(core): add isolated manual provider controls module",
-    "Commit SHA: b53a8394f61454b3746c9fbcdc8f99120d6a521c"
+    "Push commit: fix(runtime): inject manual controls script with a real newline",
+    "Commit SHA: 463c2644f7b82fe9d26260f19231c34460ff6857"
   ],
   "planned": [
     "Record the commit message, changed paths and available checks.",
@@ -25,6 +25,6 @@
   "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T11:26:42+00:00",
+  "finished_at_utc": "2026-10-17T11:26:46+00:00",
   "outcome": "failure"
 }
