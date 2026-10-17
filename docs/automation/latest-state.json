@@ -1,25 +1,26 @@
 {
-  "timestamp_utc": "2026-10-17T12:00:04+00:00",
+  "timestamp_utc": "2026-10-17T12:02:48+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029647858",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029647858",
-  "source_run_id": "39029433847",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029433847",
+  "run_id": "39029833456",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029833456",
+  "source_run_id": "39029591888",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029591888",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "2768d0b7f31ba7eff25a287064c7e022f5fcb646",
+  "sha": "f275417323984635db2dd9b305f388f6d0e5dd37",
   "checked": [
-    "Completed workflow result: Mosharrof Tests = failure",
-    "Source commit: 2768d0b7f31ba7eff25a287064c7e022f5fcb646",
-    "Job: test — completed/failure"
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: f275417323984635db2dd9b305f388f6d0e5dd37",
+    "Job: test — completed/failure",
+    "Job: deploy — completed/skipped"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
-  "source_workflow": "Mosharrof Tests",
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Deploy Mosharrof Pages",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
@@ -33,27 +34,11 @@
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v4",
+          "name": "Run actions/checkout@v6",
           "conclusion": "success"
         },
         {
-          "name": "Verify image engine prompt parsing",
-          "conclusion": "success"
-        },
-        {
-          "name": "Test personal memory engine",
-          "conclusion": "success"
-        },
-        {
-          "name": "Test memory retrieval and timeline regressions",
-          "conclusion": "success"
-        },
-        {
-          "name": "Check memory bridge syntax",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v5",
+          "name": "Run actions/setup-python@v6",
           "conclusion": "success"
         },
         {
@@ -61,19 +46,39 @@
           "conclusion": "success"
         },
         {
-          "name": "Run python3 scripts/run_organ_checks.py",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pytest -q",
+          "name": "Enforce file and folder size budgets",
           "conclusion": "failure"
         },
         {
-          "name": "Post Run actions/setup-python@v5",
+          "name": "Run python -m pytest -q",
           "conclusion": "skipped"
         },
         {
-          "name": "Post Run actions/checkout@v4",
+          "name": "Verify Pages artifact",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Prepare candidate organ runtime assets",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Install Chromium for candidate runtime smoke test",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Start candidate Pages server",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Test candidate organ runtime in Chromium",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
           "conclusion": "success"
         },
         {
@@ -81,10 +86,16 @@
           "conclusion": "success"
         }
       ]
+    },
+    {
+      "job": "deploy",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
     }
   ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T12:02:40+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T12:02:53+00:00",
+  "outcome": "success"
 }
