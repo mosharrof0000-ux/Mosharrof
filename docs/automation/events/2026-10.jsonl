@@ -23463,3 +23463,94 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:27:15+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39028475857",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028475857",
+  "source_run_id": "39028395448",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028395448",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "35826462b6bcc3d56f51d143b92a85c0f3a11590",
+  "checked": [
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: 35826462b6bcc3d56f51d143b92a85c0f3a11590",
+    "Job: test — completed/failure"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof Tests",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify image engine prompt parsing",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test personal memory engine",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test memory retrieval and timeline regressions",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check memory bridge syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/run_organ_checks.py",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Run python -m pytest -q",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:28:19+00:00",
+  "outcome": "success"
+}
+
