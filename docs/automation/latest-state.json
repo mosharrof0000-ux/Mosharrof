@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T11:31:31+00:00",
+  "timestamp_utc": "2026-10-17T11:29:13+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028533794",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028533794",
-  "source_run_id": "39028435030",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028435030",
+  "run_id": "39028485166",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028485166",
+  "source_run_id": "39028396350",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028396350",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "463c2644f7b82fe9d26260f19231c34460ff6857",
+  "sha": "35826462b6bcc3d56f51d143b92a85c0f3a11590",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = failure",
-    "Source commit: 463c2644f7b82fe9d26260f19231c34460ff6857",
-    "Job: build-apk — completed/failure"
+    "Completed workflow result: Mosharrof CI = failure",
+    "Source commit: 35826462b6bcc3d56f51d143b92a85c0f3a11590",
+    "Job: test — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Build MOSHARROF Android APK",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof CI",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "build-apk",
+      "job": "test",
       "status": "completed",
       "conclusion": "failure",
       "steps": [
@@ -33,59 +33,27 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout MOSHARROF",
+          "name": "Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
-          "name": "Setup Node",
+          "name": "Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Setup Java",
+          "name": "Run python -m pip install -r requirements.txt",
           "conclusion": "success"
         },
         {
-          "name": "Verify edge-to-edge web contract",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare Android full-screen voice manager",
+          "name": "Run python -m pytest -q",
           "conclusion": "failure"
         },
         {
-          "name": "Enforce file and folder size budgets",
+          "name": "Post Run actions/setup-python@v5",
           "conclusion": "skipped"
         },
         {
-          "name": "Verify Android agent contract suite",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Build debug APK",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Verify APK",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload APK artifact",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Publish GitHub Release",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Node",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Checkout MOSHARROF",
+          "name": "Post Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
@@ -96,7 +64,7 @@
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:31:37+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:31:44+00:00",
+  "outcome": "failure"
 }
