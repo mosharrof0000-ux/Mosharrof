@@ -81,7 +81,16 @@ export function initializeComposerEnhancements() {
       activeInput.value = value;
       activeInput.dispatchEvent(new Event("input", { bubbles: true }));
       activeInput.dispatchEvent(new Event("change", { bubbles: true }));
-      activeInput.value = value;
+
+      // Some UI listeners may replace the composer input while handling the input event.
+      // Reacquire by ID instead of writing a second time to a detached node.
+      let latestInput = currentInput();
+      if (latestInput !== activeInput) {
+        latestInput.value = value;
+        latestInput.dispatchEvent(new Event("input", { bubbles: true }));
+        latestInput = currentInput();
+      }
+      latestInput.value = value;
       syncVisibility();
     }
     editor.classList.remove("open");
