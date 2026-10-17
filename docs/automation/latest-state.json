@@ -1,29 +1,28 @@
 {
-  "timestamp_utc": "2026-10-17T08:38:26+00:00",
+  "timestamp_utc": "2026-10-17T08:38:45+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018056809",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018056809",
+  "run_id": "39018056835",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018056835",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/work-engine-ledger-retry-2026-10-17",
   "sha": "5c604361544daa258e651821e020e04568ca8a6a",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = success",
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
     "Source commit: 5c604361544daa258e651821e020e04568ca8a6a",
-    "Job: test — completed/success",
-    "Job: deploy — completed/skipped"
+    "Job: interaction-qa — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Deploy Mosharrof Pages",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "test",
+      "job": "interaction-qa",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -32,35 +31,19 @@
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v6",
+          "name": "Checkout candidate",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v6",
+          "name": "Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Run python -m pip install -r requirements.txt",
+          "name": "Install Playwright with transient-network retries",
           "conclusion": "success"
         },
         {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pytest -q",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify Pages artifact",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare candidate organ runtime assets",
-          "conclusion": "success"
-        },
-        {
-          "name": "Install Chromium for candidate runtime smoke test",
+          "name": "Prepare candidate Pages assets",
           "conclusion": "success"
         },
         {
@@ -68,15 +51,27 @@
           "conclusion": "success"
         },
         {
-          "name": "Test candidate organ runtime in Chromium",
+          "name": "Select safe inspection target",
           "conclusion": "success"
         },
         {
-          "name": "Post Run actions/setup-python@v6",
+          "name": "Run safe mobile interaction inspection",
           "conclusion": "success"
         },
         {
-          "name": "Post Run actions/checkout@v6",
+          "name": "Run one real live chat round-trip",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload inspection evidence",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout candidate",
           "conclusion": "success"
         },
         {
@@ -84,16 +79,10 @@
           "conclusion": "success"
         }
       ]
-    },
-    {
-      "job": "deploy",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:38:31+00:00",
+  "finished_at_utc": "2026-10-17T08:38:51+00:00",
   "outcome": "success"
 }
