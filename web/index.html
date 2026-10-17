@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="application-name" content="Mosharrof">
 <title>MOSHARROF AI — Full Screen V5</title>
-<!-- Mosharrof live pages contract -->
+<!-- Live pages contract -->
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -753,7 +753,7 @@ header.top{
     try{
       var box=document.createElement("div");
       box.innerHTML=renderRichText(source);
-      /* Read rendered HTML text, not Markdown source, so hidden syntax is never spoken. */
+      /* Read rendered text so hidden Markdown is not spoken. */
       Array.prototype.forEach.call(box.querySelectorAll("p,h1,h2,h3,h4,h5,h6,li,blockquote,pre,hr,tr"),function(el){
         el.insertAdjacentText("beforebegin","\n");
       });
@@ -809,7 +809,7 @@ header.top{
     setSpeakButton(button,"⏳ প্রস্তুত হচ্ছে…");button.disabled=false;
     button.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();if(activeSpeech===session&&activeSpeechButton===button){button.classList.add("is-stop-requested");synth.cancel();activeSpeech=null;activeSpeechButton=null;hideV();window.setTimeout(function(){resetSpeakButton(button);},180);}};
     synth.cancel();
-    /* Android Chrome may populate its voice list asynchronously. */
+    /* Android voice lists may load asynchronously. */
     var voices=synth.getVoices?synth.getVoices():[];
     if(!voices.length){var started=false;var begin=function(){if(started)return;started=true;synth.removeEventListener&&synth.removeEventListener("voiceschanged",begin);next();};if(synth.addEventListener)synth.addEventListener("voiceschanged",begin);window.setTimeout(begin,700);}else next();
   }
@@ -1159,14 +1159,14 @@ header.top{
   function normalizeVoiceTranscript(value,language){
     var text=String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
     if(!text)return "";
-    /* Fix punctuation spacing but preserve the recognizer's wording and line breaks. */
+    /* Preserve transcript wording and line breaks. */
     text=text.replace(/[ \t]+([,.;!?।॥])/g,"$1").replace(/([,;])(?=\S)/g,"$1 ");
     var lines=text.split("\n");
     var last=-1;
     for(var i=lines.length-1;i>=0;i--){if(lines[i].trim()){last=i;break;}}
     if(last<0)return "";
     var finalLine=lines[last].trim();
-    /* Bengali regexes must not use \b: JavaScript word boundaries are ASCII-centric. */
+    /* Bengali regexes avoid ASCII-only word boundaries. */
     var questionStart=/^(?:কি|কী|কেন|কিভাবে|কীভাবে|কেমন|কোথায়|কোথায়|কখন|কার|কাদের|কত|কোন|কোনটা|নাকি)(?:\s|$)/i;
     var questionEnd=/(?:^|\s)(?:কি|কী)\s*$/i;
     if(!/[.!?।॥…]$/.test(finalLine)){
