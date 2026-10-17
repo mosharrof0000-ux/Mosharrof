@@ -1,29 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T11:34:59+00:00",
+  "timestamp_utc": "2026-10-17T11:35:11+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028507222",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028507222",
-  "source_run_id": "39028484922",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028484922",
+  "run_id": "39028542205",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028542205",
+  "source_run_id": "39028398525",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028398525",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
+  "sha": "a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = failure",
-    "Source commit: d0e389d62b2d02f677f4a53ce19f1e55cc871b42"
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: a0fdc4923e4eeefd0ab35f37d35f0fe8ddde6128"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Deploy Mosharrof Pages",
+  "source_workflow": "Mosharrof Tests",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T11:34:59+00:00",
+  "finished_at_utc": "2026-10-17T11:35:11+00:00",
   "outcome": "failure"
 }
