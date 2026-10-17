@@ -1,50 +1,56 @@
 {
-  "timestamp_utc": "2026-10-17T08:12:52+00:00",
+  "timestamp_utc": "2026-10-17T08:16:12+00:00",
   "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39016174502",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39016174502",
+  "run_id": "39016178286",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39016178286",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "feature/automatic-work-engine-2026-10-17",
-  "sha": "ad40999088113fd107a89d9f90cb64f1314d46cc",
+  "branch": "feature/full-app-interactive-qa-engine-2026-10-17",
+  "sha": "86b1397a74a3b6f342483b77429db5ca69646b0f",
   "checked": [
     "Push commit: fix(automation): retry concurrent work ledger writes",
-    "Commit SHA: ad40999088113fd107a89d9f90cb64f1314d46cc",
-    "Check: interaction-qa — completed/success",
+    "Commit SHA: 86b1397a74a3b6f342483b77429db5ca69646b0f",
+    "Check: deploy — completed/cancelled",
+    "Check: test — completed/cancelled",
     "Check: Redirect rules - bucolic-mooncake-c83372 — completed/neutral",
     "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
     "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
-    "Check: test — queued/pending",
-    "Check: Verify before promotion — queued/pending",
-    "Check: browser-memory-roundtrip — completed/success",
-    "Check: Leave the repo clean — completed/success",
-    "Check: Mandatory Organ Isolation — completed/success",
+    "Check: Verify before promotion — completed/cancelled",
+    "Check: Leave the repo clean — completed/cancelled",
+    "Check: browser-memory-roundtrip — completed/cancelled",
     "Check: record — completed/skipped",
-    "Check: validate — queued/pending",
-    "Check: visual-qa — queued/pending",
-    "Check: verify-ecosystem — queued/pending",
-    "Check: Component awareness heartbeat — queued/pending",
+    "Check: Mandatory Organ Isolation — completed/cancelled",
     "Check: test — completed/success",
-    "Check: test — queued/pending",
+    "Check: validate — completed/success",
+    "Check: visual-qa — queued/pending",
     "Check: build-apk — queued/pending",
+    "Check: Component awareness heartbeat — completed/success",
+    "Check: test — queued/pending",
+    "Check: verify-ecosystem — queued/pending",
     "Check: validate — completed/skipped",
     "Check: record — in_progress/pending",
-    "Check: test — queued/pending"
+    "Check: test — completed/success"
   ],
   "planned": [
     "Record the commit message, changed paths and available checks.",
     "Run the work-engine contract tests and validate the run metadata.",
     "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Wait for pending checks (test, Verify before promotion, validate, visual-qa, verify-ecosystem); then inspect their results and artifacts.",
+  "next_step": "Resume at failed check: deploy. Open its run logs and repair on a safe feature branch.",
   "source_workflow": null,
   "source_conclusion": null,
   "changed_files": [],
   "check_results": [
     {
-      "job": "interaction-qa",
+      "job": "deploy",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "cancelled",
       "steps": []
     },
     {
@@ -66,33 +72,21 @@
       "steps": []
     },
     {
-      "job": "test",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
       "job": "Verify before promotion",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "browser-memory-roundtrip",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "cancelled",
       "steps": []
     },
     {
       "job": "Leave the repo clean",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "cancelled",
       "steps": []
     },
     {
-      "job": "Mandatory Organ Isolation",
+      "job": "browser-memory-roundtrip",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "cancelled",
       "steps": []
     },
     {
@@ -102,9 +96,21 @@
       "steps": []
     },
     {
+      "job": "Mandatory Organ Isolation",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": []
+    },
+    {
       "job": "validate",
-      "status": "queued",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "steps": []
     },
     {
@@ -114,19 +120,13 @@
       "steps": []
     },
     {
-      "job": "verify-ecosystem",
+      "job": "build-apk",
       "status": "queued",
       "conclusion": null,
       "steps": []
     },
     {
       "job": "Component awareness heartbeat",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
       "status": "completed",
       "conclusion": "success",
       "steps": []
@@ -138,7 +138,7 @@
       "steps": []
     },
     {
-      "job": "build-apk",
+      "job": "verify-ecosystem",
       "status": "queued",
       "conclusion": null,
       "steps": []
@@ -157,13 +157,13 @@
     },
     {
       "job": "test",
-      "status": "queued",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "success",
       "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:12:53+00:00",
+  "finished_at_utc": "2026-10-17T08:16:12+00:00",
   "outcome": "success"
 }
