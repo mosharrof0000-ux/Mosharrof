@@ -41341,3 +41341,94 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T12:10:07+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39030229227",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030229227",
+  "source_run_id": "39030013269",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030013269",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "e6b185b1bf48fe6d38d2cf1be0f5db32b34f64db",
+  "checked": [
+    "Completed workflow result: Mosharrof Visual QA = success",
+    "Source commit: e6b185b1bf48fe6d38d2cf1be0f5db32b34f64db",
+    "Job: visual-qa — completed/success"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof Visual QA",
+  "source_conclusion": "success",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "visual-qa",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install playwright",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare candidate Pages assets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/visual_qa.py --url http://127.0.0.1:4173/ --output artifacts/candidate.png",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/visual_qa.py --url https://mosharrof0000-ux.github.io/Mosharrof/ --output artifacts/live.png",
+          "conclusion": "success"
+        },
+        {
+          "name": "Gemini visual comparison",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:12:46+00:00",
+  "outcome": "failure"
+}
+
