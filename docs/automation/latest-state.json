@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T11:24:57+00:00",
+  "timestamp_utc": "2026-10-17T11:25:16+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028448818",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028448818",
-  "source_run_id": "39028435018",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028435018",
+  "run_id": "39028457401",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028457401",
+  "source_run_id": "39028396372",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028396372",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "463c2644f7b82fe9d26260f19231c34460ff6857",
+  "sha": "35826462b6bcc3d56f51d143b92a85c0f3a11590",
   "checked": [
-    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = failure",
-    "Source commit: 463c2644f7b82fe9d26260f19231c34460ff6857",
-    "Job: Mandatory Organ Isolation — completed/failure"
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: 35826462b6bcc3d56f51d143b92a85c0f3a11590",
+    "Job: test — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: Mandatory Organ Isolation. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof Tests",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Mandatory Organ Isolation",
+      "job": "test",
       "status": "completed",
       "conclusion": "failure",
       "steps": [
@@ -33,47 +33,47 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout proposed commit and history",
+          "name": "Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
-          "name": "Setup Python",
+          "name": "Verify image engine prompt parsing",
           "conclusion": "success"
         },
         {
-          "name": "Prove the gate blocks invalid replacements",
+          "name": "Test personal memory engine",
           "conclusion": "success"
         },
         {
-          "name": "Validate registry and safe organ scaffolding",
+          "name": "Test memory retrieval and timeline regressions",
           "conclusion": "success"
         },
         {
-          "name": "Validate manifests and generated browser registry",
+          "name": "Check memory bridge syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/run_organ_checks.py",
           "conclusion": "failure"
         },
         {
-          "name": "Setup Node.js for runtime contract tests",
+          "name": "Run python -m pytest -q",
           "conclusion": "skipped"
         },
         {
-          "name": "Test organ runtime and UI contracts",
+          "name": "Post Run actions/setup-python@v5",
           "conclusion": "skipped"
         },
         {
-          "name": "Fetch target branch",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Enforce organ isolation, link caps, and file-size limits",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Setup Python",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Checkout proposed commit and history",
+          "name": "Post Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
@@ -85,6 +85,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:25:03+00:00",
+  "finished_at_utc": "2026-10-17T11:25:21+00:00",
   "outcome": "success"
 }
