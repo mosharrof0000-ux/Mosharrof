@@ -1,75 +1,59 @@
 {
-  "timestamp_utc": "2026-10-17T11:35:36+00:00",
+  "timestamp_utc": "2026-10-17T11:40:48+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028745252",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028745252",
-  "source_run_id": "39028684009",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028684009",
+  "run_id": "39028822564",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028822564",
+  "source_run_id": "39028783238",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028783238",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "42ffa14e4886546ea8fa09fbceb55def4515b9b4",
+  "sha": "435c2b819c63da26b5085f359cf39b51d629e182",
   "checked": [
-    "Completed workflow result: Personal Memory Browser Smoke Test = cancelled",
-    "Source commit: 42ffa14e4886546ea8fa09fbceb55def4515b9b4",
-    "Job: browser-memory-roundtrip — completed/cancelled"
+    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
+    "Source commit: 435c2b819c63da26b5085f359cf39b51d629e182",
+    "Job: verify-ecosystem — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
-  "source_workflow": "Personal Memory Browser Smoke Test",
-  "source_conclusion": "cancelled",
+  "next_step": "Resume at failed workflow/job: verify-ecosystem. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "browser-memory-roundtrip",
+      "job": "verify-ecosystem",
       "status": "completed",
-      "conclusion": "cancelled",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v4",
+          "name": "Checkout Code",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v5",
+          "name": "Set up Python 3.12",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages runtime for pull requests",
+          "name": "Install test dependencies",
           "conclusion": "success"
         },
         {
-          "name": "Start candidate Pages server",
-          "conclusion": "success"
+          "name": "Run Integration Tests",
+          "conclusion": "failure"
         },
         {
-          "name": "Run actions/setup-node@v4",
-          "conclusion": "success"
+          "name": "Post Set up Python 3.12",
+          "conclusion": "skipped"
         },
         {
-          "name": "Install Chromium browser test runner",
-          "conclusion": "success"
-        },
-        {
-          "name": "Test send, persistent storage, and recall after reload",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-node@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-python@v5",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v4",
+          "name": "Post Checkout Code",
           "conclusion": "success"
         },
         {
@@ -80,7 +64,7 @@
     }
   ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T11:40:36+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:40:53+00:00",
+  "outcome": "success"
 }
