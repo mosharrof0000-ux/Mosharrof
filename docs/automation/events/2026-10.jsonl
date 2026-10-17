@@ -41682,3 +41682,74 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T12:12:42+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39030377406",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030377406",
+  "source_run_id": "39030152017",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030152017",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "08bbcf0955158a1e530c2120e45c3f94edfc4928",
+  "checked": [
+    "Completed workflow result: Mosharrof CI = failure",
+    "Source commit: 08bbcf0955158a1e530c2120e45c3f94edfc4928",
+    "Job: test — completed/failure"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof CI",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "success",
+  "finished_at_utc": "2026-10-17T12:13:19+00:00",
+  "outcome": "success"
+}
+
