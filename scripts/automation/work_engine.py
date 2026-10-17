@@ -219,6 +219,17 @@ def main() -> int:
                 previous = {}
         status = args.job_status
         finished_at = utc_now()
+        missing_start_state = not bool(previous.get("timestamp_utc"))
+        if missing_start_state:
+            # The start step may have failed before writing a state file. Preserve an explicit
+            # recovery record rather than silently producing a success-shaped empty state.
+            previous = {
+                **details,
+                "timestamp_utc": utc_now(),
+                "phase": "STARTED_RECOVERY",
+                "status": "interrupted",
+                "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+            }
         result = {
             **previous,
             "timestamp_utc": previous.get("timestamp_utc", finished_at),
@@ -227,7 +238,9 @@ def main() -> int:
             "status": status,
             "outcome": "success" if status == "success" else ("failure" if status == "failure" else status),
         }
-        if status != "success":
+        if status != "success" and missing_start_state:
+            result["next_step"] = "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step."
+        elif status != "success":
             result["next_step"] = "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks."
         elif previous.get("event_name") == "workflow_run" and previous.get("source_conclusion") != "success":
             result["next_step"] = previous.get("next_step", "Inspect the failed source workflow logs and resume at its first failed job.")
