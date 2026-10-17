@@ -13,7 +13,7 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
 
     steps:
       - name: Checkout MOSHARROF
@@ -68,6 +68,46 @@ jobs:
           unzip -t android/app/build/outputs/apk/debug/app-debug.apk >/dev/null
           echo "APK size:"
           du -h android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Install and launch APK in Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            APK="android/app/build/outputs/apk/debug/app-debug.apk"
+            test -s "$APK"
+            adb install "$APK"
+            adb shell pm grant com.mosharrof.ai android.permission.RECORD_AUDIO || true
+            adb shell pm grant com.mosharrof.ai android.permission.READ_CONTACTS || true
+            adb shell pm grant com.mosharrof.ai android.permission.CALL_PHONE || true
+            adb shell pm grant com.mosharrof.ai android.permission.POST_NOTIFICATIONS || true
+            adb shell am start -W -n com.mosharrof.ai/.MainActivity
+            sleep 12
+            adb shell dumpsys activity activities > /tmp/mosharrof-activities.txt
+            grep -q 'com.mosharrof.ai' /tmp/mosharrof-activities.txt
+            adb shell uiautomator dump /sdcard/mosharrof-window.xml
+            adb pull /sdcard/mosharrof-window.xml mosharrof-window.xml
+            adb shell screencap -p /sdcard/mosharrof-emulator.png
+            adb pull /sdcard/mosharrof-emulator.png mosharrof-emulator.png
+            test -s mosharrof-window.xml
+            test -s mosharrof-emulator.png
+            echo "Android Emulator install/launch/UI hierarchy/screenshot: PASS"
+
+      - name: Upload Android Emulator acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MOSHARROF-Android-Emulator-Evidence-${{ github.run_id }}
+          path: |
+            mosharrof-window.xml
+            mosharrof-emulator.png
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
