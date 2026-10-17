@@ -1,37 +1,90 @@
 {
-  "timestamp_utc": "2026-10-17T11:38:07+00:00",
+  "timestamp_utc": "2026-10-17T11:35:48+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028785994",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028785994",
-  "source_run_id": "39028753594",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028753594",
+  "run_id": "39028752789",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028752789",
+  "source_run_id": "39028737103",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028737103",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "e68598860c2c68a4f6f216e2d7b077ca2531b234",
+  "sha": "aab3624bfc66fe4257a676bd97524ad4252720fd",
   "checked": [
-    "Completed workflow result: Cleanup Discipline Reminder = cancelled",
-    "Source commit: e68598860c2c68a4f6f216e2d7b077ca2531b234",
-    "Job: Leave the repo clean — completed/cancelled"
+    "Completed workflow result: Mosharrof Verification Gate = failure",
+    "Source commit: aab3624bfc66fe4257a676bd97524ad4252720fd",
+    "Job: Verify before promotion — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: Leave the repo clean. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Cleanup Discipline Reminder",
-  "source_conclusion": "cancelled",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Leave the repo clean",
+      "job": "Verify before promotion",
       "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout proposed version",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Pages entrypoint",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Run project tests",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Start browser test server",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Install Playwright and Chromium",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Capture mobile and desktop screenshots",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify screenshots are valid",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload visual evidence",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Promotion decision",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout proposed version",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:38:13+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:38:22+00:00",
+  "outcome": "failure"
 }
