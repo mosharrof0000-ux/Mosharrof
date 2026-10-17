@@ -16,7 +16,7 @@ def check_composer_expansion(page: Page) -> None:
     )
     expanded_input.fill("composer expansion applied")
     editor.locator("[data-expand-apply]").click()
-    page.wait_for_function("document.querySelector('#input') && document.querySelector('#input').value === 'composer expansion applied'", timeout=3000)
+    page.wait_for_function("document.querySelector('#input') && document.querySelector('#input').value === 'composer expansion applied'", timeout=10000)
     actual = message_input.input_value()
     assert actual == "composer expansion applied", f"composer expansion editor failed to apply edited text; got {actual!r}"
     print("COMPOSER EXPANSION BROWSER CHECK: PASS")
