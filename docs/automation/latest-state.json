@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-10-17T08:39:59+00:00",
+  "timestamp_utc": "2026-10-17T08:39:48+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018114442",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018114442",
+  "run_id": "39018089842",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018089842",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "fix/work-engine-ledger-retry-2026-10-17",
-  "sha": "e8635639d4995671a0df1ff7e183087d44bb6ec6",
+  "branch": "fix/work-ledger-concurrency-recovery-2026-10-17",
+  "sha": "25273ee9d56be9d2678fda1f002f2cd413ac4038",
   "checked": [
-    "Completed workflow result: Mosharrof AI Ecosystem Verification = success",
-    "Source commit: e8635639d4995671a0df1ff7e183087d44bb6ec6",
-    "Job: verify-ecosystem — completed/success"
+    "Completed workflow result: Mosharrof CI = success",
+    "Source commit: 25273ee9d56be9d2678fda1f002f2cd413ac4038",
+    "Job: test — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_workflow": "Mosharrof CI",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "verify-ecosystem",
+      "job": "test",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -31,27 +31,27 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout Code",
+          "name": "Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
-          "name": "Set up Python 3.12",
+          "name": "Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Install test dependencies",
+          "name": "Run python -m pip install -r requirements.txt",
           "conclusion": "success"
         },
         {
-          "name": "Run Integration Tests",
+          "name": "Run python -m pytest -q",
           "conclusion": "success"
         },
         {
-          "name": "Post Set up Python 3.12",
+          "name": "Post Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Post Checkout Code",
+          "name": "Post Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
@@ -63,6 +63,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:40:03+00:00",
+  "finished_at_utc": "2026-10-17T08:39:54+00:00",
   "outcome": "success"
 }
