@@ -37,8 +37,10 @@ permissions:
   pull-requests: read
 
 concurrency:
-  # Coalesce bursts of workflow_run events per branch: one active run and only the newest pending run.
-  group: mosharrof-work-engine-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  # Every recorder writes to the same operational ledger branch, so all events must share one lock.
+  # Per-source-branch groups allow concurrent writers from different branches and cause non-fast-forward push storms.
+  # GitHub retains only the newest pending run; the ledger remains best-effort for intermediate events.
+  group: mosharrof-work-engine-ledger
   cancel-in-progress: false
 
 jobs:
