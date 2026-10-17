@@ -1,5 +1,10 @@
+import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "./reflective-chat-prompt.js";
+import { withChatProviderTimeout } from "./chat-provider-retry.js";
+
+export const CHAT_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-2.5-flash"];
+function outputTokenBudget(words){return words>0?Math.min(65536,Math.max(2048,Math.ceil(words*3.1)+512)):0;}
 export async function runSelectedChat(body,env,report,fallbackText,targetWords,maxOutputTokens,deps){
-  const {CHAT_MODELS,buildReflectiveUserPrompt,callGemini,LONG_CHAT_PROVIDER_TIMEOUT_MS,CHAT_PROVIDER_TIMEOUT_MS,buildReflectiveSystemPrompt,withChatProviderTimeout,generateWithOpenAICompatibleChat,outputTokenBudget}=deps;
+  const {callGemini,generateWithOpenAICompatibleChat,LONG_CHAT_PROVIDER_TIMEOUT_MS,CHAT_PROVIDER_TIMEOUT_MS}=deps;
   const provider=String(body.provider||"auto").toLowerCase();
   if(provider==="auto")return null;
   const requested=String(body.model||"").trim();
