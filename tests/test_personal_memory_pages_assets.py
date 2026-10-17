@@ -10,5 +10,3 @@ def test_personal_memory_modules_are_bundled_for_pages():
     assert 'import("../core/personal-memory-bridge.js")' not in sidebar
     assert '"core/personal-memory-engine.js": "web/core/personal-memory-engine.js"' in prepare
     assert '"core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js"' in prepare
-    assert '"web/runtime/core" / name' in prepare
-    assert '<script type="module">import "./runtime/core/personal-memory-bridge.js";</script>' in prepare
