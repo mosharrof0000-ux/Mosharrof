@@ -18,7 +18,7 @@ def test_runtime_preparation_copies_autogrow_and_line_limit_helpers():
     prep = (ROOT / "scripts" / "prepare_web_organ_runtime.py").read_text(encoding="utf-8")
     assert '"core/composer-autogrow.js": "web/composer-autogrow.js"' in prep
     assert '"core/composer-line-limit.js": "web/composer-line-limit.js"' in prep
-    assert '"core/composer-line-limit.js": "web/core/composer-line-limit.js"' in prep
+    assert '"core/./composer-line-limit.js": "web/core/composer-line-limit.js"' in prep
     assert 'autogrow_runtime = ROOT / "web/core/composer-autogrow.js"' in prep
     assert 'shutil.copyfile(autogrow_source, autogrow_runtime)' in prep
 
