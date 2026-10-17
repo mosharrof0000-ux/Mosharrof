@@ -30005,3 +30005,34 @@
   "outcome": "success"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:41:56+00:00",
+  "event_name": "push",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39029389135",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029389135",
+  "source_run_id": null,
+  "source_run_url": null,
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "8dc3a7aad2c374eb0d87ef1f459a35fddb5c5a11",
+  "checked": [
+    "Push commit: refactor: isolate manual provider runtime HTML patches",
+    "Commit SHA: 8dc3a7aad2c374eb0d87ef1f459a35fddb5c5a11"
+  ],
+  "planned": [
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
+  ],
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": null,
+  "source_conclusion": null,
+  "changed_files": [],
+  "check_results": [],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:41:56+00:00",
+  "outcome": "failure"
+}
+
