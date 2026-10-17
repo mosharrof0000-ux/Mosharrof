@@ -24103,3 +24103,34 @@
   "outcome": "success"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:29:25+00:00",
+  "event_name": "push",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39028467560",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028467560",
+  "source_run_id": null,
+  "source_run_url": null,
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "38c6990003032a09c0ce7d7e1beb07d07312ba25",
+  "checked": [
+    "Push commit: chore: move manual controls to isolated core module",
+    "Commit SHA: 38c6990003032a09c0ce7d7e1beb07d07312ba25"
+  ],
+  "planned": [
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
+  ],
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": null,
+  "source_conclusion": null,
+  "changed_files": [],
+  "check_results": [],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:29:25+00:00",
+  "outcome": "failure"
+}
+
