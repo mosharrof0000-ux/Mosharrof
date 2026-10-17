@@ -55,11 +55,16 @@ def event_details(event_name: str, event: dict[str, Any], env: dict[str, str]) -
         or env.get("GITHUB_SHA")
         or "unknown"
     )
-    run_id = str(workflow_run.get("id") or env.get("GITHUB_RUN_ID", "unknown"))
-    run_url = workflow_run.get("html_url") or (
+    # Keep this recorder run distinct from the workflow_run source event. Previously
+    # run_id/run_url pointed at the source workflow while status/outcome described this
+    # recorder job, which made a successful source look like a failed recorder run.
+    run_id = str(env.get("GITHUB_RUN_ID", "unknown"))
+    run_url = (
         f"{env.get('GITHUB_SERVER_URL', 'https://github.com')}/"
         f"{env.get('GITHUB_REPOSITORY', 'unknown')}/actions/runs/{run_id}"
     )
+    source_run_id = str(workflow_run.get("id")) if workflow_run.get("id") else None
+    source_run_url = workflow_run.get("html_url")
     changed_files: list[str] = []
     for commit_item in event.get("commits", []) or []:
         for key in ("added", "modified", "removed"):
@@ -152,6 +157,8 @@ def event_details(event_name: str, event: dict[str, Any], env: dict[str, str]) -
         "workflow": env.get("GITHUB_WORKFLOW", "unknown"),
         "run_id": run_id,
         "run_url": run_url,
+        "source_run_id": source_run_id,
+        "source_run_url": source_run_url,
         "repository": env.get("GITHUB_REPOSITORY", "unknown"),
         "branch": head_branch,
         "sha": head_sha,

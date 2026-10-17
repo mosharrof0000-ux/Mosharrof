@@ -62,6 +62,45 @@ class WorkEngineTests(unittest.TestCase):
             self.assertIn("FAILURE", log)
             self.assertIn("FINISHED", summary.read_text(encoding="utf-8"))
 
+    def test_workflow_run_keeps_recorder_and_source_run_ids_separate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            event = root / "event.json"
+            event.write_text(json.dumps({
+                "workflow_run": {
+                    "id": 67890,
+                    "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/67890",
+                    "name": "Mosharrof Visual QA",
+                    "head_branch": "feature/visual-check",
+                    "head_sha": "source-sha",
+                    "conclusion": "success",
+                }
+            }), encoding="utf-8")
+            out = root / "out"
+            summary = root / "summary.md"
+            env = dict(os.environ)
+            env.update({
+                "GITHUB_EVENT_NAME": "workflow_run",
+                "GITHUB_EVENT_PATH": str(event),
+                "GITHUB_WORKFLOW": "MOSHARROF Automatic Work Engine",
+                "GITHUB_RUN_ID": "12345",
+                "GITHUB_REPOSITORY": "mosharrof0000-ux/Mosharrof",
+                "GITHUB_REF_NAME": "main",
+                "GITHUB_SHA": "recorder-sha",
+                "GITHUB_SERVER_URL": "https://github.com",
+                "GITHUB_STEP_SUMMARY": str(summary),
+            })
+            subprocess.run(
+                [sys.executable, str(SCRIPT), "--phase", "start", "--out-dir", str(out)],
+                env=env, capture_output=True, text=True, check=True,
+            )
+            state = json.loads((out / "state.json").read_text(encoding="utf-8"))
+            self.assertEqual(state["run_id"], "12345")
+            self.assertEqual(state["run_url"], "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/12345")
+            self.assertEqual(state["source_run_id"], "67890")
+            self.assertEqual(state["source_run_url"], "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/67890")
+            self.assertEqual(state["source_conclusion"], "success")
+
 
 if __name__ == "__main__":
     unittest.main()
