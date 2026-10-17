@@ -93,6 +93,16 @@ export function initializeComposerEnhancements() {
       }
       latestInput.value = value;
       syncVisibility();
+
+      // Re-apply after the current frame in case the app's input listener schedules a DOM refresh.
+      requestAnimationFrame(() => {
+        const current = currentInput();
+        current.value = value;
+        current.dispatchEvent(new Event("input", { bubbles: true }));
+        const finalInput = currentInput();
+        finalInput.value = value;
+        syncVisibility();
+      });
     }
     editor.classList.remove("open");
     editor.setAttribute("aria-hidden", "true");
