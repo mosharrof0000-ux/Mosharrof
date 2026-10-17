@@ -1,32 +1,32 @@
 {
-  "timestamp_utc": "2026-10-17T11:07:34+00:00",
+  "timestamp_utc": "2026-10-17T11:05:10+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39027439811",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027439811",
-  "source_run_id": "39027390225",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027390225",
+  "run_id": "39027335920",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027335920",
+  "source_run_id": "39027315713",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027315713",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/smart-visual-intelligence-engine-2026-10-17",
-  "sha": "3567bc5e277f825378d4849d86c32f6620d4081b",
+  "sha": "8e3446ef037756eecb619c1087ec52b641a761d2",
   "checked": [
-    "Completed workflow result: Mosharrof Tests = success",
-    "Source commit: 3567bc5e277f825378d4849d86c32f6620d4081b",
-    "Job: test — completed/success"
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: 8e3446ef037756eecb619c1087ec52b641a761d2",
+    "Job: test — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
   "source_workflow": "Mosharrof Tests",
-  "source_conclusion": "success",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
@@ -66,11 +66,11 @@
         },
         {
           "name": "Run python -m pytest -q",
-          "conclusion": "success"
+          "conclusion": "failure"
         },
         {
           "name": "Post Run actions/setup-python@v5",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Post Run actions/checkout@v4",
@@ -84,7 +84,7 @@
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:07:46+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:07:58+00:00",
+  "outcome": "failure"
 }
