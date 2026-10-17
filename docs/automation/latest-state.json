@@ -1,29 +1,90 @@
 {
-  "timestamp_utc": "2026-10-17T12:24:11+00:00",
+  "timestamp_utc": "2026-10-17T12:21:38+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39031237819",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39031237819",
-  "source_run_id": "39030998883",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030998883",
+  "run_id": "39031200353",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39031200353",
+  "source_run_id": "39030998873",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030998873",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "87d2f88262dadfe561d67ba3ebdde92f2a9ae35d",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = success",
-    "Source commit: 87d2f88262dadfe561d67ba3ebdde92f2a9ae35d"
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
+    "Source commit: 87d2f88262dadfe561d67ba3ebdde92f2a9ae35d",
+    "Job: interaction-qa — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Build MOSHARROF Android APK",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
   "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "interaction-qa",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout candidate",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Playwright with transient-network retries",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare candidate Pages assets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Start candidate Pages server",
+          "conclusion": "success"
+        },
+        {
+          "name": "Select safe inspection target",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run safe mobile interaction inspection",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run one real live chat round-trip",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload inspection evidence",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout candidate",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T12:24:11+00:00",
+  "finished_at_utc": "2026-10-17T12:24:17+00:00",
   "outcome": "failure"
 }
