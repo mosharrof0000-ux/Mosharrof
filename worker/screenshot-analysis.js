@@ -435,7 +435,8 @@ async function runSelectedChat(body,env,report,fallbackText,targetWords,maxOutpu
   const requested=String(body.model||"").trim();
   const attempted=[];
   if(provider==="gemini"){
-    const model=CHAT_MODELS.includes(requested)?requested:CHAT_MODELS[0];
+    if(requested&& !CHAT_MODELS.includes(requested))return {status:400,data:{error:"unsupported_manual_model",provider,model:requested,attempted:[]}};
+    const model=requested||CHAT_MODELS[0];
     const keys=[env.GEMINI_API_KEY,env.GEMINI_API_KEY_2,env.GEMINI_API_KEY_3,env.GEMINI_API_KEY_4,env.GEMINI_API_KEY_5].map(x=>String(x||"").trim()).filter(Boolean);
     if(!keys.length)return {status:503,data:{error:"provider_not_configured",provider,model,attempted:[{provider,model,reason:"not_configured"}]}};
     const payload={contents:[{parts:[{text:buildReflectiveUserPrompt(fallbackText,{targetWords})}]}]};
@@ -452,7 +453,8 @@ async function runSelectedChat(body,env,report,fallbackText,targetWords,maxOutpu
     }
   }else if(provider==="cloudflare-workers-ai"){
     const configured=String(env.CLOUDFLARE_CHAT_MODELS||env.CLOUDFLARE_CHAT_MODEL||"@cf/zai-org/glm-4.7-flash,@cf/meta/llama-3.3-70b-instruct-fp8-fast").split(",").map(x=>x.trim()).filter(Boolean);
-    const model=configured.includes(requested)?requested:configured[0];
+    if(requested&&!configured.includes(requested))return {status:400,data:{error:"manual_model_not_configured",provider,model:requested,configured_models:configured,attempted:[]}};
+    const model=requested||configured[0];
     if(!env.AI)return {status:503,data:{error:"provider_not_configured",provider,model,attempted:[{provider,model,reason:"not_configured"}]}};
     report({stage:"trying",provider,model});
     try{
