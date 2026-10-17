@@ -79,6 +79,7 @@ export function initializeComposerEnhancements() {
     const activeInput = currentInput();
     if (apply) {
       const value = String(largeInput.value || "");
+      const previousValue = String(activeInput.value || "");
       activeInput.value = value;
       activeInput.dispatchEvent(new Event("input", { bubbles: true }));
       activeInput.dispatchEvent(new Event("change", { bubbles: true }));
@@ -94,13 +95,16 @@ export function initializeComposerEnhancements() {
       latestInput.value = value;
       syncVisibility();
 
-      // Re-apply after the current frame in case the app's input listener schedules a DOM refresh.
+      // If a listener schedules a DOM refresh, restore only while the draft is still unchanged.
+      // Never overwrite text the user has typed after applying the expanded draft.
       requestAnimationFrame(() => {
-        const current = currentInput();
-        current.value = value;
-        current.dispatchEvent(new Event("input", { bubbles: true }));
-        const finalInput = currentInput();
-        finalInput.value = value;
+        let current = currentInput();
+        if (current.value === value || current.value === previousValue || !current.value) {
+          current.value = value;
+          current.dispatchEvent(new Event("input", { bubbles: true }));
+          current = currentInput();
+          if (current.value === previousValue || !current.value) current.value = value;
+        }
         syncVisibility();
       });
     }
