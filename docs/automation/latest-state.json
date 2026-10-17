@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-10-17T08:35:34+00:00",
+  "timestamp_utc": "2026-10-17T08:36:43+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39017869297",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39017869297",
+  "run_id": "39017986414",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39017986414",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "main",
+  "branch": "fix/work-ledger-concurrency-recovery-2026-10-17",
   "sha": "261aa50c8eaf4e131da775806292c85f8037fe57",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
+    "Completed workflow result: Mosharrof Tests = success",
     "Source commit: 261aa50c8eaf4e131da775806292c85f8037fe57",
-    "Job: interaction-qa — completed/success"
+    "Job: test — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_workflow": "Mosharrof Tests",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "interaction-qa",
+      "job": "test",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -31,47 +31,47 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout candidate",
+          "name": "Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
-          "name": "Set up Python",
+          "name": "Verify image engine prompt parsing",
           "conclusion": "success"
         },
         {
-          "name": "Install Playwright with transient-network retries",
+          "name": "Test personal memory engine",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages assets",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Start candidate Pages server",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Select safe inspection target",
+          "name": "Test memory retrieval and timeline regressions",
           "conclusion": "success"
         },
         {
-          "name": "Run safe mobile interaction inspection",
+          "name": "Check memory bridge syntax",
           "conclusion": "success"
         },
         {
-          "name": "Run one real live chat round-trip",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload inspection evidence",
+          "name": "Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Post Set up Python",
+          "name": "Run python -m pip install -r requirements.txt",
           "conclusion": "success"
         },
         {
-          "name": "Post Checkout candidate",
+          "name": "Run python3 scripts/run_organ_checks.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
@@ -83,6 +83,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:35:41+00:00",
+  "finished_at_utc": "2026-10-17T08:36:48+00:00",
   "outcome": "success"
 }
