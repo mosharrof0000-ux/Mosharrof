@@ -1,19 +1,19 @@
 {
-  "timestamp_utc": "2026-10-17T14:02:19+00:00",
+  "timestamp_utc": "2026-10-17T14:03:34+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39039006126",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39039006126",
-  "source_run_id": "39038985416",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39038985416",
+  "run_id": "39039122549",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39039122549",
+  "source_run_id": "39039115123",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39039115123",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/composer-voice-longpress-2026-10-17",
-  "sha": "7b331b0cb5ac256dd40d17ec4edd28117c66f106",
+  "sha": "a5c36f11fcb6f922944c0767f22dc2f209f771f0",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = failure",
-    "Source commit: 7b331b0cb5ac256dd40d17ec4edd28117c66f106",
-    "Job: test — completed/failure",
-    "Job: deploy — completed/skipped"
+    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
+    "Source commit: a5c36f11fcb6f922944c0767f22dc2f209f771f0",
+    "Job: test — completed/cancelled",
+    "Job: deploy — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
@@ -21,81 +21,24 @@
   ],
   "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
   "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "failure",
+  "source_conclusion": "cancelled",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "failure",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pip install -r requirements.txt",
-          "conclusion": "success"
-        },
-        {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Run python -m pytest -q",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Verify Pages artifact",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Prepare candidate organ runtime assets",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Install Chromium for candidate runtime smoke test",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Start candidate Pages server",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Test candidate organ runtime in Chromium",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
+      "conclusion": "cancelled",
+      "steps": []
     },
     {
       "job": "deploy",
       "status": "completed",
-      "conclusion": "skipped",
+      "conclusion": "cancelled",
       "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T14:02:24+00:00",
+  "finished_at_utc": "2026-10-17T14:03:38+00:00",
   "outcome": "success"
 }
