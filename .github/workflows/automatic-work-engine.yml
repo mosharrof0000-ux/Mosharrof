@@ -69,6 +69,8 @@ jobs:
           python-version: "3.12"
 
       - name: Announce planned work and record starting state
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python scripts/automation/work_engine.py --phase start --out-dir "$RUNNER_TEMP/mosharrof-work-engine"
 
       - name: Run work-engine contract tests
