@@ -221,6 +221,7 @@ def main() -> int:
         finished_at = utc_now()
         result = {
             **previous,
+            "timestamp_utc": previous.get("timestamp_utc", finished_at),
             "finished_at_utc": finished_at,
             "phase": "FINISHED",
             "status": status,
