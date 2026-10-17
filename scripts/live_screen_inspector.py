@@ -281,11 +281,11 @@ async def main():
                   const rect = input.getBoundingClientRect();
                   return {rowWidth: Math.round(box.width), composerWidth: Math.round(composer.width),
                           inputWidth: Math.round(rect.width), inputHeight: Math.round(rect.height),
-                          widthRatio: rect.width / Math.max(1, composer.width)};
+                          widthRatio: rect.width / Math.max(1, box.width)};
                 }"""
             )
             record("composer_input_uses_full_width_and_readable_height",
-                   dimensions["widthRatio"] >= 0.95 and dimensions["inputHeight"] >= 44,
+                   dimensions["widthRatio"] >= 0.99 and dimensions["inputHeight"] >= 44,
                    json.dumps(dimensions, ensure_ascii=False))
             eight = "\n".join("inspection line " + str(i) for i in range(1, 9))
             await input_box.fill(eight)
