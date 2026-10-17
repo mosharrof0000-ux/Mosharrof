@@ -1,29 +1,44 @@
 {
-  "timestamp_utc": "2026-10-17T12:05:29+00:00",
+  "timestamp_utc": "2026-10-17T12:05:36+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029839594",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029839594",
-  "source_run_id": "39029591853",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029591853",
+  "run_id": "39030120784",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030120784",
+  "source_run_id": "39030112069",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030112069",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "f275417323984635db2dd9b305f388f6d0e5dd37",
+  "sha": "ac5ca7b97c981471ad264e0896f084906ad3bfd3",
   "checked": [
-    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
-    "Source commit: f275417323984635db2dd9b305f388f6d0e5dd37"
+    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
+    "Source commit: ac5ca7b97c981471ad264e0896f084906ad3bfd3",
+    "Job: test — completed/cancelled",
+    "Job: deploy — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Mosharrof AI Ecosystem Verification",
-  "source_conclusion": "failure",
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Deploy Mosharrof Pages",
+  "source_conclusion": "cancelled",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "deploy",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    }
+  ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T12:05:29+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T12:05:41+00:00",
+  "outcome": "success"
 }
