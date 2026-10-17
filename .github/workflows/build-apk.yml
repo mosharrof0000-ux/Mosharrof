@@ -45,7 +45,6 @@ jobs:
           grep -q 'safe-area-inset-top' core/android-edge-to-edge.css
           grep -q 'safe-area-inset-bottom' core/android-edge-to-edge.css
           grep -q 'backdrop-filter' web/edge-to-edge.css
-          echo "Edge-to-edge web contract: PASS"
 
       - name: Prepare Android full-screen voice manager
         run: bash scripts/android/prepare-and-install-voice.sh
@@ -66,8 +65,6 @@ jobs:
         run: |
           test -s android/app/build/outputs/apk/debug/app-debug.apk
           unzip -t android/app/build/outputs/apk/debug/app-debug.apk >/dev/null
-          echo "APK size:"
-          du -h android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Install and launch APK in Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
@@ -96,7 +93,6 @@ jobs:
           name: MOSHARROF-AI-Android-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          retention-days: 90
 
       - name: Publish GitHub Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
