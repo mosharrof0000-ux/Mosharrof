@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-10-17T08:35:18+00:00",
+  "timestamp_utc": "2026-10-17T08:35:34+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39017797535",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39017797535",
+  "run_id": "39017869297",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39017869297",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "main",
   "sha": "261aa50c8eaf4e131da775806292c85f8037fe57",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = success",
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
     "Source commit: 261aa50c8eaf4e131da775806292c85f8037fe57",
-    "Job: build-apk — completed/success"
+    "Job: interaction-qa — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Build MOSHARROF Android APK",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "build-apk",
+      "job": "interaction-qa",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -31,59 +31,47 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout MOSHARROF",
+          "name": "Checkout candidate",
           "conclusion": "success"
         },
         {
-          "name": "Setup Node",
+          "name": "Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Setup Java",
+          "name": "Install Playwright with transient-network retries",
           "conclusion": "success"
         },
         {
-          "name": "Verify edge-to-edge web contract",
+          "name": "Prepare candidate Pages assets",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Start candidate Pages server",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Select safe inspection target",
           "conclusion": "success"
         },
         {
-          "name": "Prepare Android full-screen voice manager",
+          "name": "Run safe mobile interaction inspection",
           "conclusion": "success"
         },
         {
-          "name": "Enforce file and folder size budgets",
+          "name": "Run one real live chat round-trip",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload inspection evidence",
           "conclusion": "success"
         },
         {
-          "name": "Verify Android agent contract suite",
+          "name": "Post Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Build debug APK",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify APK",
-          "conclusion": "success"
-        },
-        {
-          "name": "Upload APK artifact",
-          "conclusion": "success"
-        },
-        {
-          "name": "Publish GitHub Release",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Node",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Checkout MOSHARROF",
+          "name": "Post Checkout candidate",
           "conclusion": "success"
         },
         {
@@ -95,6 +83,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:35:23+00:00",
+  "finished_at_utc": "2026-10-17T08:35:41+00:00",
   "outcome": "success"
 }
