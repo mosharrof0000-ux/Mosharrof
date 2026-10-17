@@ -46,7 +46,7 @@ function stopHold(){clearTimeout(pressTimer);pressTimer=null;pressTarget=null;}
 document.addEventListener("pointerdown",function(e){if(e.button!==undefined&&e.button!==0)return;var target=e.target&&e.target.closest?e.target.closest("button,.response-route"):null;var kind=kindOf(target);if(kind)startHold(target,kind);},true);
 ["pointerup","pointercancel","pointerleave"].forEach(function(name){document.addEventListener(name,stopHold,true);});
 document.addEventListener("click",function(e){var target=e.target&&e.target.closest?e.target.closest("button,.response-route"):null;if(suppressClickTarget&&target===suppressClickTarget){e.preventDefault();e.stopImmediatePropagation();suppressClickTarget=null;}},true);
-document.addEventListener("contextmenu",function(e){var target=e.target&&e.target.closest?e.target.closest("button,.response-route"):null;var kind=kindOf(target);if(kind){e.preventDefault();if(kind==="chat")menuFor(target,"chat");}},true);
+document.addEventListener("contextmenu",function(e){var target=e.target&&e.target.closest?e.target.closest("button,.response-route"):null;var kind=kindOf(target);if(kind){e.preventDefault();if(kind==="chat"&&!menu)menuFor(target,"chat");}},true);
 
 setChatMode(chatValue());
 })();
