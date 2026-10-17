@@ -228,6 +228,8 @@ header.top{
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
 
+
+#composer .composer-input-row{display:flex;width:100%;min-width:0}#composer .composer-input-row>.input{display:block;width:100%;flex:1;min-width:0;max-height:min(44dvh,360px);overflow-y:auto;overscroll-behavior:contain}#composer .composer-actions-spacer{flex:1;min-width:0}#composerVoiceBtn.has-voice-activity svg{stroke:#4ade80;filter:drop-shadow(0 0 2px rgba(74,222,128,.35));animation:voice-mic-bob .24s ease-in-out infinite alternate}#sendBtn svg{stroke:var(--server-accent,#f2f2f2)!important}
 </style>
 </head>
 <body>
@@ -249,7 +251,7 @@ header.top{
   </main>
   <div class="composer" id="composer">
     <div class="image-preview" id="imagePreview"><img id="previewImage" alt="Screenshot preview"><span id="previewName">Screenshot attached</span><button id="removeImage" aria-label="Remove screenshot">×</button></div>
-    <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
+    <div class="composer-input-row"><textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea></div>
     <div class="row composer-actions-row"><div class="composer-tools" id="composerTools"><button class="composer-tool-toggle" id="plusBtn" type="button" aria-label="আরও টুল দেখান" aria-expanded="false" aria-controls="composerToolsMenu">+</button><div class="composer-tools-menu" id="composerToolsMenu" role="group" aria-label="কম্পোজার টুল"><label class="composer-action attach" aria-label="ক্যামেরা বা ছবি যোগ করুন" title="ক্যামেরা / ছবি"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.5h4.6L15.5 5h2A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12" r="3.2"/></svg><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"></label></div></div><button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button><button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button></div>
   </div>
   <div class="voice-bar" id="voiceStatus" role="status" aria-live="polite">Voice ready</div>
@@ -293,7 +295,7 @@ header.top{
   function toast(m,ms){ms=ms||2000;toastEl.textContent=m;toastEl.classList.add("show");setTimeout(function(){toastEl.classList.remove("show");},ms);}
   function showV(t){vStatus.textContent=t;vStatus.classList.add("show");}
   function hideV(){vStatus.classList.remove("show");}
-  function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
+  function resize(){var vv=window.visualViewport;var vh=vv&&vv.height>0?vv.height:(window.innerHeight||640);var max=Math.max(72,Math.min(vh*.44,360));input.style.maxHeight=max+"px";input.style.height="auto";input.style.height=Math.min(input.scrollHeight,max)+"px";}
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
   function iconSvg(kind){
     var paths={like:'<path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"/><path d="M7 10 12 3a2 2 0 0 1 2 2l-1 5h5.5a2.5 2.5 0 0 1 2.4 3.2l-1.8 6A2.5 2.5 0 0 1 16.7 21H7"/>',online:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',speak:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',retry:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6"/><path d="M18.4 15A7 7 0 0 1 6 18l-2-6"/>',share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>',download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'};
@@ -697,8 +699,9 @@ header.top{
     else if(event.stage==="failed")route.textContent=provider+" ব্যর্থ · বিকল্প খোঁজা হচ্ছে";
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
+  function getChatProviderPreference(){var v="auto";try{v=localStorage.getItem("mosharrof_chat_provider_v1")||"auto";}catch(e){}return ["auto","gemini","cloudflare-workers-ai","groq","openrouter"].includes(v)?v:"auto";}
   function coreReply(t,image){
-    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,provider:getChatProviderPreference(),stream_status:true})})
       .then(function(res){
         function finish(data,status){
           var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
@@ -1086,7 +1089,7 @@ header.top{
   var busy=false;
   function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
   function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
-  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";input.style.height="40px";input.scrollTop=0;resize();
     if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
       session.messages=session.messages.slice(0,editTargetIndex);
       msgEl.innerHTML="";
@@ -1145,7 +1148,7 @@ header.top{
   if(ttsVoiceSelect){ttsVoiceSelect.value=getTtsVoice();ttsVoiceSelect.addEventListener("change",function(){try{localStorage.setItem(TTS_VOICE_KEY,ttsVoiceSelect.value);}catch(e){}toast("Edge বাংলা কণ্ঠ পরিবর্তন হয়েছে");});}
   var historySearch=$("#historySearch"),historyNewChat=$("#historyNewChat");if(historySearch)historySearch.addEventListener("input",updateHistoryList);if(historyNewChat)historyNewChat.onclick=newChat;
   updateMeta();updateHistoryList();
-  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[],voiceEndTimer=null,voiceTimerInterval=null,voiceTimerRestoreTimeout=null,voiceProcessingStartedAt=0,voiceMicMarkup=null;
+  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[],voiceEndTimer=null,voiceTimerInterval=null,voiceTimerRestoreTimeout=null,voiceProcessingStartedAt=0,voiceMicMarkup=null,voiceAudioContext=null,voiceAnalyser=null,voiceMeterSource=null,voiceMeterGain=null,voiceMeterFrame=0;
   var STT_LANGUAGE_KEY="mosharrof_stt_language_v1",sttLanguageSelect=null;
   var AUDIO_TRANSCRIBE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/transcribe-audio";
   function getSttLanguage(){var value="bn-BD";try{value=localStorage.getItem(STT_LANGUAGE_KEY)||"bn-BD";}catch(e){}return ["bn-BD","en-US","hi-IN"].includes(value)?value:"bn-BD";}
@@ -1155,7 +1158,9 @@ header.top{
   function finishVoiceProcessingTimer(success){if(!voiceProcessingStartedAt)return;var elapsed=((Date.now()-voiceProcessingStartedAt)/1000).toFixed(1);if(voiceTimerInterval){clearInterval(voiceTimerInterval);voiceTimerInterval=null;}composerVoiceBtn.classList.remove("is-processing","is-listening");composerVoiceBtn.classList.add(success?"is-transcription-success":"is-transcription-error");composerVoiceBtn.innerHTML=success?("✓ "+elapsed+"s"):("! "+elapsed+"s");composerVoiceBtn.setAttribute("aria-label",success?"অডিও থেকে লেখা তৈরি হয়েছে, "+elapsed+" সেকেন্ডে":"অডিও থেকে লেখা তৈরি ব্যর্থ, "+elapsed+" সেকেন্ডে");composerVoiceBtn.title=success?"লেখা তৈরি সম্পন্ন":"লেখা তৈরি ব্যর্থ";voiceTimerRestoreTimeout=setTimeout(function(){if(voiceWanted||voiceProcessing)return;composerVoiceBtn.innerHTML=voiceMicMarkup||composerVoiceBtn.innerHTML;composerVoiceBtn.classList.remove("is-processing","is-transcription-success","is-transcription-error","is-listening");composerVoiceBtn.setAttribute("aria-label","ভয়েস ইনপুট");composerVoiceBtn.title="ভয়েস ইনপুট";voiceProcessingStartedAt=0;},2200);}
   function showVoiceMessage(message){showV(message);if(voiceEndTimer)clearTimeout(voiceEndTimer);voiceEndTimer=setTimeout(hideV,5000);}
   function audioErrorMessage(error){var name=String(error&&error.name||"");if(name==="NotAllowedError"||name==="PermissionDeniedError")return "মাইক্রোফোনের অনুমতি দিন, তারপর আবার চেষ্টা করুন।";if(name==="NotFoundError"||name==="DevicesNotFoundError")return "মাইক্রোফোন পাওয়া যায়নি।";if(name==="NotReadableError"||name==="TrackStartError")return "অন্য অ্যাপ মাইক্রোফোন ব্যবহার করছে।";return "অডিও রেকর্ড করা যায়নি। আবার চেষ্টা করুন।";}
-  function releaseVoiceStream(){if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
+  function stopVoiceActivityMeter(){if(voiceMeterFrame){cancelAnimationFrame(voiceMeterFrame);voiceMeterFrame=0;}if(voiceMeterSource){try{voiceMeterSource.disconnect();}catch(e){}voiceMeterSource=null;}if(voiceAnalyser){try{voiceAnalyser.disconnect();}catch(e){}voiceAnalyser=null;}if(voiceMeterGain){try{voiceMeterGain.disconnect();}catch(e){}voiceMeterGain=null;}composerVoiceBtn.classList.remove("has-voice-activity");if(voiceAudioContext){var c=voiceAudioContext;voiceAudioContext=null;if(c.state!=="closed")c.close().catch(function(){});}}
+function startVoiceActivityMeter(stream){stopVoiceActivityMeter();var AC=window.AudioContext||window.webkitAudioContext;if(!AC||!stream)return;try{voiceAudioContext=new AC();voiceAnalyser=voiceAudioContext.createAnalyser();voiceAnalyser.fftSize=512;voiceAnalyser.smoothingTimeConstant=.55;voiceMeterSource=voiceAudioContext.createMediaStreamSource(stream);voiceMeterGain=voiceAudioContext.createGain();voiceMeterGain.gain.value=0;voiceMeterSource.connect(voiceAnalyser);voiceAnalyser.connect(voiceMeterGain);voiceMeterGain.connect(voiceAudioContext.destination);var samples=new Uint8Array(voiceAnalyser.fftSize);var tick=function(){if(!voiceWanted||!voiceStream||!voiceAnalyser){stopVoiceActivityMeter();return;}voiceAnalyser.getByteTimeDomainData(samples);var e=0;for(var i=0;i<samples.length;i++){var x=(samples[i]-128)/128;e+=x*x;}var rms=Math.sqrt(e/samples.length);var active=rms>=.025;composerVoiceBtn.classList.toggle("has-voice-activity",active);voiceMeterFrame=requestAnimationFrame(tick);};if(voiceAudioContext.state==="suspended")voiceAudioContext.resume().catch(function(){});tick();}catch(e){stopVoiceActivityMeter();console.warn("Voice activity meter unavailable",e);}}
+function releaseVoiceStream(){stopVoiceActivityMeter();if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
   function normalizeVoiceTranscript(value,language){
     var text=String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
     if(!text)return "";
