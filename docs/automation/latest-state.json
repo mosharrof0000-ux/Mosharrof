@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T12:15:49+00:00",
+  "timestamp_utc": "2026-10-17T12:14:51+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030844189",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030844189",
-  "source_run_id": "39030264083",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030264083",
+  "run_id": "39030639563",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030639563",
+  "source_run_id": "39030264041",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030264041",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "47a4569b3f9f3c6208962e982495e0330a83b218",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
+    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = success",
     "Source commit: 47a4569b3f9f3c6208962e982495e0330a83b218",
-    "Job: interaction-qa — completed/success"
+    "Job: Mandatory Organ Isolation — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "interaction-qa",
+      "job": "Mandatory Organ Isolation",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -33,47 +33,51 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout candidate",
+          "name": "Checkout proposed commit and history",
           "conclusion": "success"
         },
         {
-          "name": "Set up Python",
+          "name": "Setup Python",
           "conclusion": "success"
         },
         {
-          "name": "Install Playwright with transient-network retries",
+          "name": "Prove the gate blocks invalid replacements",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages assets",
+          "name": "Validate registry and safe organ scaffolding",
           "conclusion": "success"
         },
         {
-          "name": "Start candidate Pages server",
+          "name": "Validate manifests and generated browser registry",
           "conclusion": "success"
         },
         {
-          "name": "Select safe inspection target",
+          "name": "Setup Node.js for runtime contract tests",
           "conclusion": "success"
         },
         {
-          "name": "Run safe mobile interaction inspection",
+          "name": "Test organ runtime and UI contracts",
           "conclusion": "success"
         },
         {
-          "name": "Run one real live chat round-trip",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload inspection evidence",
+          "name": "Fetch target branch",
           "conclusion": "success"
         },
         {
-          "name": "Post Set up Python",
+          "name": "Enforce organ isolation, link caps, and file-size limits",
           "conclusion": "success"
         },
         {
-          "name": "Post Checkout candidate",
+          "name": "Post Setup Node.js for runtime contract tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout proposed commit and history",
           "conclusion": "success"
         },
         {
@@ -85,6 +89,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T12:15:53+00:00",
+  "finished_at_utc": "2026-10-17T12:16:10+00:00",
   "outcome": "success"
 }
