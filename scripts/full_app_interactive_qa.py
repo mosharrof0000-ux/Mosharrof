@@ -152,6 +152,48 @@ def main() -> int:
         except Exception as exc:
             check("composer tools toggle", False, str(exc)[:240])
 
+        # Exercise each registered sidebar module control one at a time. These are
+        # navigation actions (not delete/clear/send actions); each gets a screenshot
+        # and a page-exception delta so module-specific failures are attributable.
+        module_controls = page.locator("#drawerLeft [data-module]").evaluate_all(
+            """els => els.map(el => ({
+              id: el.getAttribute('data-module') || '',
+              label: (el.innerText || el.getAttribute('aria-label') || '').trim()
+                .replace(/\\s+/g, ' ').slice(0, 100)
+            })).filter(item => item.id)"""
+        )
+        report["module_interactions"] = []
+        for module in module_controls:
+            module_id = module["id"]
+            outcome = {
+                "id": module_id,
+                "label": module["label"],
+                "clicked": False,
+                "page_errors_before": len(report["page_errors"]),
+            }
+            try:
+                drawer = page.locator("#drawerLeft")
+                if drawer.count() and drawer.get_attribute("aria-hidden") == "true":
+                    page.locator("#leftBtn").click()
+                    page.wait_for_timeout(200)
+                target = page.locator(f'#drawerLeft [data-module="{module_id}"]').first
+                target.click()
+                outcome["clicked"] = True
+                page.wait_for_timeout(600)
+                outcome["page_errors_after"] = len(report["page_errors"])
+                outcome["new_page_errors"] = report["page_errors"][outcome["page_errors_before"]:]
+                outcome["active_state"] = target.get_attribute("aria-current") or target.get_attribute("aria-pressed")
+                shot = "module-" + re.sub(r"[^a-z0-9-]+", "-", module_id.lower()).strip("-") + ".png"
+                page.screenshot(path=str(OUT / shot), full_page=True)
+                report["screenshots"].append(shot)
+                check("module interaction: " + module_id,
+                      outcome["clicked"] and not outcome["new_page_errors"],
+                      module["label"] or "navigation control clicked")
+            except Exception as exc:
+                outcome["error"] = str(exc)[:240]
+                check("module interaction: " + module_id, False, outcome["error"])
+            report["module_interactions"].append(outcome)
+
         # Accessibility smoke checks on visible controls: accessible name and
         # keyboard focusability. These are diagnostics, not automatic failures
         # for icon-only decorative controls that intentionally lack labels.
