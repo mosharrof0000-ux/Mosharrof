@@ -163,6 +163,7 @@ def main() -> int:
             })).filter(item => item.id)"""
         )
         report["module_interactions"] = []
+        check("sidebar module controls discovered", bool(module_controls), f"{len(module_controls)} modules")
         for module in module_controls:
             module_id = module["id"]
             outcome = {
