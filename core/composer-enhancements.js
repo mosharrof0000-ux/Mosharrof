@@ -19,8 +19,8 @@ export function initializeComposerEnhancements() {
   const style = document.createElement("style");
   style.id = "chat-composer-expand-styles";
   style.textContent = [
-    "#composer .row{gap:6px;align-items:flex-end}",
-    "#composer .input{min-height:34px!important;padding-top:6px!important;padding-bottom:6px!important}",
+    "#composer .composer-actions-row{gap:6px;align-items:center}",
+    "#composer .composer-input-row .input{min-height:44px!important}",
     "#composerExpandBtn{display:none}",
     "#composerExpandBtn.visible{display:inline-grid}",
     ".mosharrof-expand-editor{position:fixed;inset:0;z-index:20000;display:none;flex-direction:column;background:#050505;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));color:#f5f5f5}",
@@ -45,23 +45,9 @@ export function initializeComposerEnhancements() {
   expand.setAttribute("aria-controls", "mosharrofExpandEditor");
   expand.setAttribute("aria-expanded", "false");
   expand.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8h8v8H8z"/></svg>';
-  // Add a visible server/model selector in the composer action row.
-  // Provider selection must not depend on long-pressing the Send button.
-  let serverButton = document.getElementById("composerServerBtn");
-  if (!serverButton) {
-    serverButton = document.createElement("button");
-    serverButton.className = "composer-action";
-    serverButton.id = "composerServerBtn";
-    serverButton.type = "button";
-    serverButton.setAttribute("aria-label", "সার্ভার ও মডেল নির্বাচন");
-    serverButton.title = "সার্ভার / মডেল নির্বাচন";
-    serverButton.setAttribute("aria-haspopup", "menu");
-    serverButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01M11 7h6M11 17h6"/></svg>';
-    const voice = document.getElementById("composerVoiceBtn");
-    send.parentNode.insertBefore(serverButton, voice || document.getElementById("stopBtn") || send);
-  }
-  // Preserve the established live composer order: expand action before the stop action.
-  send.parentNode.insertBefore(expand, document.getElementById("stopBtn") || send);
+  // Keep the expander immediately to the left of the microphone.
+  const voice = document.getElementById("composerVoiceBtn");
+  send.parentNode.insertBefore(expand, voice || document.getElementById("stopBtn") || send);
 
   const editor = document.createElement("section");
   editor.className = "mosharrof-expand-editor";
@@ -79,7 +65,9 @@ export function initializeComposerEnhancements() {
   }
   function syncVisibility() {
     const activeInput = currentInput();
-    expand.classList.toggle("visible", !!String(activeInput.value || "").trim());
+    const lineLimitReached = activeInput.classList.contains("is-over-eight-lines");
+    expand.classList.toggle("visible", lineLimitReached);
+    expand.setAttribute("aria-hidden", lineLimitReached ? "false" : "true");
   }
   function openEditor() {
     const activeInput = currentInput();
@@ -135,6 +123,9 @@ export function initializeComposerEnhancements() {
   }
 
   document.addEventListener("input", event => {
+    if (event.target?.id === "input") syncVisibility();
+  });
+  document.addEventListener("composer:line-limit", event => {
     if (event.target?.id === "input") syncVisibility();
   });
   expand.addEventListener("click", openEditor);
