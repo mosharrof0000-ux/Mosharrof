@@ -1,62 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T11:56:40+00:00",
+  "timestamp_utc": "2026-10-17T12:01:42+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029573733",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029573733",
-  "source_run_id": "39029394437",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029394437",
+  "run_id": "39029570874",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029570874",
+  "source_run_id": "39029392977",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029392977",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "3fb8e59cbb119e7f3e8e644ef0ab4c99e073686d",
   "checked": [
-    "Completed workflow result: Mosharrof Component Consciousness = success",
-    "Source commit: 3fb8e59cbb119e7f3e8e644ef0ab4c99e073686d",
-    "Job: Component awareness heartbeat — completed/success"
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: 3fb8e59cbb119e7f3e8e644ef0ab4c99e073686d"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
-  "source_workflow": "Mosharrof Component Consciousness",
-  "source_conclusion": "success",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Tests",
+  "source_conclusion": "failure",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "Component awareness heartbeat",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run full component consciousness audit",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify autonomous engine is protected",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T12:01:35+00:00",
+  "finished_at_utc": "2026-10-17T12:01:42+00:00",
   "outcome": "failure"
 }
