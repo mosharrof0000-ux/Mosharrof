@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-10-17T11:48:05+00:00",
+  "timestamp_utc": "2026-10-17T11:48:23+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028901667",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028901667",
-  "source_run_id": "39028843565",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028843565",
+  "run_id": "39028910051",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028910051",
+  "source_run_id": "39028833113",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028833113",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "cff33ab18412216d17df77c2f37cf7e5356312d2",
+  "sha": "88f0cd1908e4a8f0b0bffa3bef49646ab4c73f0d",
   "checked": [
-    "Completed workflow result: Mosharrof CI = failure",
-    "Source commit: cff33ab18412216d17df77c2f37cf7e5356312d2",
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: 88f0cd1908e4a8f0b0bffa3bef49646ab4c73f0d",
     "Job: test — completed/failure"
   ],
   "planned": [
@@ -19,7 +19,7 @@
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof CI",
+  "source_workflow": "Mosharrof Tests",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
@@ -37,11 +37,31 @@
           "conclusion": "success"
         },
         {
+          "name": "Verify image engine prompt parsing",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test personal memory engine",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test memory retrieval and timeline regressions",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check memory bridge syntax",
+          "conclusion": "success"
+        },
+        {
           "name": "Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
           "name": "Run python -m pip install -r requirements.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/run_organ_checks.py",
           "conclusion": "success"
         },
         {
@@ -65,6 +85,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:48:10+00:00",
+  "finished_at_utc": "2026-10-17T11:48:29+00:00",
   "outcome": "success"
 }
