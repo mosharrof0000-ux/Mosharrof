@@ -61,8 +61,8 @@ if not previous.get("updated_at_utc") or current.get("updated_at_utc", "") >= pr
     target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 PY
   git -C "$LOG_REPO" add docs/automation/gates
-  RUN_JITTER=$(( ${GITHUB_RUN_ID:-0} % 5 ))
-  sleep "$((ATTEMPT * 2 + RUN_JITTER))"
+  RUN_JITTER=$(( (${GITHUB_RUN_ID:-0} + ATTEMPT * 17) % 11 ))
+  sleep "$((ATTEMPT + RUN_JITTER))"
 done
 echo "Failed to persist gate checkpoint after twelve attempts." >&2
 exit 1
