@@ -22,8 +22,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("action", choices=("enter", "checkpoint", "exit", "interrupt", "resume"))
     p.add_argument("--dir", default=os.environ.get("WORK_GATE_DIR", ".work-gate"))
-    p.add_argument("--task", default=os.environ.get("WORK_GATE_TASK", "unspecified task"))
-    p.add_argument("--purpose", default=os.environ.get("WORK_GATE_PURPOSE", "unspecified purpose"))
+    p.add_argument("--task", default=os.environ.get("WORK_GATE_TASK"))
+    p.add_argument("--purpose", default=os.environ.get("WORK_GATE_PURPOSE"))
     p.add_argument("--step", default=os.environ.get("WORK_GATE_STEP", "not specified"))
     p.add_argument("--reason", choices=sorted(REASONS), default="unknown")
     p.add_argument("--details", default="")
@@ -34,8 +34,10 @@ def main():
     state_path, events_path = root / "gate-state.json", root / "gate-events.jsonl"
     state = read_state(state_path)
     event = {
-        "timestamp_utc": now(), "action": args.action, "task": args.task,
-        "purpose": args.purpose, "step": args.step, "reason": args.reason if args.action == "interrupt" else None,
+        "timestamp_utc": now(), "action": args.action,
+        "task": args.task or state.get("task") or "unspecified task",
+        "purpose": args.purpose or state.get("purpose") or "unspecified purpose",
+        "step": args.step, "reason": args.reason if args.action == "interrupt" else None,
         "details": args.details, "run_url": args.run_url,
         "branch": os.environ.get("GITHUB_REF_NAME", "local"),
         "sha": os.environ.get("GITHUB_SHA", "unknown"),
@@ -56,8 +58,12 @@ def main():
     elif args.action == "exit":
         if not state:
             raise SystemExit("Cannot exit: no gate state exists. Run 'enter' first.")
+        done = list(state.get("completed_steps", []))
+        if args.step and args.step not in done:
+            done.append(args.step)
         state.update({"status": "completed", "finished_at_utc": event["timestamp_utc"],
-                      "last_completed_step": args.step, "resume_from": None, "exit_details": args.details})
+                      "last_completed_step": args.step, "completed_steps": done,
+                      "resume_from": None, "exit_details": args.details})
     elif args.action == "interrupt":
         if not state:
             state = {**event, "completed_steps": []}
