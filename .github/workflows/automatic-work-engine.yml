@@ -131,8 +131,8 @@ jobs:
             git -C "$LOG_REPO" rm -rf . >/dev/null 2>&1 || true
           fi
 
-          MONTH="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["timestamp_utc"][:7])' "$OUT/state.json")"
-          for ATTEMPT in 1 2 3 4 5; do
+          MONTH="$(python -c 'import json,sys; from datetime import datetime,timezone; d=json.load(open(sys.argv[1])); ts=d.get("timestamp_utc") or d.get("finished_at_utc") or datetime.now(timezone.utc).isoformat(); print(ts[:7])' "$OUT/state.json")"
+          for ATTEMPT in $(seq 1 12); do
             if [ "$ATTEMPT" -gt 1 ] && git ls-remote --exit-code --heads origin automation-work-log >/dev/null 2>&1; then
               git fetch origin automation-work-log
               git -C "$LOG_REPO" reset --hard origin/automation-work-log
@@ -169,10 +169,11 @@ jobs:
             if git -C "$LOG_REPO" push origin HEAD:refs/heads/automation-work-log; then
               exit 0
             fi
-            echo "Ledger push raced with another run; retrying (attempt $ATTEMPT/5)."
-            sleep "$ATTEMPT"
+            echo "Ledger push raced with another run; retrying (attempt $ATTEMPT/12)."
+            RUN_JITTER=$(( ${GITHUB_RUN_ID:-0} % 5 ))
+            sleep "$((ATTEMPT * 2 + RUN_JITTER))"
           done
-          echo "Could not persist ledger after five retries."
+          echo "Could not persist ledger after twelve retries."
           exit 1
 
       - name: Upload machine-readable work record
