@@ -17,8 +17,8 @@ def test_worker_uses_bounded_conversation_history_for_all_chat_providers():
 
 
 def test_prepared_frontend_sends_prior_turns_without_current_message_as_history():
-    prep = Path("scripts/prepare_web_organ_runtime.py").read_text(encoding="utf-8")
-    assert 'history:(session.messages||[]).slice(0,-1)' in prep
+    patch = Path("scripts/manual_provider_runtime_patch.py").read_text(encoding="utf-8")
+    assert 'history:(session.messages||[]).slice(0,-1)' in patch
     assert 'm.role==="user"||m.role==="ai"' in prep
     assert 'stream_status:true' in prep
     assert "chat request shape changed" in prep
