@@ -69,3 +69,15 @@ Start by reading this file and PR #692, then inspect the latest commit on the br
 - The engine writes its permanent event ledger to a dedicated `automation-work-log` branch to avoid changing the active PR head or touching production files.
 - Initial implementation is not yet proven until the new workflow's own run and tests pass. The completed-workflow trigger starts processing other workflow results only after this workflow is present on the default branch.
 - Next: inspect the new workflow run and contract-test results on this PR; repair any failure on this branch; then verify the generated ledger branch/artifact once the workflow is eligible to run.
+
+
+## Automatic Work Engine — isolated review track
+
+- Dedicated PR: https://github.com/mosharrof0000-ux/Mosharrof/pull/693
+- Dedicated branch: `feature/automatic-work-engine-2026-10-17`
+- Durable log branch already exists: `automation-work-log`; latest ledger files are under `docs/automation/` on that branch.
+- The engine records start/finish entries, branch/SHA/run URL, push commit message and changed paths, available check results, job-level workflow results, and a next-resume instruction. Logs are kept outside the active PR branch to avoid changing its head or touching live production files.
+- A first execution exposed a Python syntax error in the finish-record fallback lists; it was diagnosed from run `39015963706` and fixed in the engine script. The resume assertion was updated to match the clearer failure message.
+- The initial ledger entry from run `39015878146` persisted successfully, but it used the earlier recorder version and did not contain the later job-level check inventory. Treat that as a smoke proof of persistence only.
+- Current acceptance state: **pending**. Latest PR checks on PR #693 are queued; do not call the corrected recorder fully green until the current-head contract tests and the engine run complete successfully and a new ledger entry is inspected.
+- Resume from PR #693's latest head, inspect the `MOSHARROF Automatic Work Engine` push run and `Mosharrof Tests` run, then inspect `automation-work-log/docs/automation/latest-state.json`. Only after all relevant checks pass should the isolated PR be considered for merge. Merging this workflow into default branch is required before its `workflow_run` trigger can record completed runs for all named workflows.
