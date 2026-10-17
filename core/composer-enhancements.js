@@ -201,5 +201,32 @@ export function initializeComposerEnhancements() {
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && editor.classList.contains("open")) closeEditor(false);
   });
+
+  // Save the submitted draft before the existing send handler clears the textarea.
+  let submittedDraft = "";
+  send.addEventListener("click", () => {
+    if (input.value.trim()) submittedDraft = input.value;
+  }, true);
+  const messages = document.getElementById("messages");
+  if (messages && typeof MutationObserver !== "undefined") {
+    const failureObserver = new MutationObserver(records => {
+      if (!submittedDraft || input.value.trim()) return;
+      const added = records.flatMap(record => Array.from(record.addedNodes))
+        .filter(node => node.nodeType === 1);
+      const failed = added.some(node =>
+        (node.matches && node.matches(".message.ai")) &&
+        node.querySelector(".response-timer.is-error")
+      );
+      if (failed) {
+        input.value = submittedDraft;
+        submittedDraft = "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.focus();
+      } else if (added.some(node => node.matches && node.matches(".message.ai") && !node.querySelector(".response-timer.is-error"))) {
+        submittedDraft = "";
+      }
+    });
+    failureObserver.observe(messages, { childList: true, subtree: true });
+  }
   syncVisibility();
 }
