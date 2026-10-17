@@ -45,6 +45,7 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
     def test_microphone_activity_uses_live_audio_level(self):
         self.assertIn("createAnalyser()", VOICE_METER)
         self.assertIn('document.addEventListener("vm", event => start(event.detail))', VOICE_METER)
+        self.assertIn('document.dispatchEvent(new CustomEvent("vm",{detail:voiceStream}))', PROVIDER_PATCH)
         self.assertIn("getByteTimeDomainData(samples)", VOICE_METER)
         self.assertIn("Math.sqrt(energy / samples.length) >= 0.025", VOICE_METER)
         self.assertIn('classList.toggle("has-voice-activity", Math.sqrt(energy / samples.length) >= 0.025)', VOICE_METER)
