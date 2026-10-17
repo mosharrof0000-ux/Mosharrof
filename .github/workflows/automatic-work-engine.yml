@@ -148,16 +148,16 @@ jobs:
             cat "$OUT/state.json" >> "$EVENTS_FILE"
             printf '\n' >> "$EVENTS_FILE"
             python - "$OUT/state.json" "$LOG_REPO/docs/automation/latest-state.json" <<'PY'
-import json, sys
-from pathlib import Path
-candidate_path, latest_path = map(Path, sys.argv[1:])
-candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
-previous = json.loads(latest_path.read_text(encoding="utf-8")) if latest_path.exists() else {}
-candidate_time = candidate.get("finished_at_utc") or candidate.get("timestamp_utc") or candidate.get("updated_at_utc") or ""
-previous_time = previous.get("finished_at_utc") or previous.get("timestamp_utc") or previous.get("updated_at_utc") or ""
-if candidate_time >= previous_time:
-    latest_path.write_text(candidate_path.read_text(encoding="utf-8"), encoding="utf-8")
-PY
+            import json, sys
+            from pathlib import Path
+            candidate_path, latest_path = map(Path, sys.argv[1:])
+            candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+            previous = json.loads(latest_path.read_text(encoding="utf-8")) if latest_path.exists() else {}
+            candidate_time = candidate.get("finished_at_utc") or candidate.get("timestamp_utc") or candidate.get("updated_at_utc") or ""
+            previous_time = previous.get("finished_at_utc") or previous.get("timestamp_utc") or previous.get("updated_at_utc") or ""
+            if candidate_time >= previous_time:
+                latest_path.write_text(candidate_path.read_text(encoding="utf-8"), encoding="utf-8")
+            PY
             cat > "$LOG_REPO/docs/automation/README.md" <<'EOF'
           # Automatic Work Engine Ledger
 
