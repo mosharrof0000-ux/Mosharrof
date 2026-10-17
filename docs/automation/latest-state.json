@@ -1,140 +1,27 @@
 {
-  "timestamp_utc": "2026-10-17T08:46:26+00:00",
+  "timestamp_utc": "2026-10-17T08:50:11+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018231168",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018231168",
+  "run_id": "39018389041",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018389041",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "main",
-  "sha": "3eb4144ac7a0ce822860622cff42c2c561670387",
+  "branch": "fix/work-engine-ledger-contention-2026-10-17",
+  "sha": "bb63b979f75c235bc9e2a8ec1771973431340918",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = success",
-    "Source commit: 3eb4144ac7a0ce822860622cff42c2c561670387",
-    "Job: test — completed/success",
-    "Job: deploy — completed/success"
+    "Completed workflow result: Mosharrof Tests = success",
+    "Source commit: bb63b979f75c235bc9e2a8ec1771973431340918"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
-  "source_workflow": "Deploy Mosharrof Pages",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Tests",
   "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pip install -r requirements.txt",
-          "conclusion": "success"
-        },
-        {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pytest -q",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify Pages artifact",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare candidate organ runtime assets",
-          "conclusion": "success"
-        },
-        {
-          "name": "Install Chromium for candidate runtime smoke test",
-          "conclusion": "success"
-        },
-        {
-          "name": "Start candidate Pages server",
-          "conclusion": "success"
-        },
-        {
-          "name": "Test candidate organ runtime in Chromium",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    },
-    {
-      "job": "deploy",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 scripts/prepare_web_organ_runtime.py",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/configure-pages@v5",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/upload-pages-artifact@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Deploy to GitHub Pages",
-          "conclusion": "success"
-        },
-        {
-          "name": "Install Chromium for Live runtime health check",
-          "conclusion": "success"
-        },
-        {
-          "name": "Live deployment health check",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T08:49:49+00:00",
+  "finished_at_utc": "2026-10-17T08:50:11+00:00",
   "outcome": "failure"
 }
