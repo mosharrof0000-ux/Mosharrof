@@ -1,29 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T11:09:24+00:00",
+  "timestamp_utc": "2026-10-17T11:09:35+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39027410001",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027410001",
-  "source_run_id": "39027366777",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027366777",
+  "run_id": "39027424926",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027424926",
+  "source_run_id": "39027390257",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027390257",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/smart-visual-intelligence-engine-2026-10-17",
-  "sha": "8626a94fd656050babcfa34da1bea89f26bcc512",
+  "sha": "3567bc5e277f825378d4849d86c32f6620d4081b",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
-    "Source commit: 8626a94fd656050babcfa34da1bea89f26bcc512"
+    "Completed workflow result: Mosharrof CI = success",
+    "Source commit: 3567bc5e277f825378d4849d86c32f6620d4081b"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_workflow": "Mosharrof CI",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T11:09:24+00:00",
+  "finished_at_utc": "2026-10-17T11:09:35+00:00",
   "outcome": "failure"
 }
