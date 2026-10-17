@@ -1,44 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T11:38:26+00:00",
+  "timestamp_utc": "2026-10-17T11:38:52+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028786174",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028786174",
-  "source_run_id": "39028753568",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028753568",
+  "run_id": "39028567855",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028567855",
+  "source_run_id": "39028485066",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028485066",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "e68598860c2c68a4f6f216e2d7b077ca2531b234",
+  "sha": "d0e389d62b2d02f677f4a53ce19f1e55cc871b42",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
-    "Source commit: e68598860c2c68a4f6f216e2d7b077ca2531b234",
-    "Job: test — completed/cancelled",
-    "Job: deploy — completed/cancelled"
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: d0e389d62b2d02f677f4a53ce19f1e55cc871b42"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "cancelled",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Tests",
+  "source_conclusion": "failure",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    },
-    {
-      "job": "deploy",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:38:31+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:38:52+00:00",
+  "outcome": "failure"
 }
