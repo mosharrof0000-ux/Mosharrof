@@ -20261,3 +20261,94 @@
   "outcome": "success"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:20:33+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39028278820",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028278820",
+  "source_run_id": "39028238829",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238829",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "bf8ab44bc1bafb3fce655737c4678ac530e2041b",
+  "checked": [
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = failure",
+    "Source commit: bf8ab44bc1bafb3fce655737c4678ac530e2041b",
+    "Job: interaction-qa — completed/failure"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume at failed workflow/job: interaction-qa. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "interaction-qa",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout candidate",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Playwright with transient-network retries",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare candidate Pages assets",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Start candidate Pages server",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Select safe inspection target",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run safe mobile interaction inspection",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run one real live chat round-trip",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload inspection evidence",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Python",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout candidate",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:20:38+00:00",
+  "outcome": "success"
+}
+

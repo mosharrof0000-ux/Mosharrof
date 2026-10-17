@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T11:19:27+00:00",
+  "timestamp_utc": "2026-10-17T11:20:33+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028247840",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028247840",
-  "source_run_id": "39028238748",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238748",
+  "run_id": "39028278820",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028278820",
+  "source_run_id": "39028238829",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238829",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "bf8ab44bc1bafb3fce655737c4678ac530e2041b",
   "checked": [
-    "Completed workflow result: Mosharrof Verification Gate = failure",
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = failure",
     "Source commit: bf8ab44bc1bafb3fce655737c4678ac530e2041b",
-    "Job: Verify before promotion — completed/failure"
+    "Job: interaction-qa — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: Verify before promotion. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof Verification Gate",
+  "next_step": "Resume at failed workflow/job: interaction-qa. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Verify before promotion",
+      "job": "interaction-qa",
       "status": "completed",
       "conclusion": "failure",
       "steps": [
@@ -33,47 +33,47 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout proposed version",
+          "name": "Checkout candidate",
           "conclusion": "success"
         },
         {
-          "name": "Verify Pages entrypoint",
+          "name": "Set up Python",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Playwright with transient-network retries",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare candidate Pages assets",
           "conclusion": "failure"
         },
         {
-          "name": "Enforce file and folder size budgets",
+          "name": "Start candidate Pages server",
           "conclusion": "skipped"
         },
         {
-          "name": "Run project tests",
+          "name": "Select safe inspection target",
           "conclusion": "skipped"
         },
         {
-          "name": "Start browser test server",
+          "name": "Run safe mobile interaction inspection",
           "conclusion": "skipped"
         },
         {
-          "name": "Install Playwright and Chromium",
+          "name": "Run one real live chat round-trip",
           "conclusion": "skipped"
         },
         {
-          "name": "Capture mobile and desktop screenshots",
+          "name": "Upload inspection evidence",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Set up Python",
           "conclusion": "skipped"
         },
         {
-          "name": "Verify screenshots are valid",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload visual evidence",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Promotion decision",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Checkout proposed version",
+          "name": "Post Checkout candidate",
           "conclusion": "success"
         },
         {
@@ -85,6 +85,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:20:19+00:00",
+  "finished_at_utc": "2026-10-17T11:20:38+00:00",
   "outcome": "success"
 }
