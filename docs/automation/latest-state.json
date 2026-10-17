@@ -1,25 +1,25 @@
 {
-  "timestamp_utc": "2026-10-17T08:26:17+00:00",
+  "timestamp_utc": "2026-10-17T08:26:24+00:00",
   "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39017347064",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39017347064",
+  "run_id": "39017354059",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39017354059",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/work-gate-interruption-recovery-2026-10-17",
-  "sha": "d7cd115746d34ba1feeb3a55c95bab11da87e4a7",
+  "sha": "6e1263074aa1278c64dced4b2d4e9c01bec07acf",
   "checked": [
-    "Push commit: feat(automation): gate work with durable checkpoints and recovery",
-    "Commit SHA: d7cd115746d34ba1feeb3a55c95bab11da87e4a7",
+    "Push commit: fix(automation): reuse gate ledger worktree across checkpoints",
+    "Commit SHA: 6e1263074aa1278c64dced4b2d4e9c01bec07acf",
     "Check: validate — completed/skipped",
-    "Check: record — in_progress/pending",
-    "Check: test — in_progress/pending"
+    "Check: test — in_progress/pending",
+    "Check: record — in_progress/pending"
   ],
   "planned": [
     "Record the commit message, changed paths and available checks.",
     "Run the work-engine contract tests and validate the run metadata.",
     "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "next_step": "Wait for pending checks (test, record); then inspect their results and artifacts.",
   "source_workflow": null,
   "source_conclusion": null,
   "changed_files": [],
@@ -31,20 +31,20 @@
       "steps": []
     },
     {
-      "job": "record",
+      "job": "test",
       "status": "in_progress",
       "conclusion": null,
       "steps": []
     },
     {
-      "job": "test",
+      "job": "record",
       "status": "in_progress",
       "conclusion": null,
       "steps": []
     }
   ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T08:26:18+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T08:26:31+00:00",
+  "outcome": "success"
 }
