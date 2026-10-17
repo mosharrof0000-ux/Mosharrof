@@ -1,70 +1,157 @@
 {
-  "timestamp_utc": "2026-10-17T11:19:37+00:00",
-  "event_name": "workflow_run",
+  "timestamp_utc": "2026-10-17T11:20:01+00:00",
+  "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028255854",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028255854",
-  "source_run_id": "39028238780",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238780",
+  "run_id": "39028268695",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028268695",
+  "source_run_id": null,
+  "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "bf8ab44bc1bafb3fce655737c4678ac530e2041b",
+  "sha": "8d10ccc672e1ffe0bac084fbe24e019c6b59bfe0",
   "checked": [
-    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
-    "Source commit: bf8ab44bc1bafb3fce655737c4678ac530e2041b",
-    "Job: verify-ecosystem — completed/failure"
+    "Push commit: fix(runtime): preserve manual provider settings during history injection",
+    "Commit SHA: 8d10ccc672e1ffe0bac084fbe24e019c6b59bfe0",
+    "Check: interaction-qa — queued/pending",
+    "Check: Redirect rules - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: Header rules - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: Pages changed - bucolic-mooncake-c83372 — completed/neutral",
+    "Check: Leave the repo clean — completed/success",
+    "Check: build-apk — queued/pending",
+    "Check: Mandatory Organ Isolation — queued/pending",
+    "Check: Component awareness heartbeat — queued/pending",
+    "Check: test — in_progress/pending",
+    "Check: visual-qa — queued/pending",
+    "Check: verify-ecosystem — queued/pending",
+    "Check: Verify before promotion — queued/pending",
+    "Check: test — queued/pending",
+    "Check: browser-memory-roundtrip — in_progress/pending",
+    "Check: test — queued/pending",
+    "Check: validate — completed/skipped",
+    "Check: record — in_progress/pending",
+    "Check: test — completed/failure"
   ],
   "planned": [
-    "Record the completed workflow result, job-level checks and evidence URL.",
-    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Resume at failed workflow/job: verify-ecosystem. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof AI Ecosystem Verification",
-  "source_conclusion": "failure",
+  "next_step": "Resume at failed check: test. Open its run logs and repair on a safe feature branch.",
+  "source_workflow": null,
+  "source_conclusion": null,
   "changed_files": [],
   "check_results": [
     {
+      "job": "interaction-qa",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Redirect rules - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "Header rules - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "Pages changed - bucolic-mooncake-c83372",
+      "status": "completed",
+      "conclusion": "neutral",
+      "steps": []
+    },
+    {
+      "job": "Leave the repo clean",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": []
+    },
+    {
+      "job": "build-apk",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Mandatory Organ Isolation",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Component awareness heartbeat",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "visual-qa",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
       "job": "verify-ecosystem",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Verify before promotion",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "browser-memory-roundtrip",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "validate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "job": "record",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
       "status": "completed",
       "conclusion": "failure",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout Code",
-          "conclusion": "success"
-        },
-        {
-          "name": "Set up Python 3.12",
-          "conclusion": "success"
-        },
-        {
-          "name": "Install test dependencies",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run Integration Tests",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Post Set up Python 3.12",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Checkout Code",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
+      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:19:42+00:00",
+  "finished_at_utc": "2026-10-17T11:20:07+00:00",
   "outcome": "success"
 }
