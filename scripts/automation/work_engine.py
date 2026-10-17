@@ -40,6 +40,20 @@ def github_api_json(url: str, token: str) -> dict[str, Any] | None:
         return None
 
 
+def github_api_json(url: str, token: str) -> dict[str, Any] | None:
+    request = urllib.request.Request(
+        url,
+        headers={"Accept": "application/vnd.github+json", "Authorization": f"Bearer {token}",
+                 "X-GitHub-Api-Version": "2022-11-28"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=8) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            return payload if isinstance(payload, dict) else None
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError):
+        return None
+
+
 def event_details(event_name: str, event: dict[str, Any], env: dict[str, str]) -> dict[str, Any]:
     workflow_run = event.get("workflow_run") or {}
     pr = event.get("pull_request") or {}
@@ -186,6 +200,8 @@ def main() -> int:
             *[f"  - {item}" for item in details["checked"]],
             "- Planned work:",
             *[f"  - {item}" for item in details["planned"]],
+            "- Detected changes/checks:",
+            *[f"  - {item}" for item in details.get("checked", [])],
             "- Detected changes/checks:",
             *[f"  - {item}" for item in details.get("checked", [])],
             "- Current state: in progress; no success claim is made at start.",
