@@ -721,9 +721,8 @@ header.top{
     else if(event.stage==="failed")route.textContent=provider+" ব্যর্থ · বিকল্প খোঁজা হচ্ছে";
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
-  function getChatProviderPreference(){var value="auto";try{value=localStorage.getItem("mosharrof_chat_provider_v1")||"auto";}catch(e){}return ["auto","gemini","cloudflare-workers-ai","groq","openrouter"].includes(value)?value:"auto";}
   function coreReply(t,image){
-    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,provider:getChatProviderPreference(),stream_status:true})})
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
       .then(function(res){
         function finish(data,status){
           var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
