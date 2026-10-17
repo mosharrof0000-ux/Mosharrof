@@ -81,33 +81,38 @@ function processVoiceText(raw) {
 
 /* ── UI helpers ── */
 function toast(msg, ms = 2200) {
+  if (!toastEl) return;
   toastEl.textContent = msg;
   toastEl.classList.add("show");
   setTimeout(() => toastEl.classList.remove("show"), ms);
 }
 
 function showVoiceStatus(text) {
+  if (!voiceStatus) return;
   voiceStatus.textContent = text;
   voiceStatus.classList.add("show");
 }
 
 function hideVoiceStatus() {
+  if (!voiceStatus) return;
   voiceStatus.classList.remove("show");
 }
 
 function autoResize() {
+  if (!inputEl) return;
   inputEl.style.height = "auto";
   inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + "px";
 }
 
 function scrollToBottom() {
   requestAnimationFrame(() => {
-    chatScroll.scrollTop = chatScroll.scrollHeight;
+    if (chatScroll) chatScroll.scrollTop = chatScroll.scrollHeight;
   });
 }
 
 /* ── Message rendering (chat entity surface) ── */
 function renderMessage(role, text, label) {
+  if (!messagesEl) return null;
   const node = document.createElement("div");
   node.className = `message ${role}`;
   const lbl = document.createElement("span");
@@ -121,6 +126,7 @@ function renderMessage(role, text, label) {
 }
 
 function renderTyping() {
+  if (!messagesEl) return null;
   const node = document.createElement("div");
   node.className = "message ai typing";
   node.id = "typing-indicator";
@@ -160,11 +166,12 @@ async function coreRespond(userText) {
 let busy = false;
 
 async function sendMessage() {
+  if (!inputEl) return;
   const raw = inputEl.value.trim();
   if (!raw || busy) return;
 
   busy = true;
-  sendBtn.disabled = true;
+  if (sendBtn) sendBtn.disabled = true;
 
   const processed = correctContext(raw);
   const text = applySmartPunctuation(processed.text);
@@ -189,28 +196,36 @@ async function sendMessage() {
   }
 
   busy = false;
-  sendBtn.disabled = false;
+  if (sendBtn) sendBtn.disabled = false;
   inputEl.focus();
 }
 
 /* ── Drawer control ── */
 function openDrawer(side) {
-  scrim.classList.add("open");
+  if (scrim) scrim.classList.add("open");
   if (side === "left") {
-    drawerLeft.classList.add("open");
-    drawerLeft.setAttribute("aria-hidden", "false");
+    if (drawerLeft) {
+      drawerLeft.classList.add("open");
+      drawerLeft.setAttribute("aria-hidden", "false");
+    }
   } else {
-    drawerRight.classList.add("open");
-    drawerRight.setAttribute("aria-hidden", "false");
+    if (drawerRight) {
+      drawerRight.classList.add("open");
+      drawerRight.setAttribute("aria-hidden", "false");
+    }
   }
 }
 
 function closeDrawers() {
-  scrim.classList.remove("open");
-  drawerLeft.classList.remove("open");
-  drawerRight.classList.remove("open");
-  drawerLeft.setAttribute("aria-hidden", "true");
-  drawerRight.setAttribute("aria-hidden", "true");
+  if (scrim) scrim.classList.remove("open");
+  if (drawerLeft) {
+    drawerLeft.classList.remove("open");
+    drawerLeft.setAttribute("aria-hidden", "true");
+  }
+  if (drawerRight) {
+    drawerRight.classList.remove("open");
+    drawerRight.setAttribute("aria-hidden", "true");
+  }
 }
 
 /* ── Voice recognition ── */
@@ -234,8 +249,10 @@ function initVoice() {
       transcript += event.results[i][0].transcript;
     }
     const processed = processVoiceText(transcript);
-    inputEl.value = processed.text;
-    autoResize();
+    if (inputEl) {
+      inputEl.value = processed.text;
+      autoResize();
+    }
     showVoiceStatus(processed.corrections.length ? "Context corrected" : "Voice text ready");
   };
   recognition.onerror = (e) => {
@@ -243,7 +260,7 @@ function initVoice() {
     setTimeout(hideVoiceStatus, 2000);
   };
   recognition.onend = () => {
-    if (voiceStatus.textContent === "Listening…") hideVoiceStatus();
+    if (voiceStatus && voiceStatus.textContent === "Listening…") hideVoiceStatus();
     else setTimeout(hideVoiceStatus, 1500);
   };
 }
@@ -257,33 +274,37 @@ function startVoice() {
 }
 
 /* ── Events ── */
-sendBtn.addEventListener("click", sendMessage);
-inputEl.addEventListener("keydown", (e) => {
+sendBtn?.addEventListener("click", sendMessage);
+inputEl?.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
   }
 });
-inputEl.addEventListener("input", autoResize);
+inputEl?.addEventListener("input", autoResize);
 
-plusBtn.addEventListener("click", startVoice);
+plusBtn?.addEventListener("click", startVoice);
 
-leftBtn.addEventListener("click", () => openDrawer("left"));
-rightBtn.addEventListener("click", () => openDrawer("right"));
-closeLeft.addEventListener("click", closeDrawers);
-closeRight.addEventListener("click", closeDrawers);
-scrim.addEventListener("click", closeDrawers);
+leftBtn?.addEventListener("click", () => openDrawer("left"));
+rightBtn?.addEventListener("click", () => openDrawer("right"));
+closeLeft?.addEventListener("click", closeDrawers);
+closeRight?.addEventListener("click", closeDrawers);
+scrim?.addEventListener("click", closeDrawers);
 
 $("#btn-new-chat")?.addEventListener("click", () => {
-  messagesEl.innerHTML = "";
-  renderMessage("ai", "নতুন কথোপকথন শুরু হয়েছে। আমি কীভাবে সাহায্য করতে পারি?");
+  if (messagesEl) {
+    messagesEl.innerHTML = "";
+    renderMessage("ai", "নতুন কথোপকথন শুরু হয়েছে। আমি কীভাবে সাহায্য করতে পারি?");
+  }
   closeDrawers();
   toast("New chat started");
 });
 
 $("#btn-clear")?.addEventListener("click", () => {
-  messagesEl.innerHTML = "";
-  renderMessage("ai", "মেসেজ মুছে ফেলা হয়েছে। আমি কীভাবে সাহায্য করতে পারি?");
+  if (messagesEl) {
+    messagesEl.innerHTML = "";
+    renderMessage("ai", "মেসেজ মুছে ফেলা হয়েছে। আমি কীভাবে সাহায্য করতে পারি?");
+  }
   closeDrawers();
   toast("Messages cleared");
 });
@@ -307,7 +328,7 @@ document.querySelectorAll("#nav-left button").forEach(btn => {
 /* ── Boot ── */
 initVoice();
 autoResize();
-inputEl.focus();
+inputEl?.focus();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});

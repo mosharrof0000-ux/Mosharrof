@@ -6,13 +6,13 @@ from src.core.policy_engine import PolicyEngine
 
 
 def test_manifest_and_registry_are_machine_readable():
-    with open("PROJECT_MANIFEST.json", encoding="utf-8") as handle:
+    with open("config/project_manifest.json", encoding="utf-8") as handle:
         manifest = json.load(handle)
-    with open("docs/ENTITY_REGISTRY.json", encoding="utf-8") as handle:
+    with open("config/entity_registry.json", encoding="utf-8") as handle:
         registry = json.load(handle)
 
-    assert manifest["project"]["name"] == "Mosharrof"
-    assert manifest["architecture"]["delete_policy"] == "permanently-blocked"
+    assert manifest["name"] == "Mosharrof"
+    assert manifest["immutable_safety_rules"]["delete"] is False
     assert registry["entities"]
 
 
