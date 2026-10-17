@@ -12,6 +12,7 @@ VOICE_METER = (ROOT / "core" / "composer-voice-meter.js").read_text(encoding="ut
 MANUAL_PROVIDER = (ROOT / "core" / "manual-provider-controls.js").read_text(encoding="utf-8")
 PROVIDER_PATCH = (ROOT / "scripts" / "manual_provider_runtime_patch.py").read_text(encoding="utf-8")
 PREP_SCRIPT = (ROOT / "scripts" / "prepare_web_organ_runtime.py").read_text(encoding="utf-8")
+LIVE_INSPECTOR = (ROOT / "scripts" / "live_screen_inspector.py").read_text(encoding="utf-8")
 
 
 class ComposerVoiceInteractionContractTests(unittest.TestCase):
@@ -21,6 +22,12 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn('inputRow.appendChild(input)', LAYOUT)
         self.assertIn('existingRow.classList.add("composer-actions-row")', LAYOUT)
         self.assertIn('#composer .composer-input-row .input', LAYOUT)
+
+    def test_live_inspector_checks_composer_space_and_server_menu(self):
+        self.assertIn('composer_server_button_visible', LIVE_INSPECTOR)
+        self.assertIn('composer_input_uses_full_width_and_readable_height', LIVE_INSPECTOR)
+        self.assertIn('composer_server_button_opens_provider_menu', LIVE_INSPECTOR)
+        self.assertIn('composer_server_menu_closes_after_selection', LIVE_INSPECTOR)
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
         # Exercise the deploy-time transform itself; pytest suites may prepare web/index.html first.
