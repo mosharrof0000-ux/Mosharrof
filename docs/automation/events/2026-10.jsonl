@@ -21148,3 +21148,74 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:19:51+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39028257455",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028257455",
+  "source_run_id": "39028238774",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238774",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "bf8ab44bc1bafb3fce655737c4678ac530e2041b",
+  "checked": [
+    "Completed workflow result: Mosharrof CI = failure",
+    "Source commit: bf8ab44bc1bafb3fce655737c4678ac530e2041b",
+    "Job: test — completed/failure"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof CI",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:22:30+00:00",
+  "outcome": "failure"
+}
+
