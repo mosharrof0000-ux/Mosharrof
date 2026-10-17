@@ -240,9 +240,9 @@ def main() -> int:
             "- What was checked/detected:",
             *[f"  - {item}" for item in result.get("checked", [])],
             "- Changed paths:",
-            *[f"  - {item}" for item in result.get("changed_files", [])] or ["  - No changed-path list was provided by this event."],
+            *([f"  - {item}" for item in result.get("changed_files", [])] or ["  - No changed-path list was provided by this event."]),
             "- Job/check results:",
-            *[f"  - {item.get('job')}: {item.get('status')}/{item.get('conclusion') or 'pending'}" for item in result.get("check_results", [])] or ["  - No API check details were available for this event."],
+            *([f"  - {item.get('job')}: {item.get('status')}/{item.get('conclusion') or 'pending'}" for item in result.get("check_results", [])] or ["  - No API check details were available for this event."]),
             f"- Next resume point: {result['next_step']}",
             "",
         ]
