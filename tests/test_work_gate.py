@@ -26,7 +26,10 @@ class WorkGateTests(unittest.TestCase):
             state = json.loads((root / "gate-state.json").read_text())
             self.assertEqual(state["status"], "in_progress")
             self.assertEqual(state["resume_from"], "send test message")
-            self.assertEqual(len((root / "gate-events.jsonl").read_text().splitlines()), 4)
+            event_rows = [json.loads(line) for line in (root / "gate-events.jsonl").read_text().splitlines()]
+            self.assertEqual(len(event_rows), 4)
+            self.assertTrue(all(row["task"] == "QA" for row in event_rows))
+            self.assertTrue(all(row["purpose"] == "test live flow" for row in event_rows))
 
     def test_checkpoint_requires_entry(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -42,6 +45,7 @@ class WorkGateTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             state = json.loads((root / "gate-state.json").read_text())
             self.assertEqual(state["status"], "completed")
+            self.assertIn("all checks", state["completed_steps"])
             self.assertIsNone(state["resume_from"])
 
 if __name__ == "__main__":
