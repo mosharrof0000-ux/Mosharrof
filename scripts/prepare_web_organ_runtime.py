@@ -30,6 +30,7 @@ def main() -> int:
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
+        "core/composer-layout.js": "web/composer-layout.js",
         "core/composer-voice-meter.js": "web/composer-voice-meter.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
         "core/device-control.js": "web/device-control.js",
@@ -110,6 +111,12 @@ def main() -> int:
 
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
+    layout_source = ROOT / "core/composer-layout.js"
+    for destination in ("web/composer-layout.js", "web/core/composer-layout.js"):
+        target = ROOT / destination
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(layout_source, target)
+
     composer_source = ROOT / "core/composer-enhancements.js"
     composer_runtime = ROOT / "web/core/composer-enhancements.js"
     composer_runtime.parent.mkdir(parents=True, exist_ok=True)
