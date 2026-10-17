@@ -1,29 +1,143 @@
 {
-  "timestamp_utc": "2026-10-17T11:22:01+00:00",
-  "event_name": "workflow_run",
+  "timestamp_utc": "2026-10-17T11:22:06+00:00",
+  "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028252888",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028252888",
-  "source_run_id": "39028238790",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238790",
+  "run_id": "39028395454",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028395454",
+  "source_run_id": null,
+  "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "bf8ab44bc1bafb3fce655737c4678ac530e2041b",
+  "sha": "35826462b6bcc3d56f51d143b92a85c0f3a11590",
   "checked": [
-    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = failure",
-    "Source commit: bf8ab44bc1bafb3fce655737c4678ac530e2041b"
+    "Push commit: feat(runtime): inject manual controls as an isolated organ",
+    "Commit SHA: 35826462b6bcc3d56f51d143b92a85c0f3a11590",
+    "Check: deploy — completed/cancelled",
+    "Check: Leave the repo clean — completed/cancelled",
+    "Check: Mandatory Organ Isolation — completed/cancelled",
+    "Check: test — queued/pending",
+    "Check: browser-memory-roundtrip — completed/cancelled",
+    "Check: Verify before promotion — completed/cancelled",
+    "Check: test — completed/cancelled",
+    "Check: interaction-qa — queued/pending",
+    "Check: verify-ecosystem — in_progress/pending",
+    "Check: build-apk — queued/pending",
+    "Check: Component awareness heartbeat — queued/pending",
+    "Check: visual-qa — queued/pending",
+    "Check: test — queued/pending",
+    "Check: validate — completed/skipped",
+    "Check: record — in_progress/pending",
+    "Check: test — queued/pending"
   ],
   "planned": [
-    "Record the completed workflow result, job-level checks and evidence URL.",
-    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
-  "source_conclusion": "failure",
+  "next_step": "Resume at failed check: deploy. Open its run logs and repair on a safe feature branch.",
+  "source_workflow": null,
+  "source_conclusion": null,
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "deploy",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "Leave the repo clean",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "Mandatory Organ Isolation",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "browser-memory-roundtrip",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "Verify before promotion",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    },
+    {
+      "job": "interaction-qa",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "verify-ecosystem",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "build-apk",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "Component awareness heartbeat",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "visual-qa",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "validate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
+    },
+    {
+      "job": "record",
+      "status": "in_progress",
+      "conclusion": null,
+      "steps": []
+    },
+    {
+      "job": "test",
+      "status": "queued",
+      "conclusion": null,
+      "steps": []
+    }
+  ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T11:22:01+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T11:22:11+00:00",
+  "outcome": "success"
 }
