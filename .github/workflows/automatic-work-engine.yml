@@ -160,7 +160,7 @@ jobs:
             if event_time(candidate) >= event_time(previous):
                 latest_path.write_text(candidate_path.read_text(encoding="utf-8"), encoding="utf-8")
             PY
-                        cat > "$LOG_REPO/docs/automation/README.md" <<'EOF'
+          cat > "$LOG_REPO/docs/automation/README.md" <<'EOF'
           # Automatic Work Engine Ledger
 
           The automation-work-log branch is a dedicated operational ledger. It is intentionally separate from main and feature branches so automatic status recording never changes the active PR head or deploys the live site.
