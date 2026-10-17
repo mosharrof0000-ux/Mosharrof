@@ -77,7 +77,7 @@ export function initializeComposerEnhancements() {
       "#composerVoiceBtn.has-voice-activity svg{stroke:#4ade80;filter:drop-shadow(0 0 2px rgba(74,222,128,.35));transform-origin:50% 50%;animation:voice-mic-bob .24s ease-in-out infinite alternate}",
       "#composerVoiceBtn.has-voice-activity{background:#080808;border-color:rgba(255,255,255,.16);box-shadow:none}",
       "@media(max-width:480px){#composer{left:10px;right:10px;padding:8px 9px}#composer .composer-input-row .input{padding-left:4px;padding-right:4px}}"
-    ].join("\\n");
+    ].join("\n");
     document.head.appendChild(layoutStyle);
   }
 
