@@ -62,6 +62,19 @@ class WorkEngineTests(unittest.TestCase):
             self.assertIn("FAILURE", log)
             self.assertIn("FINISHED", summary.read_text(encoding="utf-8"))
 
+    def test_finish_without_start_creates_recovery_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            event = root / "event.json"
+            event.write_text(json.dumps({"head_commit": {"message": "start failed"}}), encoding="utf-8")
+            out = root / "out"
+            summary = root / "summary.md"
+            self.run_engine("finish", out, event, summary, status="failure")
+            state = json.loads((out / "state.json").read_text(encoding="utf-8"))
+            self.assertTrue(state.get("timestamp_utc"))
+            self.assertEqual(state["phase"], "FINISHED")
+            self.assertEqual(state["outcome"], "failure")
+            self.assertIn("Resume from the last durable gate checkpoint", state["next_step"])
 
 if __name__ == "__main__":
     unittest.main()
