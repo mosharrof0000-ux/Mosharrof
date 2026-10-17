@@ -1,27 +1,100 @@
 {
-  "timestamp_utc": "2026-10-17T08:57:56+00:00",
+  "timestamp_utc": "2026-10-17T08:58:03+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018988599",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018988599",
+  "run_id": "39018993839",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018993839",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/work-engine-ledger-contention-v2-2026-10-17",
-  "sha": "cd44626749cf7a05c75c810f58f0844c0c20c2fe",
+  "sha": "e7cdc646a46348ea30b213224b29dcaf94833419",
   "checked": [
-    "Completed workflow result: Mosharrof Tests = success",
-    "Source commit: cd44626749cf7a05c75c810f58f0844c0c20c2fe"
+    "Completed workflow result: Build MOSHARROF Android APK = success",
+    "Source commit: e7cdc646a46348ea30b213224b29dcaf94833419",
+    "Job: build-apk — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
-  "source_workflow": "Mosharrof Tests",
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "source_workflow": "Build MOSHARROF Android APK",
   "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [],
+  "check_results": [
+    {
+      "job": "build-apk",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout MOSHARROF",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Node",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify edge-to-edge web contract",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare Android full-screen voice manager",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Android agent contract suite",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build debug APK",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify APK",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload APK artifact",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish GitHub Release",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Node",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout MOSHARROF",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
   "phase": "FINISHED",
-  "status": "failure",
-  "finished_at_utc": "2026-10-17T08:57:56+00:00",
-  "outcome": "failure"
+  "status": "success",
+  "finished_at_utc": "2026-10-17T08:58:08+00:00",
+  "outcome": "success"
 }
