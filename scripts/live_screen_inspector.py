@@ -273,6 +273,11 @@ async def main():
             expand = page.locator("#composerExpandBtn")
             server_count = await page.locator("#composerServerBtn").count()
             record("composer_server_pill_absent", server_count == 0, f"server button count={server_count}")
+            stop_button = page.locator("#stopBtn")
+            record("composer_stop_hidden_when_idle", not await stop_button.is_visible(), "stop appears only during active generation")
+            video_button = page.locator("#videoGenerationBtn")
+            video_parent = await video_button.evaluate("(el) => el.parentElement && el.parentElement.id")
+            record("composer_video_tool_is_inside_plus_menu", video_parent == "composerToolsMenu", f"parent={video_parent}")
             dimensions = await page.locator("#composer .composer-input-row").evaluate(
                 """row => {
                   const input = row.querySelector('#input');
