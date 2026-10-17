@@ -20,7 +20,10 @@ export function initializeComposerLayout(input, composer, send) {
     style.textContent = [
       "#composer{display:flex;flex-direction:column;gap:7px}",
       "#composer .composer-input-row{display:flex;align-items:stretch;width:100%;min-width:0}",
-      "#composer .composer-input-row .input{display:block;width:100%;flex:1;min-width:0;min-height:40px;max-height:min(44dvh,360px);padding:8px 6px;line-height:1.5;overflow-y:auto;overscroll-behavior:contain}",
+      "#composer .composer-input-row{flex:0 0 100%;box-sizing:border-box}",
+      "#composer .composer-input-row .input{display:block;box-sizing:border-box;width:100%;flex:1 1 100%;min-width:0;min-height:88px!important;height:88px;max-height:min(44dvh,360px);padding:12px 8px;line-height:1.5;overflow-y:auto;overscroll-behavior:contain}",
+      "#composer .composer-actions-row{width:100%;box-sizing:border-box}",
+      "#composerServerBtn{position:relative;flex:none}",
       "#composer .composer-actions-row{display:flex;align-items:center;gap:6px;min-height:36px}",
       "#composerTools{margin-right:auto}",
       "#composerVoiceBtn.is-listening{background:#080808;border-color:rgba(255,255,255,.16);color:#f2f2f2;box-shadow:none}",

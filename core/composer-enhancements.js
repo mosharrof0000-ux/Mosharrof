@@ -45,6 +45,21 @@ export function initializeComposerEnhancements() {
   expand.setAttribute("aria-controls", "mosharrofExpandEditor");
   expand.setAttribute("aria-expanded", "false");
   expand.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8h8v8H8z"/></svg>';
+  // Add a visible server/model selector in the composer action row.
+  // Provider selection must not depend on long-pressing the Send button.
+  let serverButton = document.getElementById("composerServerBtn");
+  if (!serverButton) {
+    serverButton = document.createElement("button");
+    serverButton.className = "composer-action";
+    serverButton.id = "composerServerBtn";
+    serverButton.type = "button";
+    serverButton.setAttribute("aria-label", "সার্ভার ও মডেল নির্বাচন");
+    serverButton.title = "সার্ভার / মডেল নির্বাচন";
+    serverButton.setAttribute("aria-haspopup", "menu");
+    serverButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01M11 7h6M11 17h6"/></svg>';
+    const voice = document.getElementById("composerVoiceBtn");
+    send.parentNode.insertBefore(serverButton, voice || document.getElementById("stopBtn") || send);
+  }
   // Preserve the established live composer order: expand action before the stop action.
   send.parentNode.insertBefore(expand, document.getElementById("stopBtn") || send);
 
