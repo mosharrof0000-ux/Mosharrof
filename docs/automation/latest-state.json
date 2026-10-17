@@ -1,30 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T12:25:07+00:00",
+  "timestamp_utc": "2026-10-17T12:25:25+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39032016030",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39032016030",
-  "source_run_id": "39031911680",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39031911680",
+  "run_id": "39032291340",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39032291340",
+  "source_run_id": "39032246961",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39032246961",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "fix/serialize-work-engine-ledger-writers-2026-10-17",
-  "sha": "8d68e10ad556dabfaa1d7957f36a8d2b5e5d67fc",
+  "branch": "fix/limit-work-engine-trigger-storm-2026-10-17",
+  "sha": "0fb6c93b8b4185b0be4aea97b66a1fa262707a35",
   "checked": [
-    "Completed workflow result: Mosharrof Verification Gate = success",
-    "Source commit: 8d68e10ad556dabfaa1d7957f36a8d2b5e5d67fc",
-    "Job: Verify before promotion — completed/success"
+    "Completed workflow result: Mosharrof Tests = success",
+    "Source commit: 0fb6c93b8b4185b0be4aea97b66a1fa262707a35",
+    "Job: test — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Verification Gate",
+  "source_workflow": "Mosharrof Tests",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Verify before promotion",
+      "job": "test",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -33,47 +33,47 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout proposed version",
+          "name": "Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
-          "name": "Verify Pages entrypoint",
+          "name": "Verify image engine prompt parsing",
           "conclusion": "success"
         },
         {
-          "name": "Enforce file and folder size budgets",
+          "name": "Test personal memory engine",
           "conclusion": "success"
         },
         {
-          "name": "Run project tests",
+          "name": "Test memory retrieval and timeline regressions",
           "conclusion": "success"
         },
         {
-          "name": "Start browser test server",
+          "name": "Check memory bridge syntax",
           "conclusion": "success"
         },
         {
-          "name": "Install Playwright and Chromium",
+          "name": "Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Capture mobile and desktop screenshots",
+          "name": "Run python -m pip install -r requirements.txt",
           "conclusion": "success"
         },
         {
-          "name": "Verify screenshots are valid",
+          "name": "Run python3 scripts/run_organ_checks.py",
           "conclusion": "success"
         },
         {
-          "name": "Upload visual evidence",
+          "name": "Run python -m pytest -q",
           "conclusion": "success"
         },
         {
-          "name": "Promotion decision",
+          "name": "Post Run actions/setup-python@v5",
           "conclusion": "success"
         },
         {
-          "name": "Post Checkout proposed version",
+          "name": "Post Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
@@ -85,6 +85,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T12:25:14+00:00",
+  "finished_at_utc": "2026-10-17T12:25:29+00:00",
   "outcome": "success"
 }
