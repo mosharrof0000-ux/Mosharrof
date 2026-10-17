@@ -12,9 +12,10 @@ ROUTER = (ROOT / "core" / "manual-chat-routing.js").read_text(encoding="utf-8")
 def test_manual_menus_are_isolated_in_a_dedicated_runtime_module():
     assert 'core/manual-provider-controls.js' in PREP
     assert 'manualChatModeBtn' not in CONTROLS
-    assert 'document.querySelector("#composerServerBtn")' in CONTROLS
+    assert 'sendButton' in CONTROLS
     assert 'menuFor(target,"chat")' in CONTROLS
-    assert 'target.closest("#composerServerBtn")' in CONTROLS
+    assert 'composerServerBtn' not in CONTROLS
+    assert 'target.closest("#sendBtn")' in CONTROLS
     assert '},520);' in CONTROLS
     assert 'AI MODEL / CONNECTION' in CONTROLS
     assert 'RECORDING / SPEECH TO TEXT' in CONTROLS

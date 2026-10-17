@@ -267,13 +267,17 @@ async def main():
         }""")
         await page.wait_for_timeout(150)
 
-        # Verify the exact two user-reported composer defects in the real browser layout.
+        # Verify full-width input, eight-line cap, ninth-line expansion and provider long-press.
         try:
             input_box = page.locator("#input")
-            server_button = page.locator("#composerServerBtn")
-            server_count = await server_button.count()
-            record("composer_server_button_visible", server_count == 1 and await server_button.is_visible(),
-                   f"selector=#composerServerBtn; count={server_count}")
+            expand = page.locator("#composerExpandBtn")
+            server_count = await page.locator("#composerServerBtn").count()
+            record("composer_server_pill_absent", server_count == 0, f"server button count={server_count}")
+            stop_button = page.locator("#stopBtn")
+            record("composer_stop_hidden_when_idle", not await stop_button.is_visible(), "stop appears only during active generation")
+            video_button = page.locator("#videoGenerationBtn")
+            video_parent = await video_button.evaluate("(el) => el.parentElement && el.parentElement.id")
+            record("composer_video_tool_is_inside_plus_menu", video_parent == "composerToolsMenu", f"parent={video_parent}")
             dimensions = await page.locator("#composer .composer-input-row").evaluate(
                 """row => {
                   const input = row.querySelector('#input');
@@ -282,33 +286,47 @@ async def main():
                   const rect = input.getBoundingClientRect();
                   return {rowWidth: Math.round(box.width), composerWidth: Math.round(composer.width),
                           inputWidth: Math.round(rect.width), inputHeight: Math.round(rect.height),
-                          widthRatio: rect.width / Math.max(1, composer.width)};
+                          widthRatio: rect.width / Math.max(1, box.width)};
                 }"""
             )
             record("composer_input_uses_full_width_and_readable_height",
-                   dimensions["widthRatio"] >= 0.90 and dimensions["inputHeight"] >= 80,
+                   dimensions["widthRatio"] >= 0.99 and dimensions["inputHeight"] >= 44,
                    json.dumps(dimensions, ensure_ascii=False))
-            if server_count == 1 and await server_button.is_visible():
-                await server_button.click()
-                menu = page.locator(".manual-provider-menu")
-                await menu.wait_for(state="visible", timeout=3000)
-                menu_items = await menu.locator('[role="menuitemradio"]').count()
-                record("composer_server_button_opens_provider_menu", menu_items >= 5,
-                       f"visible provider/model choices={menu_items}")
-                await menu.locator('[role="menuitemradio"]').first.click()
-                record("composer_server_menu_closes_after_selection",
-                       await page.locator(".manual-provider-menu").count() == 0,
-                       "provider selection menu closes after choosing a route")
+            eight = "\n".join("inspection line " + str(i) for i in range(1, 9))
+            await input_box.fill(eight)
+            await page.wait_for_timeout(120)
+            record("composer_expand_hidden_through_eight_lines", not await expand.is_visible())
+            await input_box.fill(eight + "\ninspection line 9")
+            await expand.wait_for(state="visible", timeout=4000)
+            record("composer_expander_appears_on_ninth_line", await expand.is_visible())
+            before_requests = len(mock_requests)
+            send = page.locator("#sendBtn")
+            await send.dispatch_event("pointerdown", {"button": 0, "pointerId": 1, "pointerType": "touch"})
+            await page.wait_for_timeout(700)
+            await send.dispatch_event("pointerup", {"button": 0, "pointerId": 1, "pointerType": "touch"})
+            menu = page.locator(".manual-provider-menu")
+            await menu.wait_for(state="visible", timeout=4000)
+            choices = await menu.locator('[role="menuitemradio"]').count()
+            record("composer_send_long_press_opens_provider_menu",
+                   choices >= 5 and len(mock_requests) == before_requests,
+                   f"choices={choices}; chat requests before={before_requests}; after={len(mock_requests)}")
+            await menu.locator('[role="menuitemradio"]').first.click()
+            record("composer_provider_menu_closes_after_selection",
+                   await page.locator(".manual-provider-menu").count() == 0)
         except Exception as exc:
-            record("composer_layout_and_server_button", False, repr(exc))
+            record("composer_layout_and_provider_selection", False, repr(exc))
 
         # Composer expansion is safe: only a temporary draft in this browser context.
         # Assert draft copy, cancel preservation, and explicit apply; never submit this draft.
         try:
             input_box = page.locator("#input")
-            original_draft = "MOSHARROF inspector temporary draft"
-            await input_box.fill(original_draft)
+            original_draft = "\n".join("MOSHARROF inspector draft line " + str(i) for i in range(1, 10))
+            await input_box.fill("\n".join("MOSHARROF inspector draft line " + str(i) for i in range(1, 9)))
             expand = page.locator("#composerExpandBtn")
+            await page.wait_for_timeout(100)
+            record("composer_expander_hidden_through_eight_lines", not await expand.is_visible(),
+                   "expander remains hidden through eight lines")
+            await input_box.fill(original_draft)
             await expand.wait_for(state="visible", timeout=8000)
             await expand.click()
             editor = page.locator("#mosharrofExpandEditor")

@@ -28,7 +28,9 @@
     var button = document.createElement("button");
     button.type = "button"; button.className = "composer-action"; button.id = "videoGenerationBtn";
     button.setAttribute("aria-label", "১০ সেকেন্ডের ভিডিও তৈরি"); button.title = "১০ সেকেন্ডের AI ভিডিও"; button.textContent = "▣";
-    send.parentNode.insertBefore(button, send);
+    var toolsMenu = document.getElementById("composerToolsMenu");
+    if (toolsMenu) toolsMenu.appendChild(button);
+    else send.parentNode.insertBefore(button, send);
     var modal = document.createElement("section");
     modal.className = "mos-video-modal"; modal.id = "mosVideoModal";
     modal.setAttribute("role", "dialog"); modal.setAttribute("aria-modal", "true"); modal.setAttribute("aria-hidden", "true");
@@ -79,7 +81,13 @@
       messages.appendChild(card);
       var scroll = document.getElementById("chatScroll"); if (scroll) scroll.scrollTop = scroll.scrollHeight;
     }
-    button.addEventListener("click", openModal);
+    button.addEventListener("click", function () {
+      var menu = document.getElementById("composerToolsMenu");
+      var plus = document.getElementById("plusBtn");
+      if (menu) menu.classList.remove("open");
+      if (plus) plus.setAttribute("aria-expanded", "false");
+      openModal();
+    });
     modal.querySelector("[data-video-close]").addEventListener("click", closeModal);
     modal.addEventListener("click", function (event) { if (event.target === modal) closeModal(); });
     document.addEventListener("keydown", function (event) { if (event.key === "Escape") closeModal(); });
