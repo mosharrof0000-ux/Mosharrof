@@ -1170,7 +1170,7 @@ header.top{
   if(ttsVoiceSelect){ttsVoiceSelect.value=getTtsVoice();ttsVoiceSelect.addEventListener("change",function(){try{localStorage.setItem(TTS_VOICE_KEY,ttsVoiceSelect.value);}catch(e){}toast("Edge বাংলা কণ্ঠ পরিবর্তন হয়েছে");});}
   var historySearch=$("#historySearch"),historyNewChat=$("#historyNewChat");if(historySearch)historySearch.addEventListener("input",updateHistoryList);if(historyNewChat)historyNewChat.onclick=newChat;
   updateMeta();updateHistoryList();
-  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[],voiceEndTimer=null,voiceTimerInterval=null,voiceTimerRestoreTimeout=null,voiceProcessingStartedAt=0,voiceMicMarkup=null;
+  var voiceListening=false,voiceWanted=false,voiceProcessing=false,voiceBaseText="",voiceStream=null,voiceRecorder=null,voiceChunks=[],voiceEndTimer=null,voiceTimerInterval=null,voiceTimerRestoreTimeout=null,voiceProcessingStartedAt=0,voiceMicMarkup=null,voiceAudioContext=null,voiceAnalyser=null,voiceMeterSource=null,voiceMeterGain=null,voiceMeterFrame=0;
   var STT_LANGUAGE_KEY="mosharrof_stt_language_v1",sttLanguageSelect=null;
   var AUDIO_TRANSCRIBE_WORKER_URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/transcribe-audio";
   function getSttLanguage(){var value="bn-BD";try{value=localStorage.getItem(STT_LANGUAGE_KEY)||"bn-BD";}catch(e){}return ["bn-BD","en-US","hi-IN"].includes(value)?value:"bn-BD";}
@@ -1180,7 +1180,46 @@ header.top{
   function finishVoiceProcessingTimer(success){if(!voiceProcessingStartedAt)return;var elapsed=((Date.now()-voiceProcessingStartedAt)/1000).toFixed(1);if(voiceTimerInterval){clearInterval(voiceTimerInterval);voiceTimerInterval=null;}composerVoiceBtn.classList.remove("is-processing","is-listening");composerVoiceBtn.classList.add(success?"is-transcription-success":"is-transcription-error");composerVoiceBtn.innerHTML=success?("✓ "+elapsed+"s"):("! "+elapsed+"s");composerVoiceBtn.setAttribute("aria-label",success?"অডিও থেকে লেখা তৈরি হয়েছে, "+elapsed+" সেকেন্ডে":"অডিও থেকে লেখা তৈরি ব্যর্থ, "+elapsed+" সেকেন্ডে");composerVoiceBtn.title=success?"লেখা তৈরি সম্পন্ন":"লেখা তৈরি ব্যর্থ";voiceTimerRestoreTimeout=setTimeout(function(){if(voiceWanted||voiceProcessing)return;composerVoiceBtn.innerHTML=voiceMicMarkup||composerVoiceBtn.innerHTML;composerVoiceBtn.classList.remove("is-processing","is-transcription-success","is-transcription-error","is-listening");composerVoiceBtn.setAttribute("aria-label","ভয়েস ইনপুট");composerVoiceBtn.title="ভয়েস ইনপুট";voiceProcessingStartedAt=0;},2200);}
   function showVoiceMessage(message){showV(message);if(voiceEndTimer)clearTimeout(voiceEndTimer);voiceEndTimer=setTimeout(hideV,5000);}
   function audioErrorMessage(error){var name=String(error&&error.name||"");if(name==="NotAllowedError"||name==="PermissionDeniedError")return "মাইক্রোফোনের অনুমতি দিন, তারপর আবার চেষ্টা করুন।";if(name==="NotFoundError"||name==="DevicesNotFoundError")return "মাইক্রোফোন পাওয়া যায়নি।";if(name==="NotReadableError"||name==="TrackStartError")return "অন্য অ্যাপ মাইক্রোফোন ব্যবহার করছে।";return "অডিও রেকর্ড করা যায়নি। আবার চেষ্টা করুন।";}
-  function releaseVoiceStream(){if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
+  function stopVoiceActivityMeter(){
+    if(voiceMeterFrame){cancelAnimationFrame(voiceMeterFrame);voiceMeterFrame=0;}
+    if(voiceMeterSource){try{voiceMeterSource.disconnect();}catch(e){}voiceMeterSource=null;}
+    if(voiceAnalyser){try{voiceAnalyser.disconnect();}catch(e){}voiceAnalyser=null;}
+    if(voiceMeterGain){try{voiceMeterGain.disconnect();}catch(e){}voiceMeterGain=null;}
+    composerVoiceBtn.classList.remove("has-voice-activity");
+    if(voiceAudioContext){var context=voiceAudioContext;voiceAudioContext=null;if(context.state!=="closed")context.close().catch(function(){});}
+  }
+  function startVoiceActivityMeter(stream){
+    stopVoiceActivityMeter();
+    var AudioContextCtor=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextCtor||!stream)return;
+    try{
+      voiceAudioContext=new AudioContextCtor();
+      voiceAnalyser=voiceAudioContext.createAnalyser();
+      voiceAnalyser.fftSize=512;
+      voiceAnalyser.smoothingTimeConstant=0.55;
+      voiceMeterSource=voiceAudioContext.createMediaStreamSource(stream);
+      voiceMeterGain=voiceAudioContext.createGain();
+      voiceMeterGain.gain.value=0;
+      voiceMeterSource.connect(voiceAnalyser);
+      voiceAnalyser.connect(voiceMeterGain);
+      voiceMeterGain.connect(voiceAudioContext.destination);
+      var samples=new Uint8Array(voiceAnalyser.fftSize);
+      var tick=function(){
+        if(!voiceWanted||!voiceStream||!voiceAnalyser){stopVoiceActivityMeter();return;}
+        voiceAnalyser.getByteTimeDomainData(samples);
+        var energy=0;
+        for(var i=0;i<samples.length;i++){var sample=(samples[i]-128)/128;energy+=sample*sample;}
+        var rms=Math.sqrt(energy/samples.length);
+        var active=rms>=0.025;
+        composerVoiceBtn.classList.toggle("has-voice-activity",active);
+        composerVoiceBtn.style.setProperty("--voice-level",String(Math.min(1,rms*8)));
+        voiceMeterFrame=requestAnimationFrame(tick);
+      };
+      if(voiceAudioContext.state==="suspended")voiceAudioContext.resume().catch(function(){});
+      tick();
+    }catch(error){stopVoiceActivityMeter();console.warn("Voice activity meter unavailable",error);}
+  }
+  function releaseVoiceStream(){stopVoiceActivityMeter();if(voiceStream){voiceStream.getTracks().forEach(function(track){track.stop();});voiceStream=null;}}
   function normalizeVoiceTranscript(value,language){
     var text=String(value==null?"":value).replace(/\r\n?/g,"\n").trim();
     if(!text)return "";
@@ -1241,19 +1280,20 @@ header.top{
     if(voiceProcessing)return;
     if(voiceWanted){
       voiceWanted=false;setVoiceButtonState(false);
-      if(voiceRecorder&&voiceRecorder.state!=="inactive"){try{voiceRecorder.stop();}catch(e){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("রেকর্ডিং বন্ধ করা যায়নি।");}}
+      if(voiceRecorder&&voiceRecorder.state!=="inactive"){stopVoiceActivityMeter();try{voiceRecorder.stop();}catch(e){voiceProcessing=false;releaseVoiceStream();showVoiceMessage("রেকর্ডিং বন্ধ করা যায়নি।");}}
       return;
     }
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){var unsupported="এই ব্রাউজারে অডিও রেকর্ডিং সমর্থিত নয়। আপডেটেড Chrome ব্যবহার করুন।";toast(unsupported,4000);showVoiceMessage(unsupported);return;}
     voiceBaseText=input.value.trim();voiceChunks=[];voiceWanted=true;setVoiceButtonState(true);showV("শুনছি… পুরো গান/কথা বলুন; শেষ হলে মাইক্রোফোনে চাপুন");
     try{
       voiceStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
+      startVoiceActivityMeter(voiceStream);
       var types=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"];
       var mime=types.find(function(type){return MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(type);});
       voiceRecorder=mime?new MediaRecorder(voiceStream,{mimeType:mime}):new MediaRecorder(voiceStream);
       voiceRecorder.ondataavailable=function(event){if(event.data&&event.data.size)voiceChunks.push(event.data);};
       voiceRecorder.onerror=function(){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();voiceProcessing=false;showVoiceMessage("অডিও রেকর্ডিংয়ে সমস্যা হয়েছে। আবার চেষ্টা করুন।");};
-      voiceRecorder.onstop=function(){voiceWanted=false;setVoiceButtonState(false);var blob=new Blob(voiceChunks,{type:voiceRecorder.mimeType||"audio/webm"});transcribeAudioBlob(blob);};
+      voiceRecorder.onstop=function(){voiceWanted=false;stopVoiceActivityMeter();setVoiceButtonState(false);var blob=new Blob(voiceChunks,{type:voiceRecorder.mimeType||"audio/webm"});transcribeAudioBlob(blob);};
       voiceRecorder.start(1000);
     }catch(error){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();showVoiceMessage(audioErrorMessage(error));}
   }
