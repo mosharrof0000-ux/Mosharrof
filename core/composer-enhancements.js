@@ -13,6 +13,41 @@ export function initializeComposerEnhancements() {
   initializeComposerAutoGrow(input, composer);
   initializeComposerVoiceMeter(document.getElementById("composerVoiceBtn"));
 
+  // Long-press the existing Send control to choose a provider; a normal tap still sends.
+  const providers = [
+    {value:"auto",label:"স্বয়ংক্রিয় fallback",color:"#f2f2f2"},
+    {value:"gemini",label:"Gemini",color:"#8ab4f8"},
+    {value:"cloudflare-workers-ai",label:"Cloudflare Workers AI",color:"#f38020"},
+    {value:"groq",label:"Groq",color:"#ff6b6b"},
+    {value:"openrouter",label:"OpenRouter",color:"#b6a0ff"}
+  ];
+  const providerKey = "mosharrof_chat_provider_v1";
+  const getProvider = () => { try { const v=localStorage.getItem(providerKey)||"auto"; return providers.some(p=>p.value===v)?v:"auto"; } catch { return "auto"; } };
+  let serverMenu=document.getElementById("composerServerMenu");
+  if(!serverMenu){
+    serverMenu=document.createElement("div");serverMenu.id="composerServerMenu";serverMenu.className="composer-server-menu";serverMenu.setAttribute("role","menu");serverMenu.setAttribute("aria-label","সার্ভার নির্বাচন");
+    const heading=document.createElement("div");heading.className="composer-server-menu-title";heading.textContent="সার্ভার নির্বাচন";serverMenu.appendChild(heading);
+    providers.forEach(p=>{const b=document.createElement("button");b.type="button";b.className="composer-server-option";b.dataset.provider=p.value;b.setAttribute("role","menuitemradio");b.innerHTML='<span class="composer-server-dot"></span><span class="composer-server-label"></span><span class="composer-server-check">✓</span>';b.querySelector(".composer-server-label").textContent=p.label;b.querySelector(".composer-server-dot").style.background=p.color;b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();try{localStorage.setItem(providerKey,p.value);}catch{}applyProvider(p.value);closeServerMenu();window.dispatchEvent(new CustomEvent("mosharrof:chat-provider-change",{detail:{provider:p.value}}));});serverMenu.appendChild(b);});
+    composer.appendChild(serverMenu);
+  }
+  function applyProvider(value){const p=providers.find(x=>x.value===value)||providers[0];send.style.setProperty("--server-accent",p.color);send.title="মেসেজ পাঠান · সার্ভার: "+p.label;send.setAttribute("aria-label","মেসেজ পাঠান · সার্ভার: "+p.label);serverMenu.querySelectorAll("[data-provider]").forEach(b=>{const active=b.dataset.provider===p.value;b.setAttribute("aria-checked",active?"true":"false");b.classList.toggle("selected",active);});}
+  function openServerMenu(){applyProvider(getProvider());serverMenu.classList.add("open");send.setAttribute("aria-expanded","true");}
+  function closeServerMenu(){serverMenu.classList.remove("open");send.setAttribute("aria-expanded","false");}
+  applyProvider(getProvider());
+  if(send.dataset.serverLongPressReady!=="true"){
+    send.dataset.serverLongPressReady="true";let timer=0,startX=0,startY=0,suppress=false;
+    const cancel=()=>{if(timer)window.clearTimeout(timer);timer=0;};
+    send.addEventListener("pointerdown",e=>{if(e.button!==undefined&&e.button!==0)return;startX=e.clientX;startY=e.clientY;cancel();timer=window.setTimeout(()=>{timer=0;suppress=true;openServerMenu();},520);},{passive:true});
+    send.addEventListener("pointermove",e=>{if(Math.abs(e.clientX-startX)>10||Math.abs(e.clientY-startY)>10)cancel();},{passive:true});
+    send.addEventListener("pointerup",()=>{cancel();window.setTimeout(()=>{suppress=false;},0);},{passive:true});
+    send.addEventListener("pointercancel",()=>{cancel();window.setTimeout(()=>{suppress=false;},0);},{passive:true});
+    send.addEventListener("click",e=>{if(suppress){e.preventDefault();e.stopImmediatePropagation();suppress=false;}},true);
+    send.addEventListener("contextmenu",e=>{e.preventDefault();openServerMenu();});
+    document.addEventListener("click",e=>{if(!serverMenu.contains(e.target)&&e.target!==send&&!send.contains(e.target))closeServerMenu();});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape")closeServerMenu();});
+  }
+  if(!document.getElementById("composer-server-menu-styles")){const st=document.createElement("style");st.id="composer-server-menu-styles";st.textContent="#composerServerMenu{position:absolute;right:0;bottom:calc(100% + 8px);z-index:20001;display:none;flex-direction:column;gap:3px;width:min(280px,calc(100vw - 28px));padding:8px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:#101010;box-shadow:0 12px 36px rgba(0,0,0,.55)}#composerServerMenu.open{display:flex}.composer-server-menu-title{padding:5px 8px 8px;color:#a1a1aa;font-size:11px;font-weight:700}.composer-server-option{display:flex;align-items:center;gap:9px;min-height:40px;width:100%;padding:7px 9px;border:1px solid transparent;border-radius:9px;background:transparent;color:#f5f5f5;text-align:left;font-size:13px}.composer-server-option.selected{border-color:rgba(255,255,255,.18);background:#1b1b1b}.composer-server-dot{width:9px;height:9px;flex:none;border-radius:50%}.composer-server-label{flex:1}.composer-server-check{visibility:hidden}.composer-server-option.selected .composer-server-check{visibility:visible}#sendBtn svg{stroke:var(--server-accent,#f2f2f2)!important}";document.head.appendChild(st);}
+
   if (!document.getElementById("composer-layout-styles")) {
     const layoutStyle = document.createElement("style");
     layoutStyle.id = "composer-layout-styles";
