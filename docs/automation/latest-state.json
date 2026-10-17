@@ -1,88 +1,27 @@
 {
-  "timestamp_utc": "2026-10-17T08:57:21+00:00",
+  "timestamp_utc": "2026-10-17T08:57:39+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018993906",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018993906",
+  "run_id": "39018988553",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018988553",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/work-engine-ledger-contention-v2-2026-10-17",
-  "sha": "e7cdc646a46348ea30b213224b29dcaf94833419",
+  "sha": "cd44626749cf7a05c75c810f58f0844c0c20c2fe",
   "checked": [
-    "Completed workflow result: Mosharrof Visual QA = success",
-    "Source commit: e7cdc646a46348ea30b213224b29dcaf94833419",
-    "Job: visual-qa — completed/success"
+    "Completed workflow result: Mosharrof Component Consciousness = success",
+    "Source commit: cd44626749cf7a05c75c810f58f0844c0c20c2fe"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Visual QA",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Component Consciousness",
   "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "visual-qa",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pip install playwright",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare candidate Pages assets",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 scripts/visual_qa.py --url http://127.0.0.1:4173/ --output artifacts/candidate.png",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 scripts/visual_qa.py --url https://mosharrof0000-ux.github.io/Mosharrof/ --output artifacts/live.png",
-          "conclusion": "success"
-        },
-        {
-          "name": "Gemini visual comparison",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/upload-artifact@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T08:57:25+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T08:57:39+00:00",
+  "outcome": "failure"
 }
