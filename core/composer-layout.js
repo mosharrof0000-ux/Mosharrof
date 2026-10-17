@@ -18,7 +18,7 @@ export function initializeComposerLayout(input, composer, send) {
     const style = document.createElement("style");
     style.id = "composer-layout-styles";
     style.textContent = [
-      "#composer{display:flex;flex-direction:column;gap:6px;position:relative;box-sizing:border-box}",
+      "#composer{display:flex;flex-direction:column;gap:6px;box-sizing:border-box}",
       "#composer .composer-input-row{display:block;width:100%;min-width:0;flex:0 0 auto;box-sizing:border-box}",
       "#composer .composer-input-row .input{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;flex:1 1 auto;min-height:44px!important;height:44px;max-height:none;padding:10px 10px;line-height:24px;overflow-x:hidden;overflow-y:hidden;resize:none;white-space:pre-wrap;overflow-wrap:anywhere;overscroll-behavior:contain;scrollbar-width:thin}",
       "#composer .composer-actions-row{display:flex;align-items:center;justify-content:flex-start;gap:6px;width:100%;min-width:0;min-height:38px;box-sizing:border-box}",
