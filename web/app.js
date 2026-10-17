@@ -49,7 +49,7 @@ const CORRECTION_MAP = {
 };
 
 function applySmartPunctuation(text) {
-  const chunks = String(text || "").trim().split(/(?:\n+|\s{3,})/).filter(Boolean);
+  const chunks = String(text || "").trim().split(/(?:\n+|\s{3,})/ ).filter(Boolean);
   return chunks.map(chunk => {
     const value = chunk.trim();
     if (!value) return "";
@@ -274,6 +274,7 @@ closeLeft.addEventListener("click", closeDrawers);
 closeRight.addEventListener("click", closeDrawers);
 scrim.addEventListener("click", closeDrawers);
 
+$("#btn-new-chat")?.setAttribute("aria-label", "নতুন চ্যাট শুরু করুন");
 $("#btn-new-chat")?.addEventListener("click", () => {
   messagesEl.innerHTML = "";
   renderMessage("ai", "নতুন কথোপকথন শুরু হয়েছে। আমি কীভাবে সাহায্য করতে পারি?");
