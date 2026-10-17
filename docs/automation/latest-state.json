@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-10-17T08:40:47+00:00",
+  "timestamp_utc": "2026-10-17T08:40:56+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018089815",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018089815",
+  "run_id": "39018114394",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018114394",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "fix/work-ledger-concurrency-recovery-2026-10-17",
-  "sha": "25273ee9d56be9d2678fda1f002f2cd413ac4038",
+  "branch": "fix/work-engine-ledger-retry-2026-10-17",
+  "sha": "e8635639d4995671a0df1ff7e183087d44bb6ec6",
   "checked": [
-    "Completed workflow result: Mosharrof Verification Gate = success",
-    "Source commit: 25273ee9d56be9d2678fda1f002f2cd413ac4038",
-    "Job: Verify before promotion — completed/success"
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
+    "Source commit: e8635639d4995671a0df1ff7e183087d44bb6ec6",
+    "Job: interaction-qa — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Verification Gate",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Verify before promotion",
+      "job": "interaction-qa",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -31,47 +31,47 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout proposed version",
+          "name": "Checkout candidate",
           "conclusion": "success"
         },
         {
-          "name": "Verify Pages entrypoint",
+          "name": "Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Enforce file and folder size budgets",
+          "name": "Install Playwright with transient-network retries",
           "conclusion": "success"
         },
         {
-          "name": "Run project tests",
+          "name": "Prepare candidate Pages assets",
           "conclusion": "success"
         },
         {
-          "name": "Start browser test server",
+          "name": "Start candidate Pages server",
           "conclusion": "success"
         },
         {
-          "name": "Install Playwright and Chromium",
+          "name": "Select safe inspection target",
           "conclusion": "success"
         },
         {
-          "name": "Capture mobile and desktop screenshots",
+          "name": "Run safe mobile interaction inspection",
           "conclusion": "success"
         },
         {
-          "name": "Verify screenshots are valid",
+          "name": "Run one real live chat round-trip",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload inspection evidence",
           "conclusion": "success"
         },
         {
-          "name": "Upload visual evidence",
+          "name": "Post Set up Python",
           "conclusion": "success"
         },
         {
-          "name": "Promotion decision",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Checkout proposed version",
+          "name": "Post Checkout candidate",
           "conclusion": "success"
         },
         {
@@ -83,6 +83,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:40:51+00:00",
+  "finished_at_utc": "2026-10-17T08:41:02+00:00",
   "outcome": "success"
 }
