@@ -30,6 +30,7 @@ def main() -> int:
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
+        "core/composer-voice-meter.js": "web/composer-voice-meter.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
         "core/device-control.js": "web/device-control.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
@@ -58,6 +59,11 @@ def main() -> int:
         target = ROOT / destination
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(stop_source, target)
+    meter_source = ROOT / "core/composer-voice-meter.js"
+    for destination in ("web/composer-voice-meter.js", "web/core/composer-voice-meter.js"):
+        target = ROOT / destination
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(meter_source, target)
     # Inject runtime-only enhancements into the prepared Pages artifact; keep the tracked legacy entrypoint frozen.
     index_path = ROOT / "web/index.html"
     index_html = index_path.read_text(encoding="utf-8")
