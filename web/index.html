@@ -227,20 +227,6 @@ header.top{
 .audio-setting-row label{font-size:12px;color:#e5e5e5;font-weight:650}
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
-
-.manual-mode-pill{flex:none;min-width:43px;height:30px;padding:0 8px;border:1px solid rgba(37,99,235,.35);border-radius:999px;background:rgba(37,99,235,.10);color:#93b7ff;font-size:10px;font-weight:650;white-space:nowrap}
-.manual-mode-pill[data-mode="auto"]{border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.09);color:#8be0a1}
-.manual-mode-pill:active{transform:scale(.97)}
-.manual-provider-menu{position:fixed;z-index:10050;min-width:210px;max-width:min(310px,calc(100vw - 24px));max-height:min(64vh,420px);overflow:auto;padding:6px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(20,20,22,.98);box-shadow:0 12px 36px rgba(0,0,0,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#f5f5f5}
-.manual-provider-menu .manual-menu-heading{padding:7px 9px 8px;color:#a1a1aa;font-size:10px;font-weight:750;letter-spacing:.08em}
-.manual-provider-menu button{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:7px 9px;border:0;border-radius:9px;background:transparent;color:#e8e8e8;text-align:left;font-size:12px;line-height:1.3}
-.manual-provider-menu button:active,.manual-provider-menu button[aria-checked="true"]{background:rgba(37,99,235,.12);color:#b9d0ff}
-.manual-provider-menu .manual-menu-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#71717a}
-.manual-provider-menu button[data-tone="green"] .manual-menu-dot{background:#16A34A}.manual-provider-menu button[data-tone="blue"] .manual-menu-dot{background:#2563EB}.manual-provider-menu button[data-tone="yellow"] .manual-menu-dot{background:#EAB308}.manual-provider-menu button[data-tone="red"] .manual-menu-dot{background:#DC2626}
-.manual-provider-menu .manual-menu-foot{margin-top:4px;padding:7px 9px;border-top:1px solid rgba(255,255,255,.08);color:#8e8e93;font-size:10px;line-height:1.45}
-@media(prefers-color-scheme:light){.manual-provider-menu{background:rgba(250,250,252,.98);border-color:rgba(0,0,0,.12);color:#202124;box-shadow:0 12px 32px rgba(0,0,0,.16)}.manual-provider-menu button{color:#303036}.manual-provider-menu .manual-menu-foot{border-color:rgba(0,0,0,.08);color:#666}}
-@media(max-width:480px){.manual-provider-menu{min-width:205px;max-width:calc(100vw - 16px)}.manual-mode-pill{min-width:39px;padding:0 6px}}
-
 </style>
 </head>
 <body>
@@ -271,7 +257,6 @@ header.top{
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
-      <button class="manual-mode-pill" id="manualChatModeBtn" type="button" aria-label="মডেল নির্বাচন করতে চেপে ধরে রাখুন" title="মডেল নির্বাচন · চেপে ধরে রাখুন" data-mode="auto">Auto</button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
   </div>
@@ -327,14 +312,14 @@ header.top{
     var meta=document.createElement("div");meta.className="message-meta-row";
     var toggle=document.createElement("button");toggle.type="button";toggle.className="message-actions-toggle";toggle.setAttribute("aria-label","মেসেজের কাজ দেখান");toggle.setAttribute("aria-expanded","false");toggle.textContent="⋯";
     var group=document.createElement("div");group.className="message-actions";group.setAttribute("role","group");group.setAttribute("aria-label","মেসেজ অ্যাকশন");
-    function action(kind,label,fn){var b=document.createElement("button");b.type="button";b.className="message-action";if(kind==="speak")b.setAttribute("data-manual-menu","tts");b.innerHTML=iconSvg(kind)+'<span>'+label+'</span>';b.onclick=function(e){e.stopPropagation();fn(b);};group.appendChild(b);return b;}
+    function action(kind,label,fn){var b=document.createElement("button");b.type="button";b.className="message-action";b.innerHTML=iconSvg(kind)+'<span>'+label+'</span>';b.onclick=function(e){e.stopPropagation();fn(b);};group.appendChild(b);return b;}
     meta.appendChild(toggle);
     var panel=document.createElement("div");panel.className="feedback-panel";panel.setAttribute("aria-live","polite");
     function openFeedback(kind,trigger){if(role!=="ai")return;var current=session.messages[messageIndex];renderFeedbackPanel(panel,messageIndex,kind,(current&&current.feedback)||feedback,trigger);}
     if(role==="ai"){
       var quickLike=document.createElement("button");quickLike.type="button";quickLike.className="message-feedback-shortcut";quickLike.setAttribute("aria-label","লাইক বা আনলাইক");quickLike.setAttribute("title","লাইক / আনলাইক");quickLike.innerHTML=iconSvg("like");quickLike.onclick=function(e){e.stopPropagation();openFeedback("like",quickLike);};meta.appendChild(quickLike);
       var quickOnline=document.createElement("button");quickOnline.type="button";quickOnline.className="message-feedback-shortcut online-feedback-shortcut";quickOnline.setAttribute("aria-label","অনলাইন ব্যবহারের কারণ");quickOnline.setAttribute("title","অনলাইন ব্যবহারের কারণ");quickOnline.innerHTML=iconSvg("online");quickOnline.onclick=function(e){e.stopPropagation();openFeedback("online",quickOnline);};meta.appendChild(quickOnline);
-      var quickSpeak=document.createElement("button");quickSpeak.type="button";quickSpeak.setAttribute("data-manual-menu","tts");quickSpeak.className="message-speak-shortcut";quickSpeak.setAttribute("aria-label","পড়ে শোনান");quickSpeak.setAttribute("title","পড়ে শোনান");quickSpeak.innerHTML=iconSvg("speak");quickSpeak.onclick=function(e){e.stopPropagation();speakText(text,quickSpeak);};meta.appendChild(quickSpeak);
+      var quickSpeak=document.createElement("button");quickSpeak.type="button";quickSpeak.className="message-speak-shortcut";quickSpeak.setAttribute("aria-label","পড়ে শোনান");quickSpeak.setAttribute("title","পড়ে শোনান");quickSpeak.innerHTML=iconSvg("speak");quickSpeak.onclick=function(e){e.stopPropagation();speakText(text,quickSpeak);};meta.appendChild(quickSpeak);
       quickLike.classList.toggle("is-active",!!(feedback&&feedback.like));quickOnline.classList.toggle("is-active-online",!!(feedback&&feedback.online));
       action("like","লাইক",function(){openFeedback("like",quickLike);});
       action("online","অনলাইন",function(){openFeedback("online",quickOnline);});
@@ -721,7 +706,7 @@ header.top{
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
   function coreReply(t,image){
-    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true,provider:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[0];}catch(e){return "auto";}})(),model:(function(){try{return (localStorage.getItem("mosharrof_chat_route_v1")||"auto").split("|")[1]||"";}catch(e){return "";}})()})})
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
       .then(function(res){
         function finish(data,status){
           var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
@@ -1218,7 +1203,7 @@ header.top{
     reader.onload=function(){
       var dataUrl=String(reader.result||""),parts=dataUrl.split(",");
       if(parts.length<2){finishVoiceProcessingTimer(false);voiceProcessing=false;releaseVoiceStream();showVoiceMessage("অডিও প্রস্তুত করা যায়নি।");return;}
-      fetch(AUDIO_TRANSCRIBE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage(),model:(function(){try{return localStorage.getItem("mosharrof_stt_model_v1")||"auto";}catch(e){return "auto";}})()})})
+      fetch(AUDIO_TRANSCRIBE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio_base64:parts[1],mime_type:String(blob.type||"audio/webm").split(";")[0],language:getSttLanguage()})})
         .then(function(response){return response.json().catch(function(){return {};}).then(function(data){if(!response.ok){var error=new Error(data.error||("HTTP "+response.status));error.status=response.status;error.serverData=data;throw error;}return data;});})
         .then(function(data){
           var transcript=normalizeVoiceTranscript(data.text,getSttLanguage());if(!transcript)throw new Error("empty_transcription");
@@ -1275,57 +1260,5 @@ header.top{
 })();
 </script>
 <script src="./sidebar-recovery.js"></script>
-<script>
-(function(){
-"use strict";
-var CHAT_KEY="mosharrof_chat_route_v1",STT_KEY="mosharrof_stt_model_v1";
-var chatChoices=[
-{value:"auto",label:"স্বয়ংক্রিয় · সব সংযোগ পরীক্ষা",tone:"green"},
-{value:"gemini|gemini-3.8-flash",label:"Gemini · 3.8 Flash",tone:"blue"},
-{value:"gemini|gemini-3.7-flash",label:"Gemini · 3.7 Flash",tone:"blue"},
-{value:"gemini|gemini-3.6-flash",label:"Gemini · 3.6 Flash",tone:"blue"},
-{value:"gemini|gemini-3.5-flash",label:"Gemini · 3.5 Flash",tone:"blue"},
-{value:"cloudflare-workers-ai|@cf/zai-org/glm-4.7-flash",label:"Cloudflare · GLM 4.7 Flash",tone:"yellow"},
-{value:"cloudflare-workers-ai|@cf/meta/llama-3.3-70b-instruct-fp8-fast",label:"Cloudflare · Llama 3.3 70B",tone:"yellow"},
-{value:"groq|llama-3.1-8b-instant",label:"Groq · Llama 3.1 8B",tone:"blue"},
-{value:"openrouter|meta-llama/llama-3.3-70b-instruct:free",label:"OpenRouter · Llama 3.3 Free",tone:"blue"}];
-var ttsChoices=[
-{value:"auto",label:"স্বয়ংক্রিয় · ফ্রি-ফার্স্ট",tone:"green"},
-{value:"edge",label:"Edge-TTS · বাংলা কণ্ঠ",tone:"blue"},
-{value:"gemini",label:"Google Gemini Voice",tone:"blue"},
-{value:"azure",label:"Microsoft Azure Speech",tone:"yellow"},
-{value:"sarvam",label:"Sarvam Bengali Voice",tone:"blue"},
-{value:"elevenlabs",label:"ElevenLabs · অনুমোদিত হলে",tone:"red"},
-{value:"browser",label:"ডিভাইসের Browser Voice",tone:"green"}];
-var sttChoices=[
-{value:"auto",label:"স্বয়ংক্রিয় · Gemini মডেল ফেইলওভার",tone:"green"},
-{value:"gemini-3.8-flash",label:"Gemini Transcription · 3.8 Flash",tone:"blue"},
-{value:"gemini-3.6-flash",label:"Gemini Transcription · 3.6 Flash",tone:"blue"},
-{value:"gemini-2.5-flash",label:"Gemini Transcription · 2.5 Flash",tone:"blue"}];
-var menu=null,pressTimer=null,pressTarget=null,suppressClickTarget=null;
-function read(key,fallback){try{return localStorage.getItem(key)||fallback;}catch(e){return fallback;}}
-function write(key,value){try{localStorage.setItem(key,value);}catch(e){}}
-function chatValue(){return read(CHAT_KEY,"auto");}
-function ttsValue(){var s=document.querySelector("#ttsProviderSelect");return s?s.value:read("mosharrof_tts_provider_v1","auto");}
-function sttValue(){return read(STT_KEY,"auto");}
-function closeMenu(){if(menu){menu.remove();menu=null;}document.removeEventListener("pointerdown",outsideClose,true);}
-function outsideClose(e){if(menu&&!menu.contains(e.target))closeMenu();}
-function placeMenu(target,node){var r=target.getBoundingClientRect(),w=Math.min(310,window.innerWidth-16),h=Math.min(420,window.innerHeight*.64);node.style.width=w+"px";var left=Math.max(8,Math.min(window.innerWidth-w-8,r.left));var top=r.top-h-8;if(top<8)top=Math.min(window.innerHeight-h-8,r.bottom+8);node.style.left=left+"px";node.style.top=Math.max(8,top)+"px";node.style.maxHeight=h+"px";}
-function openMenu(target,title,choices,current,onChoose,foot){closeMenu();var node=document.createElement("div");node.className="manual-provider-menu";node.setAttribute("role","menu");node.setAttribute("aria-label",title);var heading=document.createElement("div");heading.className="manual-menu-heading";heading.textContent=title;node.appendChild(heading);choices.forEach(function(item){var b=document.createElement("button");b.type="button";b.setAttribute("role","menuitemradio");b.setAttribute("aria-checked",item.value===current?"true":"false");b.dataset.tone=item.tone||"blue";var dot=document.createElement("span");dot.className="manual-menu-dot";dot.setAttribute("aria-hidden","true");var label=document.createElement("span");label.textContent=item.label;b.appendChild(dot);b.appendChild(label);b.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();onChoose(item.value,item);closeMenu();});node.appendChild(b);});if(foot){var note=document.createElement("div");note.className="manual-menu-foot";note.textContent=foot;node.appendChild(note);}document.body.appendChild(node);menu=node;placeMenu(target,node);window.setTimeout(function(){document.addEventListener("pointerdown",outsideClose,true);},0);}
-function setChatMode(value){write(CHAT_KEY,value);var btn=document.querySelector("#manualChatModeBtn");if(btn){var item=chatChoices.find(function(x){return x.value===value;});btn.textContent=value==="auto"?"Auto":(item?item.label.split(" · ")[0]:"Manual");btn.dataset.mode=value==="auto"?"auto":"manual";btn.setAttribute("aria-label","মডেল মোড: "+(item?item.label:value));}var status=document.querySelector("#voiceStatus");if(status){status.textContent="মডেল মোড: "+(chatChoices.find(function(x){return x.value===value;})||chatChoices[0]).label;status.classList.add("show");window.setTimeout(function(){status.classList.remove("show");},1800);}}
-function setTtsMode(value){write("mosharrof_tts_provider_v1",value);var select=document.querySelector("#ttsProviderSelect");if(select){select.value=value;select.dispatchEvent(new Event("change",{bubbles:true}));}}
-function setSttMode(value){write(STT_KEY,value);var status=document.querySelector("#voiceStatus");if(status){status.textContent="ট্রান্সক্রিপশন: "+(sttChoices.find(function(x){return x.value===value;})||sttChoices[0]).label;status.classList.add("show");window.setTimeout(function(){status.classList.remove("show");},1800);}}
-function menuFor(target,kind){if(kind==="chat")openMenu(target,"AI MODEL / CONNECTION",chatChoices,chatValue(),setChatMode,"Auto: সব সংযোগ পরীক্ষা করবে। Manual: নির্বাচিত provider/model-ই ব্যবহার করবে।");else if(kind==="tts")openMenu(target,"READ ALOUD / TTS",ttsChoices,ttsValue(),setTtsMode,"Manual: নির্বাচিত provider-ই। Auto: ফ্রি-ফার্স্ট fallback।");else if(kind==="stt")openMenu(target,"RECORDING / SPEECH TO TEXT",sttChoices,sttValue(),setSttMode,"নির্বাচিত মডেল সার্ভারে ট্রান্সক্রিপশনের জন্য পাঠানো হবে।");}
-function kindOf(target){if(!target||!target.closest)return null;if(target.closest("#manualChatModeBtn,.response-route"))return "chat";if(target.closest("#composerVoiceBtn"))return "stt";if(target.closest('[data-manual-menu="tts"]'))return "tts";return null;}
-function startHold(target,kind){clearTimeout(pressTimer);pressTarget=target;pressTimer=window.setTimeout(function(){if(!pressTarget)return;suppressClickTarget=pressTarget;menuFor(pressTarget,kind);},520);}
-function stopHold(){clearTimeout(pressTimer);pressTimer=null;pressTarget=null;}
-document.addEventListener("pointerdown",function(e){if(e.button!==undefined&&e.button!==0)return;var target=e.target&&e.target.closest?e.target.closest("button,.response-route"):null;var kind=kindOf(target);if(kind)startHold(target,kind);},true);
-["pointerup","pointercancel","pointerleave"].forEach(function(name){document.addEventListener(name,stopHold,true);});
-document.addEventListener("click",function(e){var target=e.target&&e.target.closest?e.target.closest("button,.response-route"):null;if(suppressClickTarget&&target===suppressClickTarget){e.preventDefault();e.stopImmediatePropagation();suppressClickTarget=null;}},true);
-document.addEventListener("contextmenu",function(e){var target=e.target&&e.target.closest?e.target.closest("button,.response-route"):null;if(kindOf(target))e.preventDefault();},true);
-document.addEventListener("click",function(e){var target=e.target&&e.target.closest?e.target.closest("#manualChatModeBtn"):null;if(target){e.preventDefault();e.stopImmediatePropagation();menuFor(target,"chat");}},true);
-setChatMode(chatValue());
-})();
-</script>
 </body>
 </html>
