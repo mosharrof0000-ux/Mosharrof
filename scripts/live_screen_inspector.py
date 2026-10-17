@@ -315,9 +315,13 @@ async def main():
         # Assert draft copy, cancel preservation, and explicit apply; never submit this draft.
         try:
             input_box = page.locator("#input")
-            original_draft = "MOSHARROF inspector temporary draft"
-            await input_box.fill(original_draft)
+            original_draft = "\\n".join("MOSHARROF inspector draft line " + str(i) for i in range(1, 10))
+            await input_box.fill("\\n".join("MOSHARROF inspector draft line " + str(i) for i in range(1, 9)))
             expand = page.locator("#composerExpandBtn")
+            await page.wait_for_timeout(100)
+            record("composer_expander_hidden_through_eight_lines", not await expand.is_visible(),
+                   "expander remains hidden through eight lines")
+            await input_box.fill(original_draft)
             await expand.wait_for(state="visible", timeout=8000)
             await expand.click()
             editor = page.locator("#mosharrofExpandEditor")
