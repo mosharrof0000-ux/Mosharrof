@@ -1,37 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T11:28:40+00:00",
+  "timestamp_utc": "2026-10-17T11:29:07+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028485127",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028485127",
-  "source_run_id": "39028435078",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028435078",
+  "run_id": "39028404497",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028404497",
+  "source_run_id": "39028396315",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028396315",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "463c2644f7b82fe9d26260f19231c34460ff6857",
+  "sha": "35826462b6bcc3d56f51d143b92a85c0f3a11590",
   "checked": [
-    "Completed workflow result: Mosharrof Verification Gate = cancelled",
-    "Source commit: 463c2644f7b82fe9d26260f19231c34460ff6857",
-    "Job: Verify before promotion — completed/cancelled"
+    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
+    "Source commit: 35826462b6bcc3d56f51d143b92a85c0f3a11590"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: Verify before promotion. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof Verification Gate",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Deploy Mosharrof Pages",
   "source_conclusion": "cancelled",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "Verify before promotion",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:28:48+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:29:07+00:00",
+  "outcome": "failure"
 }
