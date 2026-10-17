@@ -5,6 +5,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
 ENHANCEMENTS = (ROOT / "core" / "composer-enhancements.js").read_text(encoding="utf-8")
+MANUAL_PROVIDER = (ROOT / "core" / "manual-provider-controls.js").read_text(encoding="utf-8")
 
 
 class ComposerVoiceInteractionContractTests(unittest.TestCase):
@@ -16,20 +17,21 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertLess(actions, HTML.index('id="sendBtn"'))
 
     def test_provider_selection_is_sent_to_existing_chat_router(self):
-        self.assertIn('provider:getChatProviderPreference()', HTML)
+        self.assertIn('stream_status:true})', HTML)
         for provider in ("auto", "gemini", "cloudflare-workers-ai", "groq", "openrouter"):
-            self.assertIn(provider, ENHANCEMENTS)
+            self.assertIn(provider, MANUAL_PROVIDER)
 
     def test_long_press_opens_server_menu_without_a_separate_server_button(self):
-        self.assertIn('serverMenu.id = "composerServerMenu"', ENHANCEMENTS)
-        self.assertIn('}, 520);', ENHANCEMENTS)
-        self.assertIn("event.stopImmediatePropagation()", ENHANCEMENTS)
+        self.assertIn('target.closest("#sendBtn,.response-route")', MANUAL_PROVIDER)
+        self.assertIn("},520);", MANUAL_PROVIDER)
+        self.assertIn("event.stopImmediatePropagation()", MANUAL_PROVIDER)
+        self.assertNotIn("manualChatModeBtn", MANUAL_PROVIDER)
         self.assertNotIn('id="serverBtn"', HTML)
 
     def test_provider_color_changes_only_send_icon_stroke(self):
-        self.assertIn('#sendBtn svg{stroke:var(--server-accent,#f2f2f2)!important}', HTML)
-        self.assertIn('send.style.setProperty("--server-accent", selected.color)', ENHANCEMENTS)
-        self.assertNotIn('#sendBtn{background:', ENHANCEMENTS)
+        self.assertIn('#sendBtn svg{stroke:var(--chat-provider-accent,#f2f2f2)!important}', MANUAL_PROVIDER)
+        self.assertIn('sendButton.style.setProperty("--chat-provider-accent",accents[provider]||accents.auto)', MANUAL_PROVIDER)
+        self.assertNotIn('#sendBtn{background:', MANUAL_PROVIDER)
 
     def test_microphone_activity_uses_live_audio_level(self):
         self.assertIn("createAnalyser()", HTML)
