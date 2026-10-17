@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-10-17T08:38:45+00:00",
+  "timestamp_utc": "2026-10-17T08:38:38+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018056835",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018056835",
+  "run_id": "39018089717",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018089717",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "fix/work-engine-ledger-retry-2026-10-17",
-  "sha": "5c604361544daa258e651821e020e04568ca8a6a",
+  "branch": "fix/work-ledger-concurrency-recovery-2026-10-17",
+  "sha": "25273ee9d56be9d2678fda1f002f2cd413ac4038",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
-    "Source commit: 5c604361544daa258e651821e020e04568ca8a6a",
-    "Job: interaction-qa — completed/success"
+    "Completed workflow result: Cleanup Discipline Reminder = success",
+    "Source commit: 25273ee9d56be9d2678fda1f002f2cd413ac4038",
+    "Job: Leave the repo clean — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
   "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "source_workflow": "Cleanup Discipline Reminder",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "interaction-qa",
+      "job": "Leave the repo clean",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -31,47 +31,31 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout candidate",
+          "name": "Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
-          "name": "Set up Python",
+          "name": "Setup Python",
           "conclusion": "success"
         },
         {
-          "name": "Install Playwright with transient-network retries",
+          "name": "Run cleanup check",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages assets",
+          "name": "Print discipline reminder",
           "conclusion": "success"
         },
         {
-          "name": "Start candidate Pages server",
+          "name": "Comment on pull request",
           "conclusion": "success"
         },
         {
-          "name": "Select safe inspection target",
+          "name": "Post Setup Python",
           "conclusion": "success"
         },
         {
-          "name": "Run safe mobile interaction inspection",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run one real live chat round-trip",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload inspection evidence",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Set up Python",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Checkout candidate",
+          "name": "Post Run actions/checkout@v4",
           "conclusion": "success"
         },
         {
@@ -83,6 +67,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T08:38:51+00:00",
+  "finished_at_utc": "2026-10-17T08:39:08+00:00",
   "outcome": "success"
 }
