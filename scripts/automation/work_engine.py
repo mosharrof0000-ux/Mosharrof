@@ -219,6 +219,16 @@ def main() -> int:
                 previous = {}
         status = args.job_status
         finished_at = utc_now()
+        if not previous.get("timestamp_utc"):
+            # The start step may have failed before writing a state file. Preserve an explicit
+            # recovery record rather than silently producing a success-shaped empty state.
+            previous = {
+                **details,
+                "timestamp_utc": utc_now(),
+                "phase": "STARTED_RECOVERY",
+                "status": "interrupted",
+                "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+            }
         result = {
             **previous,
             "timestamp_utc": previous.get("timestamp_utc", finished_at),
