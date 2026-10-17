@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-10-17T08:55:03+00:00",
+  "timestamp_utc": "2026-10-17T08:48:26+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018949583",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018949583",
+  "run_id": "39018502744",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018502744",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "fix/work-engine-ledger-contention-v2-2026-10-17",
-  "sha": "d72398b66357771592857e1b2b773c19b69afa94",
+  "branch": "fix/work-engine-stable-source-and-latest-state-2026-10-17",
+  "sha": "e33e66e3a4e16a66cc6ba3b9e8f1e566927e4f9d",
   "checked": [
-    "Completed workflow result: Mosharrof Visual QA = success",
-    "Source commit: d72398b66357771592857e1b2b773c19b69afa94",
-    "Job: visual-qa — completed/success"
+    "Completed workflow result: Mosharrof AI Ecosystem Verification = success",
+    "Source commit: e33e66e3a4e16a66cc6ba3b9e8f1e566927e4f9d",
+    "Job: verify-ecosystem — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Mosharrof Visual QA",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof AI Ecosystem Verification",
   "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "visual-qa",
+      "job": "verify-ecosystem",
       "status": "completed",
       "conclusion": "success",
       "steps": [
@@ -31,47 +31,27 @@
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v6",
+          "name": "Checkout Code",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v6",
+          "name": "Set up Python 3.12",
           "conclusion": "success"
         },
         {
-          "name": "Run python -m pip install playwright",
+          "name": "Install test dependencies",
           "conclusion": "success"
         },
         {
-          "name": "Prepare candidate Pages assets",
+          "name": "Run Integration Tests",
           "conclusion": "success"
         },
         {
-          "name": "Run python3 -m http.server 4173 --directory web >/tmp/server.log 2>&1 &",
+          "name": "Post Set up Python 3.12",
           "conclusion": "success"
         },
         {
-          "name": "Run python3 scripts/visual_qa.py --url http://127.0.0.1:4173/ --output artifacts/candidate.png",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python3 scripts/visual_qa.py --url https://mosharrof0000-ux.github.io/Mosharrof/ --output artifacts/live.png",
-          "conclusion": "success"
-        },
-        {
-          "name": "Gemini visual comparison",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/upload-artifact@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
+          "name": "Post Checkout Code",
           "conclusion": "success"
         },
         {
@@ -82,7 +62,7 @@
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T08:55:12+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T08:55:14+00:00",
+  "outcome": "failure"
 }
