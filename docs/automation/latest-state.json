@@ -1,37 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T12:04:09+00:00",
+  "timestamp_utc": "2026-10-17T12:04:23+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030115230",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030115230",
-  "source_run_id": "39030106327",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030106327",
+  "run_id": "39030115259",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030115259",
+  "source_run_id": "39030106295",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030106295",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "d47b9853624e4ec54fd00be651f4ebf37eaeb6a6",
   "checked": [
-    "Completed workflow result: Personal Memory Browser Smoke Test = cancelled",
-    "Source commit: d47b9853624e4ec54fd00be651f4ebf37eaeb6a6",
-    "Job: browser-memory-roundtrip — completed/cancelled"
+    "Completed workflow result: MOSHARROF Full-System Interaction QA = cancelled",
+    "Source commit: d47b9853624e4ec54fd00be651f4ebf37eaeb6a6"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: browser-memory-roundtrip. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Personal Memory Browser Smoke Test",
+  "next_step": "Resume at failed workflow/job: MOSHARROF Full-System Interaction QA. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "MOSHARROF Full-System Interaction QA",
   "source_conclusion": "cancelled",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "browser-memory-roundtrip",
-      "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T12:04:14+00:00",
+  "finished_at_utc": "2026-10-17T12:04:28+00:00",
   "outcome": "success"
 }
