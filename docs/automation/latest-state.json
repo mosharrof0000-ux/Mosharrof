@@ -1,90 +1,29 @@
 {
-  "timestamp_utc": "2026-10-17T12:13:56+00:00",
+  "timestamp_utc": "2026-10-17T12:14:12+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39030536200",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030536200",
-  "source_run_id": "39030157394",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030157394",
+  "run_id": "39030273480",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030273480",
+  "source_run_id": "39030117808",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030117808",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
-  "sha": "ed77234c283e699de43db0de62f3f83bf9ba0410",
+  "sha": "d192687b477e333a18421692de71525fc45eb09d",
   "checked": [
-    "Completed workflow result: MOSHARROF Full-System Interaction QA = success",
-    "Source commit: ed77234c283e699de43db0de62f3f83bf9ba0410",
-    "Job: interaction-qa — completed/success"
+    "Completed workflow result: Mosharrof Component Consciousness = success",
+    "Source commit: d192687b477e333a18421692de71525fc45eb09d"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "MOSHARROF Full-System Interaction QA",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Component Consciousness",
   "source_conclusion": "success",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "interaction-qa",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout candidate",
-          "conclusion": "success"
-        },
-        {
-          "name": "Set up Python",
-          "conclusion": "success"
-        },
-        {
-          "name": "Install Playwright with transient-network retries",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare candidate Pages assets",
-          "conclusion": "success"
-        },
-        {
-          "name": "Start candidate Pages server",
-          "conclusion": "success"
-        },
-        {
-          "name": "Select safe inspection target",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run safe mobile interaction inspection",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run one real live chat round-trip",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Upload inspection evidence",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Set up Python",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Checkout candidate",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T12:14:01+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:14:12+00:00",
+  "outcome": "failure"
 }

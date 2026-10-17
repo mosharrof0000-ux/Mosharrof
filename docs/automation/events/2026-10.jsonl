@@ -42086,3 +42086,33 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T12:14:12+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39030273480",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030273480",
+  "source_run_id": "39030117808",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39030117808",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "d192687b477e333a18421692de71525fc45eb09d",
+  "checked": [
+    "Completed workflow result: Mosharrof Component Consciousness = success",
+    "Source commit: d192687b477e333a18421692de71525fc45eb09d"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": "Mosharrof Component Consciousness",
+  "source_conclusion": "success",
+  "changed_files": [],
+  "check_results": [],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T12:14:12+00:00",
+  "outcome": "failure"
+}
+
