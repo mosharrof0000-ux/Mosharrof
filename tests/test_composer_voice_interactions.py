@@ -55,6 +55,9 @@ class ComposerVoiceInteractionContractTests(unittest.TestCase):
         self.assertIn('input.value="";resize();', HTML)
         self.assertIn('let submittedDraft = ""', LAYOUT)
         self.assertIn('input.value = submittedDraft', LAYOUT)
+        self.assertIn('submittedDraftVersion = draftVersion', LAYOUT)
+        self.assertIn('event.key === "Enter" && !event.shiftKey', LAYOUT)
+        self.assertIn('.message.ai:not(.typing)', LAYOUT)
         self.assertIn('.response-timer.is-error', LAYOUT)
 
     def test_fullscreen_editor_remains_available(self):
