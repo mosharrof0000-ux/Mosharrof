@@ -1,16 +1,16 @@
 {
-  "timestamp_utc": "2026-10-17T08:50:23+00:00",
+  "timestamp_utc": "2026-10-17T08:51:07+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39018835556",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018835556",
+  "run_id": "39018877403",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39018877403",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/work-engine-ledger-contention-v2-2026-10-17",
-  "sha": "3eb4144ac7a0ce822860622cff42c2c561670387",
+  "sha": "c11a8cafcf4ff3fe904697b28149198bace7e8c4",
   "checked": [
-    "Completed workflow result: Mosharrof Tests = success",
-    "Source commit: 3eb4144ac7a0ce822860622cff42c2c561670387",
-    "Job: test — completed/success"
+    "Completed workflow result: Mosharrof Tests = failure",
+    "Source commit: c11a8cafcf4ff3fe904697b28149198bace7e8c4",
+    "Job: test — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
@@ -18,13 +18,13 @@
   ],
   "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
   "source_workflow": "Mosharrof Tests",
-  "source_conclusion": "success",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
@@ -64,11 +64,11 @@
         },
         {
           "name": "Run python -m pytest -q",
-          "conclusion": "success"
+          "conclusion": "failure"
         },
         {
           "name": "Post Run actions/setup-python@v5",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Post Run actions/checkout@v4",
@@ -83,6 +83,6 @@
   ],
   "phase": "FINISHED",
   "status": "failure",
-  "finished_at_utc": "2026-10-17T08:53:46+00:00",
+  "finished_at_utc": "2026-10-17T08:53:50+00:00",
   "outcome": "failure"
 }
