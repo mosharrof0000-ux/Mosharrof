@@ -67,6 +67,6 @@ export function initializeComposerVoiceMeter(button) {
     }
   }
 
-  document.addEventListener("mosharrof:voice-stream-start", event => start(event.detail && event.detail.stream));
-  document.addEventListener("mosharrof:voice-stream-stop", stop);
+  document.addEventListener("vm:start", event => start(event.stream));
+  document.addEventListener("vm:stop", stop);
 }
