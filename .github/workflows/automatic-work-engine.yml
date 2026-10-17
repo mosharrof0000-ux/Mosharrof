@@ -131,8 +131,18 @@ jobs:
             git -C "$LOG_REPO" rm -rf . >/dev/null 2>&1 || true
           fi
 
-          MONTH="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["timestamp_utc"][:7])' "$OUT/state.json")"
-          for ATTEMPT in 1 2 3 4 5; do
+          MONTH="$(python - "$OUT/state.json" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+try:
+    data = json.load(open(sys.argv[1], encoding="utf-8"))
+except (FileNotFoundError, json.JSONDecodeError):
+    data = {}
+stamp = data.get("timestamp_utc") or data.get("finished_at_utc")
+print(stamp[:7] if stamp else datetime.now(timezone.utc).strftime("%Y-%m"))
+PY
+)"
+          for ATTEMPT in $(seq 1 12); do
             if [ "$ATTEMPT" -gt 1 ] && git ls-remote --exit-code --heads origin automation-work-log >/dev/null 2>&1; then
               git fetch origin automation-work-log
               git -C "$LOG_REPO" reset --hard origin/automation-work-log
@@ -169,10 +179,12 @@ jobs:
             if git -C "$LOG_REPO" push origin HEAD:refs/heads/automation-work-log; then
               exit 0
             fi
-            echo "Ledger push raced with another run; retrying (attempt $ATTEMPT/5)."
-            sleep "$ATTEMPT"
+            echo "Ledger push raced with another run; retrying (attempt $ATTEMPT/12)."
+            DELAY=$((ATTEMPT * ATTEMPT))
+            [ "$DELAY" -gt 20 ] && DELAY=20
+            sleep "$DELAY"
           done
-          echo "Could not persist ledger after five retries."
+          echo "Could not persist ledger after twelve attempts."
           exit 1
 
       - name: Upload machine-readable work record
