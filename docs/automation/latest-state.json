@@ -1,52 +1,70 @@
 {
-  "timestamp_utc": "2026-10-17T11:19:06+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-17T11:19:37+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39028227791",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028227791",
-  "source_run_id": null,
-  "source_run_url": null,
+  "run_id": "39028255854",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028255854",
+  "source_run_id": "39028238780",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028238780",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "bf8ab44bc1bafb3fce655737c4678ac530e2041b",
   "checked": [
-    "Push commit: fix(router): reject unavailable manually selected models",
-    "Commit SHA: bf8ab44bc1bafb3fce655737c4678ac530e2041b",
-    "Check: validate — completed/skipped",
-    "Check: record — in_progress/pending",
-    "Check: test — in_progress/pending"
+    "Completed workflow result: Mosharrof AI Ecosystem Verification = failure",
+    "Source commit: bf8ab44bc1bafb3fce655737c4678ac530e2041b",
+    "Job: verify-ecosystem — completed/failure"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Wait for pending checks (record, test); then inspect their results and artifacts.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Resume at failed workflow/job: verify-ecosystem. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Mosharrof AI Ecosystem Verification",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "validate",
+      "job": "verify-ecosystem",
       "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout Code",
+          "conclusion": "success"
+        },
+        {
+          "name": "Set up Python 3.12",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install test dependencies",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run Integration Tests",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Set up Python 3.12",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout Code",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T11:19:10+00:00",
+  "finished_at_utc": "2026-10-17T11:19:42+00:00",
   "outcome": "success"
 }
