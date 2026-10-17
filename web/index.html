@@ -227,6 +227,19 @@ header.top{
 .audio-setting-row label{font-size:12px;color:#e5e5e5;font-weight:650}
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
+
+/* Composer interaction update: text area above a stable bottom action row. */
+#composer{display:flex;flex-direction:column;gap:7px}
+#composer .composer-input-row{display:flex;align-items:stretch;width:100%;min-width:0}
+#composer .composer-input-row .input{display:block;width:100%;flex:1;min-width:0;min-height:40px;max-height:min(44dvh,360px);padding:8px 6px;line-height:1.5;overflow-y:auto;overscroll-behavior:contain}
+#composer .composer-actions-row{display:flex;align-items:center;gap:6px;min-height:36px}
+#composer .composer-actions-spacer{flex:1;min-width:0}
+#sendBtn svg{stroke:var(--server-accent,#f2f2f2)!important}
+#composerVoiceBtn.is-listening{background:#080808;border-color:rgba(255,255,255,.16);color:#f2f2f2;box-shadow:none}
+#composerVoiceBtn.is-listening svg{animation:none}
+#composerVoiceBtn.has-voice-activity svg{stroke:#4ade80;filter:drop-shadow(0 0 2px rgba(74,222,128,.35));transform-origin:50% 50%;animation:voice-mic-bob .24s ease-in-out infinite alternate}
+#composerVoiceBtn.has-voice-activity{background:#080808;border-color:rgba(255,255,255,.16);box-shadow:none}
+@media(max-width:480px){#composer{left:10px;right:10px;padding:8px 9px}#composer .composer-input-row .input{padding-left:4px;padding-right:4px}}
 </style>
 </head>
 <body>
@@ -248,14 +261,17 @@ header.top{
   </main>
   <div class="composer" id="composer">
     <div class="image-preview" id="imagePreview"><img id="previewImage" alt="Screenshot preview"><span id="previewName">Screenshot attached</span><button id="removeImage" aria-label="Remove screenshot">×</button></div>
-    <div class="row">
+    <div class="composer-input-row">
+      <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
+    </div>
+    <div class="row composer-actions-row">
       <div class="composer-tools" id="composerTools">
         <button class="composer-tool-toggle" id="plusBtn" type="button" aria-label="আরও টুল দেখান" aria-expanded="false" aria-controls="composerToolsMenu">+</button>
         <div class="composer-tools-menu" id="composerToolsMenu" role="group" aria-label="কম্পোজার টুল">
           <label class="composer-action attach" aria-label="ক্যামেরা বা ছবি যোগ করুন" title="ক্যামেরা / ছবি"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.5h4.6L15.5 5h2A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12" r="3.2"/></svg><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"></label>
         </div>
       </div>
-      <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
+      <span class="composer-actions-spacer" aria-hidden="true"></span>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
@@ -301,7 +317,7 @@ header.top{
   function toast(m,ms){ms=ms||2000;toastEl.textContent=m;toastEl.classList.add("show");setTimeout(function(){toastEl.classList.remove("show");},ms);}
   function showV(t){vStatus.textContent=t;vStatus.classList.add("show");}
   function hideV(){vStatus.classList.remove("show");}
-  function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
+  function resize(){var viewport=window.visualViewport;var visibleHeight=viewport&&viewport.height>0?viewport.height:(window.innerHeight||document.documentElement.clientHeight||640);var maxHeight=Math.max(72,Math.min(visibleHeight*0.44,360));input.style.maxHeight=maxHeight+"px";input.style.height="auto";input.style.height=Math.min(input.scrollHeight,maxHeight)+"px";input.scrollTop=input.scrollHeight;}
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
   function iconSvg(kind){
     var paths={like:'<path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"/><path d="M7 10 12 3a2 2 0 0 1 2 2l-1 5h5.5a2.5 2.5 0 0 1 2.4 3.2l-1.8 6A2.5 2.5 0 0 1 16.7 21H7"/>',online:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',speak:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',retry:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6"/><path d="M18.4 15A7 7 0 0 1 6 18l-2-6"/>',share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>',download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'};
@@ -705,8 +721,9 @@ header.top{
     else if(event.stage==="failed")route.textContent=provider+" ব্যর্থ · বিকল্প খোঁজা হচ্ছে";
     else if(event.stage==="answered")route.textContent="উত্তর: "+provider+(model?" · "+model:"");
   }
+  function getChatProviderPreference(){var value="auto";try{value=localStorage.getItem("mosharrof_chat_provider_v1")||"auto";}catch(e){}return ["auto","gemini","cloudflare-workers-ai","groq","openrouter"].includes(value)?value:"auto";}
   function coreReply(t,image){
-    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})})
+    return fetch(CHAT_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,provider:getChatProviderPreference(),stream_status:true})})
       .then(function(res){
         function finish(data,status){
           var responseMeta={provider:data.provider||null,model:data.model||null,attempted:Array.isArray(data.attempted)?data.attempted:[]};
@@ -1094,7 +1111,7 @@ header.top{
   var busy=false;
   function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
   function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
-  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";input.style.height="40px";input.scrollTop=0;resize();
     if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
       session.messages=session.messages.slice(0,editTargetIndex);
       msgEl.innerHTML="";
@@ -1104,7 +1121,7 @@ header.top{
     addMsg("user",text||"📷 স্ক্রিনশট পাঠানো হয়েছে।");if(p.corrections.length)toast("Context corrected");var requestStartedAt=performance.now();typing(requestStartedAt);
     var imageMode=!attached&&looksLikeImagePrompt(text);
     var request=imageMode?imageReply(text):coreReply(text,attached);
-    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);busy=false;sendBtn.disabled=false;input.focus();});}
+    request.then(function(r){var elapsedMs=performance.now()-requestStartedAt;untype();if(imageMode){addGeneratedImage(r);}else{addMsg("ai",r.text,undefined,false,null,undefined,elapsedMs,r.responseMeta);}busy=false;sendBtn.disabled=false;input.focus();}).catch(function(e){var elapsedMs=performance.now()-requestStartedAt;untype();var err=String(e&&e.message||"");var message=imageMode?(err.indexOf("image_size_limit_unmet:")===0?"নির্ধারিত ফাইল-সাইজে ছবি সংকুচিত করা যায়নি। নির্দিষ্ট পিক্সেল মাপ ঠিক রেখে WebP/JPEG বা বেশি ফাইল-সাইজ চেষ্টা করুন।":"ইমেজ তৈরি করতে সমস্যা হয়েছে ("+(err||"unknown error")+ ")। আবার চেষ্টা করুন।"):"AI সংযোগ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";var responseMeta=e&&e.responseMeta?e.responseMeta:{failed:true,attempted:[]};addMsg("ai",message,undefined,false,null,undefined,elapsedMs,responseMeta);if(!input.value.trim()&&raw)input.value=raw;resize();busy=false;sendBtn.disabled=false;input.focus();});}
   function openD(side){scrim.classList.add("open");(side==="left"?dL:dR).classList.add("open");}
   function closeD(){scrim.classList.remove("open");dL.classList.remove("open");dR.classList.remove("open");}
   function updateMeta(){var el=$("#sessionMeta");if(!el)return;el.innerHTML="খোলা: "+fmtTime(session.openedAt)+"<br>শেষ সক্রিয়: "+fmtTime(session.lastActiveAt)+(session.closedAt?"<br>বন্ধ: "+fmtTime(session.closedAt):"");}
