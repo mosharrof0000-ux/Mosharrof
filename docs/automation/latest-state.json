@@ -1,94 +1,30 @@
 {
-  "timestamp_utc": "2026-10-17T11:06:57+00:00",
-  "event_name": "workflow_run",
+  "timestamp_utc": "2026-10-17T11:07:21+00:00",
+  "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39027413782",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027413782",
-  "source_run_id": "39027390378",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027390378",
+  "run_id": "39027317162",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39027317162",
+  "source_run_id": null,
+  "source_run_url": null,
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/smart-visual-intelligence-engine-2026-10-17",
-  "sha": "3567bc5e277f825378d4849d86c32f6620d4081b",
+  "sha": "1a1c905ec02955384c7bdb37b4485701c2d13206",
   "checked": [
-    "Completed workflow result: MOSHARROF Mandatory Architecture Gate = success",
-    "Source commit: 3567bc5e277f825378d4849d86c32f6620d4081b",
-    "Job: Mandatory Organ Isolation — completed/success"
+    "Push commit: docs(ui): document visual intelligence engine",
+    "Commit SHA: 1a1c905ec02955384c7bdb37b4485701c2d13206"
   ],
   "planned": [
-    "Record the completed workflow result, job-level checks and evidence URL.",
-    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+    "Record the commit message, changed paths and available checks.",
+    "Run the work-engine contract tests and validate the run metadata.",
+    "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "MOSHARROF Mandatory Architecture Gate",
-  "source_conclusion": "success",
+  "next_step": "Resume from the last durable gate checkpoint and inspect the failed start/checkpoint step.",
+  "source_workflow": null,
+  "source_conclusion": null,
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "Mandatory Organ Isolation",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout proposed commit and history",
-          "conclusion": "success"
-        },
-        {
-          "name": "Setup Python",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prove the gate blocks invalid replacements",
-          "conclusion": "success"
-        },
-        {
-          "name": "Validate registry and safe organ scaffolding",
-          "conclusion": "success"
-        },
-        {
-          "name": "Validate manifests and generated browser registry",
-          "conclusion": "success"
-        },
-        {
-          "name": "Setup Node.js for runtime contract tests",
-          "conclusion": "success"
-        },
-        {
-          "name": "Test organ runtime and UI contracts",
-          "conclusion": "success"
-        },
-        {
-          "name": "Fetch target branch",
-          "conclusion": "success"
-        },
-        {
-          "name": "Enforce organ isolation, link caps, and file-size limits",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Node.js for runtime contract tests",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Python",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Checkout proposed commit and history",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:07:17+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:07:21+00:00",
+  "outcome": "failure"
 }
