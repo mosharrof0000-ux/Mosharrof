@@ -150,16 +150,16 @@ jobs:
             cat "$OUT/state.json" >> "$EVENTS_FILE"
             printf '\n' >> "$EVENTS_FILE"
             python - "$OUT/state.json" "$LOG_REPO/docs/automation/latest-state.json" <<'PY'
-            import json, sys
-            from pathlib import Path
-            candidate_path, latest_path = map(Path, sys.argv[1:])
-            candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
-            previous = json.loads(latest_path.read_text(encoding="utf-8")) if latest_path.exists() else {}
-            def event_time(state):
-                return state.get("finished_at_utc") or state.get("timestamp_utc") or state.get("updated_at_utc") or ""
-            if event_time(candidate) >= event_time(previous):
-                latest_path.write_text(candidate_path.read_text(encoding="utf-8"), encoding="utf-8")
-            PY
+          import json, sys
+          from pathlib import Path
+          candidate_path, latest_path = map(Path, sys.argv[1:])
+          candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+          previous = json.loads(latest_path.read_text(encoding="utf-8")) if latest_path.exists() else {}
+          def event_time(state):
+              return state.get("finished_at_utc") or state.get("timestamp_utc") or state.get("updated_at_utc") or ""
+          if event_time(candidate) >= event_time(previous):
+              latest_path.write_text(candidate_path.read_text(encoding="utf-8"), encoding="utf-8")
+          PY
           cat > "$LOG_REPO/docs/automation/README.md" <<'EOF'
           # Automatic Work Engine Ledger
 
