@@ -37,7 +37,8 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: mosharrof-work-engine-run-${{ github.run_id }}
+  # Coalesce bursts of workflow_run events per branch: one active run and only the newest pending run.
+  group: mosharrof-work-engine-${{ github.event.workflow_run.head_branch || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
