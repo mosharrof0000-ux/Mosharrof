@@ -1,70 +1,37 @@
 {
-  "timestamp_utc": "2026-10-17T11:51:48+00:00",
+  "timestamp_utc": "2026-10-17T11:49:41+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39029096630",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39029096630",
-  "source_run_id": "39028882680",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028882680",
+  "run_id": "39028944152",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028944152",
+  "source_run_id": "39028882579",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028882579",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/manual-provider-control-menus-2026-10-17",
   "sha": "6403bab35d533eea83ed8af84974a592c6353055",
   "checked": [
-    "Completed workflow result: Mosharrof CI = failure",
+    "Completed workflow result: Mosharrof Verification Gate = cancelled",
     "Source commit: 6403bab35d533eea83ed8af84974a592c6353055",
-    "Job: test — completed/failure"
+    "Job: Verify before promotion — completed/cancelled"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Mosharrof CI",
-  "source_conclusion": "failure",
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "cancelled",
   "changed_files": [],
   "check_results": [
     {
-      "job": "test",
+      "job": "Verify before promotion",
       "status": "completed",
-      "conclusion": "failure",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/checkout@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run actions/setup-python@v5",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pip install -r requirements.txt",
-          "conclusion": "success"
-        },
-        {
-          "name": "Run python -m pytest -q",
-          "conclusion": "failure"
-        },
-        {
-          "name": "Post Run actions/setup-python@v5",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/checkout@v4",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
+      "conclusion": "cancelled",
+      "steps": []
     }
   ],
   "phase": "FINISHED",
-  "status": "success",
-  "finished_at_utc": "2026-10-17T11:51:54+00:00",
-  "outcome": "success"
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:52:15+00:00",
+  "outcome": "failure"
 }

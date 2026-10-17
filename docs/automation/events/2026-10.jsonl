@@ -33864,3 +33864,41 @@
   "outcome": "failure"
 }
 
+{
+  "timestamp_utc": "2026-10-17T11:49:41+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39028944152",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028944152",
+  "source_run_id": "39028882579",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39028882579",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feature/manual-provider-control-menus-2026-10-17",
+  "sha": "6403bab35d533eea83ed8af84974a592c6353055",
+  "checked": [
+    "Completed workflow result: Mosharrof Verification Gate = cancelled",
+    "Source commit: 6403bab35d533eea83ed8af84974a592c6353055",
+    "Job: Verify before promotion — completed/cancelled"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Inspect this work-engine run's logs, fix its first failure on a safe feature branch, and rerun focused checks.",
+  "source_workflow": "Mosharrof Verification Gate",
+  "source_conclusion": "cancelled",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "Verify before promotion",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "steps": []
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "failure",
+  "finished_at_utc": "2026-10-17T11:52:15+00:00",
+  "outcome": "failure"
+}
+
