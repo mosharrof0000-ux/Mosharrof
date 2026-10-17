@@ -1,5 +1,6 @@
 import { initializeComposerStopControl } from "./composer-stop.js";
 import { initializeComposerAutoGrow } from "./composer-autogrow.js";
+import { initializeComposerVoiceMeter } from "./composer-voice-meter.js";
 
 export function initializeComposerEnhancements() {
   if (typeof document === "undefined") return;
@@ -10,6 +11,25 @@ export function initializeComposerEnhancements() {
 
   initializeComposerStopControl(send);
   initializeComposerAutoGrow(input, composer);
+  initializeComposerVoiceMeter(document.getElementById("composerVoiceBtn"));
+
+  if (!document.getElementById("composer-layout-styles")) {
+    const layoutStyle = document.createElement("style");
+    layoutStyle.id = "composer-layout-styles";
+    layoutStyle.textContent = [
+      "#composer{display:flex;flex-direction:column;gap:7px}",
+      "#composer .composer-input-row{display:flex;align-items:stretch;width:100%;min-width:0}",
+      "#composer .composer-input-row .input{display:block;width:100%;flex:1;min-width:0;min-height:40px;max-height:min(44dvh,360px);padding:8px 6px;line-height:1.5;overflow-y:auto;overscroll-behavior:contain}",
+      "#composer .composer-actions-row{display:flex;align-items:center;gap:6px;min-height:36px}",
+      "#composer .composer-actions-spacer{flex:1;min-width:0}",
+      "#composerVoiceBtn.is-listening{background:#080808;border-color:rgba(255,255,255,.16);color:#f2f2f2;box-shadow:none}",
+      "#composerVoiceBtn.is-listening svg{animation:none}",
+      "#composerVoiceBtn.has-voice-activity svg{stroke:#4ade80;filter:drop-shadow(0 0 2px rgba(74,222,128,.35));transform-origin:50% 50%;animation:voice-mic-bob .24s ease-in-out infinite alternate}",
+      "#composerVoiceBtn.has-voice-activity{background:#080808;border-color:rgba(255,255,255,.16);box-shadow:none}",
+      "@media(max-width:480px){#composer{left:10px;right:10px;padding:8px 9px}#composer .composer-input-row .input{padding-left:4px;padding-right:4px}}"
+    ].join("\\n");
+    document.head.appendChild(layoutStyle);
+  }
 
   if (document.getElementById("composerExpandBtn")) return;
 
