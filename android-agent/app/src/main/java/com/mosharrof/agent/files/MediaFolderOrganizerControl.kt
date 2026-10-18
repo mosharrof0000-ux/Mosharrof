@@ -61,10 +61,14 @@ object MediaFolderOrganizerControl {
             val candidates = files.filter { it.isFile }.mapNotNull { file ->
                 val name = file.name ?: return@mapNotNull null
                 val kind = MediaLibraryAssistant.classify(name)
-                val topics = if (kind == MediaKind.AUDIO) {
+                val reviewed = if (kind == MediaKind.AUDIO) SongMetadataStore.load(activity, file.uri.toString()) else null
+                val topics = reviewed?.topics ?: if (kind == MediaKind.AUDIO) {
                     MediaLibraryAssistant.draftSongTopics(name).topics - SongTopic.UNKNOWN
                 } else emptySet()
-                val record = MediaRecord(file.uri.toString(), name, kind, file.length(), topics = topics)
+                val record = MediaRecord(
+                    file.uri.toString(), name, kind, file.length(),
+                    bengaliTitle = reviewed?.bengaliTitle, topics = topics
+                )
                 MediaFolderPlanner.plan(listOf(record)).firstOrNull()?.let { file to it }
             }
             val kindCounts = files.filter { it.isFile }.groupingBy { MediaLibraryAssistant.classify(it.name.orEmpty()) }.eachCount()
@@ -98,9 +102,12 @@ object MediaFolderOrganizerControl {
 
     private fun collect(folder: DocumentFile, depth: Int, out: MutableList<DocumentFile>) {
         if (depth > MAX_DEPTH || out.size >= MAX_FILES) return
+        val managedFolders = setOf("ছবি", "ভিডিও", "ডকুমেন্ট", "অ্যাপ ইনস্টলার", "আর্কাইভ", "গান", "গান/বিষয় নির্ধারণ বাকি")
         for (child in runCatching { folder.listFiles() }.getOrDefault(emptyArray())) {
             if (out.size >= MAX_FILES) return
-            if (child.isDirectory) collect(child, depth + 1, out) else if (child.isFile) out += child
+            if (child.isDirectory) {
+                if (child.name !in managedFolders) collect(child, depth + 1, out)
+            } else if (child.isFile) out += child
         }
     }
 
