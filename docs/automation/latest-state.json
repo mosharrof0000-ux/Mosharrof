@@ -1,30 +1,31 @@
 {
-  "timestamp_utc": "2026-10-18T18:51:01+00:00",
+  "timestamp_utc": "2026-10-18T18:51:17+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39156035025",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39156035025",
-  "source_run_id": "39155928840",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39155928840",
+  "run_id": "39156049489",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39156049489",
+  "source_run_id": "39155983598",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39155983598",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "qa/android-apk-chat-smoke-2026-10-19",
-  "sha": "15466f12e04af3f808efbbb4f399455aff3acc8e",
+  "branch": "main",
+  "sha": "5fe7624454e88faecc39a35e5d80406a1504c775",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = failure",
-    "Source commit: 15466f12e04af3f808efbbb4f399455aff3acc8e",
-    "Job: build-apk — completed/failure"
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: 5fe7624454e88faecc39a35e5d80406a1504c775",
+    "Job: test — completed/failure",
+    "Job: deploy — completed/skipped"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Build MOSHARROF Android APK",
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Deploy Mosharrof Pages",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "build-apk",
+      "job": "test",
       "status": "completed",
       "conclusion": "failure",
       "steps": [
@@ -33,23 +34,15 @@
           "conclusion": "success"
         },
         {
-          "name": "Checkout MOSHARROF",
+          "name": "Run actions/checkout@v6",
           "conclusion": "success"
         },
         {
-          "name": "Setup Node",
+          "name": "Run actions/setup-python@v6",
           "conclusion": "success"
         },
         {
-          "name": "Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify edge-to-edge web contract",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare Android full-screen voice manager",
+          "name": "Run python -m pip install -r requirements.txt",
           "conclusion": "success"
         },
         {
@@ -57,35 +50,35 @@
           "conclusion": "success"
         },
         {
-          "name": "Verify Android agent contract suite",
+          "name": "Run python -m pytest -q",
           "conclusion": "success"
         },
         {
-          "name": "Build debug APK",
+          "name": "Verify Pages artifact",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare candidate organ runtime assets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Chromium for candidate runtime smoke test",
+          "conclusion": "success"
+        },
+        {
+          "name": "Start candidate Pages server",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test candidate organ runtime in Chromium",
           "conclusion": "failure"
         },
         {
-          "name": "Verify APK",
+          "name": "Post Run actions/setup-python@v6",
           "conclusion": "skipped"
         },
         {
-          "name": "Upload APK artifact",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Publish GitHub Release",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Node",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Checkout MOSHARROF",
+          "name": "Post Run actions/checkout@v6",
           "conclusion": "success"
         },
         {
@@ -93,10 +86,16 @@
           "conclusion": "success"
         }
       ]
+    },
+    {
+      "job": "deploy",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T18:51:06+00:00",
+  "finished_at_utc": "2026-10-18T18:51:21+00:00",
   "outcome": "success"
 }
