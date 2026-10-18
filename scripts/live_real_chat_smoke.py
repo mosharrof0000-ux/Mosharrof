@@ -3,7 +3,7 @@
 
 Uses a disposable Playwright browser and one synthetic prompt against the real
 configured chat backend. No provider credentials are read or logged. This may
-consume one unit of provider quota and is never used by scheduled QA.
+consume provider quota. It is used by the explicit manual probe, the nightly scheduled probe, and after successful main Pages deployments.
 """
 from __future__ import annotations
 
