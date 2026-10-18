@@ -46,7 +46,10 @@ data class PluginCommand(
  * Approval is produced by the Android app's own visible confirmation UI,
  * never by a remote model or caller-supplied Boolean.
  */
-data class LocalApproval internal constructor(val requestId: String)
+data class LocalApproval internal constructor(
+    val requestId: String,
+    val expiresAtEpochMillis: Long = System.currentTimeMillis() + 60_000L
+)
 
 enum class PluginResultStatus {
     COMPLETED,
