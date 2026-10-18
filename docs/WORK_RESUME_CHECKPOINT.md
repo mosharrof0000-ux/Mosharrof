@@ -1,6 +1,6 @@
 # MOSHARROF Work Resume Checkpoint
 
-Last updated: 2026-10-18 18:47 UTC (2026-10-19 00:47 Bangladesh time)
+Last updated: 2026-10-19 02:00 UTC (2026-10-19 08:00 Bangladesh time)
 
 Purpose: resume from verified current evidence after a ChatGPT page/session change. Recheck exact SHAs and run states before acting. Preserve `main` and Live Pages; promote only through a clean PR with green required checks.
 
@@ -38,10 +38,10 @@ Purpose: resume from verified current evidence after a ChatGPT page/session chan
 
 - **Clean foundation PR #731**: https://github.com/mosharrof0000-ux/Mosharrof/pull/731
   - Branch: `feat/android-agent-foundation-clean-2026-10-18`
-  - Current head at checkpoint: `5383e9add40339688ab5a559cd753d9687d2e075`
-  - Draft; last metadata reported mergeable=true. Recheck mergeability and base SHA before promotion because main has advanced.
-  - Latest Android Agent CI run #39155469831 is IN PROGRESS: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39155469831. Setup/checkout/JDK/Gradle succeeded; debug APK build is in progress, unit and emulator tests have not yet run in this attempt.
-  - The workflow now bounds preflight ADB commands, test-APK build, APK installs and instrumentation to avoid indefinite hangs.
+  - Current status (2026-10-19): current-head checks show unit tests and debug APK build successful.
+  - Latest Android Agent CI run #39156843929: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39156843929. The only outstanding job is `Run emulator smoke tests` which is currently in progress.
+  - Failure details/artifacts will be preserved if `Run emulator smoke tests` fails.
+  - PR #731 remains unmerged until emulator smoke tests complete successfully.
 - **Old foundation PR #648**: https://github.com/mosharrof0000-ux/Mosharrof/pull/648
   - Old head `fce9e2afa96e5e02b9991c5a88ea018ab3c77b6f`; based on stale main.
   - Android Agent CI #39152902212 failed on the old emulator/UTP path. Do not merge it. Keep it open until PR #731 passes and is merged, then close it as superseded.
@@ -54,7 +54,7 @@ Purpose: resume from verified current evidence after a ChatGPT page/session chan
 
 ## Exact next actions
 
-1. Recheck Android Agent CI #39155469831 until terminal. If it fails, inspect logs/artifacts and fix the exact root cause on PR #731; do not merge while pending/red.
+1. Recheck Android Agent CI #39156843929 until terminal. If it fails, inspect logs/artifacts and preserve failure details to fix on PR #731; PR remains unmerged until emulator smoke completes successfully.
 2. Once PR #731's exact-head checks are green and mergeability is clean, mark ready and merge it; then close PR #648 as superseded.
 3. Create a clean assistant PR from PR #723's incremental diff on current main. Preserve current main's newer `core/composer-enhancements.js`; manually combine the stronger permission-disclosure assertions with the assistant UI smoke test rather than blindly copying a conflicting stale test file.
 4. Add a separate emulator-backed test of the actual generated MOSHARROF APK/WebView chat, using the built APK artifact and a real backend round-trip. Run it after a successful main APK build and nightly; inspect the report and fix CORS/backend issues if found.
