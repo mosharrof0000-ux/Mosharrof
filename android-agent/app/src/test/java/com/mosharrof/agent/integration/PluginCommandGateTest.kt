@@ -64,6 +64,21 @@ class PluginCommandGateTest {
     }
 
     @Test
+    fun expiredLocalApprovalCannotAuthorizeACommand() {
+        val command = PluginCommand(
+            requestId = "req-expired",
+            action = ControlAction.OPEN_APP,
+            targetApp = "Settings"
+        )
+        val expired = LocalApproval("req-expired", expiresAtEpochMillis = 999L)
+
+        assertEquals(
+            PluginCommandGate.Decision.NEEDS_CONFIRMATION,
+            PluginCommandGate.evaluate(command, expired, nowMillis = 1_000L)
+        )
+    }
+
+    @Test
     fun dangerousBengaliLabelsAreRejectedEvenWithApproval() {
         listOf("পাঠান", "মুছে ফেলুন", "টাকা পাঠান", "পেমেন্ট", "শেয়ার").forEachIndexed { index, label ->
             val requestId = "req-bn-$index"
