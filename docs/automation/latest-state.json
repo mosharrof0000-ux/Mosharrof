@@ -1,31 +1,30 @@
 {
-  "timestamp_utc": "2026-10-18T08:37:35+00:00",
+  "timestamp_utc": "2026-10-18T08:38:00+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39112156871",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39112156871",
-  "source_run_id": "39112140196",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39112140196",
+  "run_id": "39112161533",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39112161533",
+  "source_run_id": "39112140207",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39112140207",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "fix/refresh-pwa-cache-for-floating-chat-20261018",
   "sha": "081531d884b83631da3911518cca6abef0143f43",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Completed workflow result: Build MOSHARROF Android APK = failure",
     "Source commit: 081531d884b83631da3911518cca6abef0143f43",
-    "Job: test — completed/failure",
-    "Job: deploy — completed/skipped"
+    "Job: build-apk — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
-  "source_workflow": "Deploy Mosharrof Pages",
+  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Build MOSHARROF Android APK",
   "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "test",
+      "job": "build-apk",
       "status": "completed",
       "conclusion": "failure",
       "steps": [
@@ -34,15 +33,23 @@
           "conclusion": "success"
         },
         {
-          "name": "Run actions/checkout@v6",
+          "name": "Checkout MOSHARROF",
           "conclusion": "success"
         },
         {
-          "name": "Run actions/setup-python@v6",
+          "name": "Setup Node",
           "conclusion": "success"
         },
         {
-          "name": "Run python -m pip install -r requirements.txt",
+          "name": "Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify edge-to-edge web contract",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare Android full-screen voice manager",
           "conclusion": "success"
         },
         {
@@ -50,35 +57,35 @@
           "conclusion": "failure"
         },
         {
-          "name": "Run python -m pytest -q",
+          "name": "Verify Android agent contract suite",
           "conclusion": "skipped"
         },
         {
-          "name": "Verify Pages artifact",
+          "name": "Build debug APK",
           "conclusion": "skipped"
         },
         {
-          "name": "Prepare candidate organ runtime assets",
+          "name": "Verify APK",
           "conclusion": "skipped"
         },
         {
-          "name": "Install Chromium for candidate runtime smoke test",
+          "name": "Upload APK artifact",
           "conclusion": "skipped"
         },
         {
-          "name": "Start candidate Pages server",
+          "name": "Publish GitHub Release",
           "conclusion": "skipped"
         },
         {
-          "name": "Test candidate organ runtime in Chromium",
+          "name": "Post Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Node",
           "conclusion": "skipped"
         },
         {
-          "name": "Post Run actions/setup-python@v6",
-          "conclusion": "skipped"
-        },
-        {
-          "name": "Post Run actions/checkout@v6",
+          "name": "Post Checkout MOSHARROF",
           "conclusion": "success"
         },
         {
@@ -86,16 +93,10 @@
           "conclusion": "success"
         }
       ]
-    },
-    {
-      "job": "deploy",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T08:37:41+00:00",
+  "finished_at_utc": "2026-10-18T08:38:06+00:00",
   "outcome": "success"
 }
