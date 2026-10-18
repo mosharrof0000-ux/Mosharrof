@@ -1,108 +1,102 @@
 {
-  "timestamp_utc": "2026-10-18T18:18:38+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-18T18:19:43+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39153532016",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39153532016",
-  "source_run_id": null,
-  "source_run_url": null,
+  "run_id": "39153639083",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39153639083",
+  "source_run_id": "39153496777",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39153496777",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "main",
-  "sha": "a9250f1e6e852c0107f6a2c45b870641980c7b34",
+  "branch": "feat/android-control-plugin-bridge-2026-10-18",
+  "sha": "d6d798bbe431c175118844815d6df6da6b6a6bb8",
   "checked": [
-    "Push commit: test(qa): verify live chat nightly and after deploy",
-    "Commit SHA: a9250f1e6e852c0107f6a2c45b870641980c7b34",
-    "Check: deploy — queued/pending",
-    "Check: validate — completed/skipped",
-    "Check: record — in_progress/pending",
-    "Check: checkpoint — completed/success",
-    "Check: test — completed/success",
-    "Check: verify-ecosystem — completed/success",
-    "Check: Leave the repo clean — completed/success",
-    "Check: test — completed/success",
-    "Check: build-apk — in_progress/pending",
-    "Check: Component awareness heartbeat — completed/success",
-    "Check: test — completed/success"
+    "Completed workflow result: Build MOSHARROF Android APK = success",
+    "Source commit: d6d798bbe431c175118844815d6df6da6b6a6bb8",
+    "Job: build-apk — completed/success"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Wait for pending checks (deploy, record, build-apk); then inspect their results and artifacts.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "source_workflow": "Build MOSHARROF Android APK",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
-      "job": "deploy",
-      "status": "queued",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "validate",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "checkpoint",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": []
-    },
-    {
-      "job": "verify-ecosystem",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": []
-    },
-    {
-      "job": "Leave the repo clean",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": []
-    },
-    {
       "job": "build-apk",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Component awareness heartbeat",
       "status": "completed",
       "conclusion": "success",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": []
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout MOSHARROF",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Node",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify edge-to-edge web contract",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare Android full-screen voice manager",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Android agent contract suite",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build debug APK",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify APK",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload APK artifact",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish GitHub Release",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Node",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Checkout MOSHARROF",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T18:18:42+00:00",
+  "finished_at_utc": "2026-10-18T18:19:47+00:00",
   "outcome": "success"
 }
