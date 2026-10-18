@@ -2,8 +2,8 @@ name: Mosharrof Autonomous Work Cycle
 
 on:
   schedule:
-    # UTC hours 0,2,14,16,18,20,22 map to Bangladesh 06:00, 08:00, 20:00, 22:00, 00:00, 02:00, 04:00, 06:00. GitHub schedule is best-effort, not a continuous runner.
-    - cron: "0 0,2,14,16,18,20,22 * * *"
+    # Bangladesh time 20:00–08:00: UTC hours 14–23 and 0–2. GitHub schedule is best-effort; this is recurring work, not a guaranteed continuous 12-hour runner.
+    - cron: "0 0-2,14-23 * * *"
   workflow_dispatch:
   issues:
     types: [opened, edited]
