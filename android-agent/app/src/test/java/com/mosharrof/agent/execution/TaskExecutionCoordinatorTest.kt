@@ -96,6 +96,32 @@ class TaskExecutionCoordinatorTest {
     }
 
     @Test
+    fun timesOutBlockingAdapterAndDoesNotStartFollowingStep() {
+        val seen = mutableListOf<String>()
+        val adapter = object : TaskStepAdapter {
+            override fun execute(step: TaskStep): StepOutcome {
+                seen += step.id
+                if (step.id == "slow") Thread.sleep(2_000)
+                return StepOutcome.Completed
+            }
+            override fun verifyPostcondition(step: TaskStep) = true
+        }
+
+        val report = TaskExecutionCoordinator().execute(
+            listOf(
+                step("slow").copy(timeoutMillis = 100),
+                step("must-not-run")
+            ),
+            setOf("slow", "must-not-run"),
+            adapter
+        )
+
+        assertEquals(TaskRunState.FAILED, report.state)
+        assertEquals(StepState.TIMED_OUT, report.steps.single().state)
+        assertEquals(listOf("slow"), seen)
+    }
+
+    @Test
     fun rejectsDuplicateStepIdsBeforeRunning() {
         var executions = 0
         val adapter = object : TaskStepAdapter {
