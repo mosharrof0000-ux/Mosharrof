@@ -1,32 +1,32 @@
 {
-  "timestamp_utc": "2026-10-18T18:04:20+00:00",
+  "timestamp_utc": "2026-10-18T18:04:40+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39152457403",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152457403",
-  "source_run_id": "39152300843",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152300843",
+  "run_id": "39152481643",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152481643",
+  "source_run_id": "39152458597",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152458597",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "feat/android-control-plugin-bridge-2026-10-18",
-  "sha": "fc29f9d5f1e4bf0f7938c8b370157afdc6074a00",
+  "branch": "feat/nightly-backlog-duty-2026-10-18",
+  "sha": "aa00ece86809c6ad060003cc537dc728db503ace",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = success",
-    "Source commit: fc29f9d5f1e4bf0f7938c8b370157afdc6074a00",
-    "Job: build-apk — completed/success"
+    "Completed workflow result: Build MOSHARROF Android APK = failure",
+    "Source commit: aa00ece86809c6ad060003cc537dc728db503ace",
+    "Job: build-apk — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
   "source_workflow": "Build MOSHARROF Android APK",
-  "source_conclusion": "success",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
       "job": "build-apk",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
@@ -54,23 +54,23 @@
         },
         {
           "name": "Enforce file and folder size budgets",
-          "conclusion": "success"
+          "conclusion": "failure"
         },
         {
           "name": "Verify Android agent contract suite",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Build debug APK",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Verify APK",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Upload APK artifact",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Publish GitHub Release",
@@ -82,7 +82,7 @@
         },
         {
           "name": "Post Setup Node",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Post Checkout MOSHARROF",
@@ -97,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T18:04:25+00:00",
+  "finished_at_utc": "2026-10-18T18:04:45+00:00",
   "outcome": "success"
 }
