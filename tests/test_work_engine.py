@@ -104,3 +104,16 @@ class WorkEngineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+def test_autonomous_workflow_scripts_are_valid_python():
+    import ast
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    for relative in (
+        ".github/scripts/build_backlog_task.py",
+        ".github/scripts/publish_autonomous_pr.py",
+        ".github/scripts/mosharrof_agent.py",
+    ):
+        ast.parse((root / relative).read_text(encoding="utf-8"), filename=relative)
+
