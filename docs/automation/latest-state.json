@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-10-18T08:35:47+00:00",
+  "timestamp_utc": "2026-10-18T08:36:07+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39112018107",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39112018107",
-  "source_run_id": "39111895557",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39111895557",
+  "run_id": "39112050781",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39112050781",
+  "source_run_id": "39111943934",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39111943934",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "main",
-  "sha": "e1bd8cef5962731c7f280df4b284ee039a3b2fab",
+  "branch": "fix/refresh-pwa-cache-for-floating-chat-20261018",
+  "sha": "bd0b7c9d400c7a5277f5019debbe1b8e24fe88d7",
   "checked": [
     "Completed workflow result: Build MOSHARROF Android APK = success",
-    "Source commit: e1bd8cef5962731c7f280df4b284ee039a3b2fab",
+    "Source commit: bd0b7c9d400c7a5277f5019debbe1b8e24fe88d7",
     "Job: build-apk — completed/success"
   ],
   "planned": [
@@ -74,7 +74,7 @@
         },
         {
           "name": "Publish GitHub Release",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Post Setup Java",
@@ -97,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T08:35:51+00:00",
+  "finished_at_utc": "2026-10-18T08:36:12+00:00",
   "outcome": "success"
 }
