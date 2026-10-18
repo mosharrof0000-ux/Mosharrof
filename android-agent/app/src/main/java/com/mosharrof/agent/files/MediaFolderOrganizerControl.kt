@@ -224,7 +224,7 @@ object MediaFolderOrganizerControl {
                             if (runCatching { source.delete() }.getOrDefault(false)) moved++ else copiedKept++
                         } catch (_: Exception) { failed++ }
                     }
-                    val playlistCount = MediaFolderOrganizerFileOps.writeTopicPlaylists(activity, root, playlists)
+                    val playlistCount = MediaFolderOrganizerFileOps.writeTopicPlaylists(activity, root, playlists) { failedPlaylist -> runCatching { failedPlaylist.delete() } }
                     activity.runOnUiThread {
                         if (!activity.isFinishing) status.text =
                             "ফোল্ডার সাজানোর ফল: ${moved}টি কপি-যাচাই করে মূল স্থান থেকে সরেছে; ${copiedKept}টি কপি হয়েছে কিন্তু মূল ফাইল রাখা হয়েছে; ${failed}টি ব্যর্থ।\nবিষয়ভিত্তিক প্লেলিস্ট তৈরি: ${playlistCount}টি।"
