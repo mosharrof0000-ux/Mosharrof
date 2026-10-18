@@ -55,7 +55,8 @@ object AudioAnalysisClient {
                     output.toByteArray()
                 } ?: throw IllegalStateException("নির্বাচিত অডিও পড়া যায়নি")
                 require(bytes.isNotEmpty()) { "অডিও ফাইল খালি" }
-                val mime = (resolver.getType(uri) ?: mimeFromName(name))
+                val resolvedMime = resolver.getType(uri)
+                val mime = if (resolvedMime?.startsWith("audio/") == true) resolvedMime else mimeFromName(name)
                 require(mime.startsWith("audio/")) { "নির্বাচিত ফাইলটি অডিও নয়" }
                 val metadata = request(name, bytes, mime, key)
                 SongMetadataStore.save(context, uri.toString(), metadata)
