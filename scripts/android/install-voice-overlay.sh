@@ -308,3 +308,21 @@ public class VoiceOverlayService extends Service {
     @Override public IBinder onBind(Intent intent) { return null; }
 }
 JAVA
+
+# Enable Android's native picture-in-picture window for the existing MainActivity.
+python - <<'PY'
+from pathlib import Path
+import re
+path = Path("android/app/src/main/AndroidManifest.xml")
+xml = path.read_text(encoding="utf-8")
+match = re.search(r'<activity\\b(?=[^>]*android:name="\\.MainActivity")[^>]*>', xml, re.S)
+if not match:
+    raise SystemExit("MainActivity manifest declaration not found")
+tag = match.group(0)
+for name, value in (("android:supportsPictureInPicture", "true"), ("android:resizeableActivity", "true")):
+    if name not in tag:
+        tag = tag[:-1] + f' {name}="{value}">'
+xml = xml[:match.start()] + tag + xml[match.end():]
+path.write_text(xml, encoding="utf-8")
+print("Native floating chat PiP manifest: PASS")
+PY
