@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-10-18T17:16:11+00:00",
+  "timestamp_utc": "2026-10-18T17:23:19+00:00",
   "event_name": "push",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39148779502",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39148779502",
+  "run_id": "39149340861",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39149340861",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/full-app-interactive-qa-engine-2026-10-17",
-  "sha": "89c73663586ccf470942b224aefd03ffc79dcccf",
+  "sha": "143aff07f4cdde8e64a07f7ff76c0566fa48ad35",
   "checked": [
-    "Push commit: test(qa): assert response completion condition",
-    "Commit SHA: 89c73663586ccf470942b224aefd03ffc79dcccf",
+    "Push commit: chore(qa): keep APK release workflow outside QA engine PR",
+    "Commit SHA: 143aff07f4cdde8e64a07f7ff76c0566fa48ad35",
     "Check: Redirect rules - bucolic-mooncake-c83372 — in_progress/pending",
     "Check: Header rules - bucolic-mooncake-c83372 — in_progress/pending",
     "Check: Pages changed - bucolic-mooncake-c83372 — in_progress/pending",
     "Check: validate — completed/skipped",
-    "Check: record — in_progress/pending",
-    "Check: test — in_progress/pending"
+    "Check: test — in_progress/pending",
+    "Check: record — in_progress/pending"
   ],
   "planned": [
     "Record the commit message, changed paths and available checks.",
     "Run the work-engine contract tests and validate the run metadata.",
     "Publish a durable log entry and a machine-readable latest state."
   ],
-  "next_step": "Wait for pending checks (Redirect rules - bucolic-mooncake-c83372, Header rules - bucolic-mooncake-c83372, Pages changed - bucolic-mooncake-c83372, record, test); then inspect their results and artifacts.",
+  "next_step": "Wait for pending checks (Redirect rules - bucolic-mooncake-c83372, Header rules - bucolic-mooncake-c83372, Pages changed - bucolic-mooncake-c83372, test, record); then inspect their results and artifacts.",
   "source_workflow": null,
   "source_conclusion": null,
   "changed_files": [],
@@ -52,13 +52,13 @@
       "steps": []
     },
     {
-      "job": "record",
+      "job": "test",
       "status": "in_progress",
       "conclusion": null,
       "steps": []
     },
     {
-      "job": "test",
+      "job": "record",
       "status": "in_progress",
       "conclusion": null,
       "steps": []
@@ -66,6 +66,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T17:16:12+00:00",
+  "finished_at_utc": "2026-10-18T17:23:19+00:00",
   "outcome": "success"
 }
