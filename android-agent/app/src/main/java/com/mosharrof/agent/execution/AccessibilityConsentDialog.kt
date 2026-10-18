@@ -12,13 +12,13 @@ object AccessibilityConsentDialog {
     private const val PREFS = "mosharrof_privacy"
     private const val KEY_CONSENTED = "accessibility_disclosure_consented"
 
-    fun show(activity: Activity, onAccepted: () -> Unit) {
+    fun show(activity: Activity, onAccepted: () -> Unit): AlertDialog? {
         if (activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CONSENTED, false)) {
             onAccepted()
-            return
+            return null
         }
 
-        AlertDialog.Builder(activity)
+        val dialog = AlertDialog.Builder(activity)
             .setTitle("স্ক্রিন নিয়ন্ত্রণের অনুমতি")
             .setMessage(
                 "MOSHARROF AI স্ক্রিনে দৃশ্যমান লেখা ও বোতামের তথ্য পড়তে পারে, " +
@@ -34,6 +34,8 @@ object AccessibilityConsentDialog {
                 onAccepted()
             }
             .setOnCancelListener { }
-            .show()
+            .create()
+        dialog.show()
+        return dialog
     }
 }
