@@ -1,33 +1,33 @@
 {
-  "timestamp_utc": "2026-10-18T18:24:04+00:00",
+  "timestamp_utc": "2026-10-18T18:24:51+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39153966509",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39153966509",
-  "source_run_id": "39153916300",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39153916300",
+  "run_id": "39154022249",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154022249",
+  "source_run_id": "39153996172",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39153996172",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "feat/android-agent-foundation-clean-2026-10-18",
-  "sha": "80bd10476aff75c928e9cefa3222652860423351",
+  "branch": "fix/background-automation-resilience-20261019",
+  "sha": "43ab7a97132c0d8c0016910615743834878e84e6",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = success",
-    "Source commit: 80bd10476aff75c928e9cefa3222652860423351",
-    "Job: test — completed/success",
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: 43ab7a97132c0d8c0016910615743834878e84e6",
+    "Job: test — completed/failure",
     "Job: deploy — completed/skipped"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
   "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "success",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
@@ -47,35 +47,35 @@
         },
         {
           "name": "Enforce file and folder size budgets",
-          "conclusion": "success"
+          "conclusion": "failure"
         },
         {
           "name": "Run python -m pytest -q",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Verify Pages artifact",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Prepare candidate organ runtime assets",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Install Chromium for candidate runtime smoke test",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Start candidate Pages server",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Test candidate organ runtime in Chromium",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Post Run actions/setup-python@v6",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Post Run actions/checkout@v6",
@@ -96,6 +96,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T18:24:10+00:00",
+  "finished_at_utc": "2026-10-18T18:24:57+00:00",
   "outcome": "success"
 }
