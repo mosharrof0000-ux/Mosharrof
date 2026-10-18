@@ -1,91 +1,84 @@
 {
-  "timestamp_utc": "2026-10-17T17:53:57+00:00",
+  "timestamp_utc": "2026-10-18T08:07:39+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39055733954",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39055733954",
-  "source_run_id": "39055600638",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39055600638",
+  "run_id": "39110238856",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39110238856",
+  "source_run_id": "39110222673",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39110222673",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "main",
-  "sha": "fa19971e6dab74bfc8c5fdcd4f72e3539db65a2f",
+  "branch": "feature/main-chat-newchat-floating-popup-20261018",
+  "sha": "fb76a00d5dbb14029a2c60d3f41650d03f75dc31",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = success",
-    "Source commit: fa19971e6dab74bfc8c5fdcd4f72e3539db65a2f",
-    "Job: build-apk — completed/success"
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: fb76a00d5dbb14029a2c60d3f41650d03f75dc31",
+    "Job: test — completed/failure",
+    "Job: deploy — completed/skipped"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Build MOSHARROF Android APK",
-  "source_conclusion": "success",
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Deploy Mosharrof Pages",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "build-apk",
+      "job": "test",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
           "conclusion": "success"
         },
         {
-          "name": "Checkout MOSHARROF",
+          "name": "Run actions/checkout@v6",
           "conclusion": "success"
         },
         {
-          "name": "Setup Node",
+          "name": "Run actions/setup-python@v6",
           "conclusion": "success"
         },
         {
-          "name": "Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify edge-to-edge web contract",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare Android full-screen voice manager",
+          "name": "Run python -m pip install -r requirements.txt",
           "conclusion": "success"
         },
         {
           "name": "Enforce file and folder size budgets",
-          "conclusion": "success"
+          "conclusion": "failure"
         },
         {
-          "name": "Verify Android agent contract suite",
-          "conclusion": "success"
+          "name": "Run python -m pytest -q",
+          "conclusion": "skipped"
         },
         {
-          "name": "Build debug APK",
-          "conclusion": "success"
+          "name": "Verify Pages artifact",
+          "conclusion": "skipped"
         },
         {
-          "name": "Verify APK",
-          "conclusion": "success"
+          "name": "Prepare candidate organ runtime assets",
+          "conclusion": "skipped"
         },
         {
-          "name": "Upload APK artifact",
-          "conclusion": "success"
+          "name": "Install Chromium for candidate runtime smoke test",
+          "conclusion": "skipped"
         },
         {
-          "name": "Publish GitHub Release",
-          "conclusion": "success"
+          "name": "Start candidate Pages server",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Setup Java",
-          "conclusion": "success"
+          "name": "Test candidate organ runtime in Chromium",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Setup Node",
-          "conclusion": "success"
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "skipped"
         },
         {
-          "name": "Post Checkout MOSHARROF",
+          "name": "Post Run actions/checkout@v6",
           "conclusion": "success"
         },
         {
@@ -93,10 +86,16 @@
           "conclusion": "success"
         }
       ]
+    },
+    {
+      "job": "deploy",
+      "status": "completed",
+      "conclusion": "skipped",
+      "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-17T17:54:03+00:00",
+  "finished_at_utc": "2026-10-18T08:07:43+00:00",
   "outcome": "success"
 }
