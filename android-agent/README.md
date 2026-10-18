@@ -39,7 +39,7 @@ gradle assembleDebug
 gradle testDebugUnitTest
 ```
 
-GitHub Actions is configured to build a debug APK, run JVM unit tests and emulator instrumentation tests, and upload the APK only if all configured steps pass. A debug APK is for testing, not a release-signed production build.
+GitHub Actions is configured to build a debug APK, run JVM unit tests and emulator instrumentation tests, and upload the APK only if all configured steps pass. Emulator CI preserves snapshots where supported, waits for the Android device to boot, and captures logcat if the bounded instrumentation run fails. A debug APK is for testing, not a release-signed production build.
 
 ## Current implementation limits
 
