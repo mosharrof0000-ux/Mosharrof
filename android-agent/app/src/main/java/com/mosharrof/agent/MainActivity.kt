@@ -23,6 +23,7 @@ import com.mosharrof.agent.execution.DeviceIntentControl
 import com.mosharrof.agent.execution.AppPackageControl
 import com.mosharrof.agent.files.UserFileAccessControl
 import com.mosharrof.agent.files.MediaFolderOrganizerControl
+import com.mosharrof.agent.files.AudioAnalysisControl
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
@@ -48,6 +49,9 @@ class MainActivity : ComponentActivity() {
     private val apkPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status)
         else status.text = "APK নির্বাচন বাতিল করা হয়েছে; কোনো অ্যাপ ইনস্টল হয়নি।"
+    }
+    private val audioPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        AudioAnalysisControl.analyzeSelected(this, uri, status)
     }
     private val permissionResult = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -128,6 +132,7 @@ class MainActivity : ComponentActivity() {
             ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled, ::prepareCommand)
             UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
             MediaFolderOrganizerControl.addTo(this@MainActivity, this, status) { organizerFolderPicker.launch(null) }
+            AudioAnalysisControl.addTo(this@MainActivity, this, status) { audioPicker.launch(arrayOf("audio/*")) }
             addView(Button(this@MainActivity).apply {
                 text = "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
                 setOnClickListener { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) }
