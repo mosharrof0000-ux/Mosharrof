@@ -8,6 +8,7 @@ export function initializeNewChatFloatingOrgan() {
   css.rel = "stylesheet";
   css.href = new URL("./style.css", import.meta.url).href;
   document.head.appendChild(css);
+  ["compact.css", "theme.css"].forEach(function (name) { var link = document.createElement("link"); link.rel = "stylesheet"; link.href = new URL("./" + name, import.meta.url).href; document.head.appendChild(link); });
 
   var button = document.createElement("button");
   button.className = "top-new-chat";
@@ -18,32 +19,7 @@ export function initializeNewChatFloatingOrgan() {
   button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   header.insertBefore(button, right);
 
-  var themeButton = document.createElement("button");
-  themeButton.className = "top-theme-toggle";
-  themeButton.id = "topThemeToggle";
-  themeButton.type = "button";
-  themeButton.setAttribute("aria-label", "দিন/রাতের থিম বদলান");
-  themeButton.title = "দিন/রাতের থিম";
-  themeButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>';
-  header.insertBefore(themeButton, button);
-  function applyTheme(theme) {
-    var next = theme === "light" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-    themeButton.setAttribute("aria-pressed", next === "light" ? "true" : "false");
-    themeButton.innerHTML = next === "light"
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z"/></svg>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>';
-    var metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) metaTheme.setAttribute("content", next === "light" ? "#f5f7fb" : "#000000");
-    try { localStorage.setItem("mosharrof_theme", next); } catch (_) {}
-  }
-  var savedTheme = "dark";
-  try { savedTheme = localStorage.getItem("mosharrof_theme") || "dark"; } catch (_) {}
-  applyTheme(savedTheme);
-  themeButton.addEventListener("click", function (event) {
-    event.preventDefault(); event.stopPropagation();
-    applyTheme(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
-  });
+  import("./theme.js").then(function (theme) { theme.initializeThemeToggle(header, button); }).catch(function (error) { console.error("[MOSHARROF Theme] Initialization failed", error); });
 
   var pressTimer = null;
   var longPressed = false;
