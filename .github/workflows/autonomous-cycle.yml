@@ -46,7 +46,7 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           COMMENT_BODY: ${{ github.event.comment.body }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.MOSHARROF_RECOVERY_TOKEN || github.token }}
           GH_REPO: ${{ github.repository }}
         run: python3 .github/scripts/build_backlog_task.py
 
