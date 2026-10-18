@@ -16,7 +16,6 @@ import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
 import com.mosharrof.agent.accessibility.GalleryImageAnalysisControl
-import com.mosharrof.agent.accessibility.FloatingControlToggle
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
@@ -129,7 +128,6 @@ class MainActivity : ComponentActivity() {
             addView(planButton)
             addView(confirmButton)
             SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
-            FloatingControlToggle.addTo(this@MainActivity, this, status)
             TaskControlButtons.addCancelButton(this@MainActivity, this) { taskController.cancelPending() }
             addView(inspectButton)
             addView(screenDetails)
