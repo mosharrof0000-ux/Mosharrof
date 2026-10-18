@@ -45,6 +45,9 @@ def main() -> int:
         "core/design-intelligence.css": "web/design-intelligence.css",
         "core/new-chat-floating/index.js": "web/core/new-chat-floating/index.js",
         "core/new-chat-floating/style.css": "web/core/new-chat-floating/style.css",
+        "core/new-chat-floating/compact.css": "web/core/new-chat-floating/compact.css",
+        "core/new-chat-floating/theme.css": "web/core/new-chat-floating/theme.css",
+        "core/new-chat-floating/theme.js": "web/core/new-chat-floating/theme.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
@@ -152,7 +155,7 @@ def main() -> int:
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
-        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js", "web/core/design-intelligence.js", "web/design-intelligence.css", "web/core/new-chat-floating/index.js", "web/core/new-chat-floating/style.css")]
+        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js", "web/core/design-intelligence.js", "web/design-intelligence.css", "web/core/new-chat-floating/index.js", "web/core/new-chat-floating/style.css", "web/core/new-chat-floating/compact.css", "web/core/new-chat-floating/theme.css", "web/core/new-chat-floating/theme.js")]
     if not all(p.is_file() for p in required):
         raise SystemExit("ORGAN ASSET PREP: required browser files are missing")
     print(f"ORGAN ASSET PREP: PASS — {len(ui_ids)} UI organs prepared")
