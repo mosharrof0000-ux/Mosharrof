@@ -153,8 +153,7 @@ object CapabilityPermissionCenter {
         }
         val action = capability.settingsAction ?: return
         val intent = Intent(action).apply {
-            if (action == Settings.ACTION_MANAGE_OVERLAY_PERMISSION ||
-                action == Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM ||
+            if (action == Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM ||
                 action == Settings.ACTION_MANAGE_WRITE_SETTINGS ||
                 action == Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS ||
                 action == Settings.ACTION_APPLICATION_DETAILS_SETTINGS) {
