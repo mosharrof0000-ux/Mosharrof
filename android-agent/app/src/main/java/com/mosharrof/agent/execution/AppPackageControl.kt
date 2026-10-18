@@ -17,12 +17,16 @@ object AppPackageControl {
         val command = rawCommand.trim()
         if (command.length !in 1..240) return false
         val lower = command.lowercase()
+        if (lower in setOf("uninstall app", "অ্যাপ আনইনস্টল করো", "আনইনস্টল করো", "আনইনস্টল করুন")) {
+            status.text = "কোন অ্যাপটি আনইনস্টল করতে হবে তার সঠিক নাম বলুন।"
+            return true
+        }
         val uninstallPrefixes = listOf("uninstall ", "remove app ", "অ্যাপ আনইনস্টল ", "আনইনস্টল করো ", "আনইনস্টল করুন ")
         val uninstallSuffixes = listOf(" আনইনস্টল করো", " আনইনস্টল করুন", " uninstall", " remove")
         val uninstallTarget = uninstallPrefixes.firstOrNull { lower.startsWith(it) }?.let { command.drop(it.length).trim() }
             ?: uninstallSuffixes.firstOrNull { lower.endsWith(it) }?.let { command.dropLast(it.length).trim() }
-        if (uninstallTarget != null || lower == "uninstall app" || lower == "অ্যাপ আনইনস্টল করো") {
-            if (uninstallTarget.isNullOrBlank()) {
+        if (uninstallTarget != null) {
+            if (uninstallTarget.isBlank()) {
                 status.text = "কোন অ্যাপটি আনইনস্টল করতে হবে তার সঠিক নাম বলুন।"
                 return true
             }
@@ -31,12 +35,14 @@ object AppPackageControl {
             else requestUninstall(activity, packageName, status)
             return true
         }
+        val installWithoutName = lower in setOf("install app", "অ্যাপ ইনস্টল করো", "অ্যাপ ইনস্টল করুন", "ইনস্টল করো", "ইনস্টল করুন")
         val installPrefixes = listOf("install ", "install app ", "অ্যাপ ইনস্টল ", "ইনস্টল করো ", "ইনস্টল করুন ")
         val installSuffixes = listOf(" ইনস্টল করো", " ইনস্টল করুন", " install")
         val installTarget = installPrefixes.firstOrNull { lower.startsWith(it) }?.let { command.drop(it.length).trim() }
             ?: installSuffixes.firstOrNull { lower.endsWith(it) }?.let { command.dropLast(it.length).trim() }
-        if (installTarget != null || lower == "install app" || lower == "অ্যাপ ইনস্টল করো") {
-            if (installTarget.isNullOrBlank() || installTarget.equals("apk", true) ||
+        if (installTarget != null || installWithoutName) {
+            if (installWithoutName || installTarget.isNullOrBlank() || installTarget.equals("apk", true) ||
+                installTarget.equals("app", true) || installTarget.equals("অ্যাপ", true) ||
                 installTarget.contains("ফাইল") || installTarget.contains("apk")) {
                 status.text = "Android ফাইল পিকার থেকে APK নির্বাচন করুন।"
                 pickApk()
