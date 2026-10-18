@@ -44,7 +44,11 @@ sealed interface StepOutcome {
     data class Failed(val reason: String) : StepOutcome
 }
 
-/** The adapter must use supported Android APIs and verify the actual resulting state. */
+/**
+ * Adapter contract: use supported Android APIs, bounded calls, and verify actual resulting state.
+ * Implementations must cooperate with thread interruption. A timeout sends an interrupt but cannot
+ * roll back an external side effect already performed; callers must never blindly retry timed-out work.
+ */
 interface TaskStepAdapter {
     fun execute(step: TaskStep): StepOutcome
     fun verifyPostcondition(step: TaskStep): Boolean
