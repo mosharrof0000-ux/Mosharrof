@@ -1,19 +1,19 @@
 {
-  "timestamp_utc": "2026-10-18T08:11:55+00:00",
+  "timestamp_utc": "2026-10-18T08:12:13+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39110501661",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39110501661",
-  "source_run_id": "39110481869",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39110481869",
+  "run_id": "39110518396",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39110518396",
+  "source_run_id": "39110497427",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39110497427",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feature/main-chat-newchat-floating-popup-20261018",
-  "sha": "a1340a8f2c72525625eece0086f485421c40aae6",
+  "sha": "62dc47da61c9aa5b67002d5ed35a77899c1bfec5",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
-    "Source commit: a1340a8f2c72525625eece0086f485421c40aae6",
-    "Job: test — completed/cancelled",
-    "Job: deploy — completed/cancelled"
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: 62dc47da61c9aa5b67002d5ed35a77899c1bfec5",
+    "Job: test — completed/failure",
+    "Job: deploy — completed/skipped"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
@@ -21,13 +21,13 @@
   ],
   "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
   "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "cancelled",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "cancelled",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
@@ -90,12 +90,12 @@
     {
       "job": "deploy",
       "status": "completed",
-      "conclusion": "cancelled",
+      "conclusion": "skipped",
       "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T08:11:59+00:00",
+  "finished_at_utc": "2026-10-18T08:12:18+00:00",
   "outcome": "success"
 }
