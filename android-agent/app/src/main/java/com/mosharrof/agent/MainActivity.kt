@@ -167,7 +167,7 @@ class MainActivity : ComponentActivity() {
             intent.removeExtra(EXTRA_START_VOICE)
             window.decorView.post { startSpeechInput() }
         }
-        handleExternalCommand(intent)
+        ExternalDeviceCommandHandler.handle(this, intent, commandInput, status, ::prepareCommand)
     }
     override fun onResume() {
         super.onResume()
