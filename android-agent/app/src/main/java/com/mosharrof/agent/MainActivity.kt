@@ -15,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.accessibility.FloatingControlToggle
-import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
@@ -25,7 +24,6 @@ import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
 import com.mosharrof.agent.notifications.NotificationAccessControl
-import com.mosharrof.agent.files.UserFileAccessControl
 import com.mosharrof.agent.admin.ManagedDeviceControl
 import com.mosharrof.agent.planner.AiCommandNormalizer
 import com.mosharrof.agent.permissions.PermissionCenterControl
@@ -43,9 +41,6 @@ class MainActivity : ComponentActivity() {
         val granted = grants.count { it.value }
         val denied = grants.size - granted
         status.text = "অনুমতি ফলাফল: ${granted}টি অনুমোদিত, ${denied}টি অননুমোদিত। বিশেষ অনুমতিগুলো নিচের Settings বোতাম থেকে চালু করুন।"
-    }
-    private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -115,10 +110,8 @@ class MainActivity : ComponentActivity() {
             FloatingControlToggle.addTo(this@MainActivity, this, status)
             TaskControlButtons.addCancelButton(this@MainActivity, this) { taskController.cancelPending() }
             addView(inspectButton)
-            ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled, ::prepareCommand)
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
-            UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
             addView(Button(this@MainActivity).apply {
                 text = "সমস্ত runtime permission চাইুন"
                 setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
@@ -219,7 +212,6 @@ class MainActivity : ComponentActivity() {
         }
     }
     override fun onDestroy() {
-        ScreenshotAnalysisControl.release()
         speechOutput?.close()
         super.onDestroy()
     }
