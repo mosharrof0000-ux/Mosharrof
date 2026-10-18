@@ -1,6 +1,8 @@
 package com.mosharrof.agent
 
+import android.app.AlertDialog
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.atomic.AtomicBoolean
 
 @RunWith(AndroidJUnit4::class)
 class MainActivitySmokeTest {
@@ -87,19 +90,21 @@ class MainActivitySmokeTest {
 
     @Test
     fun accessibilityDisclosureRequiresExplicitConsent() {
+        lateinit var preferences: SharedPreferences
+        lateinit var dialog: AlertDialog
+        val accepted = AtomicBoolean(false)
+
         activityRule.scenario.onActivity { activity ->
-            val preferences = activity.getSharedPreferences(
+            preferences = activity.getSharedPreferences(
                 "mosharrof_privacy",
                 android.content.Context.MODE_PRIVATE
             )
             preferences.edit().clear().commit()
-            assertNotNull(
-                "Accessibility settings entry must exist in the Activity hierarchy",
-                findTextView(activity.window.decorView, "Accessibility সেটিংস খুলুন")
-            )
+            val button = findTextView(activity.window.decorView, "Accessibility সেটিংস খুলুন")
+                ?: throw AssertionError("Accessibility settings entry must exist in the Activity hierarchy")
+            assertNotNull("Accessibility settings entry must exist", button)
 
-            val accepted = booleanArrayOf(false)
-            val dialog = AccessibilityConsentDialog.show(activity) { accepted[0] = true }
+            dialog = AccessibilityConsentDialog.show(activity) { accepted.set(true) }
                 ?: throw AssertionError("Consent dialog should be shown before consent")
             assertTrue("Consent dialog should be visible", dialog.isShowing)
             val dialogRoot = dialog.window?.decorView
@@ -115,20 +120,26 @@ class MainActivitySmokeTest {
                 "এখন নয়",
                 dialog.getButton(DialogInterface.BUTTON_NEGATIVE).text.toString()
             )
-            assertFalse("Settings callback must not run before consent", accepted[0])
-
+            assertFalse("Settings callback must not run before consent", accepted.get())
             dialog.getButton(DialogInterface.BUTTON_NEGATIVE).performClick()
-            assertFalse("Dismissing consent must not authorize Settings", accepted[0])
-            assertFalse("Negative action should dismiss the dialog", dialog.isShowing)
+        }
 
-            val confirmation = AccessibilityConsentDialog.show(activity) { accepted[0] = true }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        assertFalse("Negative action should dismiss the dialog", dialog.isShowing)
+        assertFalse("Dismissing consent must not authorize Settings", accepted.get())
+
+        lateinit var confirmation: AlertDialog
+        activityRule.scenario.onActivity { activity ->
+            confirmation = AccessibilityConsentDialog.show(activity) { accepted.set(true) }
                 ?: throw AssertionError("Consent dialog should be shown again until accepted")
             confirmation.getButton(DialogInterface.BUTTON_POSITIVE).performClick()
-            assertTrue("Only the positive consent action may authorize Settings", accepted[0])
-            assertTrue(
-                "Explicit consent must be persisted",
-                preferences.getBoolean("accessibility_disclosure_consented", false)
-            )
         }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        assertTrue("Only the positive consent action may authorize Settings", accepted.get())
+        assertTrue(
+            "Explicit consent must be persisted",
+            preferences.getBoolean("accessibility_disclosure_consented", false)
+        )
     }
+}
 }
