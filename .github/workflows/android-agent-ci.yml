@@ -48,7 +48,7 @@ jobs:
           api-level: 35
           arch: x86_64
           emulator-port: 5556
-          emulator-boot-timeout: 300000
+          emulator-boot-timeout: 300
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -camera-back none
           disable-animations: true
           disable-spellchecker: true
