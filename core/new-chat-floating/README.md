@@ -1,4 +1,4 @@
-# New Chat Floating Window Organ
+# New Chat Floating Window Core Module
 
 Owns the top-bar New Chat control and an in-page floating presentation of the existing chat DOM. It reuses the current page/session and does not create a second chat store or modify microphone handlers.
 
