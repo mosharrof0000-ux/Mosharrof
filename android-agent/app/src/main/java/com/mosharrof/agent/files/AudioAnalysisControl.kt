@@ -6,6 +6,7 @@ import android.net.Uri
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.documentfile.provider.DocumentFile
 import com.mosharrof.agent.vision.AudioAnalysisClient
 
 /** Presents the selected filename and explicit upload consent before sending audio to Gemini. */
@@ -15,6 +16,69 @@ object AudioAnalysisControl {
             text = "গান বিশ্লেষণ ও বাংলা শিরোনাম লিখুন"
             setOnClickListener { pickAudio() }
         })
+    }
+
+    fun handleCommand(activity: Activity, rawCommand: String, status: TextView, pickAudio: () -> Unit): Boolean {
+        val command = rawCommand.lowercase()
+        val matches = listOf("গান বিশ্লেষণ", "গানগুলো বিশ্লেষণ", "গানের বিষয়", "song analysis", "analyze song", "analyze my songs", "বাংলা শিরোনাম")
+            .any { command.contains(it) }
+        if (!matches) return false
+        val saved = activity.getSharedPreferences("mosharrof_media_control", Activity.MODE_PRIVATE)
+            .getString("selected_tree_uri", null)
+        val root = saved?.let { runCatching { DocumentFile.fromTreeUri(activity, Uri.parse(it)) }.getOrNull() }
+        if (root == null || !root.isDirectory) {
+            status.text = "একটি গান বিশ্লেষণ করতে অডিও ফাইল বাছুন; একাধিক গানের জন্য আগে মিডিয়া ফোল্ডার নির্বাচন করুন।"
+            pickAudio()
+            return true
+        }
+        val candidates = mutableListOf<DocumentFile>()
+        collectAudio(root, 0, candidates)
+        val unreviewed = candidates.filter { SongMetadataStore.load(activity, it.uri.toString()) == null }
+            .filter { it.length() in 1..(20L * 1024L * 1024L) }
+            .sortedBy { it.name.orEmpty() }
+            .take(10)
+        if (unreviewed.isEmpty()) {
+            status.text = if (candidates.isEmpty()) "নির্বাচিত ফোল্ডারে সমর্থিত গান পাওয়া যায়নি।"
+            else "নতুন/অবিশ্লেষিত উপযুক্ত গান পাওয়া যায়নি। সর্বোচ্চ 20 MB-এর গান ও 10টি ফাইল করে বিশ্লেষণ করা হয়।"
+            return true
+        }
+        val total = unreviewed.sumOf { it.length() }
+        AlertDialog.Builder(activity)
+            .setTitle("একাধিক গান বিশ্লেষণ")
+            .setMessage("সর্বোচ্চ 10টি অবিশ্লেষিত গান Google Gemini-তে পাঠানো হবে (মোট ${total / (1024 * 1024)} MB)। বাংলা শিরোনাম, একাধিক বিষয়, সংক্ষিপ্ত ব্যাখ্যা এবং অনিশ্চয়তা ডিভাইসে রাখা হবে।\n\n${unreviewed.joinToString("\n") { "• ${it.name} (${it.length() / 1024} KB)" }}\n\nএতে আপনার নির্বাচিত ফোল্ডারের গানগুলোর অডিও Google-এ পাঠানোর সম্মতি দিচ্ছেন।")
+            .setNegativeButton("বাতিল", null)
+            .setPositiveButton("সম্মতি দিয়ে বিশ্লেষণ") { _, _ ->
+                val results = mutableListOf<String>()
+                fun runNext(index: Int) {
+                    if (index >= unreviewed.size) {
+                        status.text = "গান বিশ্লেষণ শেষ: ${results.size}/${unreviewed.size}টি সফল।\n" + results.joinToString("\n")
+                        return
+                    }
+                    val file = unreviewed[index]
+                    status.text = "গান বিশ্লেষণ ${index + 1}/${unreviewed.size}: ${file.name}"
+                    AudioAnalysisClient.analyzeSelected(activity, file.uri) { result, error ->
+                        activity.runOnUiThread {
+                            if (activity.isFinishing) return@runOnUiThread
+                            if (result != null) {
+                                val topics = result.metadata.topics.joinToString("、") { it.bengaliLabel }
+                                results += "• ${result.originalName} → ${result.metadata.bengaliTitle} [${topics}]"
+                            } else results += "• ${file.name}: ব্যর্থ — ${error ?: "অজানা সমস্যা"}"
+                            runNext(index + 1)
+                        }
+                    }
+                }
+                runNext(0)
+            }.show()
+        return true
+    }
+
+    private fun collectAudio(folder: DocumentFile, depth: Int, out: MutableList<DocumentFile>) {
+        if (depth > 8 || out.size >= 500) return
+        for (child in runCatching { folder.listFiles() }.getOrDefault(emptyArray())) {
+            if (out.size >= 500) return
+            if (child.isDirectory) collectAudio(child, depth + 1, out)
+            else if (child.isFile && MediaLibraryAssistant.classify(child.name.orEmpty()) == MediaKind.AUDIO) out += child
+        }
     }
 
     fun analyzeSelected(activity: Activity, uri: Uri?, status: TextView) {
