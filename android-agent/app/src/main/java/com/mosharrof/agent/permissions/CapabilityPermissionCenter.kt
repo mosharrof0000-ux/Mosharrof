@@ -67,7 +67,7 @@ object CapabilityPermissionCenter {
                 })
             }
             list.addView(TextView(activity).apply {
-                text = "\nগুরুত্বপূর্ণ: Android-এর lock screen, protected system permissions, অন্য অ্যাপের private data এবং OS policy-কে সাধারণ অ্যাপ হিসেবে জোর করে অতিক্রম করা যায় না। সর্বোচ্চ নিয়ন্ত্রণের জন্য সমর্থিত অনুমতি, user-granted Accessibility, overlay, scoped file access এবং system intents একত্রে ব্যবহার করা হবে।"
+                text = "\nগুরুত্বপূর্ণ: Android-এর lock screen, protected system permissions, অন্য অ্যাপের private data এবং OS policy-কে সাধারণ অ্যাপ হিসেবে জোর করে অতিক্রম করা যায় না। সর্বোচ্চ নিয়ন্ত্রণের জন্য সমর্থিত অনুমতি, user-granted Accessibility, overlay এবং system intents একত্রে ব্যবহার করা হবে।"
                 textSize = 13f
             })
         }
