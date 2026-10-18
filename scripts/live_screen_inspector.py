@@ -85,6 +85,33 @@ async def main():
         record("document_title", bool(await page.title()), await page.title())
         await page.screenshot(path=str(out / "initial-mobile.png"), full_page=True)
 
+        # Verify the isolated New Chat organ loads and its long-press fallback is reversible.
+        try:
+            await page.wait_for_selector("#topNewChat", state="visible", timeout=8000)
+            order = await page.locator("header.top").evaluate(
+                "(el) => [...el.children].map(child => child.id || child.className)"
+            )
+            record("new_chat_button_loaded", True, f"header children={order}")
+            record("new_chat_button_immediately_left_of_options",
+                   order.index("topNewChat") + 1 == order.index("rightBtn"),
+                   f"header children={order}")
+            box = await page.locator("#topNewChat").bounding_box()
+            await page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+            await page.mouse.down()
+            await page.wait_for_timeout(650)
+            await page.mouse.up()
+            await page.wait_for_timeout(150)
+            floating = await page.locator("body").evaluate("(el) => el.classList.contains('chat-floating')")
+            record("new_chat_long_press_opens_floating_window", floating, f"body classes={await page.locator('body').get_attribute('class')}")
+            if floating:
+                await page.locator("#topNewChat").click()
+                await page.wait_for_timeout(100)
+            restored = not await page.locator("body").evaluate("(el) => el.classList.contains('chat-floating')")
+            record("new_chat_floating_window_returns_fullscreen", restored, f"body classes={await page.locator('body').get_attribute('class')}")
+        except Exception as exc:
+            record("new_chat_floating_interaction", False, repr(exc))
+
+
         for selector, name in [("#leftBtn", "left menu trigger"), ("#rightBtn", "right menu trigger"),
                                ("#input", "chat input"), ("#sendBtn", "send button")]:
             loc = page.locator(selector).first
