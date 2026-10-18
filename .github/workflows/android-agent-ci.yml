@@ -51,7 +51,8 @@ jobs:
           cores: 3
           ram-size: 3072M
           heap-size: 768M
-          emulator-port: 5556
+          # Use the runner action's standard emulator port to avoid connecting to a stale/wrong ADB endpoint.
+          emulator-port: 5554
           emulator-boot-timeout: 600
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -camera-back none
           disable-animations: true
