@@ -54,9 +54,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val title = TextView(this).apply {
-            text = "মোশাররফ অটোনোমাস এজেন্ট"
+            text = "মোশাররফ অ্যান্ড্রয়েড ডিভাইস কন্ট্রোল"
             textSize = 24f
-            contentDescription = "Mosharrof Autonomous Agent"
+            contentDescription = "Mosharrof Android Device Control"
         }
         status = TextView(this).apply { textSize = 16f }
         speechStatus = TextView(this).apply { textSize = 14f }
