@@ -15,3 +15,5 @@ node scripts/test_android_agent_recovery.mjs
 node scripts/test_android_agent_executor.mjs
 node scripts/test_android_accessibility_composer_contract.mjs
 bash scripts/android/test-agent-ui-contracts.sh
+# Debug WebView inspection is enabled only for debug builds so the APK QA can use CDP.
+grep -q 'if (BuildConfig.DEBUG) android.webkit.WebView.setWebContentsDebuggingEnabled(true);' scripts/android/install-main-activity.sh
