@@ -2,7 +2,8 @@ name: Mosharrof Autonomous Work Cycle
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    # UTC hours 0,2,14,16,18,20,22 map to Bangladesh 06:00, 08:00, 20:00, 22:00, 00:00, 02:00, 04:00, 06:00. GitHub schedule is best-effort, not a continuous runner.
+    - cron: "0 0,2,14,16,18,20,22 * * *"
   workflow_dispatch:
   issues:
     types: [opened, edited]
@@ -17,7 +18,7 @@ permissions:
 
 concurrency:
   group: mosharrof-autonomous
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   autonomous:
@@ -38,26 +39,15 @@ jobs:
       - name: Baseline tests
         run: python3 -m pytest -q
 
-      - name: Build task
+      - name: Build backlog-aware task
         env:
           EVENT_NAME: ${{ github.event_name }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           COMMENT_BODY: ${{ github.event.comment.body }}
-        run: |
-          python3 - <<'PY'
-          import os
-          event=os.environ.get("EVENT_NAME","schedule")
-          if event=="schedule":
-              task="Perform a conservative 6-hour health/audit cycle. Find only clear, testable defects or safe improvements. If nothing is justified, make no change."
-          elif event=="workflow_dispatch":
-              task="Perform a conservative health/audit cycle and make only clearly justified, testable improvements."
-          elif event=="issues":
-              task=os.environ.get("ISSUE_TITLE","")+"\n"+os.environ.get("ISSUE_BODY","")
-          else:
-              task=os.environ.get("COMMENT_BODY","")
-          open("/tmp/task.txt","w",encoding="utf-8").write(task[:12000])
-          PY
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python3 .github/scripts/build_backlog_task.py
 
       - name: Autonomous planner and patcher
         env:
