@@ -8,6 +8,39 @@ export function initializeComposerEnhancements() {
   const send = document.getElementById("sendBtn");
   if (!input || !composer || !send) return;
 
+  // Explicit phone-command handoff: MOSHARROF chat remains the command entry point.
+  // Android still validates the command and requires local confirmation before execution.
+  let lastHandoffKey = "";
+  let lastHandoffAt = 0;
+  function handoffPhoneCommand() {
+    const raw = String(input.value || "").trim();
+    const match = raw.match(/^(?:মোশাররফ[ ,،]*)?(?:ফোনে করো|ফোনে|@ফোন|@phone)\s*[:：-]\s*(.+)$/i);
+    if (!match || !match[1].trim()) return;
+    const command = match[1].trim();
+    if (command.length > 240) {
+      input.setCustomValidity("ফোনের নির্দেশ ২৪০ অক্ষরের মধ্যে রাখুন।");
+      input.reportValidity();
+      input.setCustomValidity("");
+      return;
+    }
+    const key = command;
+    const now = Date.now();
+    if (key === lastHandoffKey && now - lastHandoffAt < 1400) return;
+    lastHandoffKey = key;
+    lastHandoffAt = now;
+    const link = document.createElement("a");
+    link.href = "mosharrof://device-control?command=" + encodeURIComponent(command);
+    link.setAttribute("aria-hidden", "true");
+    link.tabIndex = -1;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    window.setTimeout(() => link.remove(), 1000);
+  }
+  send.addEventListener("click", handoffPhoneCommand, true);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) handoffPhoneCommand();
+  }, true);
   initializeComposerStopControl(send);
   initializeComposerAutoGrow(input, composer);
   if (document.getElementById("composerExpandBtn")) return;
