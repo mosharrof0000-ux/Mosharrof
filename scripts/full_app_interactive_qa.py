@@ -209,6 +209,7 @@ def main() -> int:
 
         if SEND_MESSAGE:
             before = page.locator("#messages").inner_text()
+            before_ai_count = page.locator("#messages .message.ai:not(.typing)").count()
             try:
                 page.locator("#input").fill(TEST_MESSAGE)
                 page.locator("#sendBtn").click()
