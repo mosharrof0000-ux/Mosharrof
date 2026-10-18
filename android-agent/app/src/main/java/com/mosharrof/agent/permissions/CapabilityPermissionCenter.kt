@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.provider.Settings
 import android.widget.Button
 import android.widget.LinearLayout
@@ -82,9 +81,7 @@ object CapabilityPermissionCenter {
         Capability("Floating control / overlay", "অন্য অ্যাপের উপরে ভাসমান কন্ট্রোল দেখানো.", settingsAction = Settings.ACTION_MANAGE_OVERLAY_PERMISSION, readiness = { Settings.canDrawOverlays(it) }),
         Capability("নোটিফিকেশন পড়া", "Android-এর আলাদা Notification access অনুমতি দিলে সাম্প্রতিক notification-এর bounded in-memory snapshot.", settingsAction = Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS, readiness = { com.mosharrof.agent.notifications.NotificationAccessControl.isAccessEnabled(it) }),
         Capability("ব্যবহারের পরিসংখ্যান", "Android অনুমতি দিলে অ্যাপ ব্যবহারের তথ্য.", settingsAction = Settings.ACTION_USAGE_ACCESS_SETTINGS, readiness = ::usageAccessGranted),
-        Capability("সম্পূর্ণ ফাইল ব্যবস্থাপনা", "সমর্থিত Android সংস্করণে all-files access; অনুমতি পাওয়া গেলেও protected app data নয়.", settingsAction = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, readiness = { Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager() }),
         Capability("মাইক্রোফোন", "ভয়েস কমান্ড বা ভবিষ্যৎ hands-free voice session.", listOf(Manifest.permission.RECORD_AUDIO), readiness = { permissionsGranted(it, listOf(Manifest.permission.RECORD_AUDIO)) }),
-        Capability("ক্যামেরা", "ক্যামেরা-নির্ভর ফিচারের জন্য runtime access.", listOf(Manifest.permission.CAMERA), readiness = { permissionsGranted(it, listOf(Manifest.permission.CAMERA)) }),
         Capability("লোকেশন", "লোকেশন-ভিত্তিক কমান্ড; background location আলাদা Android অনুমতি.", listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION), readiness = { permissionsGranted(it, listOf(Manifest.permission.ACCESS_COARSE_LOCATION)) || permissionsGranted(it, listOf(Manifest.permission.ACCESS_FINE_LOCATION)) }),
         Capability("Bluetooth / কাছাকাছি ডিভাইস", "Android সংস্করণ অনুযায়ী Bluetooth scan/connect access.", bluetoothPermissions(), readiness = { permissionsGranted(it, bluetoothPermissions()) }),
         Capability("ফোন কল", "সমর্থিত কল action; Android ও ডিফল্ট ফোন অ্যাপের সীমা প্রযোজ্য.", listOf(Manifest.permission.CALL_PHONE, Manifest.permission.ANSWER_PHONE_CALLS), readiness = { permissionsGranted(it, listOf(Manifest.permission.CALL_PHONE)) && permissionsGranted(it, listOf(Manifest.permission.ANSWER_PHONE_CALLS)) }),
@@ -93,7 +90,6 @@ object CapabilityPermissionCenter {
         Capability("কল লগ", "কল লগ সংবেদনশীল; ডিভাইস/OS ও Play policy সীমা প্রযোজ্য.", listOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_CALL_LOG)) }),
         Capability("সিস্টেম সেটিংস পরিবর্তন", "শুধু সমর্থিত সেটিংস; Android-এর বিশেষ access আলাদা.", settingsAction = Settings.ACTION_MANAGE_WRITE_SETTINGS, readiness = { Build.VERSION.SDK_INT < 23 || Settings.System.canWrite(it) }),
         Capability("Battery optimization", "দীর্ঘ কাজের জন্য battery optimization অবস্থা; exemption ঐচ্ছিক.", settingsAction = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, readiness = ::batteryOptimizationIgnored),
-        Capability("Camera", "ব্যবহারকারী অনুমতি দিলে ছবি/QR/ডকুমেন্ট capture.", listOf(Manifest.permission.CAMERA), readiness = { permissionsGranted(it, listOf(Manifest.permission.CAMERA)) }),
         Capability("Location", "GPS/নেটওয়ার্ক অবস্থান; background location আলাদা OS অনুমতি চায়.", listOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION), readiness = { permissionsGranted(it, listOf(Manifest.permission.ACCESS_COARSE_LOCATION)) || permissionsGranted(it, listOf(Manifest.permission.ACCESS_FINE_LOCATION)) }),
         Capability("Bluetooth / nearby devices", "নিকটবর্তী ডিভাইসের সঙ্গে সংযোগ; Android সংস্করণভেদে runtime permission.", bluetoothPermissions(), readiness = { bluetoothPermissions().isEmpty() || permissionsGranted(it, bluetoothPermissions()) }),
         Capability("Phone state", "SIM/নেটওয়ার্ক-সম্পর্কিত সীমিত phone state; সব telephony তথ্য সাধারণ অ্যাপে উপলব্ধ নয়.", listOf(Manifest.permission.READ_PHONE_STATE), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_PHONE_STATE)) }),
@@ -103,8 +99,6 @@ object CapabilityPermissionCenter {
         Capability("Battery optimization exemption", "দীর্ঘমেয়াদি কাজের জন্য OS অনুমোদন; ব্যাটারি/স্টোরের নীতির অধীন.", settingsAction = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, readiness = { Build.VERSION.SDK_INT < 23 || it.getSystemService(android.os.PowerManager::class.java)?.isIgnoringBatteryOptimizations(it.packageName) == true }),
         Capability("Contacts", "ব্যবহারকারী অনুমতি দিলে contacts পড়া/লেখা.", listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) }),
         Capability("Calendar", "অনুমতি দিলে calendar পড়া/লেখা.", listOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR), readiness = { permissionsGranted(it, listOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)) }),
-        Capability("ছবি ও ভিডিও", "Android-এর media permission অনুযায়ী নির্বাচিত/অনুমোদিত মিডিয়া.", mediaPermissions(), readiness = { permissionsGranted(it, mediaPermissions()) }),
-        Capability("অডিও ফাইল", "অনুমতি থাকলে shared audio media পড়া.", audioPermissions(), readiness = { permissionsGranted(it, audioPermissions()) }),
         Capability("Notifications", "Android 13+ এ notification permission.", notificationPermissions(), readiness = { permissionsGranted(it, notificationPermissions()) }),
         Capability("নির্দিষ্ট সময়ে অ্যালার্ম", "Exact alarm special access প্রয়োজন হলে Android সেটিংস খুলুন.", settingsAction = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, readiness = { Build.VERSION.SDK_INT < 31 || activity.getSystemService(android.app.AlarmManager::class.java)?.canScheduleExactAlarms() == true })
     )
@@ -127,18 +121,6 @@ object CapabilityPermissionCenter {
     private fun batteryOptimizationIgnored(activity: Activity): Boolean =
         activity.getSystemService(android.os.PowerManager::class.java)
             ?.isIgnoringBatteryOptimizations(activity.packageName) == true
-
-    private fun mediaPermissions(): List<String> = when {
-        Build.VERSION.SDK_INT >= 33 -> listOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
-        Build.VERSION.SDK_INT >= 23 -> listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-        else -> emptyList()
-    }
-
-    private fun audioPermissions(): List<String> = when {
-        Build.VERSION.SDK_INT >= 33 -> listOf(Manifest.permission.READ_MEDIA_AUDIO)
-        Build.VERSION.SDK_INT >= 23 -> listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-        else -> emptyList()
-    }
 
     private fun notificationPermissions(): List<String> =
         if (Build.VERSION.SDK_INT >= 33) listOf(Manifest.permission.POST_NOTIFICATIONS) else emptyList()
@@ -173,7 +155,6 @@ object CapabilityPermissionCenter {
         val action = capability.settingsAction ?: return
         val intent = Intent(action).apply {
             if (action == Settings.ACTION_MANAGE_OVERLAY_PERMISSION ||
-                action == Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION ||
                 action == Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM ||
                 action == Settings.ACTION_MANAGE_WRITE_SETTINGS ||
                 action == Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS ||
