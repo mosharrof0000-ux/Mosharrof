@@ -153,10 +153,29 @@ public class MainActivity extends BridgeActivity {
 
     private void handleVoiceIntent(Intent intent) {
         if (intent == null) return;
+        if (intent.getBooleanExtra("mosharrof_start_chat_voice", false)) {
+            intent.removeExtra("mosharrof_start_chat_voice");
+            deliverStartChatVoice(0);
+            return;
+        }
         String command = intent.getStringExtra("mosharrof_voice_command");
         if (command == null || command.trim().isEmpty()) return;
         intent.removeExtra("mosharrof_voice_command");
         deliverVoiceCommand(command.trim(), 0);
+    }
+
+    private void deliverStartChatVoice(int attempt) {
+        if (attempt > 30 || isFinishing()) return;
+        try {
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                String js = "(function(){var button=document.getElementById('composerVoiceBtn');if(button){button.click();return true;}return false;})()";
+                getBridge().getWebView().evaluateJavascript(js, value -> {
+                    if (!"true".equals(value)) handler.postDelayed(() -> deliverStartChatVoice(attempt + 1), 350);
+                });
+                return;
+            }
+        } catch (Exception ignored) {}
+        handler.postDelayed(() -> deliverStartChatVoice(attempt + 1), 350);
     }
 
     private void deliverVoiceCommand(String command, int attempt) {
