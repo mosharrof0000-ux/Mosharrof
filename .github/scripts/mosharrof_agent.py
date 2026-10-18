@@ -2,6 +2,9 @@
 """Guarded autonomous patcher with Gemini model discovery and safe fallback."""
 import json, os, sys, subprocess, pathlib, requests, time
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
+from scripts.automation.autonomous_patch_quality import is_trivial_rewrite
+
 task=pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").strip()
 if not task:
     raise SystemExit("No task supplied; refusing to generate an empty autonomous patch.")
@@ -122,8 +125,17 @@ for item in plan.get("files",[]):
         raise SystemExit("Path outside autonomous allowlist: "+path)
     if not isinstance(content,str):
         raise SystemExit("Non-text content blocked for "+path)
-    pathlib.Path(path).parent.mkdir(parents=True,exist_ok=True)
-    pathlib.Path(path).write_text(content,encoding="utf-8")
+    target=pathlib.Path(path)
+    if target.exists():
+        try:
+            current=target.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError) as exc:
+            raise SystemExit(f"Unable to safely inspect existing file {path}: {type(exc).__name__}")
+        if is_trivial_rewrite(current,content):
+            print("IGNORED_TRIVIAL_CHANGE "+path)
+            continue
+    target.parent.mkdir(parents=True,exist_ok=True)
+    target.write_text(content,encoding="utf-8")
     changed.append(path)
 if not changed:
     print("NO_SAFE_CHANGE")
