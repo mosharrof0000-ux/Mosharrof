@@ -196,6 +196,16 @@ class MainActivity : ComponentActivity() {
         if (AppPackageControl.handleCommand(this, command, status) {
                 apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
             }) return
+        val normalizedCommand = command.lowercase()
+        if (listOf("গান বিশ্লেষণ", "গানগুলো বিশ্লেষণ", "গানের বিষয়", "song analysis", "analyze song", "analyze my songs", "বাংলা শিরোনাম").any { normalizedCommand.contains(it) }) {
+            audioPicker.launch(arrayOf("audio/*"))
+            return
+        }
+        if (listOf("ছবি বিশ্লেষণ", "ছবিগুলো বিশ্লেষণ", "আমার ছবিগুলো বিশ্লেষণ", "সর্বশেষ স্ক্রিনশট", "latest screenshot", "analyze screenshot", "analyze image", "গ্যালারির ছবি").any { normalizedCommand.contains(it) }) {
+            imagePicker.launch(arrayOf("image/*"))
+            return
+        }
+        if (MediaFolderOrganizerControl.handleCommand(this, command, status) { organizerFolderPicker.launch(null) }) return
         if (DeviceIntentControl.handle(this, command, status)) return
         if (taskController.prepareTask(command)) return
         status.text = "স্থানীয় কমান্ডে কাজটি বোঝা যায়নি; AI-কে সমর্থিত Android কমান্ডে রূপান্তর করতে বলা হচ্ছে…"
