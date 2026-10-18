@@ -101,7 +101,7 @@ class PluginCommandGateTest {
         assertEquals(
             PluginCommandGate.Decision.REJECT,
             PluginCommandGate.evaluate(
-                PluginCommand("req\\n-1", ControlAction.NAVIGATE_BACK)
+                PluginCommand("req\n-1", ControlAction.NAVIGATE_BACK)
             )
         )
         assertEquals(
@@ -111,7 +111,7 @@ class PluginCommandGateTest {
                     "req-label",
                     ControlAction.TAP_EXACT_LABEL,
                     targetApp = "Messages",
-                    exactLabel = "Open\\u0000Messages"
+                    exactLabel = "Open\u0000Messages"
                 )
             )
         )
