@@ -1,25 +1,57 @@
 #!/usr/bin/env python3
-"""Build a bounded, backlog-aware task for the scheduled MOSHARROF worker."""
+"""Build a bounded backlog task; never hide GitHub API/auth failures as an empty backlog."""
 import json
 import os
 import subprocess
+import time
 from pathlib import Path
 
 REPO = os.environ.get("GH_REPO", "mosharrof0000-ux/Mosharrof")
 EVENT = os.environ.get("EVENT_NAME", "schedule")
+MAX_TASK_CHARS = 12000
 
 
-def gh_json(args):
-    try:
-        result = subprocess.run(
-            ["gh", *args, "--repo", REPO],
-            capture_output=True, text=True, timeout=30, check=False,
-        )
-        if result.returncode == 0:
-            return json.loads(result.stdout or "[]")
-    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
-        pass
-    return []
+def gh_json(args, attempts=3):
+    """Retry transient CLI/API errors and fail visibly rather than silently losing backlog data."""
+    last_error = "unknown error"
+    for attempt in range(attempts):
+        try:
+            result = subprocess.run(
+                ["gh", *args, "--repo", REPO],
+                capture_output=True, text=True, timeout=30, check=False,
+            )
+            if result.returncode == 0:
+                try:
+                    return json.loads(result.stdout or "[]")
+                except json.JSONDecodeError as exc:
+                    last_error = f"invalid JSON: {exc}"
+            else:
+                detail = (result.stderr or result.stdout or "no diagnostic").strip()
+                last_error = f"gh exited {result.returncode}: {detail[:500]}"
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            last_error = f"{type(exc).__name__}: {exc}"
+        if attempt < attempts - 1:
+            delay = 2 ** attempt
+            print(f"GitHub backlog query failed ({last_error}); retrying in {delay}s.")
+            time.sleep(delay)
+    raise SystemExit(f"Cannot build a trustworthy backlog: {last_error}")
+
+
+def bounded_json(items, limit=3600):
+    """Keep complete JSON records within a prompt budget; never cut JSON mid-record."""
+    if not isinstance(items, list):
+        items = []
+    kept = []
+    for item in items:
+        candidate = kept + [item]
+        suffix = {"items": candidate, "truncated": len(items) - len(candidate)}
+        if len(json.dumps(suffix, ensure_ascii=False)) > limit:
+            break
+        kept.append(item)
+    return json.dumps(
+        {"items": kept, "truncated": max(0, len(items) - len(kept))},
+        ensure_ascii=False,
+    )
 
 
 if EVENT == "schedule":
@@ -45,8 +77,13 @@ if EVENT in ("schedule", "workflow_dispatch"):
                    "number,title,url,headRefName,baseRefName,isDraft,mergeStateStatus,reviewDecision"])
     runs = gh_json(["run", "list", "--limit", "25", "--json",
                     "name,status,conclusion,createdAt,url,headBranch,event"])
-    task += "\n\nOPEN PR BACKLOG (JSON):\n" + json.dumps(prs, ensure_ascii=False)
-    task += "\n\nRECENT ACTION RUNS (JSON; inspect failed/in-progress items first):\n" + json.dumps(runs, ensure_ascii=False)
+    issues = gh_json(["issue", "list", "--state", "open", "--limit", "30", "--json",
+                      "number,title,url,updatedAt,labels"])
+    task += "\n\nOPEN PR BACKLOG (bounded complete JSON):\n" + bounded_json(prs, 3600)
+    task += "\n\nRECENT ACTION RUNS (bounded complete JSON; inspect failed/in-progress first):\n" + bounded_json(runs, 3600)
+    task += "\n\nOPEN ISSUE BACKLOG (bounded complete JSON):\n" + bounded_json(issues, 2400)
 
-Path("/tmp/task.txt").write_text(task[:12000], encoding="utf-8")
-print(f"Prepared {EVENT} task with {len(task[:12000])} characters.")
+if len(task) > MAX_TASK_CHARS:
+    task = task[:MAX_TASK_CHARS]
+Path("/tmp/task.txt").write_text(task, encoding="utf-8")
+print(f"Prepared {EVENT} task with {len(task)} characters.")
