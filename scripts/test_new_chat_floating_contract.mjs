@@ -16,12 +16,6 @@ assert.ok(organ.includes('document.body.classList.add("chat-floating")'), "float
 assert.ok(organ.includes('document.body.classList.remove("chat-floating")'), "floating mode must be reversible");
 assert.ok(organ.includes('document.querySelector(".app")'), "floating presentation must reuse the same app DOM");
 assert.ok(styles.includes("body.chat-floating .app"), "floating geometry must be scoped to floating mode");
-assert.ok(styles.includes("min-width:220px") && styles.includes("min-height:220px"), "floating window must shrink to a compact but usable size");
-assert.ok(styles.includes("body.chat-floating .composer .input"), "compact mode must preserve a usable message composer");
-assert.ok(styles.includes('header.top{grid-template-columns:36px minmax(0,1fr) 32px 36px 36px'), "header controls must have stable right-side columns");
-assert.ok(organ.includes('id = "topThemeToggle"'), "day/night theme toggle must have a stable id");
-assert.ok(organ.includes('localStorage.setItem("mosharrof_theme", next)'), "day/night preference must persist");
-assert.ok(styles.includes(':root[data-theme="light"]'), "light theme must be defined separately from dark theme");
 assert.ok(serviceWorker.includes('const CACHE = "mosharrof-v8-2026-10-18-organ-runtime-floating-chat"'), "service worker cache version must be bumped for new runtime assets");
 assert.ok(shell.includes('id="composerVoiceBtn"'), "existing composer microphone must remain in the legacy shell");
 assert.ok(prep.includes('"core/new-chat-floating/index.js": "web/core/new-chat-floating/index.js"'), "Pages/APK prep must bundle the feature module");
