@@ -48,9 +48,9 @@ jobs:
           api-level: 30
           target: default
           arch: x86_64
-          cores: 2
-          ram-size: 2048M
-          heap-size: 512M
+          cores: 3
+          ram-size: 3072M
+          heap-size: 768M
           emulator-port: 5556
           emulator-boot-timeout: 600
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -camera-back none
@@ -61,6 +61,10 @@ jobs:
             adb wait-for-device;
             for attempt in $(seq 1 60); do boot_completed="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\\r')"; if [ "$boot_completed" = "1" ]; then break; fi; sleep 2; done;
             test "$(adb shell getprop sys.boot_completed | tr -d '\\r')" = "1";
+            for attempt in $(seq 1 60); do bootanim="$(adb shell getprop init.svc.bootanim 2>/dev/null | tr -d '\\r')"; package_ready="$(adb shell pm path android 2>/dev/null | head -n 1)"; if [ "$bootanim" = "stopped" ] && [ -n "$package_ready" ]; then break; fi; sleep 2; done;
+            test "$(adb shell getprop init.svc.bootanim | tr -d '\\r')" = "stopped";
+            test -n "$(adb shell pm path android | head -n 1)";
+            adb wait-for-device;
             adb devices -l;
             adb shell getprop ro.build.version.sdk;
             adb shell wm dismiss-keyguard || true;
