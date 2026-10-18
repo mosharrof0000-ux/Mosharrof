@@ -23,7 +23,8 @@ object PluginCommandGate {
 
     fun evaluate(
         command: PluginCommand,
-        approval: LocalApproval? = null
+        approval: LocalApproval? = null,
+        nowMillis: Long = System.currentTimeMillis()
     ): Decision {
         if (command.requestId.isBlank() || command.requestId.length > 128 ||
             command.requestId.any { it.isISOControl() }
@@ -55,7 +56,9 @@ object PluginCommandGate {
         }
         if (!shapeIsValid) return Decision.REJECT
 
-        return if (approval?.requestId == command.requestId) {
+        return if (approval?.requestId == command.requestId &&
+            approval.expiresAtEpochMillis > nowMillis
+        ) {
             Decision.ALLOW
         } else {
             Decision.NEEDS_CONFIRMATION
