@@ -162,7 +162,10 @@ object MediaFolderOrganizerControl {
                                 failed++
                                 continue
                             }
-                            val targetName = uniqueName(destination, originalName)
+                            val reviewedSong = if (MediaLibraryAssistant.classify(originalName) == MediaKind.AUDIO)
+                                SongMetadataStore.load(activity, source.uri.toString()) else null
+                            val proposedName = localizedName(originalName, reviewedSong)
+                            val targetName = uniqueName(destination, proposedName)
                             val target = destination.createFile(source.type ?: mimeFor(originalName), targetName)
                             if (target == null) {
                                 failed++
