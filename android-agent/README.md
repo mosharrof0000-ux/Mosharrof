@@ -11,7 +11,8 @@ A separately buildable native Android app focused only on user-directed Android 
 - Optional draggable floating shortcut that opens the voice-command flow; it does not silently listen in the background.
 - User-triggered screenshot capture, preview, and explicit-consent Gemini Vision analysis.
 - User-selected gallery-image analysis through an explicit upload-consent dialog.
-- User-selected audio-file analysis (up to 20 MB) through explicit-consent Gemini audio understanding; reviewed Bengali title, multi-topic tags, short idea summary and uncertainty are stored locally by URI.
+- User-selected audio-file analysis (up to 20 MB) through explicit-consent Gemini audio understanding; Bengali title, multi-topic tags, short idea summary and uncertainty are stored locally by URI.
+- When a user explicitly confirms folder organization, analyzed songs can be renamed using the stored Bengali title, grouped into topic folders, and included in topic-specific M3U playlists.
 - User-selected folder classification for images, audio, videos, documents, archives and APKs; duplicate-content scan; previewed media folder organization with copy-size verification before attempting to remove original files.
 - Song-topic catalog with multi-label categories including দেহতত্ত্ব, আত্মতত্ত্ব, গুরুতত্ত্ব, প্রেম, ভক্তি, প্রকৃতি, বিরহ and সাধনা ও আত্মঅনুসন্ধান.
 - Name/extension-based local file-risk triage for suspicious extensions and double-extension files. This is not a full antivirus engine and cannot prove a file safe.
