@@ -5,6 +5,7 @@ const organ = readFileSync("core/new-chat-floating/index.js", "utf8");
 const styles = readFileSync("core/new-chat-floating/style.css", "utf8");
 const shell = readFileSync("web/index.html", "utf8");
 const prep = readFileSync("scripts/prepare_web_organ_runtime.py", "utf8");
+const sidebar = readFileSync("web/sidebar-recovery.js", "utf8");
 assert.ok(organ.includes('id = "topNewChat"') || organ.includes('button.id = "topNewChat"'), "new-chat control must have a stable id");
 assert.ok(organ.includes('document.getElementById("newChat")'), "tap must delegate to the existing new-chat action");
 assert.ok(organ.includes("setTimeout(function () { longPressed = true; openFloating(); }, 550)"), "long press must enter native or in-page floating mode");
@@ -17,4 +18,6 @@ assert.ok(styles.includes("body.chat-floating .app"), "floating geometry must be
 assert.ok(shell.includes('id="composerVoiceBtn"'), "existing composer microphone must remain in the legacy shell");
 assert.ok(prep.includes('"core/new-chat-floating/index.js": "web/core/new-chat-floating/index.js"'), "Pages/APK prep must bundle the feature module");
 assert.ok(prep.includes('"core/new-chat-floating/style.css": "web/core/new-chat-floating/style.css"'), "Pages/APK prep must bundle the feature stylesheet");
+assert.ok(sidebar.includes('import("./core/new-chat-floating/index.js")'), "GitHub Pages project subpath must resolve the bundled module");
+assert.ok(!sidebar.includes('import("../core/new-chat-floating/index.js")'), "module import must not escape the Pages project subpath");
 console.log("New Chat floating-window contract: PASS");
