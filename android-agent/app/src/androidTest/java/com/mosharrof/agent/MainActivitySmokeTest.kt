@@ -1,5 +1,6 @@
 package com.mosharrof.agent
 
+import android.content.DialogInterface
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
@@ -8,9 +9,10 @@ import android.widget.TextView
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.Until
+import com.mosharrof.agent.execution.AccessibilityConsentDialog
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -78,35 +80,55 @@ class MainActivitySmokeTest {
             "ফলাফল পড়ে শোনান",
             "কণ্ঠ থামান",
             "কাজ বাতিল করুন",
-            "ডিভাইসের অবস্থা পরীক্ষা করুন"
+            "ডিভাইসের অবস্থা পরীক্ষা করুন",
+            "Accessibility সেটিংস খুলুন"
         ).forEach(::assertActivityTextVisible)
     }
 
     @Test
-    fun accessibilityDisclosureAppearsBeforeSettingsCanOpen() {
+    fun accessibilityDisclosureRequiresExplicitConsent() {
         activityRule.scenario.onActivity { activity ->
-            activity.getSharedPreferences("mosharrof_privacy", android.content.Context.MODE_PRIVATE)
-                .edit().clear().commit()
-        }
-        device.waitForIdle()
+            val preferences = activity.getSharedPreferences(
+                "mosharrof_privacy",
+                android.content.Context.MODE_PRIVATE
+            )
+            preferences.edit().clear().commit()
+            assertNotNull(
+                "Accessibility settings entry must exist in the Activity hierarchy",
+                findTextView(activity.window.decorView, "Accessibility সেটিংস খুলুন")
+            )
 
-        activityRule.scenario.onActivity { activity ->
-            val button = findTextView(activity.window.decorView, "Accessibility সেটিংস খুলুন")
-            assertNotNull("Accessibility settings button should exist in the activity hierarchy", button)
-            button?.performClick()
-        }
+            val accepted = booleanArrayOf(false)
+            val dialog = AccessibilityConsentDialog.show(activity) { accepted[0] = true }
+                ?: throw AssertionError("Consent dialog should be shown before consent")
+            assertTrue("Consent dialog should be visible", dialog.isShowing)
+            val dialogRoot = dialog.window?.decorView
+                ?: throw AssertionError("Consent dialog window should exist")
+            val title = findTextView(dialogRoot, "স্ক্রিন নিয়ন্ত্রণের অনুমতি")
+                ?: throw AssertionError("Consent dialog title should be present")
+            assertEquals("স্ক্রিন নিয়ন্ত্রণের অনুমতি", title.text.toString())
+            assertEquals(
+                "বুঝেছি, Settings খুলুন",
+                dialog.getButton(DialogInterface.BUTTON_POSITIVE).text.toString()
+            )
+            assertEquals(
+                "এখন নয়",
+                dialog.getButton(DialogInterface.BUTTON_NEGATIVE).text.toString()
+            )
+            assertFalse("Settings callback must not run before consent", accepted[0])
 
-        assertNotNull(
-            "Consent dialog title should appear before opening system settings",
-            device.wait(Until.findObject(By.text("স্ক্রিন নিয়ন্ত্রণের অনুমতি")), 5_000)
-        )
-        assertNotNull(
-            "Consent dialog must provide an explicit Settings action",
-            device.wait(Until.findObject(By.text("বুঝেছি, Settings খুলুন")), 5_000)
-        )
-        val dismiss = device.wait(Until.findObject(By.text("এখন নয়")), 5_000)
-        assertNotNull("Consent dialog must offer a safe dismissal action", dismiss)
-        dismiss?.click()
-        device.waitForIdle()
+            dialog.getButton(DialogInterface.BUTTON_NEGATIVE).performClick()
+            assertFalse("Dismissing consent must not authorize Settings", accepted[0])
+            assertFalse("Negative action should dismiss the dialog", dialog.isShowing)
+
+            val confirmation = AccessibilityConsentDialog.show(activity) { accepted[0] = true }
+                ?: throw AssertionError("Consent dialog should be shown again until accepted")
+            confirmation.getButton(DialogInterface.BUTTON_POSITIVE).performClick()
+            assertTrue("Only the positive consent action may authorize Settings", accepted[0])
+            assertTrue(
+                "Explicit consent must be persisted",
+                preferences.getBoolean("accessibility_disclosure_consented", false)
+            )
+        }
     }
 }
