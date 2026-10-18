@@ -2,7 +2,8 @@ name: Mosharrof Autonomous Work Cycle
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    # UTC hours 0,2,14,16,18,20,22 map to Bangladesh 06:00, 08:00, 20:00, 22:00, 00:00, 02:00, 04:00, 06:00. GitHub schedule is best-effort, not a continuous runner.
+    - cron: "0 0,2,14,16,18,20,22 * * *"
   workflow_dispatch:
   issues:
     types: [opened, edited]
@@ -17,7 +18,7 @@ permissions:
 
 concurrency:
   group: mosharrof-autonomous
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   autonomous:
@@ -38,24 +39,43 @@ jobs:
       - name: Baseline tests
         run: python3 -m pytest -q
 
-      - name: Build task
+      - name: Build backlog-aware task
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
+          EVENT_NAME: \${{ github.event_name }}
+          ISSUE_TITLE: \${{ github.event.issue.title }}
+          ISSUE_BODY: \${{ github.event.issue.body }}
+          COMMENT_BODY: \${{ github.event.comment.body }}
+          GH_TOKEN: \${{ github.token }}
+          GH_REPO: \${{ github.repository }}
         run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            OPEN_PRS="$(gh pr list --repo "$GH_REPO" --state open --limit 30 --json number,title,url,headRefName,baseRefName,isDraft,mergeStateStatus,reviewDecision 2>/dev/null || printf '[]')"
+            RECENT_RUNS="$(gh run list --repo "$GH_REPO" --limit 25 --json name,status,conclusion,createdAt,url,headBranch,event 2>/dev/null || printf '[]')"
+          else
+            OPEN_PRS='[]'
+            RECENT_RUNS='[]'
+          fi
+          export OPEN_PRS RECENT_RUNS
           python3 - <<'PY'
           import os
           event=os.environ.get("EVENT_NAME","schedule")
           if event=="schedule":
-              task="Perform a conservative 6-hour health/audit cycle. Find only clear, testable defects or safe improvements. If nothing is justified, make no change."
+              task=("NIGHTLY BACKLOG DUTY for MOSHARROF. Work only on already-existing tasks and plans; do not invent new features. "
+                    "First triage open PRs, failed or still-running Actions, merge conflicts, and existing web/PWA plus Android chat verification. "
+                    "Prioritize red checks and stalled work, then the oldest mergeable backlog items. Inspect evidence, identify root causes, make the smallest safe patch only in the allowed source/test/docs paths, and run the full test suite. "
+                    "Never modify deployment/security workflows, bypass protection, merge PRs, or claim success without evidence. If a blocker needs unavailable permissions, physical-device access, or protected workflow changes, document it and continue to another safe task. "
+                    "Keep main/Live safe. Do not add unrelated features until existing backlog is cleared.")
           elif event=="workflow_dispatch":
-              task="Perform a conservative health/audit cycle and make only clearly justified, testable improvements."
+              task=("Manual MOSHARROF backlog recovery. Inspect existing PRs and failed/stalled workflows first; resolve the oldest safe blocker. "
+                    "No new feature scope, no direct main edits, no unsafe merge/deploy, and no success claims without test evidence.")
           elif event=="issues":
-              task=os.environ.get("ISSUE_TITLE","")+"\n"+os.environ.get("ISSUE_BODY","")
+              task="Existing user task:\n"+os.environ.get("ISSUE_TITLE","")+"\n"+os.environ.get("ISSUE_BODY","")
           else:
-              task=os.environ.get("COMMENT_BODY","")
+              task="Existing user task:\n"+os.environ.get("COMMENT_BODY","")
+          if event in ("schedule","workflow_dispatch"):
+              task += "\n\nOPEN PR BACKLOG (JSON):\n"+os.environ.get("OPEN_PRS","[]")
+              task += "\n\nRECENT ACTION RUNS (JSON; inspect failed/in-progress items first):\n"+os.environ.get("RECENT_RUNS","[]")
           open("/tmp/task.txt","w",encoding="utf-8").write(task[:12000])
           PY
 
