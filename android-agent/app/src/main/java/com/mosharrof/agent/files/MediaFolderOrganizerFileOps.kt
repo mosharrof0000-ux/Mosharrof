@@ -18,7 +18,8 @@ object MediaFolderOrganizerFileOps {
     fun writeTopicPlaylists(
         activity: Activity,
         root: DocumentFile,
-        playlists: Map<SongTopic, List<String>>
+        playlists: Map<SongTopic, List<String>>,
+        onWriteFailure: (DocumentFile) -> Unit
     ): Int {
         val songRoot = ensureFolder(root, "গান") ?: return 0
         var created = 0
@@ -36,7 +37,7 @@ object MediaFolderOrganizerFileOps {
                 } ?: return@runCatching false
                 true
             }.getOrDefault(false)
-            if (written) created++
+            if (written) created++ else onWriteFailure(playlist)
         }
         return created
     }
