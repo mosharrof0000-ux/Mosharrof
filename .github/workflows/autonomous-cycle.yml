@@ -24,6 +24,7 @@ jobs:
   autonomous:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.action == 'opened') || (github.event_name == 'issue_comment' && github.event.action == 'created' && contains(github.event.comment.body, '/mosharrof'))
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - name: Checkout main snapshot
         uses: actions/checkout@v6
@@ -71,3 +72,29 @@ jobs:
             echo "Destructive operation detected."
             exit 1
           fi
+
+      - name: Open review PR for verified autonomous change
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH="$(git branch --show-current)"
+          if [[ "$BRANCH" != agent/autonomous-* ]]; then
+            echo "No autonomous patch branch was created; no PR is needed."
+            exit 0
+          fi
+          if ! git diff-tree --no-commit-id --name-only -r HEAD | grep -q .; then
+            echo "Autonomous branch has no committed file changes; refusing empty PR."
+            exit 1
+          fi
+          EXISTING="$(gh pr list --repo "$GH_REPO" --state open --head "$BRANCH" --json number,url)"
+          if [[ "$EXISTING" != "[]" ]]; then
+            echo "An open PR already exists for $BRANCH: $EXISTING"
+            exit 0
+          fi
+          gh pr create --repo "$GH_REPO" --base main --head "$BRANCH" \
+            --title "Auto: verified Mosharrof autonomous improvement" \
+            --body "Created by the guarded autonomous work cycle after baseline tests, full tests, and protected-change checks passed.\n\nThis PR is review-only: no automatic merge or deployment is performed.\n\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
