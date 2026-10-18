@@ -1,0 +1,73 @@
+name: MOSHARROF Full App Interactive QA
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "HTTPS live site or PWA URL to inspect"
+        required: true
+        default: "https://mosharrof0000-ux.github.io/Mosharrof/"
+        type: string
+      send_test_message:
+        description: "Send one explicit test message to the live chat (may consume provider quota)"
+        required: true
+        default: false
+        type: boolean
+      test_message:
+        description: "Test message (used only when send_test_message is true)"
+        required: false
+        default: "MOSHARROF QA পরীক্ষা: শুধু সংক্ষিপ্তভাবে বলুন—চ্যাট উত্তর দিচ্ছে।"
+        type: string
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/full_app_interactive_qa.py"
+      - ".github/workflows/full-app-interactive-qa.yml"
+      - "tests/test_full_app_interactive_qa.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mosharrof-full-app-qa-${{ github.event_name == 'workflow_dispatch' && inputs.target_url || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  static-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pytest
+      - run: python -m py_compile scripts/full_app_interactive_qa.py
+      - run: python -m pytest -q tests/test_full_app_interactive_qa.py
+
+  live-interactive-qa:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m pip install playwright
+      - run: python -m playwright install --with-deps chromium
+      - name: Run interactive live app audit
+        env:
+          PAGE_URL: ${{ inputs.target_url }}
+          MOSHARROF_QA_SEND_MESSAGE: ${{ inputs.send_test_message }}
+          MOSHARROF_QA_MESSAGE: ${{ inputs.test_message }}
+          QA_OUTPUT_DIR: qa-artifacts
+        run: python3 scripts/full_app_interactive_qa.py
+      - name: Upload screenshots and diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-full-app-qa-${{ github.run_id }}
+          path: qa-artifacts/
+          if-no-files-found: error
+          retention-days: 30
