@@ -198,10 +198,7 @@ class MainActivity : ComponentActivity() {
             }) return
         val normalizedCommand = command.lowercase()
         if (AudioAnalysisControl.handleCommand(this, command, status) { audioPicker.launch(arrayOf("audio/*")) }) return
-        if (listOf("ছবি বিশ্লেষণ", "ছবিগুলো বিশ্লেষণ", "আমার ছবিগুলো বিশ্লেষণ", "সর্বশেষ স্ক্রিনশট", "latest screenshot", "analyze screenshot", "analyze image", "গ্যালারির ছবি").any { normalizedCommand.contains(it) }) {
-            imagePicker.launch(arrayOf("image/*"))
-            return
-        }
+        if (GalleryImageAnalysisControl.handleCommand(this, command, status) { imagePicker.launch(arrayOf("image/*")) }) return
         if (MediaFolderOrganizerControl.handleCommand(this, command, status) { organizerFolderPicker.launch(null) }) return
         if (DeviceIntentControl.handle(this, command, status)) return
         if (taskController.prepareTask(command)) return
