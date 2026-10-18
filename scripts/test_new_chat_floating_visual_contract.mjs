@@ -1,0 +1,16 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const organ = readFileSync("core/new-chat-floating/index.js", "utf8");
+const layout = readFileSync("core/new-chat-floating/compact.css", "utf8");
+const theme = readFileSync("core/new-chat-floating/theme.js", "utf8");
+const themeCss = readFileSync("core/new-chat-floating/theme.css", "utf8");
+const prep = readFileSync("scripts/prepare_web_organ_runtime.py", "utf8");
+assert.ok(organ.includes('import("./theme.js")'), "theme module must be isolated");
+assert.ok(layout.includes("min-width:220px") && layout.includes("min-height:220px"), "floating window must be compact");
+assert.ok(layout.includes("body.chat-floating .composer .input"), "compact composer must remain usable");
+assert.ok(layout.includes('header.top{grid-template-columns:36px minmax(0,1fr) 32px 36px 36px'), "header controls must stay aligned");
+assert.ok(theme.includes('id = "topThemeToggle"'), "theme toggle must have a stable id");
+assert.ok(theme.includes('localStorage.setItem("mosharrof_theme", next)'), "theme preference must persist");
+assert.ok(themeCss.includes(':root[data-theme="light"]'), "light theme must be separate");
+for (const file of ["compact.css", "theme.css", "theme.js"]) assert.ok(prep.includes('"core/new-chat-floating/' + file + '": "web/core/new-chat-floating/' + file + '"'), file + " must be bundled");
+console.log("Floating chat layout + day/night theme contract: PASS");
