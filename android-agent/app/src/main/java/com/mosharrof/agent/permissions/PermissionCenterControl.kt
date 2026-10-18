@@ -43,7 +43,6 @@ object PermissionCenterControl {
             }
         })
         specialButton(activity, layout, "Accessibility — স্ক্রিন বুঝে নিয়ন্ত্রণ", Settings.ACTION_ACCESSIBILITY_SETTINGS, status)
-        specialButton(activity, layout, "অন্য অ্যাপের উপর ভাসমান নিয়ন্ত্রণ", Settings.ACTION_MANAGE_OVERLAY_PERMISSION, status)
         specialButton(activity, layout, "ব্যবহারের পরিসংখ্যানের অনুমতি", Settings.ACTION_USAGE_ACCESS_SETTINGS, status)
         specialButton(activity, layout, "Notification access", Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS, status)
         specialButton(activity, layout, "সিস্টেম সেটিংস পরিবর্তন", Settings.ACTION_MANAGE_WRITE_SETTINGS, status)
@@ -61,7 +60,6 @@ object PermissionCenterControl {
             val granted = ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED
             appendLine("${if (granted) "✓" else "○"} ${permission.substringAfterLast(".")}: ${if (granted) "অনুমোদিত" else "অনুমোদিত নয়"}")
         }
-        appendLine("○ Overlay: ${if (Settings.canDrawOverlays(activity)) "অনুমোদিত" else "অননুমোদিত"}")
         appendLine("○ Write system settings: ${if (Settings.System.canWrite(activity)) "অনুমোদিত" else "অননুমোদিত"}")
         if (Build.VERSION.SDK_INT >= 30) {
             val pm = activity.getSystemService(PowerManager::class.java)
