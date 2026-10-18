@@ -1,33 +1,33 @@
 {
-  "timestamp_utc": "2026-10-18T08:34:48+00:00",
+  "timestamp_utc": "2026-10-18T08:35:11+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39111978120",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39111978120",
-  "source_run_id": "39111943974",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39111943974",
+  "run_id": "39111982600",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39111982600",
+  "source_run_id": "39111895604",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39111895604",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "fix/refresh-pwa-cache-for-floating-chat-20261018",
-  "sha": "bd0b7c9d400c7a5277f5019debbe1b8e24fe88d7",
+  "branch": "main",
+  "sha": "e1bd8cef5962731c7f280df4b284ee039a3b2fab",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
-    "Source commit: bd0b7c9d400c7a5277f5019debbe1b8e24fe88d7",
-    "Job: test — completed/cancelled",
-    "Job: deploy — completed/cancelled"
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: e1bd8cef5962731c7f280df4b284ee039a3b2fab",
+    "Job: test — completed/success",
+    "Job: deploy — completed/failure"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "next_step": "Resume at failed workflow/job: deploy. Open the linked run logs, fix on a safe feature branch, then rerun.",
   "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "cancelled",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "cancelled",
+      "conclusion": "success",
       "steps": [
         {
           "name": "Set up job",
@@ -90,12 +90,53 @@
     {
       "job": "deploy",
       "status": "completed",
-      "conclusion": "cancelled",
-      "steps": []
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/prepare_web_organ_runtime.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/configure-pages@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-pages-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Deploy to GitHub Pages",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Chromium for Live runtime health check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Live deployment health check",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T08:34:54+00:00",
+  "finished_at_utc": "2026-10-18T08:35:15+00:00",
   "outcome": "success"
 }
