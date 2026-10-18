@@ -22,6 +22,7 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: android-agent
@@ -47,7 +48,7 @@ jobs:
           api-level: 35
           arch: x86_64
           emulator-port: 5556
-          emulator-boot-timeout: 600
+          emulator-boot-timeout: 300
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -camera-back none
           disable-animations: true
           disable-spellchecker: true
@@ -66,7 +67,11 @@ jobs:
             adb shell settings put global window_animation_scale 0
             adb shell settings put global transition_animation_scale 0
             adb shell settings put global animator_duration_scale 0
-            cd android-agent && gradle --no-daemon connectedDebugAndroidTest
+            cd android-agent
+            if ! timeout 300s gradle --no-daemon connectedDebugAndroidTest; then
+              adb logcat -d -t 3000 || true
+              exit 1
+            fi
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v4
