@@ -19,14 +19,13 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 
 - [x] Standalone Kotlin Android app and manifest
 - [x] User-facing Accessibility Settings entry point
-- [x] Capability access hub linking to Android Accessibility, overlay, all-files, usage-access, battery-optimization and app-permission settings (user grants each access explicitly; latest CI/device verification pending)
+- [x] Capability access hub linking to Android Accessibility, all-files, usage-access, battery-optimization and app-permission settings (user grants each access explicitly; latest CI/device verification pending)
 - [x] Bounded, read-only accessibility event inspection
 - [x] Explicit current-screen snapshot: package, bounded node count, and up to 40 short visible labels
 - [x] Deterministic Bengali/English text intent parsing
 - [x] Confirmed call/SMS intent support: uses CALL_PHONE/SEND_SMS only when the user has granted them; otherwise opens the Android Dialer/SMS draft. Outbound SMS is submitted only after the app's confirmation button; carrier delivery is not guaranteed.
 - [x] Common Bengali app aliases and installed-app discovery
 - [x] Confirmed Back/Home/Notifications/Recent Apps commands; deterministic parser and policy tests added (emulator/physical-device verification pending)
-- [x] User-toggleable draggable Accessibility overlay with edge snapping, long-press expand/collapse, close control, and one-tap launch of the voice-command flow (latest CI and physical-device verification pending)
 - [x] On-demand read-only battery, internal storage, system RAM/low-memory warning, network transport/connectivity, device model, Android version and uptime diagnostics displayed locally (physical-device verification pending)
 - [x] User-selected folder inventory and bounded SHA-256 duplicate scan; duplicates are only deleted after a separate confirmation (CI/device verification pending)
 - [x] User-triggered screen screenshot capture, in-app preview, and transient UI-label analysis
@@ -52,11 +51,11 @@ GitHub Actions builds a debug APK and publishes it as a workflow artifact.
 - [ ] Speech output and continuous, interruption-aware voice session
 - [ ] Local vision model adapter and on-device benchmark
 - [ ] Encrypted, opt-in local memory/retrieval
-- [x] Initial capability/permission center for Accessibility, overlay, usage access, all-files access, microphone, contacts, calendar, media, notifications and exact-alarm access; user grants remain controlled by Android.
+- [x] Initial capability/permission center for Accessibility, usage access, all-files access, microphone, contacts, calendar, media, notifications and exact-alarm access; user grants remain controlled by Android.
 - [ ] Full permission registry with risk tiers, audit/revocation and capability-by-capability device validation
 - [ ] Release signing, installation validation and distribution
 
-This milestone is **not** a completed fully autonomous agent. Current executable scope is an MVP: resolve an explicit installed-app name and request Android to launch it after confirmation; one exact-label tap, directional swipe, global navigation action, or user-approved text insertion into the named app's focused editable field can be proposed and confirmed. Text insertion never presses Send/Submit. The optional floating control only launches the app's voice-command flow; it does not silently listen in the background. These UI actions are bounded and still require CI and physical-device verification. Screen inspection is read-only and user-triggered. A captured screenshot stays in app memory unless the user separately confirms sending it to Gemini Vision; the API key is encrypted at rest with Android Keystore. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
+This milestone is **not** a completed fully autonomous agent. Current executable scope is an MVP: resolve an explicit installed-app name and request Android to launch it after confirmation; one exact-label tap, directional swipe, global navigation action, or user-approved text insertion into the named app's focused editable field can be proposed and confirmed. Text insertion never presses Send/Submit. These UI actions are bounded and still require CI and physical-device verification. Screen inspection is read-only and user-triggered. A captured screenshot stays in app memory unless the user separately confirms sending it to Gemini Vision; the API key is encrypted at rest with Android Keystore. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
 
 ## Capability and permission center\n\nUse “ডিভাইসের ক্ষমতা ও অনুমতি পরিচালনা করুন” in the app to inspect the initial capability inventory and open Android-owned permission screens. A granted permission means the OS permits that category; it does not mean every feature in that category has been implemented or tested. The inventory is a first step, not a claim of unrestricted device control.\n\n## Safety model
 
