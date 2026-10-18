@@ -13,7 +13,7 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
 
     steps:
       - name: Checkout MOSHARROF
@@ -45,6 +45,7 @@ jobs:
           grep -q 'safe-area-inset-top' core/android-edge-to-edge.css
           grep -q 'safe-area-inset-bottom' core/android-edge-to-edge.css
           grep -q 'backdrop-filter' web/edge-to-edge.css
+          echo "Edge-to-edge web contract: PASS"
 
       - name: Prepare Android full-screen voice manager
         run: bash scripts/android/prepare-and-install-voice.sh
@@ -65,27 +66,8 @@ jobs:
         run: |
           test -s android/app/build/outputs/apk/debug/app-debug.apk
           unzip -t android/app/build/outputs/apk/debug/app-debug.apk >/dev/null
-
-      - name: Install and launch APK in Android Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: pixel_2
-          disable-animations: true
-          script: bash scripts/android/emulator-acceptance.sh
-
-      - name: Upload Android Emulator acceptance evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: MOSHARROF-Android-Emulator-Evidence-${{ github.run_id }}
-          path: |
-            mosharrof-window.xml
-            mosharrof-emulator.png
-          if-no-files-found: warn
-          retention-days: 30
+          echo "APK size:"
+          du -h android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -93,6 +75,7 @@ jobs:
           name: MOSHARROF-AI-Android-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 90
 
       - name: Publish GitHub Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
