@@ -47,37 +47,7 @@ jobs:
           COMMENT_BODY: ${{ github.event.comment.body }}
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            OPEN_PRS="$(gh pr list --repo "$GH_REPO" --state open --limit 30 --json number,title,url,headRefName,baseRefName,isDraft,mergeStateStatus,reviewDecision 2>/dev/null || printf '[]')"
-            RECENT_RUNS="$(gh run list --repo "$GH_REPO" --limit 25 --json name,status,conclusion,createdAt,url,headBranch,event 2>/dev/null || printf '[]')"
-          else
-            OPEN_PRS='[]'
-            RECENT_RUNS='[]'
-          fi
-          export OPEN_PRS RECENT_RUNS
-          python3 - <<'PY'
-          import os
-          event=os.environ.get("EVENT_NAME","schedule")
-          if event=="schedule":
-              task=("NIGHTLY BACKLOG DUTY for MOSHARROF. Work only on already-existing tasks and plans; do not invent new features. "
-                    "First triage open PRs, failed or still-running Actions, merge conflicts, and existing web/PWA plus Android chat verification. "
-                    "Prioritize red checks and stalled work, then the oldest mergeable backlog items. Inspect evidence, identify root causes, make the smallest safe patch only in the allowed source/test/docs paths, and run the full test suite. "
-                    "Never modify deployment/security workflows, bypass protection, merge PRs, or claim success without evidence. If a blocker needs unavailable permissions, physical-device access, or protected workflow changes, document it and continue to another safe task. "
-                    "Keep main/Live safe. Do not add unrelated features until existing backlog is cleared.")
-          elif event=="workflow_dispatch":
-              task=("Manual MOSHARROF backlog recovery. Inspect existing PRs and failed/stalled workflows first; resolve the oldest safe blocker. "
-                    "No new feature scope, no direct main edits, no unsafe merge/deploy, and no success claims without test evidence.")
-          elif event=="issues":
-              task="Existing user task:\n"+os.environ.get("ISSUE_TITLE","")+"\n"+os.environ.get("ISSUE_BODY","")
-          else:
-              task="Existing user task:\n"+os.environ.get("COMMENT_BODY","")
-          if event in ("schedule","workflow_dispatch"):
-              task += "\n\nOPEN PR BACKLOG (JSON):\n"+os.environ.get("OPEN_PRS","[]")
-              task += "\n\nRECENT ACTION RUNS (JSON; inspect failed/in-progress items first):\n"+os.environ.get("RECENT_RUNS","[]")
-          open("/tmp/task.txt","w",encoding="utf-8").write(task[:12000])
-          PY
+        run: python3 .github/scripts/build_backlog_task.py
 
       - name: Autonomous planner and patcher
         env:
