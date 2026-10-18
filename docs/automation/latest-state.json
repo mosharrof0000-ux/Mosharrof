@@ -1,19 +1,19 @@
 {
-  "timestamp_utc": "2026-10-18T18:07:15+00:00",
+  "timestamp_utc": "2026-10-18T18:08:00+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39152666738",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152666738",
-  "source_run_id": "39152608853",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152608853",
+  "run_id": "39152738775",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152738775",
+  "source_run_id": "39152653123",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152653123",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "feat/nightly-backlog-duty-2026-10-18",
-  "sha": "a4cbc33ab67d9366f937e4eadbd0047c9aaf533c",
+  "branch": "main",
+  "sha": "3a4e013cb13f9f89912049c7a75e07af34086f10",
   "checked": [
     "Completed workflow result: Deploy Mosharrof Pages = success",
-    "Source commit: a4cbc33ab67d9366f937e4eadbd0047c9aaf533c",
+    "Source commit: 3a4e013cb13f9f89912049c7a75e07af34086f10",
     "Job: test — completed/success",
-    "Job: deploy — completed/skipped"
+    "Job: deploy — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
@@ -90,12 +90,53 @@
     {
       "job": "deploy",
       "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/prepare_web_organ_runtime.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/configure-pages@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-pages-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Deploy to GitHub Pages",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Chromium for Live runtime health check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Live deployment health check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T18:07:20+00:00",
+  "finished_at_utc": "2026-10-18T18:08:06+00:00",
   "outcome": "success"
 }
