@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
+import com.mosharrof.agent.accessibility.GalleryImageAnalysisControl
 import com.mosharrof.agent.accessibility.FloatingControlToggle
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
@@ -52,6 +53,9 @@ class MainActivity : ComponentActivity() {
     }
     private val audioPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         AudioAnalysisControl.analyzeSelected(this, uri, status)
+    }
+    private val imagePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        GalleryImageAnalysisControl.analyzeSelected(this, uri, status)
     }
     private val permissionResult = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -133,6 +137,7 @@ class MainActivity : ComponentActivity() {
             UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
             MediaFolderOrganizerControl.addTo(this@MainActivity, this, status) { organizerFolderPicker.launch(null) }
             AudioAnalysisControl.addTo(this@MainActivity, this, status) { audioPicker.launch(arrayOf("audio/*")) }
+            GalleryImageAnalysisControl.addTo(this@MainActivity, this, status) { imagePicker.launch(arrayOf("image/*")) }
             addView(Button(this@MainActivity).apply {
                 text = "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
                 setOnClickListener { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) }
