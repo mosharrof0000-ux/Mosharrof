@@ -77,30 +77,7 @@ def main() -> int:
             assert control.first.get_attribute("data-organ-id") == organ_id, (
                 f"{module_id} did not connect to organ {organ_id}"
             )
-        try:
-            # The composer enhancer is dynamically imported by the sidebar bootstrap.
-            # Wait for its button before exercising the line-limit state machine.
-            page.wait_for_selector("#composerExpandBtn", state="attached", timeout=15000)
-            check_composer_expansion(page)
-        except Exception:
-            diagnostic = page.evaluate("""() => {
-                const input = document.querySelector("#input");
-                const button = document.querySelector("#composerExpandBtn");
-                return {
-                    inputExists: !!input,
-                    inputClass: input ? input.className : null,
-                    inputValue: input ? input.value : null,
-                    scrollHeight: input ? input.scrollHeight : null,
-                    clientHeight: input ? input.clientHeight : null,
-                    inlineHeight: input ? input.style.height : null,
-                    inlineMaxHeight: input ? input.style.maxHeight : null,
-                    buttonExists: !!button,
-                    buttonClass: button ? button.className : null,
-                    buttonDisplay: button ? getComputedStyle(button).display : null
-                };
-            }""")
-            print("COMPOSER_EXPANSION_DIAGNOSTIC=" + json.dumps(diagnostic, ensure_ascii=False))
-            raise
+        check_composer_expansion(page)
         browser.close()
 
     print("LIVE ORGAN RUNTIME BROWSER HEALTH CHECK: PASS")
