@@ -23,7 +23,7 @@ object GalleryImageAnalysisControl {
 
     fun handleCommand(activity: Activity, rawCommand: String, status: TextView, pickImage: () -> Unit): Boolean {
         val command = rawCommand.lowercase()
-        val matches = listOf("ছবি বিশ্লেষণ", "ছবিগুলো বিশ্লেষণ", "আমার ছবিগুলো বিশ্লেষণ", "সর্বশেষ স্ক্রিনশট", "latest screenshot", "analyze screenshot", "analyze image", "analyze my photos", "গ্যালারির ছবি")
+        val matches = listOf("ছবি বিশ্লেষণ", "ছবিগুলো বিশ্লেষণ", "আমার ছবিগুলো বিশ্লেষণ", "ছবি এনালাইস", "ছবিগুলো এনালাইস", "আমার ছবিগুলো এনালাইস", "ছবি অ্যানালাইস", "সর্বশেষ স্ক্রিনশট", "স্ক্রিনশট বিশ্লেষণ", "latest screenshot", "analyze screenshot", "analyze image", "analyze photos", "analyze my photos", "photo analysis", "picture analysis", "গ্যালারির ছবি")
             .any { command.contains(it) }
         if (!matches) return false
         val saved = activity.getSharedPreferences("mosharrof_media_control", Activity.MODE_PRIVATE)
