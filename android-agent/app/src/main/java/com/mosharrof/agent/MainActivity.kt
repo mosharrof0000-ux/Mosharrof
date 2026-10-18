@@ -143,7 +143,6 @@ class MainActivity : ComponentActivity() {
             window.decorView.post { startSpeechInput() }
         }
     }
-    override fun onDestroy() { speechOutput?.close(); speechOutput = null; super.onDestroy() }
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
