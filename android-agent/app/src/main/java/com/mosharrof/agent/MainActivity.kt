@@ -14,11 +14,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
+import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
 import com.mosharrof.agent.accessibility.FloatingControlToggle
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
 import com.mosharrof.agent.execution.DeviceIntentControl
+import com.mosharrof.agent.execution.AppPackageControl
+import com.mosharrof.agent.files.UserFileAccessControl
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
@@ -35,6 +38,13 @@ class MainActivity : ComponentActivity() {
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
     private var speechOutput: AgentSpeechOutput? = null
+    private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        UserFileAccessControl.scanSelectedFolder(this, uri, status)
+    }
+    private val apkPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status)
+        else status.text = "APK নির্বাচন বাতিল করা হয়েছে; কোনো অ্যাপ ইনস্টল হয়নি।"
+    }
     private val permissionResult = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { grants ->
@@ -111,6 +121,12 @@ class MainActivity : ComponentActivity() {
             TaskControlButtons.addCancelButton(this@MainActivity, this) { taskController.cancelPending() }
             addView(inspectButton)
             addView(screenDetails)
+            ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled, ::prepareCommand)
+            UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
+            addView(Button(this@MainActivity).apply {
+                text = "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
+                setOnClickListener { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) }
+            })
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             addView(Button(this@MainActivity).apply {
                 text = "সমস্ত runtime permission চাইুন"
@@ -162,6 +178,9 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun prepareCommand(command: String) {
+        if (AppPackageControl.handleCommand(this, command, status) {
+                apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
+            }) return
         if (DeviceIntentControl.handle(this, command, status)) return
         if (taskController.prepareTask(command)) return
         status.text = "স্থানীয় কমান্ডে কাজটি বোঝা যায়নি; AI-কে সমর্থিত Android কমান্ডে রূপান্তর করতে বলা হচ্ছে…"
@@ -230,6 +249,7 @@ class MainActivity : ComponentActivity() {
         }
     }
     override fun onDestroy() {
+        ScreenshotAnalysisControl.release()
         speechOutput?.close()
         super.onDestroy()
     }
