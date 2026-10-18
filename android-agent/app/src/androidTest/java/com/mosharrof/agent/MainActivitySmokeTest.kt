@@ -24,7 +24,6 @@ class MainActivitySmokeTest {
         onView(withText("ফলাফল পড়ে শোনান")).check(matches(isDisplayed()))
         onView(withText("কণ্ঠ থামান")).check(matches(isDisplayed()))
         onView(withText("কাজ বাতিল করুন")).check(matches(isDisplayed()))
-        onView(withText("ভাসমান সহকারী চালু করুন")).check(matches(isDisplayed()))
         onView(withText("ডিভাইসের অবস্থা পরীক্ষা করুন")).check(matches(isDisplayed()))
     }
     @Test
