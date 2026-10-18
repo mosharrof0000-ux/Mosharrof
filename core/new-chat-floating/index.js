@@ -18,6 +18,33 @@ export function initializeNewChatFloatingOrgan() {
   button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   header.insertBefore(button, right);
 
+  var themeButton = document.createElement("button");
+  themeButton.className = "top-theme-toggle";
+  themeButton.id = "topThemeToggle";
+  themeButton.type = "button";
+  themeButton.setAttribute("aria-label", "দিন/রাতের থিম বদলান");
+  themeButton.title = "দিন/রাতের থিম";
+  themeButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>';
+  header.insertBefore(themeButton, button);
+  function applyTheme(theme) {
+    var next = theme === "light" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    themeButton.setAttribute("aria-pressed", next === "light" ? "true" : "false");
+    themeButton.innerHTML = next === "light"
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z"/></svg>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>';
+    var metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute("content", next === "light" ? "#f5f7fb" : "#000000");
+    try { localStorage.setItem("mosharrof_theme", next); } catch (_) {}
+  }
+  var savedTheme = "dark";
+  try { savedTheme = localStorage.getItem("mosharrof_theme") || "dark"; } catch (_) {}
+  applyTheme(savedTheme);
+  themeButton.addEventListener("click", function (event) {
+    event.preventDefault(); event.stopPropagation();
+    applyTheme(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
+  });
+
   var pressTimer = null;
   var longPressed = false;
   function enterFloating() { document.body.classList.add("chat-floating"); }
@@ -74,8 +101,8 @@ export function initializeNewChatFloatingOrgan() {
       var points = Array.from(pointers.values());
       var distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
       var scale = distance / Math.max(1, pinch.distance);
-      app.style.width = Math.max(280, Math.min(innerWidth * .96, pinch.width * scale)) + "px";
-      app.style.height = Math.max(260, Math.min(innerHeight * .88, pinch.height * scale)) + "px";
+      app.style.width = Math.max(220, Math.min(innerWidth * .96, pinch.width * scale)) + "px";
+      app.style.height = Math.max(220, Math.min(innerHeight * .88, pinch.height * scale)) + "px";
     } else if (drag) {
       app.style.left = Math.max(0, Math.min(innerWidth - app.offsetWidth, drag.left + event.clientX - drag.x)) + "px";
       app.style.top = Math.max(0, Math.min(innerHeight - app.offsetHeight, drag.top + event.clientY - drag.y)) + "px";
