@@ -45,11 +45,15 @@ jobs:
       - name: Run emulator smoke tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 30
+          target: default
           arch: x86_64
+          cores: 2
+          ram-size: 2048M
+          heap-size: 512M
           emulator-port: 5556
-          emulator-boot-timeout: 300
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -camera-back none
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -camera-back none
           disable-animations: true
           disable-spellchecker: true
           # Fold into a single shell command: this action executes script lines separately.
