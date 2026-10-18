@@ -53,7 +53,8 @@ async function waitForStoredMarker(page, marker) {
 }
 
 const browser = await chromium.launch({ headless: true });
-const context = await browser.newContext();
+// Keep this isolated smoke test independent of the installed PWA service worker so Playwright's chat route mock is observable.
+const context = await browser.newContext({ serviceWorkers: "block" });
 const page = await context.newPage();
 page.setDefaultTimeout(timeoutMs);
 const chatRequests = [];
