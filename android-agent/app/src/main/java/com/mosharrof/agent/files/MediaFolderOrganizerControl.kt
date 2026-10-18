@@ -144,11 +144,22 @@ object MediaFolderOrganizerControl {
                     var failed = 0
                     for ((source, suggestion) in moves) {
                         try {
-                            val destination = ensureFolder(root, suggestion.destinationFolder) ?: run { failed++; continue }
-                            val originalName = source.name ?: run { failed++; continue }
+                            val destination = ensureFolder(root, suggestion.destinationFolder)
+                            if (destination == null) {
+                                failed++
+                                continue
+                            }
+                            val originalName = source.name
+                            if (originalName == null) {
+                                failed++
+                                continue
+                            }
                             val targetName = uniqueName(destination, originalName)
-                            val target = destination.createFile(source.type ?: mimeFor(source.name.orEmpty()), targetName)
-                                ?: run { failed++; continue }
+                            val target = destination.createFile(source.type ?: mimeFor(originalName), targetName)
+                            if (target == null) {
+                                failed++
+                                continue
+                            }
                             val copied = activity.contentResolver.openInputStream(source.uri)?.use { input ->
                                 activity.contentResolver.openOutputStream(target.uri, "w")?.use { output ->
                                     val buffer = ByteArray(32 * 1024)
