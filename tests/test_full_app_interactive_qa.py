@@ -19,3 +19,10 @@ def test_qa_runner_records_artifact_and_checks_failures():
     assert '"initial-mobile.png"' in source
     assert '"failed_requests"' in source
     assert 'return 1 if report["summary"]["failed"] else 0' in source
+
+
+def test_response_count_is_part_of_completion_condition():
+    source = SOURCE.read_text(encoding="utf-8")
+    assert "before_ai_count" in source
+    assert "replies > baseline.aiCount" in source
+    assert "&& !pending" in source
