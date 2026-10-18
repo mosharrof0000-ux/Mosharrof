@@ -65,12 +65,12 @@ jobs:
             test "$(timeout 10s adb shell getprop sys.boot_completed | tr -d '\r')" = "1";
             test "$(timeout 10s adb shell getprop init.svc.bootanim | tr -d '\r')" = "stopped";
             sleep 20;
-            adb devices -l;
-            adb shell wm dismiss-keyguard || true;
-            adb shell input keyevent 224 || true;
-            adb shell settings put global window_animation_scale 0;
-            adb shell settings put global transition_animation_scale 0;
-            adb shell settings put global animator_duration_scale 0;
+            timeout 10s adb devices -l || true;
+            timeout 10s adb shell wm dismiss-keyguard || true;
+            timeout 10s adb shell input keyevent 224 || true;
+            timeout 10s adb shell settings put global window_animation_scale 0 || true;
+            timeout 10s adb shell settings put global transition_animation_scale 0 || true;
+            timeout 10s adb shell settings put global animator_duration_scale 0 || true;
             cd android-agent;
             mkdir -p app/build/reports/androidTests/connected/debug;
             if ! timeout 300s gradle --no-daemon assembleDebugAndroidTest; then adb logcat -d -t 3000 || true; exit 1; fi;
