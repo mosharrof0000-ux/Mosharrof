@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-10-18T18:31:45+00:00",
+  "timestamp_utc": "2026-10-18T18:32:15+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39154534708",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154534708",
-  "source_run_id": "39154383146",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154383146",
+  "run_id": "39154588704",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154588704",
+  "source_run_id": "39154465897",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154465897",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "feat/android-agent-foundation-clean-2026-10-18",
-  "sha": "22e9821de0270a232ab546e6c3c02dff6bd1dcf7",
+  "branch": "feat/android-control-plugin-bridge-2026-10-18",
+  "sha": "36fd11cf8b814cbb0b3977f73dc82f629c7105a7",
   "checked": [
     "Completed workflow result: Build MOSHARROF Android APK = success",
-    "Source commit: 22e9821de0270a232ab546e6c3c02dff6bd1dcf7",
+    "Source commit: 36fd11cf8b814cbb0b3977f73dc82f629c7105a7",
     "Job: build-apk — completed/success"
   ],
   "planned": [
@@ -97,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T18:31:52+00:00",
+  "finished_at_utc": "2026-10-18T18:32:20+00:00",
   "outcome": "success"
 }
