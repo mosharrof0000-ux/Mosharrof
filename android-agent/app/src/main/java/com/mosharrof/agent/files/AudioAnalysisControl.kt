@@ -20,7 +20,7 @@ object AudioAnalysisControl {
 
     fun handleCommand(activity: Activity, rawCommand: String, status: TextView, pickAudio: () -> Unit): Boolean {
         val command = rawCommand.lowercase()
-        val matches = listOf("গান বিশ্লেষণ", "গানগুলো বিশ্লেষণ", "গানের বিষয়", "song analysis", "analyze song", "analyze my songs", "বাংলা শিরোনাম")
+        val matches = listOf("গান বিশ্লেষণ", "গানগুলো বিশ্লেষণ", "গান এনালাইস", "গানগুলো এনালাইস", "গান অ্যানালাইস", "গানের বিষয়", "song analysis", "analyze song", "analyze audio", "analyze my songs", "বাংলা শিরোনাম", "ইংলিশ টাইটেল বাংলায়")
             .any { command.contains(it) }
         if (!matches) return false
         val saved = activity.getSharedPreferences("mosharrof_media_control", Activity.MODE_PRIVATE)
