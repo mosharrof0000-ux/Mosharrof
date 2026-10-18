@@ -1,93 +1,76 @@
 # MOSHARROF Work Resume Checkpoint
 
-Last updated: 2026-10-17 (UTC; GitHub Actions evidence snapshot)
-Purpose: preserve exact working state across ChatGPT page/session changes. Update this file after each meaningful milestone; never claim a stage passed without its evidence.
+Last updated: 2026-10-18 18:15 UTC (2026-10-19 00:15 Bangladesh time)
 
-## Active work
+Purpose: resume from verified current evidence after a ChatGPT page/session change. Do not claim a task is complete without checking the exact commit, workflow, and artifact. Preserve `main` and Live Pages; promote only through a clean PR with green required checks.
+
+## Current repository state
 
 - Repository: https://github.com/mosharrof0000-ux/Mosharrof
-- Active PR: https://github.com/mosharrof0000-ux/Mosharrof/pull/692
-- Branch: `feature/full-app-interactive-qa-engine-2026-10-17`
-- Recorded head at this checkpoint: `3507dcc17a4729be94fcb15f9b47f9ed5d45ed50`
-- PR status at checkpoint: OPEN, not merged. Do not merge or deploy this branch until the current head's required checks pass and evidence has been reviewed.
+- Live Pages: https://mosharrof0000-ux.github.io/Mosharrof/
+- Main commit at checkpoint: `78967e8fce95dc4374077d9ba218aa821d504d58`
+- Latest main Pages deployment after the automation update: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152809636
+- Main tests at that commit: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152809627
+- Main recovery checkpoint workflow: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152809614
 
-## Completed milestones (evidence-backed)
+## Completed in this recovery pass
 
-1. Added Playwright mobile Chromium QA for the live MOSHARROF PWA: page/title/composer/send/voice/image/message region checks; safe reversible drawer/tool interactions; visible-control inventory; JavaScript/console/request/HTTP error collection; screenshots and JSON report; optional one-message probe disabled by default.
-   - Workflow: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39015397795 — SUCCESS for head `3507dcc`.
-2. Added Android emulator lifecycle acceptance script and wired it into APK workflow: fresh install, launch, UIAutomator hierarchy/screenshot evidence, same-build in-place install path, uninstall verification, reinstall.
-3. Added extensible Android automation roadmap documenting modular observation/action adapters, capability registry, task coordinator, postcondition verification, evidence/memory, lifecycle tests and permission boundaries.
-4. Latest head's architecture, CI, visual QA, verification gate, interaction QA, memory smoke and app QA workflows reported success in the GitHub Actions listing at checkpoint. APK workflow was still running; see pending stage below.
+1. **Full-app QA engine merged** — PR #727, merge commit `3a4e013cb13f9f89912049c7a75e07af34086f10`: https://github.com/mosharrof0000-ux/Mosharrof/pull/727
+   - Includes mobile browser/PWA interaction inspector, screenshots/report artifacts, opt-in real-chat smoke workflow, Android automation roadmap, and resume checkpoint foundation.
+   - The old stale/diverged PR #692 was closed as superseded: https://github.com/mosharrof0000-ux/Mosharrof/pull/692
+2. **Nightly backlog duty schedule merged** — PR #728, merge commit `78967e8fce95dc4374077d9ba218aa821d504d58`: https://github.com/mosharrof0000-ux/Mosharrof/pull/728
+   - GitHub Actions scheduled passes at 20:00, 22:00, 00:00, 02:00, 04:00, 06:00 and 08:00 Bangladesh time (UTC cron: `0 0,2,14,16,18,20,22 * * *`).
+   - Each pass collects open PR metadata and recent Actions runs and tells the planner to prioritize existing failed/stalled work, conflicts, and verification over new features.
+   - This is a series of bounded scheduled runs, not a guaranteed continuously-running 12-hour process. GitHub may delay scheduled runs.
+3. **Live PWA interaction inspection** — SUCCESS on main commit `78967e8`: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152903268
+   - Target URL returned HTTP 200.
+   - Mobile controls, both drawers, module navigation, floating new-chat window open/return, composer expansion, settings, and a mocked chat round-trip passed.
+   - Important: the chat request was intercepted and answered by a mock Worker; this does **not** prove a real provider-backed live chat response.
+   - Artifact: `mosharrof-live-screen-inspector-39152903268`, report and screenshots. Artifact expires 2026-11-01.
+4. **Live browser memory round-trip** — SUCCESS: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152903286
+   - Browser send, persistent storage, and recall after reload passed on the deployed target.
+5. **Night duty automation** — ChatGPT automation `Mosharrof Backlog Recovery` is enabled with an evening start target in `Asia/Dhaka`; an immediate run was requested asynchronously. This separate automation is not proof that a run completed, and it does not replace the GitHub schedule.
 
-## Current pending stage — DO NOT MARK GREEN YET
+## Active blocker: Android native assistant
 
-- Android APK build + emulator lifecycle run: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39015397759
-- At last inspection, APK compile and APK verification had succeeded; step **Install and launch APK in Android Emulator** was still in progress. Evidence and APK artifacts had not yet been uploaded.
-- Next action: inspect that run until terminal status. If it fails, read the job logs, patch the feature branch only, commit the fix, and wait for new-head workflows. If it succeeds, inspect uploaded emulator acceptance artifact and verify install/launch/UI hierarchy/screenshot/uninstall/reinstall records before marking lifecycle accepted.
+- Feature PR #723: https://github.com/mosharrof0000-ux/Mosharrof/pull/723
+- Feature head before latest foundation-base update: `fc29f9d5f1e4bf0f7938c8b370157afdc6074a00`
+- Android Agent CI run #382 is still reported `in_progress`: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152300848
+- The previous run #381 failed in emulator instrumentation, not APK compilation or JVM unit tests. Logs showed `ShellCommandUnresponsiveException`, Gradle reporting `Unknown API Level`, and zero compatible devices while the emulator's system services were unresponsive: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39149307354
+- Mitigation committed to the feature workflow: more emulator resources, longer boot/job timeouts, bounded ADB command timeouts, and a readiness/stabilization check before Gradle probes the emulator.
+- The same stabilization change is also on the foundation branch PR #648 head `fce9e2afa96e5e02b9991c5a88ea018ab3c77b6f`; its Android Agent CI run is still in progress: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39152902212
+- Do not merge #723 or foundation PR #648 until the exact-head emulator test succeeds and the PR mergeability/base branch are rechecked. Physical-device acceptance is not proven.
 
-## Files added/changed for this work
+## Active PR: real live-chat probe
 
-- `scripts/full_app_interactive_qa.py`
-- `.github/workflows/full-app-interactive-qa.yml`
-- `tests/test_full_app_interactive_qa.py`
-- `docs/FULL_APP_INTERACTIVE_QA.md`
-- `scripts/android/emulator-acceptance.sh`
-- `.github/workflows/build-apk.yml`
-- `docs/ANDROID_DEVICE_AUTOMATION_ROADMAP.md`
+- PR #729: https://github.com/mosharrof0000-ux/Mosharrof/pull/729
+- Current purpose: run one real live chat round-trip nightly at 20:37 Bangladesh time and after each successful main Pages deployment.
+- Current head: `2f260c47f84b1b3701f6ac187eda616819daa2ea`
+- Latest required workflows are still running/pending. Do not merge until all required checks are green and mergeability is clean.
+- After it is merged, verify the Pages deployment and the resulting `MOSHARROF Full-System Interaction QA` workflow-run event. Inspect the artifact/log and confirm the real chat step actually ran and received an assistant reply; do not count the mocked round-trip above as real chat evidence.
+- Each real probe sends one test message and may consume provider quota.
 
-Confirm exact file list from PR diff before relying on this list as exhaustive.
+## Backlog inventory at last inspection
 
-## Remaining work, in order
+There were 46 open PRs before the latest PR #729 was opened. The highest-priority existing groups include:
+- Android dependency chain: #648 foundation, #723 media/device assistant (based on foundation), #653 task coordinator, #651 task engine, plus related Android work #645/#643.
+- Personal memory/runtime PRs: #671, #673, #674, #675, #676. Their branches show failures on older commits; compare each against current main before choosing a canonical fix or closing duplicates.
+- Resumable work checkpoint PR #640 and older UI/runtime/security/streaming PRs (#404, #401, #367, #365, #363, #358, #354, #348, #347, #345, #344, #342, #341, #340, #338, #337, #334, #333, #332, #331, #330, #328, #327, #326).
+- Do not merge/close these in bulk. Triage each by current diff, dependency, exact-head checks, and whether its change is already present in main. Prefer the smallest clean PR based on current main and close a stale PR only after its replacement is merged.
 
-1. Finish Android emulator run; diagnose/fix any failure; inspect artifacts and test logs.
-2. Update this checkpoint with run outcome and commit SHA after each milestone.
-3. Strengthen interaction coverage beyond the current bounded checks, adding feature-specific modules with preconditions, assertions, cleanup and evidence. Do not blindly trigger destructive controls.
-4. Make lifecycle test a true version-to-version update: install a previous released APK, then update to candidate APK, verify package/data expectations, then uninstall and clean-reinstall. Current script only exercises same-build replacement, not a previous-release-to-candidate upgrade.
-5. Verify runtime permissions/accessibility/overlay only through approved emulator/device flows; special permissions must not be faked as granted.
-6. Verify the live site after deployment only if deployment is intentionally authorized and checks pass. PR #692 states no production code or Pages behavior is changed; do not deploy/merge merely because checks are green.
-7. Physical-phone acceptance is still unproven. It requires a connected, authorized ADB bridge or an owner-operated device session. Cloud browser and emulator evidence must never be described as physical-device verification.
+## Exact next actions
 
-## Resume instructions for a new ChatGPT page
+1. Recheck Android Agent CI #382 and foundation CI #39152902212 until terminal status. If either fails, inspect the full logs/artifact and fix the root cause on the appropriate feature branch; do not call it a code failure if ADB/emulator setup is the actual cause.
+2. Recheck PR #723 and #648 base/head SHAs and mergeability after the foundation branch update. Keep dependency order intact.
+3. Recheck PR #729 current-head workflows. After they are green and mergeable, mark ready, merge, verify deployment, then inspect the real live-chat round-trip evidence.
+4. Continue memory/runtime PR triage using current-main comparisons and tests; do not merge stale branches simply because some historical run was green.
+5. Keep this checkpoint current after each meaningful milestone, with exact SHA, workflow links, artifacts, blockers, and the next resume point.
 
-Start by reading this file and PR #692, then inspect the latest commit on the branch and all Actions runs for that exact SHA. Continue from the first unchecked/pending stage above; do not restart completed work or ask the user to repeat project context. Before making changes, inspect current file contents and latest branch head. Commit each meaningful fix/checkpoint update to this branch and update this file. Keep main/live untouched until required checks pass and a safe promotion is justified.
+## Truth and safety rules
 
-## Acceptance truth rules
-
-- A successful workflow is not the same as verified artifacts; inspect both.
-- Emulator success is not physical-phone success.
-- APK build success is not full device-control capability.
-- Do not mark version-to-version upgrade complete until an older release APK is actually installed and upgraded to the candidate.
-- Report exact pass/fail/pending state and link to evidence.
-
-
-## Automatic work engine milestone — 2026-10-17
-
-- Added `scripts/automation/work_engine.py`: records work start, preflight checks, planned work, finish status and a resume instruction.
-- Added `tests/test_work_engine.py`: verifies start metadata and failure/finish recording.
-- Added `.github/workflows/automatic-work-engine.yml`: runs the recorder on supported branch pushes/manual runs, validates on PR, and records completed workflow outcomes.
-- Added `docs/AUTOMATIC_WORK_ENGINE.md`: documents the automatic event ledger and resume procedure.
-- The engine writes its permanent event ledger to a dedicated `automation-work-log` branch to avoid changing the active PR head or touching production files.
-- Initial implementation is not yet proven until the new workflow's own run and tests pass. The completed-workflow trigger starts processing other workflow results only after this workflow is present on the default branch.
-- Next: inspect the new workflow run and contract-test results on this PR; repair any failure on this branch; then verify the generated ledger branch/artifact once the workflow is eligible to run.
-
-
-## Automatic Work Engine — isolated review track
-
-- Dedicated PR: https://github.com/mosharrof0000-ux/Mosharrof/pull/693
-- Dedicated branch: `feature/automatic-work-engine-2026-10-17`
-- Durable log branch already exists: `automation-work-log`; latest ledger files are under `docs/automation/` on that branch.
-- The engine records start/finish entries, branch/SHA/run URL, push commit message and changed paths, available check results, job-level workflow results, and a next-resume instruction. Logs are kept outside the active PR branch to avoid changing its head or touching live production files.
-- A first execution exposed a Python syntax error in the finish-record fallback lists; it was diagnosed from run `39015963706` and fixed in the engine script. The resume assertion was updated to match the clearer failure message.
-- The initial ledger entry from run `39015878146` persisted successfully, but it used the earlier recorder version and did not contain the later job-level check inventory. Treat that as a smoke proof of persistence only.
-- Current acceptance state: **pending**. Latest PR checks on PR #693 are queued; do not call the corrected recorder fully green until the current-head contract tests and the engine run complete successfully and a new ledger entry is inspected.
-- Resume from PR #693's latest head, inspect the `MOSHARROF Automatic Work Engine` push run and `Mosharrof Tests` run, then inspect `automation-work-log/docs/automation/latest-state.json`. Only after all relevant checks pass should the isolated PR be considered for merge. Merging this workflow into default branch is required before its `workflow_run` trigger can record completed runs for all named workflows.
-
-
-## Latest automatic-engine verification update — 2026-10-17
-
-- PR #692 branch now includes the corrected recorder and test assertion. Recorder smoke run `39016092459` completed **SUCCESS** on SHA `5d6bda4c3aa7ca5260a3f609f027d35fe76c7455`: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39016092459
-- The ledger's latest-state file now records changed paths and available check statuses for that run: https://github.com/mosharrof0000-ux/Mosharrof/blob/automation-work-log/docs/automation/latest-state.json
-- A concurrent-write retry improvement was added to the work-ledger persistence step after that successful smoke run. It still needs validation on the latest workflow revision; current revision on this branch was commit `86b1397a74a3b6f342483b77429db5ca69646b0f`.
-- Isolated automatic-engine PR #693 is OPEN at head `ad40999088113fd107a89d9f90cb64f1314d46cc`: https://github.com/mosharrof0000-ux/Mosharrof/pull/693
-- Latest PR #693 engine push run `39016174502` was QUEUED at last check: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39016174502
-- Next: wait for and inspect the current-head engine contract test and recorder run, then verify the latest-state ledger was updated from that exact run. Do not merge PR #693 until required checks pass; its workflow_run trigger only becomes globally active after the workflow is merged to default branch.
+- No direct edits to main; use isolated branches and PRs.
+- No merge/deploy with pending/red checks, unresolved conflicts, or dirty merge state.
+- Browser UI checks, mocked chat, emulator tests, and physical-device tests are separate evidence categories.
+- Never claim real provider chat passed unless the real-chat smoke step ran and its response assertion passed.
+- Never claim physical-phone acceptance unless an authorized physical device was actually connected and tested.
+- The user may continue planning and working during night duty; the scheduled worker must not lock the project or override newer user priorities.
