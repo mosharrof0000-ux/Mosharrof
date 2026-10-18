@@ -20,9 +20,10 @@ public class VoiceQuickSettingsTile extends TileService {
     }
     @Override public void onClick() {
         super.onClick();
-        Intent voice = new Intent(this, VoiceCommandActivity.class);
-        voice.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivityAndCollapse(voice);
+        Intent chat = new Intent(this, MainActivity.class);
+        chat.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        chat.putExtra("mosharrof_start_chat_voice", true);
+        startActivityAndCollapse(chat);
     }
 }
 JAVA

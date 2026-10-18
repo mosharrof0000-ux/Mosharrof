@@ -1,0 +1,18 @@
+/* SVIE styles are opt-in and limited to semantic status controls. */
+:root { --svie-red:#DC2626; --svie-blue:#2563EB; --svie-green:#16A34A; --svie-yellow:#EAB308; }
+[data-visual-intelligence][data-svie-tone="red"] { color:var(--svie-red); }
+[data-visual-intelligence][data-svie-tone="blue"] { color:var(--svie-blue); }
+[data-visual-intelligence][data-svie-tone="green"] { color:var(--svie-green); }
+[data-visual-intelligence][data-svie-tone="yellow"] { color:var(--svie-yellow); }
+[data-visual-intelligence][data-svie-tint="true"][data-svie-tone="red"] { background-color:rgba(220,38,38,.08); }
+[data-visual-intelligence][data-svie-tint="true"][data-svie-tone="blue"] { background-color:rgba(37,99,235,.08); }
+[data-visual-intelligence][data-svie-tint="true"][data-svie-tone="green"] { background-color:rgba(22,163,74,.08); }
+[data-visual-intelligence][data-svie-tint="true"][data-svie-tone="yellow"] { background-color:rgba(234,179,8,.09); }
+[data-visual-intelligence][data-svie-badge="true"] { border-radius:999px; }
+[data-visual-intelligence][data-svie-emphasis="high"][data-svie-tint="true"] { border-color:currentColor; }
+@media (prefers-color-scheme: light) {
+ [data-visual-intelligence][data-svie-tint="true"][data-svie-tone="red"] { background-color:rgba(220,38,38,.06); }
+ [data-visual-intelligence][data-svie-tint="true"][data-svie-tone="blue"] { background-color:rgba(37,99,235,.06); }
+ [data-visual-intelligence][data-svie-tint="true"][data-svie-tone="green"] { background-color:rgba(22,163,74,.06); }
+ [data-visual-intelligence][data-svie-tint="true"][data-svie-tone="yellow"] { background-color:rgba(234,179,8,.07); }
+}

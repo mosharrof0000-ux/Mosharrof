@@ -2,6 +2,11 @@
 set -euo pipefail
 
 cp native/android/DeviceControlPlugin.java android/app/src/main/java/com/mosharrof/ai/DeviceControlPlugin.java
+cp native/android/FloatingChatPlugin.java android/app/src/main/java/com/mosharrof/ai/FloatingChatPlugin.java
+cp native/android/AndroidAccessibilityPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidAccessibilityPlugin.java
+cp native/android/AndroidFileManagerPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidFileManagerPlugin.java
+cp native/android/AndroidMediaOrganizerPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidMediaOrganizerPlugin.java
+cp native/android/AndroidDuplicateScanner.java android/app/src/main/java/com/mosharrof/ai/AndroidDuplicateScanner.java
 
 cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
 package com.mosharrof.ai;
@@ -37,6 +42,10 @@ public class MainActivity extends BridgeActivity {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(DeviceControlPlugin.class);
+        registerPlugin(FloatingChatPlugin.class);
+        registerPlugin(AndroidAccessibilityPlugin.class);
+        registerPlugin(AndroidFileManagerPlugin.class);
+        registerPlugin(AndroidMediaOrganizerPlugin.class);
         super.onCreate(savedInstanceState);
         Window window = getWindow();
         WindowCompat.setDecorFitsSystemWindows(window, false);
@@ -146,10 +155,29 @@ public class MainActivity extends BridgeActivity {
 
     private void handleVoiceIntent(Intent intent) {
         if (intent == null) return;
+        if (intent.getBooleanExtra("mosharrof_start_chat_voice", false)) {
+            intent.removeExtra("mosharrof_start_chat_voice");
+            deliverStartChatVoice(0);
+            return;
+        }
         String command = intent.getStringExtra("mosharrof_voice_command");
         if (command == null || command.trim().isEmpty()) return;
         intent.removeExtra("mosharrof_voice_command");
         deliverVoiceCommand(command.trim(), 0);
+    }
+
+    private void deliverStartChatVoice(int attempt) {
+        if (attempt > 30 || isFinishing()) return;
+        try {
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                String js = "(function(){var button=document.getElementById('composerVoiceBtn');if(button){button.click();return true;}return false;})()";
+                getBridge().getWebView().evaluateJavascript(js, value -> {
+                    if (!"true".equals(value)) handler.postDelayed(() -> deliverStartChatVoice(attempt + 1), 350);
+                });
+                return;
+            }
+        } catch (Exception ignored) {}
+        handler.postDelayed(() -> deliverStartChatVoice(attempt + 1), 350);
     }
 
     private void deliverVoiceCommand(String command, int attempt) {
