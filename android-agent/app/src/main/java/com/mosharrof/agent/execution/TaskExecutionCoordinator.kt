@@ -1,5 +1,10 @@
 package com.mosharrof.agent.execution.coordinator
+import java.util.concurrent.Callable
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /** A bounded, explicit task step. Platform-specific work is supplied by a trusted adapter. */
 data class TaskStep(
@@ -58,6 +63,7 @@ class TaskExecutionCoordinator(
     private val clock: TaskClock = TaskClock { System.nanoTime() / 1_000_000 }
 ) {
     private val cancellationRequested = AtomicBoolean(false)
+    private val activeStepTask = AtomicReference<FutureTask<Pair<StepOutcome, Boolean>>?>(null)
 
     @Volatile
     var state: TaskRunState = TaskRunState.IDLE
@@ -65,6 +71,7 @@ class TaskExecutionCoordinator(
 
     fun cancel() {
         cancellationRequested.set(true)
+        activeStepTask.get()?.cancel(true)
     }
 
     fun execute(
@@ -111,17 +118,37 @@ class TaskExecutionCoordinator(
                 }
 
                 attempts += 1
-                val outcome = runCatching { adapter.execute(step) }
-                    .getOrElse { StepOutcome.Failed(it.message ?: "অজানা ত্রুটি") }
-
-                if (clock.nowMillis() - startedAt >= step.timeoutMillis) {
-                    reports += StepReport(step.id, StepState.TIMED_OUT, attempts, "ধাপটি নির্ধারিত সময়ের পরে ফিরেছে।")
-                    return finish(TaskRunState.FAILED, reports, "সময়সীমা অতিক্রম করেছে; পরের ধাপ চালানো হয়নি।")
+                val remainingMillis = (step.timeoutMillis - (clock.nowMillis() - startedAt)).coerceAtLeast(1)
+                val task = FutureTask(Callable {
+                    val result = runCatching { adapter.execute(step) }
+                        .getOrElse { StepOutcome.Failed(it.message ?: "অজানা ত্রুটি") }
+                    val postcondition = if (result == StepOutcome.Completed) {
+                        runCatching { adapter.verifyPostcondition(step) }.getOrDefault(false)
+                    } else false
+                    result to postcondition
+                })
+                activeStepTask.set(task)
+                Thread(task, "mosharrof-task-step-${step.id}").apply { isDaemon = true }.start()
+                val result = try {
+                    task.get(remainingMillis, TimeUnit.MILLISECONDS)
+                } catch (_: TimeoutException) {
+                    task.cancel(true)
+                    reports += StepReport(step.id, StepState.TIMED_OUT, attempts, "ধাপটির সময়সীমা শেষ হয়েছে; কাজ বাতিলের সংকেত পাঠানো হয়েছে।")
+                    return finish(TaskRunState.FAILED, reports, "সময়সীমা শেষ; পরের ধাপ চালানো হয়নি।")
+                } catch (e: InterruptedException) {
+                    task.cancel(true)
+                    Thread.currentThread().interrupt()
+                    reports += StepReport(step.id, StepState.CANCELLED, attempts, "কাজের থ্রেড বন্ধের অনুরোধ পেয়েছে।")
+                    return finish(TaskRunState.CANCELLED, reports, "কাজ বন্ধ করা হয়েছে।")
+                } catch (e: java.util.concurrent.ExecutionException) {
+                    StepOutcome.Failed(e.cause?.message ?: "অজানা ত্রুটি") to false
+                } finally {
+                    activeStepTask.compareAndSet(task, null)
                 }
 
-                when (outcome) {
+                when (val outcome = result.first) {
                     StepOutcome.Completed -> {
-                        verified = runCatching { adapter.verifyPostcondition(step) }.getOrDefault(false)
+                        verified = result.second
                         if (verified) break
                         // Never repeat an action whose side effect may already have occurred.
                         failure = "কাজের পরের অবস্থা নিশ্চিত করা যায়নি; পুনরায় চালানো হয়নি।"
