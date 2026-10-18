@@ -21,6 +21,14 @@ export function initializeNewChatFloatingOrgan() {
   var pressTimer = null;
   var longPressed = false;
   function enterFloating() { document.body.classList.add("chat-floating"); }
+  async function openFloating() {
+    var plugins = window.Capacitor && window.Capacitor.Plugins;
+    var nativeFloating = plugins && plugins.FloatingChat;
+    if (nativeFloating && typeof nativeFloating.enterPictureInPicture === "function") {
+      try { await nativeFloating.enterPictureInPicture(); return; } catch (error) { console.warn("[MOSHARROF Floating Chat] Native PiP unavailable; using in-page window.", error); }
+    }
+    enterFloating();
+  }
   function leaveFloating() {
     document.body.classList.remove("chat-floating");
     var app = document.querySelector(".app");
@@ -28,7 +36,7 @@ export function initializeNewChatFloatingOrgan() {
   }
   button.addEventListener("pointerdown", function () {
     longPressed = false;
-    pressTimer = setTimeout(function () { longPressed = true; enterFloating(); }, 550);
+    pressTimer = setTimeout(function () { longPressed = true; openFloating(); }, 550);
   });
   ["pointerup", "pointercancel", "pointerleave"].forEach(function (type) {
     button.addEventListener(type, function () { if (pressTimer) clearTimeout(pressTimer); pressTimer = null; });
