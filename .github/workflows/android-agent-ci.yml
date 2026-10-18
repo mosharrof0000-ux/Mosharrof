@@ -45,7 +45,7 @@ jobs:
       - name: Run emulator smoke tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 34
           arch: x86_64
           emulator-port: 5556
           emulator-boot-timeout: 300
@@ -66,6 +66,14 @@ jobs:
             adb shell settings put global animator_duration_scale 0;
             cd android-agent;
             if ! timeout 300s gradle --no-daemon connectedDebugAndroidTest; then adb logcat -d -t 3000 || true; exit 1; fi
+      - name: Upload Android instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-instrumentation-reports-${{ github.run_id }}
+          path: android-agent/app/build/reports/androidTests/connected/debug/**
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload debug APK
         if: success()
         uses: actions/upload-artifact@v4
