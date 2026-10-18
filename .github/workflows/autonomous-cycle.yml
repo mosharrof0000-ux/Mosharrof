@@ -62,16 +62,7 @@ jobs:
         run: python3 -m pytest -q
 
       - name: Protected change-surface check
-        shell: bash
-        run: |
-          if git diff --name-only HEAD 2>/dev/null | grep -E '^\.github/workflows/(deploy-pages|verification-gate)\.yml$|^CODEOWNERS
-            echo "Protected deployment/security file was modified."
-            exit 1
-          fi
-          if git diff --unified=0 HEAD -- . | grep -nE '^\+[^+].*(rm -rf|git push --force|git reset --hard|gh repo delete|delete-repository)' >/dev/null; then
-            echo "Destructive operation detected."
-            exit 1
-          fi
+        run: python3 scripts/automation/protected_change_surface.py
 
       - name: Open review PR for verified autonomous change
         if: success()
