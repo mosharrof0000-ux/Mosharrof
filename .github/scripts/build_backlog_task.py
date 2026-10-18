@@ -1,26 +1,13 @@
 #!/usr/bin/env python3
-"""Build a bounded, backlog-aware task for the scheduled MOSHARROF worker."""
+"""Build a bounded, trustworthy task for the scheduled MOSHARROF worker."""
 import json
 import os
-import subprocess
 from pathlib import Path
+
+from automation_resilience import bounded_json, gh_json
 
 REPO = os.environ.get("GH_REPO", "mosharrof0000-ux/Mosharrof")
 EVENT = os.environ.get("EVENT_NAME", "schedule")
-
-
-def gh_json(args):
-    try:
-        result = subprocess.run(
-            ["gh", *args, "--repo", REPO],
-            capture_output=True, text=True, timeout=30, check=False,
-        )
-        if result.returncode == 0:
-            return json.loads(result.stdout or "[]")
-    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
-        pass
-    return []
-
 
 if EVENT == "schedule":
     task = (
@@ -42,11 +29,16 @@ else:
 
 if EVENT in ("schedule", "workflow_dispatch"):
     prs = gh_json(["pr", "list", "--state", "open", "--limit", "30", "--json",
-                   "number,title,url,headRefName,baseRefName,isDraft,mergeStateStatus,reviewDecision"])
+                   "number,title,url,headRefName,baseRefName,isDraft,mergeStateStatus,reviewDecision"], REPO)
     runs = gh_json(["run", "list", "--limit", "25", "--json",
-                    "name,status,conclusion,createdAt,url,headBranch,event"])
-    task += "\n\nOPEN PR BACKLOG (JSON):\n" + json.dumps(prs, ensure_ascii=False)
-    task += "\n\nRECENT ACTION RUNS (JSON; inspect failed/in-progress items first):\n" + json.dumps(runs, ensure_ascii=False)
+                    "name,status,conclusion,createdAt,url,headBranch,event"], REPO)
+    issues = gh_json(["issue", "list", "--state", "open", "--limit", "30", "--json",
+                      "number,title,url,updatedAt,labels"], REPO)
+    task += "\n\nOPEN PR BACKLOG (bounded complete JSON):\n" + bounded_json(prs, 3600)
+    task += "\n\nRECENT ACTION RUNS (bounded complete JSON; inspect failed/in-progress first):\n" + bounded_json(runs, 3600)
+    task += "\n\nOPEN ISSUE BACKLOG (bounded complete JSON):\n" + bounded_json(issues, 2400)
 
-Path("/tmp/task.txt").write_text(task[:12000], encoding="utf-8")
-print(f"Prepared {EVENT} task with {len(task[:12000])} characters.")
+if len(task) > 12000:
+    raise SystemExit(f"Backlog task exceeded the 12000-character safety limit ({len(task)}); refusing to truncate evidence.")
+Path("/tmp/task.txt").write_text(task, encoding="utf-8")
+print(f"Prepared {EVENT} task with {len(task)} characters.")

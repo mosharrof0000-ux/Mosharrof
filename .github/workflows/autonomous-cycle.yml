@@ -24,6 +24,7 @@ jobs:
   autonomous:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.action == 'opened') || (github.event_name == 'issue_comment' && github.event.action == 'created' && contains(github.event.comment.body, '/mosharrof'))
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - name: Checkout main snapshot
         uses: actions/checkout@v6
@@ -71,3 +72,12 @@ jobs:
             echo "Destructive operation detected."
             exit 1
           fi
+
+      - name: Open review PR for verified autonomous change
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: python3 .github/scripts/open_verified_autonomous_pr.py
