@@ -25,9 +25,13 @@ public class FloatingChatPlugin extends Plugin {
             return;
         }
         try {
-            PictureInPictureParams params = new PictureInPictureParams.Builder()
-                .setAspectRatio(new Rational(9, 16))
-                .build();
+            PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
+                .setAspectRatio(new Rational(9, 16));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                builder.setAutoEnterEnabled(true);
+                builder.setSeamlessResizeEnabled(true);
+            }
+            PictureInPictureParams params = builder.build();
             boolean entered = activity.enterPictureInPictureMode(params);
             if (!entered) {
                 call.reject("Android could not enter floating chat mode");

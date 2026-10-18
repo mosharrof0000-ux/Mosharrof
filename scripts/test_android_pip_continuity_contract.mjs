@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const plugin = readFileSync("native/android/FloatingChatPlugin.java", "utf8");
+const installer = readFileSync("scripts/android/install-main-activity.sh", "utf8");
+assert.ok(plugin.includes("enterPictureInPictureMode(params)"), "native app must enter Android PiP");
+assert.ok(plugin.includes("Build.VERSION_CODES.S"), "Android 12+ PiP policy must be version-gated");
+assert.ok(plugin.includes("builder.setAutoEnterEnabled(true)"), "PiP should persist automatically when switching apps");
+assert.ok(plugin.includes("builder.setSeamlessResizeEnabled(true)"), "PiP resize should be smooth on Android 12+");
+assert.ok(installer.includes("FloatingChatPlugin.java"), "PiP policy must be included in APK generation");
+console.log("Android cross-app PiP continuity contract: PASS");
