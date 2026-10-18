@@ -72,20 +72,3 @@ jobs:
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_RUN_ID: ${{ github.run_id }}
         run: python3 .github/scripts/open_verified_autonomous_pr.py
- >/dev/null; then
-            echo "Protected deployment/security file was modified."
-            exit 1
-          fi
-          if git diff HEAD~1 -- . | grep -nE 'rm -rf|git push --force|git reset --hard|gh repo delete|delete-repository' >/dev/null; then
-            echo "Destructive operation detected."
-            exit 1
-          fi
-
-      - name: Open review PR for verified autonomous change
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          GITHUB_SERVER_URL: ${{ github.server_url }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-        run: python3 .github/scripts/open_verified_autonomous_pr.py
