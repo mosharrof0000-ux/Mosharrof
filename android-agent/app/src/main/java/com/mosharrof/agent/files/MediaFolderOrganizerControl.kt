@@ -139,6 +139,7 @@ object MediaFolderOrganizerControl {
             status.text = "নিরাপত্তা সীমা: এই প্রস্তাব 500 MB-এর বেশি; ছোট ফোল্ডার/ব্যাচ বেছে নিন। কোনো ফাইল সরানো হয়নি।"
             return
         }
+        val playlists = mutableMapOf<SongTopic, MutableList<String>>()
         AlertDialog.Builder(activity)
             .setTitle("মূল ফাইল সরানোর চূড়ান্ত অনুমতি")
             .setMessage("নতুন ফোল্ডারে কপি ও আকার যাচাই সফল হলে মূল ফাইল মুছতে চেষ্টা করা হবে। স্টোরেজ প্রদানকারী মুছতে না দিলে মূল ফাইল থাকবে এবং কপি তৈরি হতে পারে। এগিয়ে যাবেন?")
@@ -186,15 +187,55 @@ object MediaFolderOrganizerControl {
                                 failed++
                                 continue
                             }
-                            if (runCatching { source.delete() }.getOrDefault(false)) moved++ else copiedKept++
+                            if (reviewedSong != null) {
+                        val folderName = suggestion.destinationFolder.substringAfterLast('/')
+                        reviewedSong.topics.filter { it != SongTopic.UNKNOWN }.forEach { topic ->
+                            playlists.getOrPut(topic) { mutableListOf() }.add("$folderName/$targetName")
+                        }
+                    }
+                    if (runCatching { source.delete() }.getOrDefault(false)) moved++ else copiedKept++
                         } catch (_: Exception) { failed++ }
                     }
+                    val playlistCount = writeTopicPlaylists(root, playlists)
                     activity.runOnUiThread {
                         if (!activity.isFinishing) status.text =
-                            "ফোল্ডার সাজানোর ফল: ${moved}টি কপি-যাচাই করে মূল স্থান থেকে সরেছে; ${copiedKept}টি কপি হয়েছে কিন্তু মূল ফাইল রাখা হয়েছে; ${failed}টি ব্যর্থ।"
+                            "ফোল্ডার সাজানোর ফল: ${moved}টি কপি-যাচাই করে মূল স্থান থেকে সরেছে; ${copiedKept}টি কপি হয়েছে কিন্তু মূল ফাইল রাখা হয়েছে; ${failed}টি ব্যর্থ।\nবিষয়ভিত্তিক প্লেলিস্ট তৈরি: ${playlistCount}টি।"
                     }
                 }.start()
             }.show()
+    }
+
+    private fun localizedName(originalName: String, metadata: ReviewedSongMetadata?): String {
+        if (metadata == null) return originalName
+        val title = metadata.bengaliTitle.map { ch ->
+            if (ch in "/:*?<>|" || ch.isISOControl() || ch == '\\') ' ' else ch
+        }.joinToString("").trim().take(100)
+        if (title.isBlank()) return originalName
+        val extension = originalName.substringAfterLast('.', "").takeIf { it.isNotBlank() }
+        return if (extension == null) title else "$title.$extension"
+    }
+
+    private fun writeTopicPlaylists(root: DocumentFile, playlists: Map<SongTopic, List<String>>): Int {
+        val songRoot = ensureFolder(root, "গান") ?: return 0
+        var created = 0
+        for ((topic, tracks) in playlists) {
+            if (tracks.isEmpty()) continue
+            val name = uniqueName(songRoot, "${topic.bengaliLabel}.m3u")
+            val playlist = songRoot.createFile("audio/x-mpegurl", name) ?: continue
+            val body = buildString {
+                appendLine("#EXTM3U")
+                tracks.distinct().forEach { appendLine(it) }
+            }
+            val written = runCatching {
+                val context = pendingActivity ?: return@runCatching false
+                context.contentResolver.openOutputStream(playlist.uri, "w")?.use {
+                    it.write(body.toByteArray(Charsets.UTF_8))
+                } ?: return@runCatching false
+                true
+            }.getOrDefault(false)
+            if (written) created++ else runCatching { playlist.delete() }
+        }
+        return created
     }
 
     private fun ensureFolder(root: DocumentFile, path: String): DocumentFile? {
