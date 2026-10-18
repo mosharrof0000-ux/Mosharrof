@@ -1,5 +1,7 @@
 import { initializeComposerStopControl } from "./composer-stop.js";
 import { initializeComposerAutoGrow } from "./composer-autogrow.js";
+import { initializeComposerLayout } from "./composer-layout.js";
+import { initializeComposerVoiceMeter } from "./composer-voice-meter.js";
 
 export function initializeComposerEnhancements() {
   if (typeof document === "undefined") return;
@@ -9,14 +11,16 @@ export function initializeComposerEnhancements() {
   if (!input || !composer || !send) return;
 
   initializeComposerStopControl(send);
+  initializeComposerLayout(input, composer, send);
   initializeComposerAutoGrow(input, composer);
+  initializeComposerVoiceMeter(document.getElementById("composerVoiceBtn"));
   if (document.getElementById("composerExpandBtn")) return;
 
   const style = document.createElement("style");
   style.id = "chat-composer-expand-styles";
   style.textContent = [
-    "#composer .row{gap:6px;align-items:flex-end}",
-    "#composer .input{min-height:34px!important;padding-top:6px!important;padding-bottom:6px!important}",
+    "#composer .composer-actions-row{gap:6px;align-items:center}",
+    "#composer .composer-input-row .input{min-height:44px!important}",
     "#composerExpandBtn{display:none}",
     "#composerExpandBtn.visible{display:inline-grid}",
     ".mosharrof-expand-editor{position:fixed;inset:0;z-index:20000;display:none;flex-direction:column;background:#050505;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));color:#f5f5f5}",
@@ -41,7 +45,9 @@ export function initializeComposerEnhancements() {
   expand.setAttribute("aria-controls", "mosharrofExpandEditor");
   expand.setAttribute("aria-expanded", "false");
   expand.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/><path d="M8 8h8v8H8z"/></svg>';
-  send.parentNode.insertBefore(expand, send);
+  // Keep the expander immediately to the left of the microphone.
+  const voice = document.getElementById("composerVoiceBtn");
+  send.parentNode.insertBefore(expand, voice || document.getElementById("stopBtn") || send);
 
   const editor = document.createElement("section");
   editor.className = "mosharrof-expand-editor";
@@ -54,12 +60,19 @@ export function initializeComposerEnhancements() {
   document.body.appendChild(editor);
   const largeInput = editor.querySelector("textarea");
 
+  function currentInput() {
+    return document.getElementById("input") || input;
+  }
   function syncVisibility() {
-    expand.classList.toggle("visible", !!String(input.value || "").trim());
+    const activeInput = currentInput();
+    const lineLimitReached = activeInput.classList.contains("is-over-eight-lines");
+    expand.classList.toggle("visible", lineLimitReached);
+    expand.setAttribute("aria-hidden", lineLimitReached ? "false" : "true");
   }
   function openEditor() {
-    if (!String(input.value || "").trim()) return;
-    largeInput.value = input.value;
+    const activeInput = currentInput();
+    if (!String(activeInput.value || "").trim()) return;
+    largeInput.value = activeInput.value;
     editor.classList.add("open");
     editor.setAttribute("aria-hidden", "false");
     expand.setAttribute("aria-expanded", "true");
@@ -70,21 +83,51 @@ export function initializeComposerEnhancements() {
     });
   }
   function closeEditor(apply) {
+    const activeInput = currentInput();
     if (apply) {
-      input.value = largeInput.value;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-      input.value = largeInput.value;
+      const value = String(largeInput.value || "");
+      const previousValue = String(activeInput.value || "");
+      activeInput.value = value;
+      activeInput.dispatchEvent(new Event("input", { bubbles: true }));
+      activeInput.dispatchEvent(new Event("change", { bubbles: true }));
+
+      // Some UI listeners may replace the composer input while handling the input event.
+      // Reacquire by ID instead of writing a second time to a detached node.
+      let latestInput = currentInput();
+      if (latestInput !== activeInput) {
+        latestInput.value = value;
+        latestInput.dispatchEvent(new Event("input", { bubbles: true }));
+        latestInput = currentInput();
+      }
+      latestInput.value = value;
       syncVisibility();
+
+      // If a listener schedules a DOM refresh, restore only while the draft is still unchanged.
+      // Never overwrite text the user has typed after applying the expanded draft.
+      requestAnimationFrame(() => {
+        let current = currentInput();
+        if (current.value === value || current.value === previousValue || !current.value) {
+          current.value = value;
+          current.dispatchEvent(new Event("input", { bubbles: true }));
+          current = currentInput();
+          if (current.value === previousValue || !current.value) current.value = value;
+        }
+        syncVisibility();
+      });
     }
     editor.classList.remove("open");
     editor.setAttribute("aria-hidden", "true");
     expand.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
-    if (apply) input.focus();
+    if (apply) activeInput.focus();
   }
 
-  input.addEventListener("input", syncVisibility);
+  document.addEventListener("input", event => {
+    if (event.target?.id === "input") syncVisibility();
+  });
+  document.addEventListener("composer:line-limit", event => {
+    if (event.target?.id === "input") syncVisibility();
+  });
   expand.addEventListener("click", openEditor);
   editor.querySelector("[data-expand-cancel]").addEventListener("click", () => closeEditor(false));
   editor.querySelector("[data-expand-apply]").addEventListener("click", event => {

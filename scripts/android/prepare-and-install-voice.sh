@@ -7,3 +7,4 @@ bash scripts/android/install-voice-overlay.sh
 bash scripts/android/install-voice-command-activity.sh
 bash scripts/android/install-voice-tile.sh
 bash scripts/android/install-main-activity.sh
+bash scripts/android/install-agent-accessibility.sh

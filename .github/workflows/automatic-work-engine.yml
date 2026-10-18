@@ -1,0 +1,193 @@
+name: MOSHARROF Automatic Work Engine
+
+on:
+  # Only main writes to the shared ledger; feature branches are validated by PR checks.
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/automation/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/automation/**"
+      - "tests/test_work_engine.py"
+      - "tests/test_work_engine_recovery.py"
+      - "tests/test_work_gate.py"
+      - ".github/workflows/automatic-work-engine.yml"
+  workflow_dispatch:
+  workflow_run:
+    # Avoid a recorder storm from every supporting workflow; these are the two release-critical outcomes.
+    workflows:
+      - Deploy Mosharrof Pages
+      - Build MOSHARROF Android APK
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  # Only main and the two release-critical workflow completions write to the shared ledger.
+  # Keep same-branch writers serialized while avoiding collisions from unrelated feature branches.
+  group: mosharrof-work-engine-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate work engine
+        run: |
+          python -m py_compile scripts/automation/work_engine.py
+          python -m unittest discover -s tests -p 'test_work_engine.py' -v
+          python -m unittest discover -s tests -p 'test_work_engine_recovery.py' -v
+          python -m unittest discover -s tests -p 'test_work_gate.py' -v
+
+  record:
+    if: github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.name != 'MOSHARROF Automatic Work Engine')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source branch for this work event
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Enter work gate and persist start checkpoint
+        run: |
+          mkdir -p "$RUNNER_TEMP/mosharrof-work-engine"
+          python scripts/automation/work_gate.py enter --dir "$RUNNER_TEMP/mosharrof-work-engine" --task "Automatic work-engine verification" --purpose "Validate recorder and durable resume behavior" --step "Run work-engine and work-gate contract tests"
+          bash scripts/automation/persist_work_gate.sh "$RUNNER_TEMP/mosharrof-work-engine"
+
+      - name: Announce planned work and record starting state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/automation/work_engine.py --phase start --out-dir "$RUNNER_TEMP/mosharrof-work-engine"
+
+      - name: Checkpoint recorder start and persist
+        run: |
+          python scripts/automation/work_gate.py checkpoint --dir "$RUNNER_TEMP/mosharrof-work-engine" --step "Recorder start entry written" --details "next: run Python compilation and both contract test suites"
+          bash scripts/automation/persist_work_gate.sh "$RUNNER_TEMP/mosharrof-work-engine"
+
+      - name: Run work-engine and work-gate contract tests
+        run: |
+          python -m py_compile scripts/automation/work_engine.py scripts/automation/work_gate.py
+          bash -n scripts/automation/persist_work_gate.sh
+          python -m unittest discover -s tests -p 'test_work_engine.py' -v
+          python -m unittest discover -s tests -p 'test_work_gate.py' -v
+
+      - name: Close work gate with exact resume point
+        if: always()
+        env:
+          ENGINE_JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ "$ENGINE_JOB_STATUS" = "success" ]; then
+            python scripts/automation/work_gate.py exit --dir "$RUNNER_TEMP/mosharrof-work-engine" --step "Python compilation and contract tests" --details "All focused tests passed; inspect workflow result and artifacts next."
+          else
+            python scripts/automation/work_gate.py interrupt --dir "$RUNNER_TEMP/mosharrof-work-engine" --reason unknown --step "Run work-engine and work-gate contract tests" --details "Job ended with status $ENGINE_JOB_STATUS; exact cause must be determined from Actions logs."
+          fi
+          bash scripts/automation/persist_work_gate.sh "$RUNNER_TEMP/mosharrof-work-engine"
+
+      - name: Record outcome and resume point
+        if: always()
+        env:
+          ENGINE_JOB_STATUS: ${{ job.status }}
+        run: python scripts/automation/work_engine.py --phase finish --job-status "$ENGINE_JOB_STATUS" --out-dir "$RUNNER_TEMP/mosharrof-work-engine"
+
+      - name: Persist work log to dedicated repository branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/mosharrof-work-engine"
+          LOG_REPO="$RUNNER_TEMP/mosharrof-work-log-repo"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin automation-work-log >/dev/null 2>&1; then
+            git fetch origin automation-work-log
+            git worktree add --detach "$LOG_REPO" origin/automation-work-log
+          else
+            git worktree add --detach "$LOG_REPO" HEAD
+            git -C "$LOG_REPO" checkout --orphan automation-work-log
+            git -C "$LOG_REPO" rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          MONTH="$(python -c 'import json,sys; from datetime import datetime,timezone; d=json.load(open(sys.argv[1])); ts=d.get("timestamp_utc") or d.get("updated_at_utc") or d.get("finished_at_utc") or datetime.now(timezone.utc).isoformat(); print(ts[:7])' "$OUT/state.json")"
+          for ATTEMPT in $(seq 1 12); do
+            if [ "$ATTEMPT" -gt 1 ] && git ls-remote --exit-code --heads origin automation-work-log >/dev/null 2>&1; then
+              git fetch origin automation-work-log
+              git -C "$LOG_REPO" reset --hard origin/automation-work-log
+            fi
+
+            mkdir -p "$LOG_REPO/docs/automation/logs" "$LOG_REPO/docs/automation/events"
+            LOG_FILE="$LOG_REPO/docs/automation/logs/${MONTH}.md"
+            EVENTS_FILE="$LOG_REPO/docs/automation/events/${MONTH}.jsonl"
+            if [ ! -f "$LOG_FILE" ]; then
+              printf '# MOSHARROF Automatic Work Log — %s\n\nEach entry records what was checked before work, the plan, the result, and the next resume point. See latest-state.json for the newest state.\n\n' "$MONTH" > "$LOG_FILE"
+            fi
+            cat "$OUT/entry.md" >> "$LOG_FILE"
+            cat "$OUT/state.json" >> "$EVENTS_FILE"
+            printf '\n' >> "$EVENTS_FILE"
+            python - "$OUT/state.json" "$LOG_REPO/docs/automation/latest-state.json" <<'PY'
+          import json, sys
+          from pathlib import Path
+          candidate_path, latest_path = map(Path, sys.argv[1:])
+          candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+          previous = json.loads(latest_path.read_text(encoding="utf-8")) if latest_path.exists() else {}
+          def event_time(state):
+              return state.get("finished_at_utc") or state.get("timestamp_utc") or state.get("updated_at_utc") or ""
+          if event_time(candidate) >= event_time(previous):
+              latest_path.write_text(candidate_path.read_text(encoding="utf-8"), encoding="utf-8")
+          PY
+          cat > "$LOG_REPO/docs/automation/README.md" <<'EOF'
+          # Automatic Work Engine Ledger
+
+          The automation-work-log branch is a dedicated operational ledger. It is intentionally separate from main and feature branches so automatic status recording never changes the active PR head or deploys the live site.
+
+          - latest-state.json: latest machine-readable state, including branch, commit SHA, workflow/run URL, checks, outcome, and next resume point.
+          - logs/YYYY-MM.md: readable start/finish history.
+          - events/YYYY-MM.jsonl: one JSON record per workflow event.
+
+          The engine records its own run plus completed GitHub Actions workflows. A green workflow is not automatically proof of a real physical-device test; inspect its artifacts and logs.
+          EOF
+
+            git -C "$LOG_REPO" add docs/automation
+            if git -C "$LOG_REPO" diff --cached --quiet; then
+              echo "No ledger changes to persist."
+              exit 0
+            fi
+            git -C "$LOG_REPO" commit -m "chore(automation): record work event ${GITHUB_RUN_ID}"
+            if git -C "$LOG_REPO" push origin HEAD:refs/heads/automation-work-log; then
+              exit 0
+            fi
+            echo "Ledger push raced with another run; retrying (attempt $ATTEMPT/12)."
+            RUN_JITTER=$(( ${GITHUB_RUN_ID:-0} % 5 ))
+            sleep "$((ATTEMPT * 2 + RUN_JITTER))"
+          done
+          echo "Could not persist ledger after twelve retries."
+          exit 1
+
+      - name: Upload machine-readable work record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MOSHARROF-Work-Engine-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/mosharrof-work-engine/entry.md
+            ${{ runner.temp }}/mosharrof-work-engine/state.json
+          if-no-files-found: warn
+          retention-days: 90

@@ -38,7 +38,18 @@ jobs:
       - name: Install Chromium for candidate runtime smoke test
         run: python -m pip install playwright && python -m playwright install chromium
       - name: Start candidate Pages server
-        run: python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
+        shell: bash
+        run: |
+          nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-pages.log 2>&1 &
+          pid=$!
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0
+            kill -0 "$pid" 2>/dev/null || { cat /tmp/mosharrof-pages.log; exit 1; }
+            sleep 1
+          done
+          cat /tmp/mosharrof-pages.log
+          echo "Server readiness timed out."
+          exit 1
       - name: Test candidate organ runtime in Chromium
         env:
           PAGE_URL: http://127.0.0.1:4173/
@@ -65,4 +76,16 @@ jobs:
       - name: Live deployment health check
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-        run: python3 scripts/live_organ_browser_health.py
+        run: |
+          for attempt in 1 2 3; do
+            echo "Live Pages health check attempt $attempt/3"
+            if python3 scripts/live_organ_browser_health.py; then
+              exit 0
+            fi
+            if [[ "$attempt" -lt 3 ]]; then
+              echo "Waiting 15 seconds for Pages/CDN and runtime assets to converge..."
+              sleep 15
+            fi
+          done
+          echo "Live Pages health check failed after 3 attempts."
+          exit 1

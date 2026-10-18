@@ -15,7 +15,7 @@ export function initializeComposerStopControl(send) {
   if (!document.getElementById("mosharrof-stop-styles")) {
     const style = document.createElement("style");
     style.id = "mosharrof-stop-styles";
-    style.textContent = ".mosharrof-stop-action{color:#f87171}.mosharrof-stop-action:disabled{opacity:.48;cursor:not-allowed}";
+    style.textContent = ".mosharrof-stop-action{color:#f87171}.mosharrof-stop-action:disabled{display:none!important}";
     document.head.appendChild(style);
   }
   if (stop.dataset.stopBound === "true") return;

@@ -121,3 +121,12 @@
 import("./composer-enhancements.js")
   .then(function (module) { module.initializeComposerEnhancements(); })
   .catch(function (error) { console.error("Composer enhancement initialization failed:", error); });
+
+
+// Install the local-first personal memory bridge for chat requests.
+import("./core/personal-memory-bridge.js")
+  .then(function () { console.info("[MOSHARROF Memory] Local personal memory bridge ready"); })
+  .catch(function (error) { console.error("[MOSHARROF Memory] Bridge initialization failed:", error); });
+
+// Load the isolated New Chat / floating-window organ without growing the legacy entrypoint.
+import("./core/new-chat-floating/index.js").catch(function (error) { console.error("[MOSHARROF Floating Chat] Initialization failed:", error); });

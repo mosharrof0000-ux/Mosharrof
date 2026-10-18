@@ -76,6 +76,8 @@ public class DeviceControlPlugin extends Plugin {
         openSettings(call, Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
     }
 
+    
+
     private void openSettings(PluginCall call, String action) {
         openSettings(call, action, null);
     }

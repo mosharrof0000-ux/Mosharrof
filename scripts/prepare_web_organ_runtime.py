@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.mosharrof_registry import build_registry  # noqa: E402
+from scripts.manual_provider_runtime_patch import apply_manual_provider_patches  # noqa: E402
 
 
 def main() -> int:
@@ -29,15 +30,35 @@ def main() -> int:
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
+        "core/composer-layout.js": "web/composer-layout.js",
+        "core/composer-voice-meter.js": "web/composer-voice-meter.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
+        "core/composer-line-limit.js": "web/composer-line-limit.js",
+        "core/./composer-line-limit.js": "web/core/composer-line-limit.js",
         "core/device-control.js": "web/device-control.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
+        "core/personal-memory-engine.js": "web/core/personal-memory-engine.js",
+        "core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js",
+        "core/design-intelligence.js": "web/core/design-intelligence.js",
+        "core/manual-provider-controls.js": "web/core/manual-provider-controls.js",
+        "core/design-intelligence.css": "web/design-intelligence.css",
+        "core/new-chat-floating/index.js": "web/core/new-chat-floating/index.js",
+        "core/new-chat-floating/style.css": "web/core/new-chat-floating/style.css",
+        "core/new-chat-floating/compact.css": "web/core/new-chat-floating/compact.css",
+        "core/new-chat-floating/theme.css": "web/core/new-chat-floating/theme.css",
+        "core/new-chat-floating/theme.js": "web/core/new-chat-floating/theme.js",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
         if not src.is_file():
             raise SystemExit(f"ORGAN ASSET PREP: missing {source}")
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dst)
+    # Bundle the same memory modules at the runtime path used by the injected module script.
+    for name in ("personal-memory-engine.js", "personal-memory-bridge.js"):
+        src = ROOT / "core" / name
+        dst = ROOT / "web/runtime/core" / name
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
     # The composer enhancement is loaded from both the Pages root and core/.
@@ -46,6 +67,11 @@ def main() -> int:
         target = ROOT / destination
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(stop_source, target)
+    meter_source = ROOT / "core/composer-voice-meter.js"
+    for destination in ("web/composer-voice-meter.js", "web/core/composer-voice-meter.js"):
+        target = ROOT / destination
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(meter_source, target)
     # Inject runtime-only enhancements into the prepared Pages artifact; keep the tracked legacy entrypoint frozen.
     index_path = ROOT / "web/index.html"
     index_html = index_path.read_text(encoding="utf-8")
@@ -62,14 +88,42 @@ def main() -> int:
             raise SystemExit("ORGAN ASSET PREP: device-control script anchor missing for video UI")
         index_html = index_html.replace(device_tag, device_tag + "\n" + video_tag, 1)
 
-    old_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
-    new_chat_request = 'body:JSON.stringify({text:String(t||"").trim(),history:(session.messages||[]).slice(0,-1).filter(function(m){return m&&(m.role==="user"||m.role==="ai")&&typeof m.text==="string";}).slice(-12).map(function(m){return {role:m.role==="ai"?"ai":"user",text:String(m.text||"").slice(0,900)};}),image:image?image.dataUrl:null,image_name:image?image.name:null,stream_status:true})'
-    if new_chat_request not in index_html:
-        if old_chat_request not in index_html:
-            raise SystemExit("ORGAN ASSET PREP: chat request shape changed; history injection requires review")
-        index_html = index_html.replace(old_chat_request, new_chat_request, 1)
+    design_css_tag = '<link rel="stylesheet" href="./design-intelligence.css">'
+    if design_css_tag not in index_html:
+        if "</head>" not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: HTML head anchor missing for design intelligence stylesheet")
+        index_html = index_html.replace("</head>", "  " + design_css_tag + "\n</head>", 1)
+
+    design_script_tag = '<script src="./core/design-intelligence.js"></script>'
+    if design_script_tag not in index_html:
+        anchor_tag = '<script src="./sidebar-recovery.js"></script>'
+        if anchor_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for design intelligence engine")
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + design_script_tag, 1)
+
+    manual_controls_tag = '<script src="./core/manual-provider-controls.js"></script>'
+    if manual_controls_tag not in index_html:
+        anchor_tag = '<script src="./core/design-intelligence.js"></script>'
+        if anchor_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: design intelligence script anchor missing for manual provider controls")
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + manual_controls_tag, 1)
+
+    memory_bridge_tag = '<script type="module">import "./runtime/core/personal-memory-bridge.js";</script>'
+    if memory_bridge_tag not in index_html:
+        if video_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: video script anchor missing for memory bridge")
+        index_html = index_html.replace(video_tag, video_tag + "\n" + memory_bridge_tag, 1)
+
+    index_html = apply_manual_provider_patches(index_html)
+
     index_path.write_text(index_html, encoding="utf-8")
     # Preserve the organ-relative import path and the live-page fallback path.
+    layout_source = ROOT / "core/composer-layout.js"
+    for destination in ("web/composer-layout.js", "web/core/composer-layout.js"):
+        target = ROOT / destination
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(layout_source, target)
+
     composer_source = ROOT / "core/composer-enhancements.js"
     composer_runtime = ROOT / "web/core/composer-enhancements.js"
     composer_runtime.parent.mkdir(parents=True, exist_ok=True)
@@ -101,7 +155,7 @@ def main() -> int:
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
-        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js")]
+        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js", "web/core/design-intelligence.js", "web/design-intelligence.css", "web/core/new-chat-floating/index.js", "web/core/new-chat-floating/style.css", "web/core/new-chat-floating/compact.css", "web/core/new-chat-floating/theme.css", "web/core/new-chat-floating/theme.js")]
     if not all(p.is_file() for p in required):
         raise SystemExit("ORGAN ASSET PREP: required browser files are missing")
     print(f"ORGAN ASSET PREP: PASS — {len(ui_ids)} UI organs prepared")

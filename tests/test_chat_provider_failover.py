@@ -19,7 +19,7 @@ def test_chat_provider_order_is_gemini_then_workers_ai_then_optional_fallbacks()
     worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
     chat = worker[worker.index("async function runChat(body,env,onStatus){"):worker.index("async function chat(request,env){")]
     gemini_loop = chat.index("const geminiPlan=[]")
-    cloudflare = chat.index("generateWithCloudflareChat(text,env,report)")
+    cloudflare = chat.index("generateWithCloudflareChat(fallbackText,env,report,targetWords)")
     groq = chat.index('"groq","https://api.groq.com/openai/v1/chat/completions"')
     openrouter = chat.index('"openrouter","https://openrouter.ai/api/v1/chat/completions"')
     assert gemini_loop < cloudflare < groq < openrouter
@@ -41,11 +41,12 @@ def test_worker_health_reports_provider_configuration_without_secret_values():
 def test_chat_providers_have_bounded_timeouts_so_failover_can_continue():
     worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
     assert "const CHAT_PROVIDER_TIMEOUT_MS=12000;" in worker
-    assert "signal:AbortSignal.timeout(CHAT_PROVIDER_TIMEOUT_MS)" in worker
+    assert "signal:AbortSignal.timeout(timeoutMs)" in worker
+    assert "const LONG_CHAT_PROVIDER_TIMEOUT_MS=120000;" in worker
+    assert "signal:AbortSignal.timeout(targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS)" in worker
     assert 'withChatProviderTimeout(env.AI.run(model' in worker
-    assert 'CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai"' in worker
-    assert 'CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai"' in worker
-    assert "max_tokens:1024" in worker
+    assert 'targetWords>1000?LONG_CHAT_PROVIDER_TIMEOUT_MS:CHAT_PROVIDER_TIMEOUT_MS,"cloudflare_workers_ai"' in worker
+    assert "max_tokens:targetWords?Math.min(8192,outputTokenBudget(targetWords)):1024" in worker
 
 
 def test_worker_javascript_parses_with_node():

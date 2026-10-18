@@ -1,0 +1,20 @@
+:root[data-theme="light"]{--bg:#f5f7fb;--surface:#ffffff;--surface2:#edf1f7;--surface3:#e3e8f0;--text:#182230;--muted:#667085;--border:rgba(24,34,48,.14);color-scheme:light}
+:root[data-theme="light"] body{background:#f5f7fb;color:#182230}
+:root[data-theme="light"] .app{background:linear-gradient(145deg,#f8fafc 0%,#eef2f8 100%)}
+:root[data-theme="light"] header.top{background:#f8fafc;border-bottom-color:rgba(24,34,48,.12)}
+:root[data-theme="light"] .brand b,:root[data-theme="light"] .message,:root[data-theme="light"] .message.ai .rich-content,:root[data-theme="light"] .message.ai .rich-content h1,:root[data-theme="light"] .message.ai .rich-content h2,:root[data-theme="light"] .message.ai .rich-content h3,:root[data-theme="light"] .message.ai .rich-content strong{color:#182230}
+:root[data-theme="light"] .round,:root[data-theme="light"] .top-new-chat,:root[data-theme="light"] .top-theme-toggle{background:#edf1f7;color:#263449;border-color:rgba(24,34,48,.14);box-shadow:0 2px 8px rgba(24,34,48,.08)}
+:root[data-theme="light"] .message.user{background:#dce8fa;color:#182230}
+:root[data-theme="light"] .message.ai .rich-content blockquote{background:#edf1f7;color:#344054;border-left-color:#64748b}
+:root[data-theme="light"] .message.ai .rich-content table{background:#fff}
+:root[data-theme="light"] .message.ai .rich-content th{background:#e8edf5;color:#182230}
+:root[data-theme="light"] .message.ai .rich-content td,:root[data-theme="light"] .message.ai .rich-content th{border-color:rgba(24,34,48,.12)}
+:root[data-theme="light"] .message.ai .rich-content :not(pre)>code{background:#e8edf5;color:#805b12;border-color:rgba(24,34,48,.12)}
+:root[data-theme="light"] .composer{background:#fff;border-color:rgba(24,34,48,.15);box-shadow:0 8px 28px rgba(24,34,48,.10)}
+:root[data-theme="light"] .input{color:#182230}
+:root[data-theme="light"] .input::placeholder{color:#667085}
+:root[data-theme="light"] .nav button,:root[data-theme="light"] .history-item{color:#344054}
+:root[data-theme="light"] .history-search,:root[data-theme="light"] .history-new,:root[data-theme="light"] .audio-setting-row,:root[data-theme="light"] .audio-setting-row select{background:#f8fafc;color:#182230;border-color:rgba(24,34,48,.14)}
+:root[data-theme="light"] .history-new{background:#e8edf5}
+:root[data-theme="light"] .image-preview span,:root[data-theme="light"] .audio-setting-row label{color:#344054}
+:root[data-theme="light"] body.chat-floating:before{background:rgba(15,23,42,.20)}

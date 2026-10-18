@@ -1,0 +1,26 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const { planCommand } = require("../core/android-agent-task-planner.js");
+
+let p = planCommand("ডুপ্লিকেট গান খুঁজে বের করো");
+assert.equal(p.status, "preview");
+assert.equal(p.steps[0].action, "duplicates_scan");
+assert.equal(p.steps[0].risk, "read_only");
+p = planCommand("ছবিগুলো ফোল্ডার অনুযায়ী সাজাও");
+assert.equal(p.steps[0].action, "photos_group");
+p = planCommand("একটা নতুন ফোল্ডার তৈরি করো");
+assert.equal(p.steps[0].action, "folder_create");
+p = planCommand("আমার ফোনের সমস্যা খুঁজে বের করো");
+assert.equal(p.steps[0].action, "diagnose");
+p = planCommand("সমস্যাটা ঠিক করো");
+assert.equal(p.steps[0].action, "repair_plan");
+p = planCommand("সব ফাইল ডিলিট করে দাও");
+assert.equal(p.steps[0].action, "duplicates_review");
+assert.equal(p.steps[0].requiresReview, true);
+p = planCommand("আমার OTP লিখে দাও");
+assert.equal(p.status, "blocked");
+assert.equal(p.steps.length, 0);
+p = planCommand("অজানা কিছু করো");
+assert.equal(p.status, "unsupported");
+console.log("Android task planner contract: PASS");

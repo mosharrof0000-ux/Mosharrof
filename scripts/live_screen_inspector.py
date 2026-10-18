@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Permission-safe browser inspection for MOSHARROF AI.
-
-Inventories visible controls, exercises safe navigation/composer flows, and sends
-one synthetic chat prompt only through a browser-intercepted mock Worker response.
-It does not contact a real provider, delete history, or change account settings.
+"""Safe browser inspection with a mocked chat Worker; no real provider calls or destructive actions.
 """
 from __future__ import annotations
 
@@ -58,6 +54,8 @@ async def main():
                 if msg.type == "error" else None)
 
         # Never send test prompts to a real provider. Intercept the chat Worker in-browser.
+        mock_requests = []
+
         async def mock_chat(route):
             if route.request.method == "OPTIONS":
                 await route.fulfill(status=204, headers={
@@ -66,9 +64,14 @@ async def main():
                     "access-control-allow-headers": "content-type",
                 })
             else:
+                try:
+                    mock_requests.append(json.loads(route.request.post_data or "{}"))
+                except (json.JSONDecodeError, TypeError):
+                    mock_requests.append({})
                 await route.fulfill(status=200, content_type="application/json", headers={
                     "access-control-allow-origin": "*",
                 }, body=json.dumps({
+                    "ok": True,
                     "text": "MOSHARROF inspector mock response: chat pipeline passed",
                     "provider": "mock",
                     "model": "playwright-safe-test",
@@ -81,6 +84,33 @@ async def main():
                f"HTTP {response.status if response else 'no response'}")
         record("document_title", bool(await page.title()), await page.title())
         await page.screenshot(path=str(out / "initial-mobile.png"), full_page=True)
+
+        # Verify the isolated New Chat organ loads and its long-press fallback is reversible.
+        try:
+            await page.wait_for_selector("#topNewChat", state="visible", timeout=8000)
+            order = await page.locator("header.top").evaluate(
+                "(el) => [...el.children].map(child => child.id || child.className)"
+            )
+            record("new_chat_button_loaded", True, f"header children={order}")
+            record("new_chat_button_immediately_left_of_options",
+                   order.index("topNewChat") + 1 == order.index("rightBtn"),
+                   f"header children={order}")
+            box = await page.locator("#topNewChat").bounding_box()
+            await page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+            await page.mouse.down()
+            await page.wait_for_timeout(650)
+            await page.mouse.up()
+            await page.wait_for_timeout(150)
+            floating = await page.locator("body").evaluate("(el) => el.classList.contains('chat-floating')")
+            record("new_chat_long_press_opens_floating_window", floating, f"body classes={await page.locator('body').get_attribute('class')}")
+            if floating:
+                await page.locator("#topNewChat").click()
+                await page.wait_for_timeout(100)
+            restored = not await page.locator("body").evaluate("(el) => el.classList.contains('chat-floating')")
+            record("new_chat_floating_window_returns_fullscreen", restored, f"body classes={await page.locator('body').get_attribute('class')}")
+        except Exception as exc:
+            record("new_chat_floating_interaction", False, repr(exc))
+
 
         for selector, name in [("#leftBtn", "left menu trigger"), ("#rightBtn", "right menu trigger"),
                                ("#input", "chat input"), ("#sendBtn", "send button")]:
@@ -151,8 +181,7 @@ async def main():
             except Exception as exc:
                 record(f"{label}_drawer_opens", False, repr(exc))
 
-        # Activate each declared organ module in the disposable browser context.
-        # This verifies event wiring/registry availability without changing remote data.
+        # Exercise declared modules in this disposable browser context.
         try:
             await page.locator("#leftBtn").click(timeout=4000)
             modules = await page.locator("#drawerLeft [data-module]").evaluate_all(
@@ -191,8 +220,7 @@ async def main():
         }""")
         await page.wait_for_timeout(150)
 
-        # Exercise history/navigation actions only in this fresh, disposable browser context.
-        # These changes affect isolated localStorage, never the user's personal browser.
+        # History actions affect only this disposable browser context.
         try:
             await page.locator("#rightBtn").click(timeout=3000)
             await page.locator("#historyBtn").click(timeout=3000)
@@ -228,7 +256,7 @@ async def main():
         except Exception as exc:
             record("history_and_safe_local_actions", False, repr(exc))
 
-        # Check setting controls without invoking speech/microphone or provider services.
+        # Check audio settings without invoking microphone or providers.
         try:
             await page.locator("#rightBtn").click(timeout=3000)
             provider = page.locator("#ttsProviderSelect")
@@ -266,13 +294,66 @@ async def main():
         }""")
         await page.wait_for_timeout(150)
 
+        # Verify full-width input, eight-line cap, ninth-line expansion and provider long-press.
+        try:
+            input_box = page.locator("#input")
+            expand = page.locator("#composerExpandBtn")
+            server_count = await page.locator("#composerServerBtn").count()
+            record("composer_server_pill_absent", server_count == 0, f"server button count={server_count}")
+            stop_button = page.locator("#stopBtn")
+            record("composer_stop_hidden_when_idle", not await stop_button.is_visible(), "stop appears only during active generation")
+            video_button = page.locator("#videoGenerationBtn")
+            video_parent = await video_button.evaluate("(el) => el.parentElement && el.parentElement.id")
+            record("composer_video_tool_is_inside_plus_menu", video_parent == "composerToolsMenu", f"parent={video_parent}")
+            dimensions = await page.locator("#composer .composer-input-row").evaluate(
+                """row => {
+                  const input = row.querySelector('#input');
+                  const box = row.getBoundingClientRect();
+                  const composer = document.querySelector('#composer').getBoundingClientRect();
+                  const rect = input.getBoundingClientRect();
+                  return {rowWidth: Math.round(box.width), composerWidth: Math.round(composer.width),
+                          inputWidth: Math.round(rect.width), inputHeight: Math.round(rect.height),
+                          widthRatio: rect.width / Math.max(1, box.width)};
+                }"""
+            )
+            record("composer_input_uses_full_width_and_readable_height",
+                   dimensions["widthRatio"] >= 0.99 and dimensions["inputHeight"] >= 44,
+                   json.dumps(dimensions, ensure_ascii=False))
+            eight = "\n".join("inspection line " + str(i) for i in range(1, 9))
+            await input_box.fill(eight)
+            await page.wait_for_timeout(120)
+            record("composer_expand_hidden_through_eight_lines", not await expand.is_visible())
+            await input_box.fill(eight + "\ninspection line 9")
+            await expand.wait_for(state="visible", timeout=4000)
+            record("composer_expander_appears_on_ninth_line", await expand.is_visible())
+            before_requests = len(mock_requests)
+            send = page.locator("#sendBtn")
+            await send.dispatch_event("pointerdown", {"button": 0, "pointerId": 1, "pointerType": "touch"})
+            await page.wait_for_timeout(700)
+            await send.dispatch_event("pointerup", {"button": 0, "pointerId": 1, "pointerType": "touch"})
+            menu = page.locator(".manual-provider-menu")
+            await menu.wait_for(state="visible", timeout=4000)
+            choices = await menu.locator('[role="menuitemradio"]').count()
+            record("composer_send_long_press_opens_provider_menu",
+                   choices >= 5 and len(mock_requests) == before_requests,
+                   f"choices={choices}; chat requests before={before_requests}; after={len(mock_requests)}")
+            await menu.locator('[role="menuitemradio"]').first.click()
+            record("composer_provider_menu_closes_after_selection",
+                   await page.locator(".manual-provider-menu").count() == 0)
+        except Exception as exc:
+            record("composer_layout_and_provider_selection", False, repr(exc))
+
         # Composer expansion is safe: only a temporary draft in this browser context.
         # Assert draft copy, cancel preservation, and explicit apply; never submit this draft.
         try:
             input_box = page.locator("#input")
-            original_draft = "MOSHARROF inspector temporary draft"
-            await input_box.fill(original_draft)
+            original_draft = "\n".join("MOSHARROF inspector draft line " + str(i) for i in range(1, 10))
+            await input_box.fill("\n".join("MOSHARROF inspector draft line " + str(i) for i in range(1, 9)))
             expand = page.locator("#composerExpandBtn")
+            await page.wait_for_timeout(100)
+            record("composer_expander_hidden_through_eight_lines", not await expand.is_visible(),
+                   "expander remains hidden through eight lines")
+            await input_box.fill(original_draft)
             await expand.wait_for(state="visible", timeout=8000)
             await expand.click()
             editor = page.locator("#mosharrofExpandEditor")
@@ -304,7 +385,7 @@ async def main():
         # changing remote state. The route above prevents the real chat endpoint call.
         try:
             chat_input = page.locator("#input")
-            await chat_input.fill("MOSHARROF inspector safe chat test")
+            await chat_input.fill("MOSHARROFMEMORYCHECK731")
             await page.locator("#sendBtn").click()
             mock_answer = page.locator("#messages .message.ai").filter(
                 has_text="MOSHARROF inspector mock response: chat pipeline passed"
@@ -315,7 +396,72 @@ async def main():
         except Exception as exc:
             record("mocked_chat_round_trip", False, repr(exc))
 
-        # Enumerate remaining visible controls without clicking potentially destructive actions.
+        # Verify memory save, reload persistence, and retrieval via mocked Worker.
+        try:
+            await page.wait_for_function(
+                "() => !!window.MosharrofPersonalMemory && typeof window.MosharrofPersonalMemory.list === 'function'",
+                timeout=8000,
+            )
+            await page.wait_for_function(
+                """async () => {
+                    const api = window.MosharrofPersonalMemory;
+                    if (!api) return false;
+                    const rows = await api.list(100);
+                    return rows.some(row => row.kind === "user" && row.text.includes("MOSHARROFMEMORYCHECK731"))
+                        && rows.some(row => row.kind === "assistant" && row.text.includes("MOSHARROF inspector mock response"));
+                }""",
+                timeout=10000,
+            )
+            rows_before_reload = await page.evaluate("async () => await window.MosharrofPersonalMemory.list(100)")
+            record(
+                "memory_bridge_saves_user_and_assistant_turns",
+                any(row["kind"] == "user" and "MOSHARROFMEMORYCHECK731" in row["text"] for row in rows_before_reload)
+                and any(row["kind"] == "assistant" and "MOSHARROF inspector mock response" in row["text"] for row in rows_before_reload),
+                f"stored {len(rows_before_reload)} rows: " + json.dumps([{"kind": row.get("kind"), "text": row.get("text", "")[:100]} for row in rows_before_reload], ensure_ascii=False),
+            )
+
+            await page.reload(wait_until="domcontentloaded", timeout=args.timeout_ms)
+            await page.wait_for_function(
+                "() => !!window.MosharrofPersonalMemory && typeof window.MosharrofPersonalMemory.list === 'function'",
+                timeout=10000,
+            )
+            await page.wait_for_function(
+                """async () => {
+                    const rows = await window.MosharrofPersonalMemory.list(100);
+                    return rows.some(row => row.kind === "user" && row.text.includes("MOSHARROFMEMORYCHECK731"));
+                }""",
+                timeout=10000,
+            )
+            rows_after_reload = await page.evaluate("async () => await window.MosharrofPersonalMemory.list(100)")
+            record(
+                "memory_survives_page_reload",
+                any(row["kind"] == "user" and "MOSHARROFMEMORYCHECK731" in row["text"] for row in rows_after_reload),
+                f"reloaded browser found {len(rows_after_reload)} rows: " + json.dumps([{"kind": row.get("kind"), "text": row.get("text", "")[:100]} for row in rows_after_reload], ensure_ascii=False),
+            )
+
+            previous_answer_count = await page.locator("#messages .message.ai").count()
+            await page.locator("#input").fill("Continue from memory: MOSHARROFMEMORYCHECK731")
+            await page.locator("#sendBtn").click()
+            await page.wait_for_function(
+                "count => document.querySelectorAll('#messages .message.ai').length > count",
+                arg=previous_answer_count,
+                timeout=12000,
+            )
+            for _ in range(100):
+                if len(mock_requests) >= 2:
+                    break
+                await page.wait_for_timeout(100)
+            followup_request = mock_requests[-1] if len(mock_requests) >= 2 else {}
+            memory_context = str(followup_request.get("memory_context") or "")
+            record(
+                "retrieved_memory_is_sent_to_chat_worker",
+                "MOSHARROFMEMORYCHECK731" in memory_context,
+                f"memory_context length={len(memory_context)}; mock requests={len(mock_requests)}; context={memory_context[:800]!r}",
+            )
+        except Exception as exc:
+            record("memory_persistence_and_recall_round_trip", False, repr(exc))
+
+        # Inventory remaining visible controls without destructive clicks.
         try:
             report["visible_controls"] = await page.locator("button, a, input, select, textarea, [role=button]").evaluate_all(
                 """els => els.map((el, index) => {

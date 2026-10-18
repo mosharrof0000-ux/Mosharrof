@@ -1,0 +1,69 @@
+name: Personal Memory Browser Smoke Test
+
+on:
+  pull_request:
+    branches: ["main"]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_run:
+    workflows: ["Deploy Mosharrof Pages"]
+    types: [completed]
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      test_url:
+        description: "Site URL; a real live chat send requires explicit confirmation"
+        required: true
+        default: "https://mosharrof0000-ux.github.io/Mosharrof/"
+      confirm_send_test_message:
+        description: "Type SEND_TEST_MESSAGE to send one live test"
+        required: true
+        type: string
+        default: "NO"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memory-browser-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-memory-roundtrip:
+    if: ${{ (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') && (github.event_name != 'workflow_dispatch' || inputs.confirm_send_test_message == 'SEND_TEST_MESSAGE') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Prepare candidate Pages runtime for pull requests
+        if: github.event_name == 'pull_request'
+        run: python3 scripts/prepare_web_organ_runtime.py
+      - name: Start candidate Pages server
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          nohup python3 -m http.server 4173 --directory web >/tmp/mosharrof-memory-pages.log 2>&1 &
+          pid=$!
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0
+            kill -0 "$pid" 2>/dev/null || { cat /tmp/mosharrof-memory-pages.log; exit 1; }
+            sleep 1
+          done
+          cat /tmp/mosharrof-memory-pages.log
+          echo "Candidate Pages server did not become ready."
+          exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Chromium browser test runner
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Test send, persistent storage, and recall after reload
+        env:
+          MOSHARROF_TEST_URL: ${{ github.event_name == 'pull_request' && 'http://127.0.0.1:4173/' || (inputs.test_url || 'https://mosharrof0000-ux.github.io/Mosharrof/') }}
+          MOSHARROF_TEST_TIMEOUT_MS: "45000"
+          MOSHARROF_MOCK_CHAT: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_send_test_message == 'SEND_TEST_MESSAGE' && '0' || '1' }}
+        run: node tests/e2e/personal-memory-browser-smoke.mjs
