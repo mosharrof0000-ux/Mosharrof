@@ -23,9 +23,9 @@ elif EVENT == "workflow_dispatch":
         "No new feature scope, no direct main edits, no unsafe merge/deploy, and no success claims without test evidence."
     )
 elif EVENT == "issues":
-    task = "Existing user task:\\n" + os.environ.get("ISSUE_TITLE", "") + "\\n" + os.environ.get("ISSUE_BODY", "")
+    task = "Existing user task:\n" + os.environ.get("ISSUE_TITLE", "") + "\n" + os.environ.get("ISSUE_BODY", "")
 else:
-    task = "Existing user task:\\n" + os.environ.get("COMMENT_BODY", "")
+    task = "Existing user task:\n" + os.environ.get("COMMENT_BODY", "")
 
 if EVENT in ("schedule", "workflow_dispatch"):
     prs = gh_json(["pr", "list", "--state", "open", "--limit", "30", "--json",
@@ -34,9 +34,9 @@ if EVENT in ("schedule", "workflow_dispatch"):
                     "name,status,conclusion,createdAt,url,headBranch,event"], REPO)
     issues = gh_json(["issue", "list", "--state", "open", "--limit", "30", "--json",
                       "number,title,url,updatedAt,labels"], REPO)
-    task += "\\n\\nOPEN PR BACKLOG (bounded complete JSON):\\n" + bounded_json(prs, 3600)
-    task += "\\n\\nRECENT ACTION RUNS (bounded complete JSON; inspect failed/in-progress first):\\n" + bounded_json(runs, 3600)
-    task += "\\n\\nOPEN ISSUE BACKLOG (bounded complete JSON):\\n" + bounded_json(issues, 2400)
+    task += "\n\nOPEN PR BACKLOG (bounded complete JSON):\n" + bounded_json(prs, 3600)
+    task += "\n\nRECENT ACTION RUNS (bounded complete JSON; inspect failed/in-progress first):\n" + bounded_json(runs, 3600)
+    task += "\n\nOPEN ISSUE BACKLOG (bounded complete JSON):\n" + bounded_json(issues, 2400)
 
 if len(task) > 12000:
     raise SystemExit(f"Backlog task exceeded the 12000-character safety limit ({len(task)}); refusing to truncate evidence.")
