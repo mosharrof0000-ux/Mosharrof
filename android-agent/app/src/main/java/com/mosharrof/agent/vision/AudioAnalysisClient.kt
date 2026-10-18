@@ -17,7 +17,7 @@ data class AudioAnalysisResult(
     val originalName: String,
     val metadata: ReviewedSongMetadata,
     val provider: String = "Google Gemini",
-    val model: String = MODEL
+    val model: String = "gemini-2.5-flash"
 )
 
 /** Uploads a single owner-selected audio file only after AudioAnalysisControl obtains explicit consent. */
