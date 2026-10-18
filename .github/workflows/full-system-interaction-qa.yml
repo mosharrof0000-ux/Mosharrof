@@ -1,6 +1,7 @@
 name: MOSHARROF Full-System Interaction QA
 
 on:
+  schedule:
     # One live verification at 20:37 Bangladesh time; GitHub schedule is best-effort.
     - cron: "37 14 * * *"
   pull_request:
