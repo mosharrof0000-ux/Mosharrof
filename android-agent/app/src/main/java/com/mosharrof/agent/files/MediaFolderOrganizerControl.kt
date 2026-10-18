@@ -124,7 +124,7 @@ object MediaFolderOrganizerControl {
         for (child in runCatching { folder.listFiles() }.getOrDefault(emptyArray())) {
             if (out.size >= MAX_FILES) return
             if (child.isDirectory) {
-                if (child.name !in managedFolders) collect(child, depth + 1, out)
+                if (depth != 0 || child.name !in managedFolders) collect(child, depth + 1, out)
             } else if (child.isFile) out += child
         }
     }
