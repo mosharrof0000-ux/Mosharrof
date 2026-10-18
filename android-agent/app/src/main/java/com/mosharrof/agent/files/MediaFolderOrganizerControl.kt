@@ -19,7 +19,6 @@ object MediaFolderOrganizerControl {
     private const val MAX_TOTAL_MOVE_BYTES = 500L * 1024L * 1024L
     private var pendingMoves: List<Pair<DocumentFile, FolderMoveSuggestion>> = emptyList()
     private var pendingRoot: DocumentFile? = null
-    private var pendingActivity: Activity? = null
     private var pendingStatus: TextView? = null
 
     fun addTo(activity: Activity, layout: LinearLayout, status: TextView, pickFolder: () -> Unit) {
@@ -99,7 +98,6 @@ object MediaFolderOrganizerControl {
             synchronized(this) {
                 pendingMoves = candidates
                 pendingRoot = root
-                pendingActivity = activity
                 pendingStatus = status
             }
             val report = buildString {
@@ -174,7 +172,7 @@ object MediaFolderOrganizerControl {
                     var failed = 0
                     for ((source, suggestion) in moves) {
                         try {
-                            val destination = ensureFolder(root, suggestion.destinationFolder)
+                            val destination = MediaFolderOrganizerFileOps.ensureFolder(root, suggestion.destinationFolder)
                             if (destination == null) {
                                 failed++
                                 continue
@@ -189,9 +187,9 @@ object MediaFolderOrganizerControl {
                                 SongMetadataStore.load(activity, source.uri.toString()) else null
                             val reviewedPhoto = if (kind == MediaKind.IMAGE)
                                 ImageMetadataStore.load(activity, source.uri.toString()) else null
-                            val proposedName = localizedName(originalName, reviewedSong)
-                            val targetName = uniqueName(destination, proposedName)
-                            val target = destination.createFile(source.type ?: mimeFor(originalName), targetName)
+                            val proposedName = MediaFolderOrganizerFileOps.localizedName(originalName, reviewedSong)
+                            val targetName = MediaFolderOrganizerFileOps.uniqueName(destination, proposedName)
+                            val target = destination.createFile(source.type ?: MediaFolderOrganizerFileOps.mimeFor(originalName), targetName)
                             if (target == null) {
                                 failed++
                                 continue
@@ -226,7 +224,7 @@ object MediaFolderOrganizerControl {
                             if (runCatching { source.delete() }.getOrDefault(false)) moved++ else copiedKept++
                         } catch (_: Exception) { failed++ }
                     }
-                    val playlistCount = writeTopicPlaylists(root, playlists)
+                    val playlistCount = MediaFolderOrganizerFileOps.writeTopicPlaylists(activity, root, playlists)
                     activity.runOnUiThread {
                         if (!activity.isFinishing) status.text =
                             "ফোল্ডার সাজানোর ফল: ${moved}টি কপি-যাচাই করে মূল স্থান থেকে সরেছে; ${copiedKept}টি কপি হয়েছে কিন্তু মূল ফাইল রাখা হয়েছে; ${failed}টি ব্যর্থ।\nবিষয়ভিত্তিক প্লেলিস্ট তৈরি: ${playlistCount}টি।"
@@ -235,65 +233,4 @@ object MediaFolderOrganizerControl {
             }.show()
     }
 
-    private fun localizedName(originalName: String, metadata: ReviewedSongMetadata?): String {
-        if (metadata == null) return originalName
-        val title = metadata.bengaliTitle.map { ch ->
-            if (ch in "/:*?<>|" || ch.isISOControl() || ch == '\\') ' ' else ch
-        }.joinToString("").trim().take(100)
-        if (title.isBlank()) return originalName
-        val extension = originalName.substringAfterLast('.', "").takeIf { it.isNotBlank() }
-        return if (extension == null) title else "$title.$extension"
-    }
-
-    private fun writeTopicPlaylists(root: DocumentFile, playlists: Map<SongTopic, List<String>>): Int {
-        val songRoot = ensureFolder(root, "গান") ?: return 0
-        var created = 0
-        for ((topic, tracks) in playlists) {
-            if (tracks.isEmpty()) continue
-            val name = uniqueName(songRoot, "${topic.bengaliLabel}.m3u")
-            val playlist = songRoot.createFile("audio/x-mpegurl", name) ?: continue
-            val body = buildString {
-                appendLine("#EXTM3U")
-                tracks.distinct().forEach { appendLine(it) }
-            }
-            val written = runCatching {
-                val context = pendingActivity ?: return@runCatching false
-                context.contentResolver.openOutputStream(playlist.uri, "w")?.use {
-                    it.write(body.toByteArray(Charsets.UTF_8))
-                } ?: return@runCatching false
-                true
-            }.getOrDefault(false)
-            if (written) created++ else runCatching { playlist.delete() }
-        }
-        return created
-    }
-
-    private fun ensureFolder(root: DocumentFile, path: String): DocumentFile? {
-        var current = root
-        for (part in path.split('/').filter { it.isNotBlank() }) {
-            current = current.findFile(part)?.takeIf { it.isDirectory } ?: current.createDirectory(part) ?: return null
-        }
-        return current
-    }
-
-    private fun uniqueName(folder: DocumentFile, name: String): String {
-        if (folder.findFile(name) == null) return name
-        val base = name.substringBeforeLast('.', name)
-        val ext = name.substringAfterLast('.', "")
-        for (index in 1..999) {
-            val candidate = if (ext.isBlank()) "${base}_${index}" else "${base}_${index}.${ext}"
-            if (folder.findFile(candidate) == null) return candidate
-        }
-        return "${System.currentTimeMillis()}_${name}"
-    }
-
-    private fun mimeFor(name: String): String = when (MediaLibraryAssistant.classify(name)) {
-        MediaKind.IMAGE -> "image/*"
-        MediaKind.AUDIO -> "audio/*"
-        MediaKind.VIDEO -> "video/*"
-        MediaKind.DOCUMENT -> "application/octet-stream"
-        MediaKind.ANDROID_PACKAGE -> "application/vnd.android.package-archive"
-        MediaKind.ARCHIVE -> "application/zip"
-        MediaKind.OTHER -> "application/octet-stream"
-    }
 }
