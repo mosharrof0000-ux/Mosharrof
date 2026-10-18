@@ -127,3 +127,6 @@ import("./composer-enhancements.js")
 import("./core/personal-memory-bridge.js")
   .then(function () { console.info("[MOSHARROF Memory] Local personal memory bridge ready"); })
   .catch(function (error) { console.error("[MOSHARROF Memory] Bridge initialization failed:", error); });
+
+// Load the isolated New Chat / floating-window organ without growing the legacy entrypoint.
+import("./new-chat-floating.js").catch(function (error) { console.error("[MOSHARROF Floating Chat] Initialization failed:", error); });
