@@ -72,7 +72,18 @@ jobs:
             adb shell settings put global transition_animation_scale 0;
             adb shell settings put global animator_duration_scale 0;
             cd android-agent;
-            if ! timeout 300s gradle --no-daemon connectedDebugAndroidTest; then adb logcat -d -t 3000 || true; exit 1; fi
+            gradle --no-daemon assembleDebug assembleDebugAndroidTest;
+            mkdir -p app/build/reports/androidTests/connected/debug;
+            adb install -r app/build/outputs/apk/debug/app-debug.apk;
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk;
+            instrumentation="$(adb shell pm list instrumentation | tr -d '\r' | grep 'androidx.test.runner.AndroidJUnitRunner' | head -n 1 | sed -E 's/^instrumentation:([^ ]+).*/\1/')";
+            test -n "$instrumentation";
+            set +e;
+            output="$(timeout 300s adb shell am instrument -w -r "$instrumentation" 2>&1)";
+            status=$?;
+            set -e;
+            printf '%s\n' "$output" | tee app/build/reports/androidTests/connected/debug/ci-instrumentation.log;
+            if [ "$status" -ne 0 ] || ! printf '%s\n' "$output" | grep -Eq 'OK \([1-9][0-9]* tests?\)' || printf '%s\n' "$output" | grep -q 'FAILURES!!!'; then adb logcat -d -t 3000 || true; exit 1; fi
       - name: Upload Android instrumentation reports
         if: always()
         uses: actions/upload-artifact@v4
