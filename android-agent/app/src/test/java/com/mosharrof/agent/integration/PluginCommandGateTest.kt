@@ -64,6 +64,45 @@ class PluginCommandGateTest {
     }
 
     @Test
+    fun dangerousBengaliLabelsAreRejectedEvenWithApproval() {
+        listOf("পাঠান", "মুছে ফেলুন", "টাকা পাঠান", "পেমেন্ট", "শেয়ার").forEachIndexed { index, label ->
+            val requestId = "req-bn-$index"
+            val command = PluginCommand(
+                requestId = requestId,
+                action = ControlAction.TAP_EXACT_LABEL,
+                targetApp = "Messages",
+                exactLabel = label
+            )
+            assertEquals(
+                "Expected Bengali risky label to be rejected: $label",
+                PluginCommandGate.Decision.REJECT,
+                PluginCommandGate.evaluate(command, LocalApproval(requestId))
+            )
+        }
+    }
+
+    @Test
+    fun controlCharactersAreRejectedFromRequestAndLabels() {
+        assertEquals(
+            PluginCommandGate.Decision.REJECT,
+            PluginCommandGate.evaluate(
+                PluginCommand("req\\n-1", ControlAction.NAVIGATE_BACK)
+            )
+        )
+        assertEquals(
+            PluginCommandGate.Decision.REJECT,
+            PluginCommandGate.evaluate(
+                PluginCommand(
+                    "req-label",
+                    ControlAction.TAP_EXACT_LABEL,
+                    targetApp = "Messages",
+                    exactLabel = "Open\\u0000Messages"
+                )
+            )
+        )
+    }
+
+    @Test
     fun actionCannotSmuggleUnexpectedParameters() {
         val command = PluginCommand(
             requestId = "req-back",
