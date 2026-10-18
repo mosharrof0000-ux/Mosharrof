@@ -80,6 +80,7 @@ object MediaFolderOrganizerControl {
                 val name = file.name ?: return@mapNotNull null
                 val kind = MediaLibraryAssistant.classify(name)
                 val reviewed = if (kind == MediaKind.AUDIO) SongMetadataStore.load(activity, file.uri.toString()) else null
+                val photo = if (kind == MediaKind.IMAGE) ImageMetadataStore.load(activity, file.uri.toString()) else null
                 val topics = reviewed?.topics ?: if (kind == MediaKind.AUDIO) {
                     MediaLibraryAssistant.draftSongTopics(name).topics - SongTopic.UNKNOWN
                 } else emptySet()
@@ -87,7 +88,10 @@ object MediaFolderOrganizerControl {
                     file.uri.toString(), name, kind, file.length(),
                     bengaliTitle = reviewed?.bengaliTitle, topics = topics
                 )
-                MediaFolderPlanner.plan(listOf(record)).firstOrNull()?.let { file to it }
+                val suggestion = if (photo != null) {
+                    FolderMoveSuggestion(file.uri.toString(), name, "ছবি/${photo.category.folderLabel}", "AI-তে বিশ্লেষিত ছবির শ্রেণি")
+                } else MediaFolderPlanner.plan(listOf(record)).firstOrNull()
+                suggestion?.let { file to it }
             }
             val kindCounts = files.filter { it.isFile }.groupingBy { MediaLibraryAssistant.classify(it.name.orEmpty()) }.eachCount()
             val risks = files.filter { it.isFile }.map { it to FileRiskScanner.inspect(it.name.orEmpty(), it.type) }
