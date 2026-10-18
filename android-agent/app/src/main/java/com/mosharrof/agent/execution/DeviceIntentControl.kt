@@ -10,6 +10,7 @@ import android.widget.TextView
 import com.mosharrof.agent.planner.DeviceIntentCommand
 import com.mosharrof.agent.planner.DeviceIntentCommandParser
 import java.util.Calendar
+import java.time.LocalDate
 
 /** Hands clock and calendar work to Android's own UI after showing a local preview. */
 object DeviceIntentControl {
@@ -29,7 +30,14 @@ object DeviceIntentControl {
             }
             is DeviceIntentCommand.CreateCalendarEvent -> {
                 val start = Calendar.getInstance().apply {
-                    add(Calendar.DAY_OF_YEAR, command.dayOffset)
+                    if (command.dateIso != null) {
+                        val date = LocalDate.parse(command.dateIso)
+                        set(Calendar.YEAR, date.year)
+                        set(Calendar.MONTH, date.monthValue - 1)
+                        set(Calendar.DAY_OF_MONTH, date.dayOfMonth)
+                    } else {
+                        add(Calendar.DAY_OF_YEAR, command.dayOffset)
+                    }
                     set(Calendar.HOUR_OF_DAY, command.hour)
                     set(Calendar.MINUTE, command.minute)
                     set(Calendar.SECOND, 0)
@@ -47,7 +55,7 @@ object DeviceIntentControl {
         val preview = when (command) {
             is DeviceIntentCommand.SetTimer -> "টাইমার: ${command.seconds} সেকেন্ড"
             is DeviceIntentCommand.SetAlarm -> "অ্যালার্ম: %02d:%02d".format(command.hour, command.minute)
-            is DeviceIntentCommand.CreateCalendarEvent -> "ক্যালেন্ডার ইভেন্ট: ${command.title}"
+            is DeviceIntentCommand.CreateCalendarEvent -> "ক্যালেন্ডার ইভেন্ট: ${command.title} • ${command.dateIso ?: if (command.dayOffset == 1) "আগামীকাল" else "আজ"}"
             DeviceIntentCommand.OpenCalendar -> "ক্যালেন্ডার খুলবে"
         }
         AlertDialog.Builder(activity)
