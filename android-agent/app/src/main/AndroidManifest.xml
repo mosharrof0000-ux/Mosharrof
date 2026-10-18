@@ -42,7 +42,7 @@
 
     <application
         android:allowBackup="false"
-        android:label="Mosharrof Agent"
+        android:label="Mosharrof Device Control"
         android:supportsRtl="true"
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
