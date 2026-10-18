@@ -1260,7 +1260,8 @@ header.top{
   document.addEventListener("click",function(e){var target=e.target.closest&&e.target.closest("button");if(!target)return;if(target.id==="cL"||target.id==="cR")closeD();if(target.id==="historyBtn")showHistory();if(target.id==="newChat")newChat();if(target.id==="clearMsg")clearMsg();if(target.id==="voiceBtn"){closeD();startV();}});
   restoreMessages();initV();resize();input.focus();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
-})();
+window.MosharrofStartNewChat=newChat;
+  })();
 </script>
 <script src="./sidebar-recovery.js"></script>
 <script src="./new-chat-floating.js"></script>
