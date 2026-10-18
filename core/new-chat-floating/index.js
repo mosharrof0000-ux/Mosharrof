@@ -8,6 +8,7 @@ export function initializeNewChatFloatingOrgan() {
   css.rel = "stylesheet";
   css.href = new URL("./style.css", import.meta.url).href;
   document.head.appendChild(css);
+  ["compact.css", "theme.css"].forEach(function (name) { var link = document.createElement("link"); link.rel = "stylesheet"; link.href = new URL("./" + name, import.meta.url).href; document.head.appendChild(link); });
 
   var button = document.createElement("button");
   button.className = "top-new-chat";
@@ -17,6 +18,8 @@ export function initializeNewChatFloatingOrgan() {
   button.title = "নতুন চ্যাট · চেপে ধরুন ভাসমান উইন্ডোর জন্য";
   button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   header.insertBefore(button, right);
+
+  import("./theme.js").then(function (theme) { theme.initializeThemeToggle(header, button); }).catch(function (error) { console.error("[MOSHARROF Theme] Initialization failed", error); });
 
   var pressTimer = null;
   var longPressed = false;
@@ -74,8 +77,8 @@ export function initializeNewChatFloatingOrgan() {
       var points = Array.from(pointers.values());
       var distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
       var scale = distance / Math.max(1, pinch.distance);
-      app.style.width = Math.max(280, Math.min(innerWidth * .96, pinch.width * scale)) + "px";
-      app.style.height = Math.max(260, Math.min(innerHeight * .88, pinch.height * scale)) + "px";
+      app.style.width = Math.max(220, Math.min(innerWidth * .96, pinch.width * scale)) + "px";
+      app.style.height = Math.max(220, Math.min(innerHeight * .88, pinch.height * scale)) + "px";
     } else if (drag) {
       app.style.left = Math.max(0, Math.min(innerWidth - app.offsetWidth, drag.left + event.clientX - drag.x)) + "px";
       app.style.top = Math.max(0, Math.min(innerHeight - app.offsetHeight, drag.top + event.clientY - drag.y)) + "px";
