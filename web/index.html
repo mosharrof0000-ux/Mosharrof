@@ -1094,7 +1094,20 @@ header.top{
   var busy=false;
   function clearImage(){pendingImage=null;imageInput.value="";imagePreview.classList.remove("show");previewImage.removeAttribute("src");previewName.textContent="Screenshot attached";}
   function readImage(file){if(!file||!/^image\//.test(file.type))return; if(file.size>6*1024*1024){toast("ছবির আকার ৬ MB-এর বেশি হতে পারবে না");return;} var rd=new FileReader();rd.onload=function(){pendingImage={dataUrl:String(rd.result||""),name:file.name||"Screenshot",type:file.type};previewImage.src=pendingImage.dataUrl;previewName.textContent=pendingImage.name;imagePreview.classList.add("show");toast("স্ক্রিনশট যুক্ত হয়েছে");};rd.readAsDataURL(file);}
-  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
+  function handoffAndroidControl(raw){
+    var match=String(raw||"").match(/^(?:মোশাররফ[ ,،]*)?(?:ফোনে করো|ফোনে|@ফোন|@phone)\s*[:：-]\s*(.+)$/i);
+    if(!match||!match[1].trim())return false;
+    var command=match[1].trim();
+    if(command.length>240){toast("ফোনের নির্দেশ ২৪০ অক্ষরের মধ্যে রাখুন");return true;}
+    var at=nowISO();
+    addMsg("user",raw,at);
+    addMsg("ai","ফোনের নির্দেশ Android Control-এ পাঠানো হচ্ছে। অ্যাপটি খুলে প্রস্তাবটি যাচাই করুন; আপনার নিশ্চিতকরণ ছাড়া কোনো কাজ চলবে না।",nowISO());
+    session.lastActiveAt=nowISO();saveStore(session);updateMeta();updateHistoryList();
+    try{window.location.href="mosharrof://device-control?command="+encodeURIComponent(command);}
+    catch(e){toast("Android Control খোলা যায়নি। অ্যাপ ইনস্টল ও deep-link অনুমতি যাচাই করুন।");}
+    return true;
+  }
+  function send(){var raw=input.value.trim();if((!raw&&!pendingImage)||busy)return;if(!pendingImage&&handoffAndroidControl(raw)){input.value="";resize();return;}busy=true;sendBtn.disabled=true;var p=correct(raw);var text=punct(p.text);var attached=pendingImage;clearImage();input.value="";resize();
     if(editTargetIndex!==null&&editTargetIndex>=0&&editTargetIndex<session.messages.length){
       session.messages=session.messages.slice(0,editTargetIndex);
       msgEl.innerHTML="";
