@@ -33,7 +33,7 @@ Not implemented by this bridge yet:
 - A complete result/status callback from the live executor.
 - Universal control of every third-party app.
 
-The existing Android agent has an initial user-directed local automation MVP. It must not be described as full unrestricted control of every app or device function. Android permissions, app-specific UI, OS/OEM restrictions and user confirmation still apply.
+The app is intentionally limited to Android device control: voice commands, approved UI/navigation actions, and local battery/charging diagnostics. Photo/video capture, media browsing/editing/generation, camera/media permissions, screenshot preview/AI image analysis and file-management tools are out of scope. The existing Android agent has an initial user-directed local automation MVP. It must not be described as full unrestricted control of every app or device function. Android permissions, app-specific UI, OS/OEM restrictions and user confirmation still apply.
 
 ## Intended integration phases
 
