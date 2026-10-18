@@ -215,15 +215,17 @@ def main() -> int:
                 page.locator("#sendBtn").click()
                 try:
                     page.wait_for_function(
-                        """before => {
+                        """baseline => {
                           const box = document.querySelector('#messages');
                           const input = document.querySelector('#input');
                           const send = document.querySelector('#sendBtn');
                           const current = box ? box.innerText : '';
-                          return current !== before && input && !input.value.trim()
-                            && send && !send.disabled;
+                          const replies = box ? box.querySelectorAll('.message.ai:not(.typing)').length : 0;
+                          const pending = box && box.querySelector('.message.typing');
+                          return current !== baseline.text && replies > baseline.aiCount && !pending
+                            && input && !input.value.trim() && send && !send.disabled;
                         }""",
-                        arg=before,
+                        arg={"text": before, "aiCount": before_ai_count},
                         timeout=90000,
                     )
                     after = page.locator("#messages").inner_text()
