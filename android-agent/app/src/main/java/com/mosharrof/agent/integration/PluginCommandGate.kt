@@ -1,5 +1,7 @@
 package com.mosharrof.agent.integration
 
+import java.util.Locale
+
 /**
  * Pure local validation for commands arriving through an integration adapter.
  * A decision of ALLOW means only that the request is structurally safe and
@@ -9,16 +11,23 @@ package com.mosharrof.agent.integration
 object PluginCommandGate {
     enum class Decision { ALLOW, NEEDS_CONFIRMATION, REJECT }
 
+    // Fail closed for common externally visible/destructive English and Bengali labels.
     private val riskyLabels = setOf(
-        "send", "submit", "delete", "remove", "pay", "purchase",
-        "install", "uninstall", "share", "post", "confirm", "transfer"
+        "send", "submit", "delete", "remove", "pay", "payment", "purchase",
+        "install", "uninstall", "share", "post", "confirm", "transfer",
+        "পাঠান", "পাঠিয়ে দিন", "জমা দিন", "সাবমিট", "মুছুন", "মুছে ফেলুন",
+        "ডিলিট", "সরান", "পেমেন্ট", "পরিশোধ", "কিনুন", "ক্রয়", "ইনস্টল",
+        "আনইনস্টল", "শেয়ার", "শেয়ার", "পোস্ট", "নিশ্চিত করুন", "নিশ্চিত",
+        "স্থানান্তর", "টাকা পাঠান", "বার্তা পাঠান"
     )
 
     fun evaluate(
         command: PluginCommand,
         approval: LocalApproval? = null
     ): Decision {
-        if (command.requestId.isBlank() || command.requestId.length > 128) {
+        if (command.requestId.isBlank() || command.requestId.length > 128 ||
+            command.requestId.any { it.isISOControl() }
+        ) {
             return Decision.REJECT
         }
 
@@ -54,16 +63,21 @@ object PluginCommandGate {
     }
 
     private fun validTarget(value: String?): Boolean =
-        !value.isNullOrBlank() && value.length <= 120
+        !value.isNullOrBlank() && value.length <= 120 &&
+            value.none { it.isISOControl() }
 
     private fun validLabel(value: String?): Boolean =
-        !value.isNullOrBlank() && value.length <= 100
+        !value.isNullOrBlank() && value.length <= 100 &&
+            value.none { it.isISOControl() }
 
     private fun isRiskyLabel(value: String?): Boolean {
-        val normalized = value?.trim()?.lowercase() ?: return true
-        return normalized in riskyLabels ||
-            riskyLabels.any { risky ->
-                normalized.startsWith("$risky ") || normalized.endsWith(" $risky")
-            }
+        val normalized = value?.trim()?.lowercase(Locale.ROOT)
+            ?.replace(Regex("\\s+"), " ") ?: return true
+        return riskyLabels.any { risky ->
+            normalized == risky ||
+                normalized.startsWith("$risky ") ||
+                normalized.endsWith(" $risky") ||
+                normalized.contains(" $risky ")
+        }
     }
 }
