@@ -1,33 +1,33 @@
 {
-  "timestamp_utc": "2026-10-18T18:32:53+00:00",
+  "timestamp_utc": "2026-10-18T18:33:31+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39154631604",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154631604",
-  "source_run_id": "39154577124",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154577124",
+  "run_id": "39154685664",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154685664",
+  "source_run_id": "39154629712",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39154629712",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "fix/nightly-hourly-backlog-cycle-20261019",
-  "sha": "f00feae896e59a8687de69313290374f569606fa",
+  "branch": "fix/autonomous-pr-token-trigger-2026-10-18",
+  "sha": "5f19da908e50fdbf65f56069c64a35adb43c1198",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = success",
-    "Source commit: f00feae896e59a8687de69313290374f569606fa",
-    "Job: test — completed/success",
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: 5f19da908e50fdbf65f56069c64a35adb43c1198",
+    "Job: test — completed/failure",
     "Job: deploy — completed/skipped"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
   "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "success",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "success",
+      "conclusion": "failure",
       "steps": [
         {
           "name": "Set up job",
@@ -71,11 +71,11 @@
         },
         {
           "name": "Test candidate organ runtime in Chromium",
-          "conclusion": "success"
+          "conclusion": "failure"
         },
         {
           "name": "Post Run actions/setup-python@v6",
-          "conclusion": "success"
+          "conclusion": "skipped"
         },
         {
           "name": "Post Run actions/checkout@v6",
@@ -96,6 +96,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-18T18:32:59+00:00",
+  "finished_at_utc": "2026-10-18T18:33:35+00:00",
   "outcome": "success"
 }
