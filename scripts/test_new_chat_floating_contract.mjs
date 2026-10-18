@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const organ = readFileSync("core/new-chat-floating/index.js", "utf8");
+const styles = readFileSync("core/new-chat-floating/style.css", "utf8");
+const shell = readFileSync("web/index.html", "utf8");
+assert.ok(organ.includes('id = "topNewChat"') || organ.includes('button.id = "topNewChat"'), "new-chat control must have a stable id");
+assert.ok(organ.includes('document.getElementById("newChat")'), "tap must delegate to the existing new-chat action");
+assert.ok(organ.includes("setTimeout(function () { longPressed = true; enterFloating(); }, 550)"), "long press must enter floating mode");
+assert.ok(organ.includes('document.body.classList.add("chat-floating")'), "floating mode must be explicitly stateful");
+assert.ok(organ.includes('document.body.classList.remove("chat-floating")'), "floating mode must be reversible");
+assert.ok(organ.includes('document.querySelector(".app")'), "floating presentation must reuse the same app DOM");
+assert.ok(styles.includes("body.chat-floating .app"), "floating geometry must be scoped to floating mode");
+assert.ok(shell.includes('id="composerVoiceBtn"'), "existing composer microphone must remain in the legacy shell");
+console.log("New Chat floating-window contract: PASS");
