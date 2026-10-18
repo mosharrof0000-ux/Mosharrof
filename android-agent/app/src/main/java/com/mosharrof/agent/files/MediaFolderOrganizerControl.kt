@@ -33,7 +33,23 @@ object MediaFolderOrganizerControl {
         })
     }
 
-    fun scanSelectedFolder(activity: Activity, uri: Uri?, status: TextView) {
+    fun handleCommand(activity: Activity, rawCommand: String, status: TextView, pickFolder: () -> Unit): Boolean {
+        val command = rawCommand.lowercase()
+        val organize = listOf("organize media", "organize files", "sort my files", "ফোল্ডার ভিত্তিক", "ফোল্ডার অনুযায়ী", "সাজিয়ে দাও", "সাজান", "ছবি ভিডিও গান সাজাও").any { command.contains(it) }
+        val scan = listOf("virus scan", "malware scan", "scan files", "ফাইল স্ক্যান", "ভাইরাস", "সন্দেহজনক ফাইল", "আমার ছবিগুলো বিশ্লেষণ", "ভিডিও ফোল্ডার").any { command.contains(it) }
+        if (!organize && !scan) return false
+        val saved = activity.getSharedPreferences("mosharrof_media_control", Activity.MODE_PRIVATE)
+            .getString("selected_tree_uri", null)
+        if (saved.isNullOrBlank()) {
+            status.text = "প্রথমবার ব্যবহারে যে ফোল্ডারটি পরীক্ষা/সাজাতে চান সেটি Android picker থেকে নির্বাচন করুন।"
+            pickFolder()
+        } else {
+            scanSelectedFolder(activity, Uri.parse(saved), status, showPlanAfterScan = organize)
+        }
+        return true
+    }
+
+    fun scanSelectedFolder(activity: Activity, uri: Uri?, status: TextView, showPlanAfterScan: Boolean = true) {
         if (uri == null) {
             status.text = "ফোল্ডার নির্বাচন বাতিল হয়েছে; কোনো ফাইল বদলায়নি।"
             return
@@ -49,6 +65,8 @@ object MediaFolderOrganizerControl {
                     return
                 }
         }
+        activity.getSharedPreferences("mosharrof_media_control", Activity.MODE_PRIVATE).edit()
+            .putString("selected_tree_uri", uri.toString()).apply()
         val root = DocumentFile.fromTreeUri(activity, uri)
         if (root == null || !root.isDirectory) {
             status.text = "নির্বাচিত ফোল্ডারটি পড়া যায়নি।"
@@ -94,7 +112,7 @@ object MediaFolderOrganizerControl {
             activity.runOnUiThread {
                 if (!activity.isFinishing) {
                     status.text = report
-                    if (candidates.isNotEmpty()) showPlan(activity, status)
+                    if (showPlanAfterScan && candidates.isNotEmpty()) showPlan(activity, status)
                 }
             }
         }.start()
