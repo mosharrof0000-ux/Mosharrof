@@ -184,8 +184,11 @@ object MediaFolderOrganizerControl {
                                 failed++
                                 continue
                             }
-                            val reviewedSong = if (MediaLibraryAssistant.classify(originalName) == MediaKind.AUDIO)
+                            val kind = MediaLibraryAssistant.classify(originalName)
+                            val reviewedSong = if (kind == MediaKind.AUDIO)
                                 SongMetadataStore.load(activity, source.uri.toString()) else null
+                            val reviewedPhoto = if (kind == MediaKind.IMAGE)
+                                ImageMetadataStore.load(activity, source.uri.toString()) else null
                             val proposedName = localizedName(originalName, reviewedSong)
                             val targetName = uniqueName(destination, proposedName)
                             val target = destination.createFile(source.type ?: mimeFor(originalName), targetName)
@@ -213,12 +216,14 @@ object MediaFolderOrganizerControl {
                                 continue
                             }
                             if (reviewedSong != null) {
-                        val folderName = suggestion.destinationFolder.substringAfterLast('/')
-                        reviewedSong.topics.filter { it != SongTopic.UNKNOWN }.forEach { topic ->
-                            playlists.getOrPut(topic) { mutableListOf() }.add("$folderName/$targetName")
-                        }
-                    }
-                    if (runCatching { source.delete() }.getOrDefault(false)) moved++ else copiedKept++
+                                SongMetadataStore.save(activity, target.uri.toString(), reviewedSong)
+                                val folderName = suggestion.destinationFolder.substringAfterLast('/')
+                                reviewedSong.topics.filter { it != SongTopic.UNKNOWN }.forEach { topic ->
+                                    playlists.getOrPut(topic) { mutableListOf() }.add("$folderName/$targetName")
+                                }
+                            }
+                            if (reviewedPhoto != null) ImageMetadataStore.save(activity, target.uri.toString(), reviewedPhoto)
+                            if (runCatching { source.delete() }.getOrDefault(false)) moved++ else copiedKept++
                         } catch (_: Exception) { failed++ }
                     }
                     val playlistCount = writeTopicPlaylists(root, playlists)
