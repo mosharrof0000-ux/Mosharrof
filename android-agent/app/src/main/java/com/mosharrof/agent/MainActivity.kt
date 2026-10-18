@@ -15,18 +15,24 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
+import com.mosharrof.agent.accessibility.GalleryImageAnalysisControl
+import com.mosharrof.agent.accessibility.CurrentScreenInspectionControl
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
 import com.mosharrof.agent.execution.DeviceIntentControl
+import com.mosharrof.agent.execution.AppPackageControl
+import com.mosharrof.agent.files.UserFileAccessControl
+import com.mosharrof.agent.files.MediaFolderOrganizerControl
+import com.mosharrof.agent.files.AudioAnalysisControl
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
 import com.mosharrof.agent.notifications.NotificationAccessControl
-import com.mosharrof.agent.files.UserFileAccessControl
 import com.mosharrof.agent.admin.ManagedDeviceControl
 import com.mosharrof.agent.planner.AiCommandNormalizer
+import com.mosharrof.agent.integration.ExternalDeviceCommandHandler
 import com.mosharrof.agent.permissions.PermissionCenterControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
@@ -36,15 +42,28 @@ class MainActivity : ComponentActivity() {
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
     private var speechOutput: AgentSpeechOutput? = null
+    private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        UserFileAccessControl.scanSelectedFolder(this, uri, status)
+    }
+    private val organizerFolderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        MediaFolderOrganizerControl.scanSelectedFolder(this, uri, status)
+    }
+    private val apkPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status)
+        else status.text = "APK নির্বাচন বাতিল করা হয়েছে; কোনো অ্যাপ ইনস্টল হয়নি।"
+    }
+    private val audioPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        AudioAnalysisControl.analyzeSelected(this, uri, status)
+    }
+    private val imagePicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        GalleryImageAnalysisControl.analyzeSelected(this, uri, status)
+    }
     private val permissionResult = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { grants ->
         val granted = grants.count { it.value }
         val denied = grants.size - granted
         status.text = "অনুমতি ফলাফল: ${granted}টি অনুমোদিত, ${denied}টি অননুমোদিত। বিশেষ অনুমতিগুলো নিচের Settings বোতাম থেকে চালু করুন।"
-    }
-    private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -58,9 +77,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val title = TextView(this).apply {
-            text = "মোশাররফ অটোনোমাস এজেন্ট"
+            text = "মোশাররফ অ্যান্ড্রয়েড ডিভাইস কন্ট্রোল"
             textSize = 24f
-            contentDescription = "Mosharrof Autonomous Agent"
+            contentDescription = "Mosharrof Android Device Control"
         }
         status = TextView(this).apply { textSize = 16f }
         speechStatus = TextView(this).apply { textSize = 14f }
@@ -89,7 +108,7 @@ class MainActivity : ComponentActivity() {
         }
         val inspectButton = Button(this).apply {
             text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
-            setOnClickListener { inspectCurrentScreen() }
+            setOnClickListener { CurrentScreenInspectionControl.inspect(this@MainActivity, status, screenDetails, ::isServiceEnabled) }
         }
         val accessibilityButton = Button(this).apply {
             text = "Accessibility সেটিংস খুলুন"
@@ -113,10 +132,17 @@ class MainActivity : ComponentActivity() {
             SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
             TaskControlButtons.addCancelButton(this@MainActivity, this) { taskController.cancelPending() }
             addView(inspectButton)
-            ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled, ::prepareCommand)
             addView(screenDetails)
-            DeviceDiagnosticsControl.addTo(this@MainActivity, this)
+            ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled, ::prepareCommand)
             UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
+            MediaFolderOrganizerControl.addTo(this@MainActivity, this, status) { organizerFolderPicker.launch(null) }
+            AudioAnalysisControl.addTo(this@MainActivity, this, status) { audioPicker.launch(arrayOf("audio/*")) }
+            GalleryImageAnalysisControl.addTo(this@MainActivity, this, status) { imagePicker.launch(arrayOf("image/*")) }
+            addView(Button(this@MainActivity).apply {
+                text = "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
+                setOnClickListener { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) }
+            })
+            DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             addView(Button(this@MainActivity).apply {
                 text = "সমস্ত runtime permission চাইুন"
                 setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
@@ -132,6 +158,7 @@ class MainActivity : ComponentActivity() {
             intent.removeExtra(EXTRA_START_VOICE)
             window.decorView.post { startSpeechInput() }
         }
+        ExternalDeviceCommandHandler.handle(this, intent, commandInput, status, ::prepareCommand)
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -140,6 +167,7 @@ class MainActivity : ComponentActivity() {
             intent.removeExtra(EXTRA_START_VOICE)
             window.decorView.post { startSpeechInput() }
         }
+        ExternalDeviceCommandHandler.handle(this, intent, commandInput, status, ::prepareCommand)
     }
     override fun onResume() {
         super.onResume()
@@ -149,6 +177,12 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun prepareCommand(command: String) {
+        if (AppPackageControl.handleCommand(this, command, status) {
+                apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
+            }) return
+        if (AudioAnalysisControl.handleCommand(this, command, status) { audioPicker.launch(arrayOf("audio/*")) }) return
+        if (GalleryImageAnalysisControl.handleCommand(this, command, status) { imagePicker.launch(arrayOf("image/*")) }) return
+        if (MediaFolderOrganizerControl.handleCommand(this, command, status) { organizerFolderPicker.launch(null) }) return
         if (DeviceIntentControl.handle(this, command, status)) return
         if (taskController.prepareTask(command)) return
         status.text = "স্থানীয় কমান্ডে কাজটি বোঝা যায়নি; AI-কে সমর্থিত Android কমান্ডে রূপান্তর করতে বলা হচ্ছে…"
@@ -171,25 +205,6 @@ class MainActivity : ComponentActivity() {
                     status.text = "AI একটি কমান্ড প্রস্তাব করেছে, কিন্তু স্থানীয় নীতি সেটি প্রত্যাখ্যান করেছে। কোনো কাজ চালানো হয়নি।"
                 }
             }
-        }
-    }
-
-    private fun inspectCurrentScreen() {
-        if (!isServiceEnabled()) {
-            status.text = "স্ক্রিন পরীক্ষা করতে আগে Accessibility service চালু করুন।"
-            screenDetails.text = ""
-            return
-        }
-        val snapshot = MosharrofAccessibilityService.takeInspectionSnapshot()
-        if (snapshot == null) {
-            MosharrofAccessibilityService.startInspection()
-            status.text = "স্ক্যান প্রস্তুত। যে অ্যাপ পরীক্ষা করতে চান সেটি খুলুন, তারপর এখানে ফিরে আবার স্ক্রিন পরীক্ষা চাপুন।"
-            screenDetails.text = ""
-            return
-        }
-        status.text = "স্ক্যান সম্পন্ন: ${snapshot.packageName} • ${snapshot.nodeCount}টি UI node"
-        screenDetails.text = snapshot.visibleLabels.joinToString("\n").ifBlank {
-            "এই স্ক্রিনে পড়ার মতো কোনো দৃশ্যমান লেবেল পাওয়া যায়নি।"
         }
     }
     private fun startSpeechInput() {
@@ -221,7 +236,6 @@ class MainActivity : ComponentActivity() {
         speechOutput?.close()
         super.onDestroy()
     }
-
     private fun isServiceEnabled(): Boolean {
         val manager = getSystemService<AccessibilityManager>() ?: return false
         return manager.getEnabledAccessibilityServiceList(

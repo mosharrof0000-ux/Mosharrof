@@ -1,64 +1,58 @@
-# Mosharrof Android Autonomous Agent
+# Mosharrof Android Device Control
 
-Native Android Studio project for a user-directed automation agent, isolated from the existing MOSHARROF AI web/PWA.
+A separately buildable native Android app focused only on user-directed Android device control. It is isolated from the MOSHARROF AI web/PWA and is intended to connect later through a versioned, permission-gated plugin bridge.
+
+## Product scope
+
+**Included**
+- Bengali/English voice-command input through the Android speech-recognition activity; availability depends on the device.
+- Text-to-speech result output with explicit speak/stop controls (CI/device verification pending).
+- User-confirmed app launch, supported Settings navigation, Back/Home/Notifications/Recent Apps, bounded exact-label UI actions and directional swipe.
+- Optional draggable floating shortcut that opens the voice-command flow; it does not silently listen in the background.
+- User-triggered screenshot capture, preview, and explicit-consent Gemini Vision analysis.
+- User-selected gallery-image analysis and up to 10 previously unreviewed photos per batch through an explicit upload-consent dialog; approved metadata drives semantic photo folders.
+- User-selected audio-file analysis (up to 20 MB) through explicit-consent Gemini audio understanding; Bengali title, multi-topic tags, short idea summary and uncertainty are stored locally by URI.
+- When a user explicitly confirms folder organization, analyzed songs can be renamed using the stored Bengali title, grouped into topic folders, and included in topic-specific M3U playlists.
+- User-selected folder classification for images, audio, videos, documents, archives and APKs; duplicate-content scan; previewed media folder organization with copy-size verification before attempting to remove original files.
+- Song-topic catalog with multi-label categories including দেহতত্ত্ব, আত্মতত্ত্ব, গুরুতত্ত্ব, প্রেম, ভক্তি, প্রকৃতি, বিরহ and সাধনা ও আত্মঅনুসন্ধান.
+- Name/extension-based local file-risk triage for suspicious extensions and double-extension files. This is not a full antivirus engine and cannot prove a file safe.
+- User-directed app install flow through Android's package installer / Play Store UI, and uninstall flow through Android's system uninstall screen; final OS confirmation remains required.
+- Timer/alarm intents and calendar event drafts, including explicit dates where supported by the parser.
+- Local device diagnostics, including battery percentage and charging state, internal-storage capacity, RAM, network, device model, Android version and uptime.
+- Android-owned permission screens for Accessibility, overlay, notifications, system settings and battery optimization.
+- Local confirmation, cancellation of pending actions, and safety policy checks.
+
+The app does not request camera access for these analysis features. Gallery images and selected audio are uploaded only after a separate confirmation; the user must configure a Gemini key, which is encrypted at rest with Android Keystore. Media organization is limited to the user-selected Storage Access Framework folder and requires confirmation before moving/deleting files. File-risk triage is heuristic, not antivirus.
+
+## Battery and charging
+
+The on-demand diagnostics screen reports the battery percentage and Android-reported charging status (charging, full, not charging or unknown). Android does not permit a normal app to force hardware charging or override the device's power controller. Any future battery-related commands must stay within public Android APIs and explicit OS permissions.
 
 ## Build and test
 
 Requirements: Android Studio, JDK 17, Android SDK Platform 35.
 
-From this directory, run:
+From this directory:
 
 ```bash
 gradle assembleDebug
 gradle testDebugUnitTest
 ```
 
-GitHub Actions builds a debug APK and publishes it as a workflow artifact.
+GitHub Actions is configured to build a debug APK, run JVM unit tests and emulator instrumentation tests, and upload the APK only if all configured steps pass. Emulator CI preserves snapshots where supported, waits for the Android device to boot, and captures logcat if the bounded instrumentation run fails. A debug APK is for testing, not a release-signed production build.
 
-## Implemented in this milestone
+## Current implementation limits
 
-- [x] Standalone Kotlin Android app and manifest
-- [x] User-facing Accessibility Settings entry point
-- [x] Capability access hub linking to Android Accessibility, all-files, usage-access, battery-optimization and app-permission settings (user grants each access explicitly; latest CI/device verification pending)
-- [x] Bounded, read-only accessibility event inspection
-- [x] Explicit current-screen snapshot: package, bounded node count, and up to 40 short visible labels
-- [x] Deterministic Bengali/English text intent parsing
-- [x] Confirmed call/SMS intent support: uses CALL_PHONE/SEND_SMS only when the user has granted them; otherwise opens the Android Dialer/SMS draft. Outbound SMS is submitted only after the app's confirmation button; carrier delivery is not guaranteed.
-- [x] Common Bengali app aliases and installed-app discovery
-- [x] Confirmed Back/Home/Notifications/Recent Apps commands; deterministic parser and policy tests added (emulator/physical-device verification pending)
-- [x] On-demand read-only battery, internal storage, system RAM/low-memory warning, network transport/connectivity, device model, Android version and uptime diagnostics displayed locally (physical-device verification pending)
-- [x] User-selected folder inventory and bounded SHA-256 duplicate scan; duplicates are only deleted after a separate confirmation (CI/device verification pending)
-- [x] User-triggered screen screenshot capture, in-app preview, and transient UI-label analysis
-- [x] Explicitly opt-in Gemini Vision screenshot analysis; the API key is encrypted at rest with Android Keystore and the image is uploaded only after a separate user tap. Structured next-command suggestions are passed back through the local planner and confirmation gate (CI/live API/device verification pending)
-- [x] Initial Android permission center for runtime and special app-access permissions, with grant-status review (latest CI and device/OEM verification pending)
-- [x] HTTPS Gemini Vision API adapter for explicit screenshot analysis; other chat/planner provider integration and failover are not yet connected
-- [x] Voice command input through Android's speech-recognition activity (availability depends on device)
-- [ ] Result readout using Android TextToSpeech with explicit speak/stop controls (code added; CI/device verification pending)
-- [x] Visible cancel button clears pending app/settings/tap plans and cancels an armed screen inspection (not a general multi-step executor cancel)
-- [x] Confirmation step before launching a selected app
-- [x] Policy gate for allowlisted app launch and unit tests
-- [ ] Explicit one-shot swipe/scroll (up/down/left/right) in a named installed app; code and parser tests added, latest CI and physical-device verification pending
-- [x] CI debug APK build and JVM unit tests
+- The local agent is an MVP, not unrestricted control of every app or every device feature.
+- Full natural-language analysis of every media item, batch song analysis, precise automatic Bengali title conversion for every dialect/song, and automatic playlist playback are not yet complete.
+- General multi-step planning, universal UI element discovery, interruption-aware continuous voice sessions, comprehensive recovery/postcondition verification and physical-device acceptance remain incomplete.
+- Android app-specific UI, OEM restrictions, permission gates and user confirmation apply.
+- A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
+- The plugin bridge is a local contract only; authenticated phone pairing and MOSHARROF's remote plugin transport are not connected yet.
+- The module currently lives in the MOSHARROF repository on a feature branch; a separate GitHub repository has not been created.
 
-## Not yet complete
+## Safety model
 
-- [x] AI-assisted normalization fallback for unsupported local commands through the existing MOSHARROF chat Worker; every normalized command is revalidated by the local planner and requires confirmation (CI/live endpoint verification pending)
-- [ ] General natural-language task planning across arbitrary apps (AI Vision suggestions are constrained single-command proposals, not a general multi-step executor)
-- [ ] General semantic node locator and bounded UI action executor (exact-label tap, one-shot swipe, confirmed global navigation and focused-field text insertion are initial actions; arbitrary UI interaction is not enabled)
-- [ ] Per-task progress, interrupt, cancel, deadlines, postcondition verification and recovery (app launch and tap/swipe outcomes now have bounded verification; current cancel still clears pending/armed actions rather than a general running workflow)
-- [ ] Safe Settings command routing and system-setting confirmation (Wi-Fi, Bluetooth, Location, Display, Sound, Battery Saver, Notifications and Application Settings routes are coded; latest CI and OEM/physical-device verification pending)
-- [ ] Appium/UiAutomator2 device tests and real-device acceptance
-- [ ] Speech output and continuous, interruption-aware voice session
-- [ ] Local vision model adapter and on-device benchmark
-- [ ] Encrypted, opt-in local memory/retrieval
-- [x] Initial capability/permission center for Accessibility, usage access, all-files access, microphone, contacts, calendar, media, notifications and exact-alarm access; user grants remain controlled by Android.
-- [ ] Full permission registry with risk tiers, audit/revocation and capability-by-capability device validation
-- [ ] Release signing, installation validation and distribution
+The device owner enables Accessibility and other special capabilities explicitly in Android Settings. Externally visible or destructive actions require confirmation. The app must not bypass Android permission dialogs, read protected app-private data, store passwords/OTPs/payment credentials by default, or execute arbitrary shell/root commands.
 
-This milestone is **not** a completed fully autonomous agent. Current executable scope is an MVP: resolve an explicit installed-app name and request Android to launch it after confirmation; one exact-label tap, directional swipe, global navigation action, or user-approved text insertion into the named app's focused editable field can be proposed and confirmed. Text insertion never presses Send/Submit. These UI actions are bounded and still require CI and physical-device verification. Screen inspection is read-only and user-triggered. A captured screenshot stays in app memory unless the user separately confirms sending it to Gemini Vision; the API key is encrypted at rest with Android Keystore. Speech recognition relies on a compatible recognizer installed/configured on the device. The Accessibility service does not click arbitrary controls, read all app data, or execute shell/root commands. A successful CI build is not a substitute for installation and acceptance testing on a physical Android device.
-
-## Capability and permission center\n\nUse “ডিভাইসের ক্ষমতা ও অনুমতি পরিচালনা করুন” in the app to inspect the initial capability inventory and open Android-owned permission screens. A granted permission means the OS permits that category; it does not mean every feature in that category has been implemented or tested. The inventory is a first step, not a claim of unrestricted device control.\n\n## Safety model
-
-The service remains off until the device owner enables it in Android Settings. Tasks must be user-directed. Ask for confirmation before externally visible or destructive actions (sending, deleting, purchasing, posting, changing security settings, or sharing data). Never store passwords, OTPs, payment credentials, or arbitrary screen contents by default. Do not bypass Android permission dialogs or platform security boundaries.
-
-Root/Magisk/LSPosed and in-app ADB shell execution are not enabled. An optional Device Admin receiver and ADB Device Owner provisioning command are exposed; the command must be run by the owner on a trusted host and does not grant unrestricted control by itself.
+The existing MOSHARROF main branch and Live Pages must remain unchanged until a separate reviewed integration PR is approved.

@@ -1,10 +1,13 @@
 package com.mosharrof.agent.planner
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
 /** Parses a deliberately small set of clock/calendar requests into Android-owned intents. */
 sealed interface DeviceIntentCommand {
     data class SetTimer(val seconds: Int) : DeviceIntentCommand
     data class SetAlarm(val hour: Int, val minute: Int) : DeviceIntentCommand
-    data class CreateCalendarEvent(val title: String, val dayOffset: Int, val hour: Int, val minute: Int) : DeviceIntentCommand
+    data class CreateCalendarEvent(val title: String, val dayOffset: Int, val hour: Int, val minute: Int, val dateIso: String? = null) : DeviceIntentCommand
     data object OpenCalendar : DeviceIntentCommand
 }
 
@@ -37,10 +40,33 @@ object DeviceIntentCommandParser {
             val hour = time.groupValues[1].toIntOrNull() ?: return null
             val minute = time.groupValues[2].toIntOrNull() ?: return null
             if (hour !in 0..23 || minute !in 0..59) return null
-            val dayOffset = if (command.contains("tomorrow") || command.contains("আগামীকাল") || command.contains("কাল")) 1 else 0
+            val dateMatch = DATE.find(command)
+            val dateIso = dateMatch?.let { match ->
+                runCatching {
+                    val rawDate = match.value
+                    when {
+                        rawDate.contains("-") && rawDate.length == 10 && rawDate.take(4).all(Char::isDigit) ->
+                            LocalDate.parse(rawDate, DateTimeFormatter.ISO_LOCAL_DATE).toString()
+                        rawDate.contains("/") -> {
+                            val parts = rawDate.split("/")
+                            if (parts.size != 3) return null
+                            val (day, month, year) = parts.map { it.toInt() }
+                            LocalDate.of(year, month, day).toString()
+                        }
+                        rawDate.count { it == '-' } == 2 -> {
+                            val parts = rawDate.split("-")
+                            val (day, month, year) = parts.map { it.toInt() }
+                            LocalDate.of(year, month, day).toString()
+                        }
+                        else -> null
+                    }
+                }.getOrNull()
+            }
+            if (dateMatch != null && dateIso == null) return null
+            val dayOffset = if (dateIso == null && (command.contains("tomorrow") || command.contains("আগামীকাল") || command.contains("কাল"))) 1 else 0
             val title = EVENT_TITLE.find(command)?.groupValues?.get(1)?.trim().orEmpty()
                 .ifBlank { "MOSHARROF-এর নির্ধারিত ইভেন্ট" }.take(100)
-            return DeviceIntentCommand.CreateCalendarEvent(title, dayOffset, hour, minute)
+            return DeviceIntentCommand.CreateCalendarEvent(title, dayOffset, hour, minute, dateIso)
         }
         return null
     }
@@ -53,5 +79,6 @@ object DeviceIntentCommandParser {
     private val TIMER = Regex("(?:timer|টাইমার)\\s*(?:for|এর জন্য)?\\s*(\\d+)\\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?|ঘণ্টা|ঘন্টা|মিনিট|সেকেন্ড)")
     private val TIMER_SUFFIX = Regex("(\\d+)\\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?|ঘণ্টা|ঘন্টা|মিনিট(?:ের)?|সেকেন্ড)\\s*(?:এর\\s*)?(?:timer|টাইমার)")
     private val TIME = Regex("(?:at|for|আমার|সময়|সময়)?\\s*(\\d{1,2})[:.](\\d{2})")
-    private val EVENT_TITLE = Regex("(?:event|ইভেন্ট)\\s+(.+?)(?:\\s+(?:tomorrow|today|আগামীকাল|আজ|কাল)|\\s+\\d{1,2}[:.]\\d{2}|$)")
+    private val DATE = Regex("\\b(?:\\d{4}-\\d{2}-\\d{2}|\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{4})\\b")
+    private val EVENT_TITLE = Regex("(?:event|ইভেন্ট)\\s+(.+?)(?:\\s+(?:tomorrow|today|আগামীকাল|আজ|কাল)|\\s+\\d{4}-\\d{2}-\\d{2}|\\s+\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{4}|\\s+\\d{1,2}[:.]\\d{2}|$)")
 }

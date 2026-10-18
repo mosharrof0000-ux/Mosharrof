@@ -16,7 +16,7 @@ import android.content.pm.PackageManager
 /** Explicit, user-driven permission hub. Android remains the authority for each grant. */
 object PermissionCenterControl {
     val runtimePermissions: Array<String> get() = buildList {
-        addAll(listOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA,
+        addAll(listOf(Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS,
             Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR,
@@ -27,10 +27,7 @@ object PermissionCenterControl {
             ))
         if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
         if (Build.VERSION.SDK_INT >= 31) addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
-        if (Build.VERSION.SDK_INT >= 33) addAll(listOf(Manifest.permission.NEARBY_WIFI_DEVICES,
-            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO, Manifest.permission.READ_MEDIA_AUDIO))
-        else add(Manifest.permission.READ_EXTERNAL_STORAGE)
-        if (Build.VERSION.SDK_INT >= 34) add("android.permission.READ_MEDIA_VISUAL_USER_SELECTED")
+        if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.NEARBY_WIFI_DEVICES)
     }.distinct().toTypedArray()
 
     fun addTo(activity: Activity, layout: LinearLayout, status: TextView, requestRuntime: () -> Unit) {
@@ -46,7 +43,6 @@ object PermissionCenterControl {
             }
         })
         specialButton(activity, layout, "Accessibility — স্ক্রিন বুঝে নিয়ন্ত্রণ", Settings.ACTION_ACCESSIBILITY_SETTINGS, status)
-        specialButton(activity, layout, "সব ফাইল পরিচালনার অনুমতি", Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, status)
         specialButton(activity, layout, "ব্যবহারের পরিসংখ্যানের অনুমতি", Settings.ACTION_USAGE_ACCESS_SETTINGS, status)
         specialButton(activity, layout, "Notification access", Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS, status)
         specialButton(activity, layout, "সিস্টেম সেটিংস পরিবর্তন", Settings.ACTION_MANAGE_WRITE_SETTINGS, status)
@@ -66,7 +62,6 @@ object PermissionCenterControl {
         }
         appendLine("○ Write system settings: ${if (Settings.System.canWrite(activity)) "অনুমোদিত" else "অননুমোদিত"}")
         if (Build.VERSION.SDK_INT >= 30) {
-            appendLine("○ MANAGE_EXTERNAL_STORAGE: ${if (EnvironmentAccess.hasAllFiles(activity)) "অনুমোদিত" else "অননুমোদিত"}")
             val pm = activity.getSystemService(PowerManager::class.java)
             appendLine("○ Battery optimization exemption: ${if (pm?.isIgnoringBatteryOptimizations(activity.packageName) == true) "অনুমোদিত" else "অননুমোদিত"}")
         }
@@ -88,7 +83,6 @@ object PermissionCenterControl {
     private fun open(activity: Activity, action: String, status: TextView) {
         try {
             val intent = when (action) {
-                Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
                 Settings.ACTION_MANAGE_WRITE_SETTINGS, Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
                 Settings.ACTION_APPLICATION_DETAILS_SETTINGS ->
                     Intent(action, Uri.parse("package:${activity.packageName}"))
@@ -98,9 +92,4 @@ object PermissionCenterControl {
             status.text = "Android Settings খোলা হয়েছে। অনুমতি দিয়ে ফিরে এসে অবস্থা যাচাই করুন।"
         } catch (_: Exception) { status.text = "এই Android সংস্করণে সেটিংস পৃষ্ঠা খোলা যায়নি।" }
     }
-}
-
-private object EnvironmentAccess {
-    fun hasAllFiles(activity: Activity): Boolean =
-        Build.VERSION.SDK_INT < 30 || android.os.Environment.isExternalStorageManager()
 }
