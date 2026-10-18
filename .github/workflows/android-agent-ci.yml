@@ -60,10 +60,10 @@ jobs:
           # Fold into a single shell command: this action executes script lines separately.
           script: >-
             adb wait-for-device;
-            for attempt in $(seq 1 60); do boot_completed="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\\r')"; if [ "$boot_completed" = "1" ]; then break; fi; sleep 2; done;
-            test "$(adb shell getprop sys.boot_completed | tr -d '\\r')" = "1";
-            for attempt in $(seq 1 60); do bootanim="$(adb shell getprop init.svc.bootanim 2>/dev/null | tr -d '\\r')"; package_ready="$(adb shell pm path android 2>/dev/null | head -n 1)"; if [ "$bootanim" = "stopped" ] && [ -n "$package_ready" ]; then break; fi; sleep 2; done;
-            test "$(adb shell getprop init.svc.bootanim | tr -d '\\r')" = "stopped";
+            for attempt in $(seq 1 60); do boot_completed="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"; if [ "$boot_completed" = "1" ]; then break; fi; sleep 2; done;
+            test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1";
+            for attempt in $(seq 1 60); do bootanim="$(adb shell getprop init.svc.bootanim 2>/dev/null | tr -d '\r')"; package_ready="$(adb shell pm path android 2>/dev/null | head -n 1)"; if [ "$bootanim" = "stopped" ] && [ -n "$package_ready" ]; then break; fi; sleep 2; done;
+            test "$(adb shell getprop init.svc.bootanim | tr -d '\r')" = "stopped";
             test -n "$(adb shell pm path android | head -n 1)";
             adb wait-for-device;
             adb devices -l;
