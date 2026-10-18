@@ -144,6 +144,9 @@ class TaskExecutionCoordinator(
                     Thread.currentThread().interrupt()
                     reports += StepReport(step.id, StepState.CANCELLED, attempts, "কাজের থ্রেড বন্ধের অনুরোধ পেয়েছে।")
                     return finish(TaskRunState.CANCELLED, reports, "কাজ বন্ধ করা হয়েছে।")
+                } catch (_: java.util.concurrent.CancellationException) {
+                    reports += StepReport(step.id, StepState.CANCELLED, attempts, "কাজ বাতিলের অনুরোধে চলমান ধাপ বন্ধ হয়েছে।")
+                    return finish(TaskRunState.CANCELLED, reports, "কাজ বাতিল হয়েছে; পরের ধাপ চালানো হয়নি।")
                 } catch (e: java.util.concurrent.ExecutionException) {
                     StepOutcome.Failed(e.cause?.message ?: "অজানা ত্রুটি") to false
                 } finally {
