@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const organ = readFileSync("core/new-chat-floating/index.js", "utf8");
 const styles = readFileSync("core/new-chat-floating/style.css", "utf8");
 const shell = readFileSync("web/index.html", "utf8");
+const serviceWorker = readFileSync("web/sw.js", "utf8");
 const prep = readFileSync("scripts/prepare_web_organ_runtime.py", "utf8");
 const sidebar = readFileSync("web/sidebar-recovery.js", "utf8");
 assert.ok(organ.includes('id = "topNewChat"') || organ.includes('button.id = "topNewChat"'), "new-chat control must have a stable id");
@@ -15,6 +16,7 @@ assert.ok(organ.includes('document.body.classList.add("chat-floating")'), "float
 assert.ok(organ.includes('document.body.classList.remove("chat-floating")'), "floating mode must be reversible");
 assert.ok(organ.includes('document.querySelector(".app")'), "floating presentation must reuse the same app DOM");
 assert.ok(styles.includes("body.chat-floating .app"), "floating geometry must be scoped to floating mode");
+assert.ok(serviceWorker.includes('const CACHE = "mosharrof-v8-2026-10-18-organ-runtime-floating-chat"'), "service worker cache version must be bumped for new runtime assets");
 assert.ok(shell.includes('id="composerVoiceBtn"'), "existing composer microphone must remain in the legacy shell");
 assert.ok(prep.includes('"core/new-chat-floating/index.js": "web/core/new-chat-floating/index.js"'), "Pages/APK prep must bundle the feature module");
 assert.ok(prep.includes('"core/new-chat-floating/style.css": "web/core/new-chat-floating/style.css"'), "Pages/APK prep must bundle the feature stylesheet");

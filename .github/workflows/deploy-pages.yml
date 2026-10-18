@@ -76,4 +76,16 @@ jobs:
       - name: Live deployment health check
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-        run: python3 scripts/live_organ_browser_health.py
+        run: |
+          for attempt in 1 2 3; do
+            echo "Live Pages health check attempt $attempt/3"
+            if python3 scripts/live_organ_browser_health.py; then
+              exit 0
+            fi
+            if [[ "$attempt" -lt 3 ]]; then
+              echo "Waiting 15 seconds for Pages/CDN and runtime assets to converge..."
+              sleep 15
+            fi
+          done
+          echo "Live Pages health check failed after 3 attempts."
+          exit 1

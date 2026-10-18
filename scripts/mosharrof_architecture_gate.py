@@ -168,7 +168,7 @@ def main() -> int:
             links = count_links(source_text, suffix)
             if len(links) > MAX_LINKS_PER_FILE:
                 errors.append(f"{path}: composition root exceeds the {MAX_LINKS_PER_FILE}-link limit.")
-            if path == "web/sw.js" and "mosharrof-v7-2026-10-15-organ-runtime" not in source_text:
+            if path == "web/sw.js" and "mosharrof-v7-2026-10-15-organ-runtime" in source_text:
                 errors.append("web/sw.js: cache-affecting changes must bump the organ-runtime cache version.")
             for specifier in links:
                 target = resolve_import(ROOT / p, specifier)
