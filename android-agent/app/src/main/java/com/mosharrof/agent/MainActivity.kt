@@ -16,6 +16,7 @@ import androidx.core.content.getSystemService
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
 import com.mosharrof.agent.accessibility.GalleryImageAnalysisControl
+import com.mosharrof.agent.accessibility.CurrentScreenInspectionControl
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
@@ -31,6 +32,7 @@ import com.mosharrof.agent.permissions.CapabilityPermissionCenter
 import com.mosharrof.agent.notifications.NotificationAccessControl
 import com.mosharrof.agent.admin.ManagedDeviceControl
 import com.mosharrof.agent.planner.AiCommandNormalizer
+import com.mosharrof.agent.integration.ExternalDeviceCommandHandler
 import com.mosharrof.agent.permissions.PermissionCenterControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
@@ -106,7 +108,7 @@ class MainActivity : ComponentActivity() {
         }
         val inspectButton = Button(this).apply {
             text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
-            setOnClickListener { inspectCurrentScreen() }
+            setOnClickListener { CurrentScreenInspectionControl.inspect(this@MainActivity, status, screenDetails, ::isServiceEnabled) }
         }
         val accessibilityButton = Button(this).apply {
             text = "Accessibility সেটিংস খুলুন"
@@ -156,7 +158,7 @@ class MainActivity : ComponentActivity() {
             intent.removeExtra(EXTRA_START_VOICE)
             window.decorView.post { startSpeechInput() }
         }
-        handleExternalCommand(intent)
+        ExternalDeviceCommandHandler.handle(this, intent, commandInput, status, ::prepareCommand)
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -166,22 +168,6 @@ class MainActivity : ComponentActivity() {
             window.decorView.post { startSpeechInput() }
         }
         handleExternalCommand(intent)
-    }
-    /** Accept a bounded command handoff from MOSHARROF chat; execution still requires local confirmation. */
-    private fun handleExternalCommand(source: Intent) {
-        val uri = source.data ?: return
-        if (uri.scheme != "mosharrof" || uri.host != "device-control") return
-        val command = uri.getQueryParameter("command")?.trim().orEmpty()
-        if (command.isBlank() || command.length > 240 || command.any { it.isISOControl() }) {
-            if (::status.isInitialized) status.text = "MOSHARROF থেকে আসা নির্দেশটি খালি বা সীমার বাইরে; কোনো কাজ চালানো হয়নি।"
-            return
-        }
-        window.decorView.post {
-            if (!::commandInput.isInitialized || !::status.isInitialized) return@post
-            commandInput.setText(command)
-            status.text = "MOSHARROF চ্যাট থেকে নির্দেশ এসেছে। চালানোর আগে নিচের প্রস্তাব যাচাই ও নিশ্চিত করুন।"
-            prepareCommand(command)
-        }
     }
     override fun onResume() {
         super.onResume()
@@ -194,7 +180,6 @@ class MainActivity : ComponentActivity() {
         if (AppPackageControl.handleCommand(this, command, status) {
                 apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
             }) return
-        val normalizedCommand = command.lowercase()
         if (AudioAnalysisControl.handleCommand(this, command, status) { audioPicker.launch(arrayOf("audio/*")) }) return
         if (GalleryImageAnalysisControl.handleCommand(this, command, status) { imagePicker.launch(arrayOf("image/*")) }) return
         if (MediaFolderOrganizerControl.handleCommand(this, command, status) { organizerFolderPicker.launch(null) }) return
@@ -220,25 +205,6 @@ class MainActivity : ComponentActivity() {
                     status.text = "AI একটি কমান্ড প্রস্তাব করেছে, কিন্তু স্থানীয় নীতি সেটি প্রত্যাখ্যান করেছে। কোনো কাজ চালানো হয়নি।"
                 }
             }
-        }
-    }
-
-    private fun inspectCurrentScreen() {
-        if (!isServiceEnabled()) {
-            status.text = "স্ক্রিন পরীক্ষা করতে আগে Accessibility service চালু করুন।"
-            screenDetails.text = ""
-            return
-        }
-        val snapshot = MosharrofAccessibilityService.takeInspectionSnapshot()
-        if (snapshot == null) {
-            MosharrofAccessibilityService.startInspection()
-            status.text = "স্ক্যান প্রস্তুত। যে অ্যাপ পরীক্ষা করতে চান সেটি খুলুন, তারপর এখানে ফিরে আবার স্ক্রিন পরীক্ষা চাপুন।"
-            screenDetails.text = ""
-            return
-        }
-        status.text = "স্ক্যান সম্পন্ন: ${snapshot.packageName} • ${snapshot.nodeCount}টি UI node"
-        screenDetails.text = snapshot.visibleLabels.joinToString("\n").ifBlank {
-            "এই স্ক্রিনে পড়ার মতো কোনো দৃশ্যমান লেবেল পাওয়া যায়নি।"
         }
     }
     private fun startSpeechInput() {
@@ -270,7 +236,6 @@ class MainActivity : ComponentActivity() {
         speechOutput?.close()
         super.onDestroy()
     }
-
     private fun isServiceEnabled(): Boolean {
         val manager = getSystemService<AccessibilityManager>() ?: return false
         return manager.getEnabledAccessibilityServiceList(
