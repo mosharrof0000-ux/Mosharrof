@@ -10,7 +10,7 @@ A separately buildable native Android app focused only on user-directed Android 
 - User-confirmed app launch, supported Settings navigation, Back/Home/Notifications/Recent Apps, bounded exact-label UI actions and directional swipe.
 - Optional draggable floating shortcut that opens the voice-command flow; it does not silently listen in the background.
 - User-triggered screenshot capture, preview, and explicit-consent Gemini Vision analysis.
-- User-selected gallery-image analysis through an explicit upload-consent dialog.
+- User-selected gallery-image analysis and up to 10 previously unreviewed photos per batch through an explicit upload-consent dialog; approved metadata drives semantic photo folders.
 - User-selected audio-file analysis (up to 20 MB) through explicit-consent Gemini audio understanding; Bengali title, multi-topic tags, short idea summary and uncertainty are stored locally by URI.
 - When a user explicitly confirms folder organization, analyzed songs can be renamed using the stored Bengali title, grouped into topic folders, and included in topic-specific M3U playlists.
 - User-selected folder classification for images, audio, videos, documents, archives and APKs; duplicate-content scan; previewed media folder organization with copy-size verification before attempting to remove original files.
