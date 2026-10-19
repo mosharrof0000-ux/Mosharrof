@@ -1,11 +1,11 @@
 /** User-approved ChatGPT export parser for MOSHARROF memory. Never scrapes ChatGPT. */
 const MAX_TURNS = 20000;
 const MAX_TEXT_LENGTH = 4000;
-const SECRET = /(password|passcode|\\botp\\b|verification code|credit card|debit card|cvv|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|সিভিভি)/i;
+const SECRET = /(password|passcode|\botp\b|verification code|credit card|debit card|cvv|পাসওয়ার্ড|পাসওয়ার্ড|ওটিপি|পিন কোড|কার্ড নম্বর|সিভিভি)/i;
 const SENSITIVE = /(diagnos(ed|is)|medical record|sexual|sex life|political party|জাতীয় পরিচয়পত্র|জাতীয় পরিচয়পত্র|রোগ নির্ণয়|রোগ নির্ণয়|যৌন জীবন)/i;
 function textFromMessage(message) {
   const parts = message?.content?.parts;
-  return Array.isArray(parts) ? parts.filter(part => typeof part === "string").join("\\n").replace(/\\u0000/g, "").trim().slice(0, MAX_TEXT_LENGTH) : "";
+  return Array.isArray(parts) ? parts.filter(part => typeof part === "string").join("\n").replace(/\u0000/g, "").trim().slice(0, MAX_TEXT_LENGTH) : "";
 }
 function asMillis(value) {
   const n = Number(value);
@@ -13,7 +13,7 @@ function asMillis(value) {
   return n < 100000000000 ? Math.round(n * 1000) : Math.round(n);
 }
 function safeImportText(value) {
-  const text = String(value || "").replace(/\\s+/g, " ").trim();
+  const text = String(value || "").replace(/\s+/g, " ").trim();
   if (!text || SECRET.test(text) || SENSITIVE.test(text)) return "";
   return text.slice(0, MAX_TEXT_LENGTH);
 }
@@ -58,10 +58,10 @@ export function parseChatGPTExport(input, options = {}) {
 export function buildChatGPTStyleProfile(snapshot) {
   const answers = (snapshot?.entries || []).filter(row => row.kind === "assistant" && typeof row.text === "string");
   if (answers.length < 3) return { schemaVersion: 1, sourceProvider: "chatgpt", sampleCount: answers.length, status: "needs-more-examples", rules: [] };
-  const joined = answers.map(row => row.text).join("\\n"), count = re => (joined.match(re) || []).length, rules = [];
-  if (count(/[\\u0980-\\u09FF]/g) >= 3) rules.push({ key: "language", value: "বাংলায় প্রশ্ন করলে বাংলায় উত্তর দিন; দরকারি ইংরেজি প্রযুক্তিগত শব্দ রাখুন।" });
-  if (count(/^\\s*(?:[-*•]|\\d+[.)])\\s+/gm) >= 3) rules.push({ key: "structure", value: "কাজের নির্দেশে পরিষ্কার তালিকা ও ধাপ ব্যবহার করুন।" });
-  if (count(/^\\s*#{1,6}\\s+/gm) >= 2) rules.push({ key: "headings", value: "বহু অংশের উত্তরে সংক্ষিপ্ত শিরোনাম ব্যবহার করুন।" });
+  const joined = answers.map(row => row.text).join("\n"), count = re => (joined.match(re) || []).length, rules = [];
+  if (count(/[\u0980-\u09FF]/g) >= 3) rules.push({ key: "language", value: "বাংলায় প্রশ্ন করলে বাংলায় উত্তর দিন; দরকারি ইংরেজি প্রযুক্তিগত শব্দ রাখুন।" });
+  if (count(/^\s*(?:[-*•]|\d+[.)])\s+/gm) >= 3) rules.push({ key: "structure", value: "কাজের নির্দেশে পরিষ্কার তালিকা ও ধাপ ব্যবহার করুন।" });
+  if (count(/^\s*#{1,6}\s+/gm) >= 2) rules.push({ key: "headings", value: "বহু অংশের উত্তরে সংক্ষিপ্ত শিরোনাম ব্যবহার করুন।" });
   return { schemaVersion: 1, sourceProvider: "chatgpt", sampleCount: answers.length,
     status: "draft-user-review-required", generatedAt: new Date().toISOString(), rules,
     notice: "এটি দৃশ্যমান উত্তরের ধরন থেকে তৈরি সম্পাদনাযোগ্য খসড়া; অনুমোদন ছাড়া সক্রিয় হবে না।" };
