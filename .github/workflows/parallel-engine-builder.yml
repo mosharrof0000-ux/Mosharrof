@@ -11,6 +11,9 @@ on:
   schedule:
     - cron: "23 */3 * * *"
   workflow_dispatch:
+  # Let the repository owner resume/start work from the persistent control-center issue.
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write
@@ -26,6 +29,12 @@ concurrency:
 
 jobs:
   build-independent-backlog:
+    # Commands are accepted only from the repository owner on the designated control-center issue.
+    if: >-
+      github.event_name != 'issue_comment' ||
+      (github.event.issue.number == 756 &&
+       github.event.comment.user.login == 'mosharrof0000-ux' &&
+       contains(fromJSON('["/mosharrof start","/mosharrof resume"]'), github.event.comment.body))
     name: Parallel backlog engineering (review-only)
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -46,7 +55,7 @@ jobs:
 
       - name: Build bounded backlog task
         env:
-          # Treat each trigger as a backlog duty so workflow_run events do not become empty comment tasks.
+          # Keep the bounded backlog task for scheduled, workflow-run, and owner-command triggers.
           EVENT_NAME: schedule
           GH_TOKEN: ${{ secrets.MOSHARROF_RECOVERY_TOKEN || github.token }}
           GH_REPO: ${{ github.repository }}
