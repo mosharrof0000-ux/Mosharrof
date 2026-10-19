@@ -84,42 +84,28 @@ export function initializeComposerEnhancements() {
   }
   function closeEditor(apply) {
     const activeInput = currentInput();
+    const value = String(largeInput.value || "");
     if (apply) {
-      const value = String(largeInput.value || "");
-      const previousValue = String(activeInput.value || "");
+      // Dispatch normal events first so autosizing and line-limit state update.
       activeInput.value = value;
       activeInput.dispatchEvent(new Event("input", { bubbles: true }));
       activeInput.dispatchEvent(new Event("change", { bubbles: true }));
-
-      // Some UI listeners may replace the composer input while handling the input event.
-      // Reacquire by ID instead of writing a second time to a detached node.
-      let latestInput = currentInput();
-      if (latestInput !== activeInput) {
-        latestInput.value = value;
-        latestInput.dispatchEvent(new Event("input", { bubbles: true }));
-        latestInput = currentInput();
-      }
-      latestInput.value = value;
-      syncVisibility();
-
-      // If a listener schedules a DOM refresh, restore only while the draft is still unchanged.
-      // Never overwrite text the user has typed after applying the expanded draft.
-      requestAnimationFrame(() => {
-        let current = currentInput();
-        if (current.value === value || current.value === previousValue || !current.value) {
-          current.value = value;
-          current.dispatchEvent(new Event("input", { bubbles: true }));
-          current = currentInput();
-          if (current.value === previousValue || !current.value) current.value = value;
-        }
-        syncVisibility();
-      });
     }
     editor.classList.remove("open");
     editor.setAttribute("aria-hidden", "true");
     expand.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
-    if (apply) activeInput.focus();
+    if (apply) {
+      // The legacy shell has listeners that can refresh/recreate the composer during
+      // input dispatch. Reacquire the live node on the next frame and restore the
+      // exact edited draft without firing another event that could clear it again.
+      requestAnimationFrame(() => {
+        const latestInput = currentInput();
+        latestInput.value = value;
+        syncVisibility();
+      });
+      activeInput.focus();
+    }
   }
 
   document.addEventListener("input", event => {
