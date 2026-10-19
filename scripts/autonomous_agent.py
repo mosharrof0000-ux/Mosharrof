@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import json, os, pathlib, subprocess, urllib.request
+import json, os, pathlib, subprocess
+from scripts.automation.gemini_provider import generate_content
 
 ROOT=pathlib.Path(".").resolve()
 MODEL=os.getenv("GEMINI_MODEL") or "gemini-3.8-flash"
@@ -26,11 +27,9 @@ Request: {REQUEST or 'Inspect the project and make one concrete safe improvement
 Rules: never delete; never touch .github/, CODEOWNERS, secrets, deployment policy; only modify {ALLOWED}; never put API keys in browser code; keep patch <=500 lines; return JSON {{summary, patch}} where patch is a unified git diff.
 Snapshot:
 {snapshot}"""
-body={"contents":[{"parts":[{"text":prompt}]}],"generationConfig":{"responseMimeType":"application/json","temperature":0.1}}
-req=urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent",data=json.dumps(body).encode(),headers={"Content-Type":"application/json","x-goog-api-key":KEY})
-with urllib.request.urlopen(req,timeout=120) as r: out=json.loads(r.read())
+out=generate_content(prompt,KEY,MODEL)
 data=json.loads(out["candidates"][0]["content"]["parts"][0]["text"])
-patch=data.get("patch",""); summary=data.get("summary","Autonomous improvement")
+
 if not patch.strip(): print("NO_ACTION"); raise SystemExit(0)
 if "deleted file mode" in patch or ".github/" in patch or "CODEOWNERS" in patch: raise SystemExit("REFUSED protected/deletion patch")
 paths=[x[6:] for x in patch.splitlines() if x.startswith("+++ b/")]
