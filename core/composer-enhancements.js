@@ -98,17 +98,22 @@ export function initializeComposerEnhancements() {
     expand.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
     if (apply) {
-      // The legacy shell has listeners that can refresh/recreate the composer during
-      // input dispatch. Reacquire the live node on the next frame and restore the
-      // exact edited draft without firing another event that could clear it again.
-      requestAnimationFrame(() => {
-        // Do not overwrite text typed after the editor was applied.
+      // The legacy shell may refresh the composer after the first input event.
+      // Reacquire and restore across a short frame window so a late node replacement
+      // cannot discard the applied draft. Never emit a second input event here.
+      let framesRemaining = 3;
+      const restoreAppliedDraft = () => {
         if (inputRevision !== revisionAfterApply) return;
         const latestInput = currentInput();
         latestInput.value = value;
         syncVisibility();
-      });
-      activeInput.focus();
+        if (framesRemaining-- > 0) {
+          requestAnimationFrame(restoreAppliedDraft);
+        } else {
+          latestInput.focus();
+        }
+      };
+      requestAnimationFrame(restoreAppliedDraft);
     }
   }
 
