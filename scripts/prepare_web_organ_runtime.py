@@ -40,6 +40,8 @@ def main() -> int:
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
         "core/personal-memory-engine.js": "web/core/personal-memory-engine.js",
         "core/personal-memory-bridge.js": "web/core/personal-memory-bridge.js",
+        "core/chatgpt-conversation-import.js": "web/core/chatgpt-conversation-import.js",
+        "core/knowledge-continuity-bridge.js": "web/core/knowledge-continuity-bridge.js",
         "core/design-intelligence.js": "web/core/design-intelligence.js",
         "core/manual-provider-controls.js": "web/core/manual-provider-controls.js",
         "core/design-intelligence.css": "web/design-intelligence.css",
