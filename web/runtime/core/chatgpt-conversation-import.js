@@ -31,6 +31,7 @@ export function parseChatGPTExport(input, options = {}) {
     const messages = Object.values(conversation?.mapping || {}).map(node => node?.message)
       .filter(message => message && ["user", "assistant"].includes(message.author?.role))
       .sort((a, b) => asMillis(a.create_time) - asMillis(b.create_time));
+    let previousId = null;
     for (let i = 0; i < messages.length; i++) {
       if (entries.length >= MAX_TURNS) throw new RangeError("Export exceeds 20,000 turns; split it into smaller batches.");
       const message = messages[i], text = safeImportText(textFromMessage(message));
@@ -44,11 +45,12 @@ export function parseChatGPTExport(input, options = {}) {
         sessionId: conversationId, sequence: createdAt * 100 + i,
         tags: ["provider-chatgpt", "user-approved-import", batchId],
         folder: { id: "ai-conversation-history", label: "ChatGPT কথোপকথন" },
-        previousId: null, preferences: [],
+        previousId, preferences: [],
         source: { provider: "chatgpt", conversationId,
           conversationTitle: String(conversation.title || "ChatGPT conversation").slice(0, 200),
           messageId, captureMethod: "user-export-import", importBatchId: batchId }
       });
+      previousId = id;
     }
   }
   return { schemaVersion: 1, exportedAt: new Date().toISOString(), sourceProvider: "chatgpt",
