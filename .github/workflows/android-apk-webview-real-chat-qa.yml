@@ -33,7 +33,7 @@ jobs:
       - name: Checkout APK source revision
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'main' }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event_name == 'push' && github.sha) || 'main' }}
           fetch-depth: 0
 
       - name: Set up Python
