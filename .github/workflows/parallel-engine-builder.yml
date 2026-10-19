@@ -1,0 +1,93 @@
+name: MOSHARROF Parallel Engine Builder
+
+on:
+  # Start independent backlog work while a long Android build/real-chat QA is running.
+  workflow_run:
+    workflows:
+      - Build MOSHARROF Android APK
+      - Android APK WebView Real Chat QA
+    types: [in_progress]
+  # Also make progress on the existing backlog between long-running builds.
+  schedule:
+    - cron: "23 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  checks: read
+  actions: read
+
+concurrency:
+  # Separate from the primary autonomous cycle so independent safe tasks can overlap.
+  group: mosharrof-parallel-engine-builder
+  cancel-in-progress: false
+
+jobs:
+  build-independent-backlog:
+    name: Parallel backlog engineering (review-only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout protected main snapshot
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Install runtime dependencies
+        run: |
+          python3 -m pip install -r requirements.txt
+          python3 -m pip install requests
+
+      - name: Baseline safety tests
+        run: python3 -m pytest -q
+
+      - name: Build bounded backlog task
+        env:
+          # Treat each trigger as a backlog duty so workflow_run events do not become empty comment tasks.
+          EVENT_NAME: schedule
+          GH_TOKEN: ${{ secrets.MOSHARROF_RECOVERY_TOKEN || github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python3 .github/scripts/build_backlog_task.py
+
+      - name: Verify model credential exists
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::GEMINI_API_KEY is not configured; the parallel worker cannot safely generate a patch."
+            exit 1
+          fi
+
+      - name: Plan and implement one bounded independent task
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
+        run: python3 .github/scripts/mosharrof_agent.py /tmp/task.txt
+
+      - name: Full verification
+        run: python3 -m pytest -q
+
+      - name: Protected change-surface check
+        run: python3 scripts/automation/protected_change_surface.py
+
+      - name: Open review-only PR for verified patch
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.MOSHARROF_RECOVERY_TOKEN || github.token }}
+          GH_REPO: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: python3 .github/scripts/open_verified_autonomous_pr.py
+
+      - name: Upload task and recovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MOSHARROF-Parallel-Backlog-${{ github.run_id }}
+          path: |
+            /tmp/task.txt
+          if-no-files-found: warn
+          retention-days: 30
