@@ -1,108 +1,101 @@
 {
-  "timestamp_utc": "2026-10-19T13:13:55+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-19T13:14:35+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39258350670",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39258350670",
-  "source_run_id": null,
-  "source_run_url": null,
+  "run_id": "39258444557",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39258444557",
+  "source_run_id": "39258350632",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39258350632",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "main",
   "sha": "039f86fd2f7624893aed0abf9058a2de610fd0b2",
   "checked": [
-    "Push commit: Merge pull request #761 from mosharrof0000-ux/fix/autonomous-engine-install-test-deps-2026-10-19",
-    "Commit SHA: 039f86fd2f7624893aed0abf9058a2de610fd0b2",
-    "Check: Parallel backlog engineering (review-only) — in_progress/pending",
-    "Check: validate — completed/skipped",
-    "Check: checkpoint — in_progress/pending",
-    "Check: record — in_progress/pending",
-    "Check: verify-ecosystem — in_progress/pending",
-    "Check: test — in_progress/pending",
-    "Check: Component awareness heartbeat — completed/success",
-    "Check: test — in_progress/pending",
-    "Check: test — in_progress/pending",
-    "Check: Leave the repo clean — completed/success",
-    "Check: build-apk — in_progress/pending"
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: 039f86fd2f7624893aed0abf9058a2de610fd0b2",
+    "Job: test — completed/failure",
+    "Job: deploy — completed/skipped"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Wait for pending checks (Parallel backlog engineering (review-only), checkpoint, record, verify-ecosystem, test); then inspect their results and artifacts.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Deploy Mosharrof Pages",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "Parallel backlog engineering (review-only)",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
+      "job": "test",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pytest -q",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify Pages artifact",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare candidate organ runtime assets",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install Chromium for candidate runtime smoke test",
+          "conclusion": "success"
+        },
+        {
+          "name": "Start candidate Pages server",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test candidate organ runtime in Chromium",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     },
     {
-      "job": "validate",
+      "job": "deploy",
       "status": "completed",
       "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "checkpoint",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "verify-ecosystem",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Component awareness heartbeat",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Leave the repo clean",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": []
-    },
-    {
-      "job": "build-apk",
-      "status": "in_progress",
-      "conclusion": null,
       "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-19T13:14:02+00:00",
+  "finished_at_utc": "2026-10-19T13:14:43+00:00",
   "outcome": "success"
 }
