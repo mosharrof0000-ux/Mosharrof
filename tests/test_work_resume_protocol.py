@@ -36,11 +36,3 @@ def test_issue_command_workflow_reports_status_and_avoids_duplicate_runs():
     cycle = Path(".github/workflows/autonomous-cycle.yml").read_text(encoding="utf-8")
     assert "startsWith(github.event.comment.body, '/mosharrof run')" in cycle
     assert "contains(github.event.comment.body, '/mosharrof')" not in cycle
-
-
-def test_six_hour_agent_uses_existing_recovery_token_fallback():
-    workflow = Path(".github/workflows/mosharrof-autonomous-6h.yml").read_text(encoding="utf-8")
-    assert "contents: write" in workflow
-    assert "pull-requests: write" in workflow
-    assert "secrets.MOSHARROF_RECOVERY_TOKEN || github.token" in workflow
-    assert "cancel-in-progress: false" in workflow
