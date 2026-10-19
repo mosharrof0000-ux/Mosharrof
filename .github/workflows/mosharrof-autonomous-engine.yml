@@ -21,6 +21,12 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install autonomous engine test dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
       - name: Run autonomous agent
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
