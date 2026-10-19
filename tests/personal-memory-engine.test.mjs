@@ -65,3 +65,13 @@ test("memory export/import and clearing work with the persistent store adapter",
   await second.engine.clear();
   assert.equal((await second.engine.list(20)).length,0);
 });
+
+test("empty memory queries never recall unrelated entries or build stale context",async()=>{
+  const {engine}=makeEngine();
+  await engine.add({kind:"user",text:"MOSHARROF AI deployment checkpoint",sequence:1});
+  await engine.add({kind:"user",text:"A recipe for cooking rice and lentils",sequence:2});
+  assert.deepEqual(await engine.recall(""),[]);
+  assert.deepEqual(await engine.recall("   "),[]);
+  assert.equal(await engine.buildContext(""),"");
+  assert.equal(await engine.buildContext("   "),"");
+});
