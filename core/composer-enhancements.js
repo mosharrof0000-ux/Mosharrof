@@ -59,6 +59,7 @@ export function initializeComposerEnhancements() {
   editor.innerHTML = '<div class="mosharrof-expand-head"><div class="mosharrof-expand-title" id="mosharrofExpandTitle">বার্তা সম্পাদনা</div><button class="mosharrof-expand-btn" type="button" data-expand-cancel>ফিরে যান</button><button class="mosharrof-expand-btn mosharrof-expand-apply" type="button" data-expand-apply>লেখা ব্যবহার করুন</button></div><textarea class="mosharrof-expand-text" aria-label="সম্পূর্ণ বার্তা সম্পাদনা করুন" placeholder="এখানে আপনার সম্পূর্ণ বার্তা লিখুন..."></textarea><div class="mosharrof-expand-hint">সম্পাদিত লেখা মূল মেসেজ বক্সে নিতে “লেখা ব্যবহার করুন” চাপুন।</div>';
   document.body.appendChild(editor);
   const largeInput = editor.querySelector("textarea");
+  let inputRevision = 0;
 
   function currentInput() {
     return document.getElementById("input") || input;
@@ -84,46 +85,45 @@ export function initializeComposerEnhancements() {
   }
   function closeEditor(apply) {
     const activeInput = currentInput();
+    const value = String(largeInput.value || "");
     if (apply) {
-      const value = String(largeInput.value || "");
-      const previousValue = String(activeInput.value || "");
+      // Dispatch normal events first so autosizing and line-limit state update.
       activeInput.value = value;
       activeInput.dispatchEvent(new Event("input", { bubbles: true }));
       activeInput.dispatchEvent(new Event("change", { bubbles: true }));
-
-      // Some UI listeners may replace the composer input while handling the input event.
-      // Reacquire by ID instead of writing a second time to a detached node.
-      let latestInput = currentInput();
-      if (latestInput !== activeInput) {
-        latestInput.value = value;
-        latestInput.dispatchEvent(new Event("input", { bubbles: true }));
-        latestInput = currentInput();
-      }
-      latestInput.value = value;
-      syncVisibility();
-
-      // If a listener schedules a DOM refresh, restore only while the draft is still unchanged.
-      // Never overwrite text the user has typed after applying the expanded draft.
-      requestAnimationFrame(() => {
-        let current = currentInput();
-        if (current.value === value || current.value === previousValue || !current.value) {
-          current.value = value;
-          current.dispatchEvent(new Event("input", { bubbles: true }));
-          current = currentInput();
-          if (current.value === previousValue || !current.value) current.value = value;
-        }
-        syncVisibility();
-      });
     }
+    const revisionAfterApply = inputRevision;
     editor.classList.remove("open");
     editor.setAttribute("aria-hidden", "true");
     expand.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
-    if (apply) activeInput.focus();
+    if (apply) {
+      // The legacy shell may refresh the composer after the first input event.
+      // Reacquire and restore across a short frame window so a late node replacement
+      // cannot discard the applied draft. Never emit a second input event here.
+      let framesRemaining = 3;
+      const restoreAppliedDraft = () => {
+        if (inputRevision !== revisionAfterApply) return;
+        const latestInput = currentInput();
+        latestInput.value = value;
+        syncVisibility();
+        if (framesRemaining-- > 0) {
+          requestAnimationFrame(restoreAppliedDraft);
+        } else {
+          latestInput.focus();
+        }
+      };
+      requestAnimationFrame(restoreAppliedDraft);
+    }
   }
 
   document.addEventListener("input", event => {
-    if (event.target?.id === "input") syncVisibility();
+    if (event.target?.id === "input") {
+      // Only real user edits supersede the pending apply; internal synthetic
+      // events from resize/refresh must not cancel the exact-draft restoration.
+      if (event.isTrusted) inputRevision += 1;
+      syncVisibility();
+    }
   });
   document.addEventListener("composer:line-limit", event => {
     if (event.target?.id === "input") syncVisibility();
