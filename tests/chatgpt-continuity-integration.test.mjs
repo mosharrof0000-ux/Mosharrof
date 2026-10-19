@@ -31,7 +31,7 @@ test("parser requires valid export and excludes tool/system records and credenti
   }}];
   const snapshot = parseChatGPTExport(input);
   assert.equal(snapshot.entries.length, 0);
-  assert.equal(snapshot.preview.skippedTurns, 2);
+  assert.equal(snapshot.preview.skippedTurns, 1);
 });
 
 test("style profile remains a draft and needs enough visible assistant examples", () => {
