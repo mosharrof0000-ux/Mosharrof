@@ -100,6 +100,7 @@ if response is None or response.status_code==404 or response.status_code in TRAN
     if not alternatives:
         raise SystemExit("No alternative Gemini Flash model supporting generateContent is available.")
     errors=[]
+    external_plan=None
     for model in alternatives:
         candidate=generate(model)
         if candidate is not None and candidate.ok:
@@ -110,13 +111,51 @@ if response is None or response.status_code==404 or response.status_code in TRAN
         errors.append(f"{model}: {status}")
         print(f"Gemini fallback {model} unavailable; trying the next supported model.")
     else:
-        raise SystemExit("No listed Gemini Flash model accepted the request. "+", ".join(errors))
-
-response.raise_for_status()
-try:
-    plan=json.loads(response.json()["candidates"][0]["content"]["parts"][0]["text"])
-except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-    raise SystemExit(f"Gemini returned an invalid structured plan: {exc}")
+        # Use configured OpenAI-compatible providers only after Gemini options are exhausted.
+        providers=[
+            ("Groq", os.environ.get("GROQ_API_KEY","").strip(),
+             os.environ.get("GROQ_MODEL","llama-3.3-70b-versatile").strip(),
+             "https://api.groq.com/openai/v1/chat/completions"),
+            ("OpenRouter", os.environ.get("OPENROUTER_API_KEY","").strip(),
+             os.environ.get("OPENROUTER_MODEL","openai/gpt-4o-mini").strip(),
+             "https://openrouter.ai/api/v1/chat/completions"),
+        ]
+        external_errors=[]
+        external_plan=None
+        for provider, token, model, endpoint in providers:
+            if not token:
+                print(f"{provider} fallback skipped: credential not configured.")
+                external_errors.append(f"{provider}: not configured")
+                continue
+            try:
+                candidate=requests.post(
+                    endpoint,
+                    headers={"Authorization":f"Bearer {token}","Content-Type":"application/json"},
+                    json={"model":model,"messages":[{"role":"user","content":prompt}],
+                          "temperature":0.1,"response_format":{"type":"json_object"}},
+                    timeout=45,
+                )
+                if not candidate.ok:
+                    external_errors.append(f"{provider}: HTTP {candidate.status_code}")
+                    print(f"{provider} fallback unavailable (HTTP {candidate.status_code}); trying next provider.")
+                    continue
+                content=candidate.json()["choices"][0]["message"]["content"]
+                external_plan=json.loads(content)
+                print(f"External fallback provider selected: {provider} ({model}).")
+                break
+            except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as exc:
+                external_errors.append(f"{provider}: {type(exc).__name__}")
+                print(f"{provider} fallback failed ({type(exc).__name__}); trying next provider.")
+        if external_plan is None:
+            raise SystemExit("All configured AI providers failed; no patch was generated. Gemini: "+", ".join(errors)+"; external: "+", ".join(external_errors))
+    if external_plan is None:
+        response.raise_for_status()
+        try:
+            plan=json.loads(response.json()["candidates"][0]["content"]["parts"][0]["text"])
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+            raise SystemExit(f"Gemini returned an invalid structured plan: {exc}")
+    else:
+        plan=external_plan
 
 changed=[]
 for item in plan.get("files",[]):
@@ -138,8 +177,8 @@ for item in plan.get("files",[]):
     target.write_text(content,encoding="utf-8")
     changed.append(path)
 if not changed:
-    print("NO_SAFE_CHANGE")
-    sys.exit(0)
+    print("NO_SAFE_CHANGE: provider returned no meaningful safe patch; this run did not complete a backlog task.")
+    sys.exit(2)
 subprocess.run(["git","config","user.name","Mosharrof Autonomous Agent"],check=True)
 subprocess.run(["git","config","user.email","41898282+github-actions[bot]@users.noreply.github.com"],check=True)
 subprocess.run(["git","checkout","-b","agent/autonomous-"+str(os.getpid())],check=True)
