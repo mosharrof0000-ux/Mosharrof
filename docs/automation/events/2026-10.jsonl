@@ -86370,3 +86370,106 @@
   "outcome": "success"
 }
 
+{
+  "timestamp_utc": "2026-10-19T03:17:31+00:00",
+  "event_name": "workflow_run",
+  "workflow": "MOSHARROF Automatic Work Engine",
+  "run_id": "39193973768",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193973768",
+  "source_run_id": "39193940062",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193940062",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "branch": "feat/apk-webview-real-chat-smoke-2026-10-19",
+  "sha": "04023295d655290e97767ac3344d63ccdbdda317",
+  "checked": [
+    "Completed workflow result: Build MOSHARROF Android APK = failure",
+    "Source commit: 04023295d655290e97767ac3344d63ccdbdda317",
+    "Job: build-apk — completed/failure"
+  ],
+  "planned": [
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
+  ],
+  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Build MOSHARROF Android APK",
+  "source_conclusion": "failure",
+  "changed_files": [],
+  "check_results": [
+    {
+      "job": "build-apk",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout MOSHARROF",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Node",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify edge-to-edge web contract",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare Android full-screen voice manager",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify Android agent contract suite",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build debug APK",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify APK",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Upload APK artifact",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Publish GitHub Release",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Setup Java",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Setup Node",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Checkout MOSHARROF",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "phase": "FINISHED",
+  "status": "success",
+  "finished_at_utc": "2026-10-19T03:17:37+00:00",
+  "outcome": "success"
+}
+
