@@ -47,6 +47,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AndroidFileManagerPlugin.class);
         registerPlugin(AndroidMediaOrganizerPlugin.class);
         super.onCreate(savedInstanceState);
+        // Enable remote inspection only for debug APKs so CI can test the installed WebView.
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) android.webkit.WebView.setWebContentsDebuggingEnabled(true);
         Window window = getWindow();
         WindowCompat.setDecorFitsSystemWindows(window, false);
         window.setStatusBarColor(Color.TRANSPARENT);
@@ -196,6 +198,7 @@ public class MainActivity extends BridgeActivity {
 }
 JAVA
 grep -q 'WindowCompat.setDecorFitsSystemWindows' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+grep -q 'FLAG_DEBUGGABLE.*WebView.setWebContentsDebuggingEnabled(true)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
 grep -q 'android:name=".VoiceOverlayService"' android/app/src/main/AndroidManifest.xml
 grep -q 'android.permission.SYSTEM_ALERT_WINDOW' android/app/src/main/AndroidManifest.xml
 grep -q 'android.permission.READ_CONTACTS' android/app/src/main/AndroidManifest.xml
