@@ -1,6 +1,8 @@
 name: MOSHARROF Android APK WebView Real Chat QA
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: ["feat/current-main-apk-real-chat-qa-20261019"]
   workflow_run:
@@ -22,6 +24,7 @@ jobs:
   apk-webview-real-chat:
     if: >-
       github.event_name == 'push' ||
+      github.event_name == 'pull_request' ||
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' &&
@@ -33,7 +36,7 @@ jobs:
       - name: Checkout APK source revision
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event_name == 'push' && github.sha) || 'main' }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event_name == 'pull_request' && github.event.pull_request.head.sha) || (github.event_name == 'push' && github.sha) || 'main' }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -60,14 +63,16 @@ jobs:
           path: artifacts/apk
 
       - name: Download APK from the matching branch build
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
+          SOURCE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+          SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           run_id=""
           for attempt in $(seq 1 150); do
-            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$GITHUB_REF_NAME" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.GITHUB_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
+            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
             if [ -n "$run_id" ]; then break; fi
             sleep 10
           done
