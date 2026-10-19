@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseChatGPTExport, buildChatGPTStyleProfile } from "../web/runtime/core/chatgpt-conversation-import.js";
+import { parseChatGPTExport, buildChatGPTStyleProfile } from "../core/chatgpt-conversation-import.js";
 
 const sample = [{ id: "conv1", title: "Memory and work", mapping: {
   a: { message: { id: "m1", author: { role: "user" }, create_time: 1700000000, content: { parts: ["আমার আগের কাজ মনে রাখুন"] } } },
