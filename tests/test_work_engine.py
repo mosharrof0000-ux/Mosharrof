@@ -102,5 +102,11 @@ class WorkEngineTests(unittest.TestCase):
             self.assertEqual(state["source_conclusion"], "success")
 
 
+    def test_workflow_run_recorder_is_limited_to_main_release_runs(self):
+        workflow = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "automatic-work-engine.yml"
+        content = workflow.read_text(encoding="utf-8")
+        self.assertIn("github.event.workflow_run.head_branch == 'main'", content)
+
+
 if __name__ == "__main__":
     unittest.main()
