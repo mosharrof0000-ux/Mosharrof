@@ -98,7 +98,7 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
           script: |
-            set -euo pipefail
+            set -eu
             mkdir -p artifacts/apk-webview-chat
             test -s artifacts/apk/app-debug.apk
             for attempt in $(seq 1 60); do
