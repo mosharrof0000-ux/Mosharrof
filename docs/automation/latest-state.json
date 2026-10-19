@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-10-19T03:16:11+00:00",
+  "timestamp_utc": "2026-10-19T03:16:52+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39193869993",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193869993",
-  "source_run_id": "39193836598",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193836598",
+  "run_id": "39193921750",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193921750",
+  "source_run_id": "39193892344",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193892344",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feat/apk-webview-real-chat-smoke-2026-10-19",
-  "sha": "d2b5f2c0a1b7509ad1e8856c290354a26ca8fedb",
+  "sha": "129ae0fc25f704f3f42b75b6bd0abc36e4784c46",
   "checked": [
     "Completed workflow result: Build MOSHARROF Android APK = failure",
-    "Source commit: d2b5f2c0a1b7509ad1e8856c290354a26ca8fedb",
+    "Source commit: 129ae0fc25f704f3f42b75b6bd0abc36e4784c46",
     "Job: build-apk — completed/failure"
   ],
   "planned": [
@@ -97,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-19T03:16:16+00:00",
+  "finished_at_utc": "2026-10-19T03:16:58+00:00",
   "outcome": "success"
 }
