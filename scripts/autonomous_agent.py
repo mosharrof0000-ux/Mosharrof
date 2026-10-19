@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import json, os, pathlib, subprocess
+import json, os, pathlib, subprocess, sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from scripts.automation.gemini_provider import generate_content
 
 ROOT=pathlib.Path(".").resolve()
