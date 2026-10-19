@@ -1,17 +1,17 @@
 {
-  "timestamp_utc": "2026-10-19T03:17:31+00:00",
+  "timestamp_utc": "2026-10-19T03:18:58+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39193973768",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193973768",
-  "source_run_id": "39193940062",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193940062",
+  "run_id": "39194090940",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39194090940",
+  "source_run_id": "39193997055",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39193997055",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feat/apk-webview-real-chat-smoke-2026-10-19",
-  "sha": "04023295d655290e97767ac3344d63ccdbdda317",
+  "sha": "9d741a80be80b82e96403d37eb21081e97c010d9",
   "checked": [
     "Completed workflow result: Build MOSHARROF Android APK = failure",
-    "Source commit: 04023295d655290e97767ac3344d63ccdbdda317",
+    "Source commit: 9d741a80be80b82e96403d37eb21081e97c010d9",
     "Job: build-apk — completed/failure"
   ],
   "planned": [
@@ -50,19 +50,19 @@
         },
         {
           "name": "Prepare Android full-screen voice manager",
-          "conclusion": "failure"
+          "conclusion": "success"
         },
         {
           "name": "Enforce file and folder size budgets",
-          "conclusion": "skipped"
+          "conclusion": "success"
         },
         {
           "name": "Verify Android agent contract suite",
-          "conclusion": "skipped"
+          "conclusion": "success"
         },
         {
           "name": "Build debug APK",
-          "conclusion": "skipped"
+          "conclusion": "failure"
         },
         {
           "name": "Verify APK",
@@ -97,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-19T03:17:37+00:00",
+  "finished_at_utc": "2026-10-19T03:19:03+00:00",
   "outcome": "success"
 }
