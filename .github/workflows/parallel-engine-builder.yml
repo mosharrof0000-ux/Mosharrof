@@ -5,7 +5,7 @@ on:
   workflow_run:
     workflows:
       - Build MOSHARROF Android APK
-      - Android APK WebView Real Chat QA
+      - MOSHARROF Android APK WebView Real Chat QA
     types: [in_progress]
   # Also make progress on the existing backlog between long-running builds.
   schedule:
