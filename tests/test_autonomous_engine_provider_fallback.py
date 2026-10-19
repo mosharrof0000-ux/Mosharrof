@@ -20,7 +20,7 @@ def test_autonomous_engine_workflow_expressions_are_not_backslash_prefixed():
 
 
 def test_autonomous_engine_keeps_configured_fallback_order():
-    source = (ROOT / "scripts/mosharrof_autonomous_engine.py").read_text(encoding="utf-8")
+    source = (ROOT / "scripts/automation/provider_fallback.py").read_text(encoding="utf-8")
     cloudflare = source.index('"Cloudflare Workers AI"')
     groq = source.index('"Groq"')
     openrouter = source.index('"OpenRouter"')
