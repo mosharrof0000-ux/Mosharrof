@@ -73,6 +73,7 @@ def generate(model, attempts=3):
     print(f"Gemini model {model} still unavailable after {attempts} attempts ({last_error}); checking supported alternatives.")
     return response
 
+external_plan=None
 response=generate(preferred)
 if response is None or response.status_code==404 or response.status_code in TRANSIENT_HTTP_CODES:
     try:
