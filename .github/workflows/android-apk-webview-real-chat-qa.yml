@@ -1,6 +1,8 @@
 name: MOSHARROF Android APK WebView Real Chat QA
 
 on:
+  push:
+    branches: ["feat/apk-webview-real-chat-smoke-2026-10-19"]
   workflow_run:
     workflows: ["Build MOSHARROF Android APK"]
     types: [completed]
@@ -19,12 +21,12 @@ concurrency:
 jobs:
   apk-webview-real-chat:
     if: >-
+      github.event_name == 'push' ||
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
-       (github.event.workflow_run.head_branch == 'main' ||
-        startsWith(github.event.workflow_run.head_branch, 'feat/apk-webview-real-chat-smoke-2026-10-19')))
+       github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -54,8 +56,25 @@ jobs:
           github-token: ${{ github.token }}
           path: artifacts/apk
 
+      - name: Download APK from the matching branch build
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_id=""
+          for attempt in $(seq 1 150); do
+            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$GITHUB_REF_NAME" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.GITHUB_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
+            if [ -n "$run_id" ]; then break; fi
+            sleep 10
+          done
+          test -n "$run_id"
+          mkdir -p artifacts/apk
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
+          test -s artifacts/apk/app-debug.apk
+
       - name: Download latest successful main APK for scheduled/manual runs
-        if: github.event_name != 'workflow_run'
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
