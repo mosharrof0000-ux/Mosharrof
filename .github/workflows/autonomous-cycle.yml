@@ -15,7 +15,6 @@ permissions:
   pull-requests: write
   checks: read
 
-# Queue new runs and avoid duplicate work when a status/resume command is posted.
 concurrency:
   group: mosharrof-autonomous
   cancel-in-progress: false
