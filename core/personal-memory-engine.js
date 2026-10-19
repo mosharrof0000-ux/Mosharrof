@@ -123,7 +123,8 @@ export function createPersonalMemoryEngine(options = {}) {
     });
   }
   async function recall(query, limit = 8) {
-    if (!enabled()) return [];
+    // An empty query is not a follow-up; never return unrelated memories by default.
+    if (!String(query || "").trim() || !enabled()) return [];
     const q = new Set(tokenize(query));
     const queryFolder = inferFolder(query);
     const followup = /(এটা|সেটা|ওটা|আগের|চালিয়ে|চালিয়ে|আরও|তারপর|ওই|continue|that|it|previous|earlier|next|same)/i.test(query) || q.size < 2;
