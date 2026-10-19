@@ -2,6 +2,7 @@
 """Guarded Mosharrof autonomous implementation engine."""
 import json, os, re, subprocess, time, urllib.request, urllib.error
 from pathlib import Path
+from automation.provider_fallback import request_alternate_provider
 
 repo = os.environ["REPOSITORY"]
 request_file = Path(os.environ.get("REQUEST_FILE", "/tmp/request.txt"))
@@ -18,8 +19,8 @@ key = os.environ.get("GEMINI_API_KEY", "").strip()
 model = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash").strip()
 run_id = os.environ.get("GITHUB_RUN_ID", "local")
 
-if not key:
-    raise SystemExit("GEMINI_API_KEY is required.")
+# Gemini is preferred, but an invalid or unavailable Gemini credential must not
+# prevent configured alternate providers from completing the guarded planning step.
 
 blocked = re.compile(
     r"(rm\s+-rf|git\s+push\s+--force|git\s+reset\s+--hard|gh\s+repo\s+delete|delete[-_ ]repository|drop\s+database)",
@@ -98,13 +99,17 @@ def request_model(model_name, attempts=4):
     raise RuntimeError(f"Gemini model {model_name} remained unavailable after {attempts} attempts ({last_error}).")
 
 last_error = None
-try:
-    data = request_model(model)
-except RuntimeError as exc:
-    data = None
-    last_error = str(exc)
+data = None
+if key:
+    try:
+        data = request_model(model)
+    except RuntimeError as exc:
+        data = None
+        last_error = str(exc)
+else:
+    print("Gemini key is not configured; trying alternate providers.")
 
-if data is None:
+if data is None and key and not any(marker in (last_error or "") for marker in ("HTTP 400", "HTTP 401", "HTTP 403", "API_KEY_INVALID")):
     req = urllib.request.Request(f"{base}/models", headers={"x-goog-api-key": key})
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
@@ -140,13 +145,21 @@ if data is None:
         except RuntimeError as exc:
             last_error = str(exc)
             print(f"Gemini fallback {candidate} unavailable; trying the next supported model.")
-    if data is None:
-        raise SystemExit(last_error or "No API-listed Gemini Flash model accepted the request.")
+provider_text = None
+if data is None:
+    if last_error:
+        print(f"Gemini unavailable ({last_error[:180]}); trying configured alternate providers.")
+    provider_text = request_alternate_provider(prompt)
+if data is None and provider_text is None:
+    raise SystemExit(last_error or "No configured AI provider accepted the guarded planning request.")
 
 try:
-    proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+    if provider_text is not None:
+        proposal = json.loads(provider_text)
+    else:
+        proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
 except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-    raise SystemExit(f"Gemini returned an invalid structured plan: {exc}")
+    raise SystemExit(f"AI provider returned an invalid structured plan: {exc}")
 changes = proposal.get("files", [])
 if not isinstance(changes, list):
     raise SystemExit("Invalid agent response.")
