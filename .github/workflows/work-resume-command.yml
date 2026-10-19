@@ -1,0 +1,83 @@
+name: MOSHARROF Work Status and Resume Command
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  actions: write
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: mosharrof-resume-command-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  command:
+    if: github.event.issue.pull_request == null && (startsWith(github.event.comment.body, '/mosharrof status') || startsWith(github.event.comment.body, '/mosharrof resume'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect actual workflow status or safely request resume
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = context.issue.number;
+            const body = context.payload.comment.body.trim();
+            const isResume = body.startsWith('/mosharrof resume');
+            const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+              owner, repo, per_page: 100
+            });
+            const relevant = data.workflow_runs.filter(run =>
+              ['Mosharrof Autonomous Pipeline', 'Mosharrof Autonomous Work Cycle', 'Mosharrof Autonomous 6-Hour Cycle'].includes(run.name)
+            ).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            const active = relevant.filter(run => ['queued', 'in_progress', 'waiting', 'pending'].includes(run.status));
+            const stateLabel = run => {
+              if (run.status === 'queued' || run.status === 'waiting' || run.status === 'pending') return 'QUEUED';
+              if (run.status === 'in_progress') return 'RUNNING';
+              if (run.conclusion === 'success') return 'SUCCESS';
+              if (run.conclusion === 'failure' || run.conclusion === 'timed_out') return 'FAILED';
+              if (run.conclusion === 'cancelled') return 'CANCELLED';
+              return run.status.toUpperCase();
+            };
+            if (!isResume) {
+              if (active.length) {
+                const run = active[0];
+                const jobs = await github.rest.actions.listJobsForWorkflowRun({owner, repo, run_id: run.id, per_page: 100});
+                const current = jobs.data.jobs.find(job => job.status === 'in_progress');
+                const step = current?.steps?.find(s => s.status === 'in_progress');
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number,
+                  body: '## MOSHARROF কাজের অবস্থা\n\n- অবস্থা: **' + stateLabel(run) + '**\n- কাজ: ' + run.name + ' — ' + run.display_title + '\n- বর্তমান ধাপ: ' + (step?.name || current?.name || 'GitHub Actions-এর চলমান ধাপ পাওয়া যায়নি') + '\n- সর্বশেষ আপডেট: ' + run.updated_at + '\n- প্রমাণ: ' + run.html_url + '\n\nচলমান কাজ বাতিল করা হয়নি।'
+                });
+              } else if (relevant.length) {
+                const run = relevant[0];
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number,
+                  body: '## MOSHARROF কাজের অবস্থা\n\n- অবস্থা: **' + stateLabel(run) + '** (এখন কোনো কাজ RUNNING/QUEUED নয়)\n- সর্বশেষ রান: ' + run.name + ' — ' + run.display_title + '\n- শেষ ফল: ' + (run.conclusion || 'এখনও ফল নেই') + '\n- প্রমাণ: ' + run.html_url + '\n\nনতুন রান চালু করা হয়নি।'
+                });
+              } else {
+                await github.rest.issues.createComment({owner, repo, issue_number, body: '## MOSHARROF কাজের অবস্থা\n\n**NOT RUNNING** — এই রিপোজিটরির সাম্প্রতিক autonomous workflow run পাওয়া যায়নি। কোনো কাজ চালু বা বাতিল করা হয়নি।'});
+              }
+              return;
+            }
+            if (active.length) {
+              const run = active[0];
+              await github.rest.issues.createComment({
+                owner, repo, issue_number,
+                body: '## MOSHARROF Resume\n\n**' + stateLabel(run) + '** — একটি কাজ ইতিমধ্যে চলছে/queue-তে আছে, তাই duplicate run চালু করিনি। চলমান কাজ অক্ষত আছে।\n\n' + run.html_url
+              });
+              return;
+            }
+            await github.rest.actions.createWorkflowDispatch({
+              owner, repo, workflow_id: 'mosharrof-autonomous.yml', ref: 'main',
+              inputs: {
+                request: 'Resume MOSHARROF work from the latest durable checkpoint. First inspect recent workflow runs, open PRs, branch commits and test evidence. Reuse existing work and successful checks; continue from the last committed/verified stage, do not restart completed stages, do not create duplicate PRs, and do not change main directly. If the previous task has no durable checkpoint, report the exact blocker rather than pretending to resume.'
+              }
+            });
+            await github.rest.issues.createComment({
+              owner, repo, issue_number,
+              body: '## MOSHARROF Resume\n\n**QUEUED / DISPATCHED** — কোনো active run ছিল না, তাই checkpoint দেখে কাজ চালিয়ে যাওয়ার নির্দেশ দিয়ে নতুন workflow request পাঠানো হয়েছে। GitHub Actions-এ রান শুরু হলে প্রকৃত status সেখানে দেখা যাবে। এটি আগের cancelled process-কে instruction-by-instruction revive করে না; শেষ durable checkpoint থেকে চালিয়ে যেতে বলে।\n\n[Actions runs](https://github.com/' + owner + '/' + repo + '/actions)'
+            });
