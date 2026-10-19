@@ -16,9 +16,9 @@ if EVENT == "schedule":
         "Prioritize red checks and stalled work, then the oldest mergeable backlog items. Inspect evidence, identify root causes, make the smallest safe patch only in the allowed source/test/docs paths, and run the full test suite. "
         "Never modify deployment/security workflows, bypass protection, merge PRs, or claim success without evidence. If a blocker needs unavailable permissions, physical-device access, or protected workflow changes, document it and continue to another safe task. "
         "Keep main/Live safe. Do not add unrelated features until existing backlog is cleared. "
-        "Task-selection guard: never choose docs/WORK_RESUME_CHECKPOINT.md or another status/checkpoint document as the only code change; do not create a checkpoint-only PR. "
-        "Prefer a concrete implementation/test fix that closes an existing blocker. Specifically inspect the APK/WebView real-chat QA PR and its exact-head evidence, determine whether main has a fresh APK real-chat round-trip result, and fix the smallest safe test or diagnostic gap if evidence is stale or missing. "
-        "If no safe code fix is justified, report the blocker instead of manufacturing a documentation-only patch."
+        "Never choose docs/WORK_RESUME_CHECKPOINT.md or status/checkpoint docs as the sole change; never create checkpoint-only PRs. "
+        "Prioritize concrete implementation/test blockers; inspect PR #748 and verify fresh main-branch APK/WebView real-chat evidence, fixing the smallest safe gap if stale or missing. "
+        "If no safe code fix is justified, report the blocker rather than changing docs alone."
     )
 elif EVENT == "workflow_dispatch":
     task = (
