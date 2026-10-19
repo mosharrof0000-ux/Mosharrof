@@ -16,6 +16,6 @@ jobs:
         with:
           node-version: "22"
       - name: Test searchable repository knowledge index
-        run: node --test tests/repository-knowledge-index.test.mjs tests/repository-knowledge-crawler.test.mjs
+        run: node --test tests/repository-knowledge-index.test.mjs tests/repository-knowledge-crawler.test.mjs tests/chatgpt-continuity-integration.test.mjs
       - name: Build a non-published repository knowledge snapshot
         run: node scripts/build-repository-knowledge-index.mjs --out /tmp/repository-knowledge-index.json
