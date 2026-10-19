@@ -110,3 +110,12 @@ class WorkEngineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+def test_android_apk_chat_probe_is_valid_python():
+    import ast
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    relative = "scripts/android/apk_chat_smoke.py"
+    ast.parse((root / relative).read_text(encoding="utf-8"), filename=relative)
+

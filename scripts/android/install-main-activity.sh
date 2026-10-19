@@ -47,6 +47,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AndroidFileManagerPlugin.class);
         registerPlugin(AndroidMediaOrganizerPlugin.class);
         super.onCreate(savedInstanceState);
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) android.webkit.WebView.setWebContentsDebuggingEnabled(true);
         Window window = getWindow();
         WindowCompat.setDecorFitsSystemWindows(window, false);
         window.setStatusBarColor(Color.TRANSPARENT);
