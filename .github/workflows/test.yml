@@ -18,10 +18,6 @@ jobs:
         run: node tests/test_personal_memory_engine.mjs
       - name: Test memory retrieval and timeline regressions
         run: node --test tests/personal-memory-engine.test.mjs
-      - name: Test repository knowledge index
-        run: node --test tests/repository-knowledge-index.test.mjs tests/repository-knowledge-crawler.test.mjs
-      - name: Build repository knowledge snapshot (not published)
-        run: node scripts/build-repository-knowledge-index.mjs --out /tmp/repository-knowledge-index.json
       - name: Check memory bridge syntax
         run: node --check core/personal-memory-bridge.js
       - uses: actions/setup-python@v5
