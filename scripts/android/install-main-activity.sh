@@ -199,7 +199,7 @@ public class MainActivity extends BridgeActivity {
 JAVA
 set -x
 grep -q 'WindowCompat.setDecorFitsSystemWindows' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
-grep -q 'WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+grep -Eq 'BuildConfig.DEBUG.*WebView.setWebContentsDebuggingEnabled\\(true\\)|WebView.setWebContentsDebuggingEnabled\\(BuildConfig.DEBUG\\)|FLAG_DEBUGGABLE.*WebView.setWebContentsDebuggingEnabled\\(true\\)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
 grep -q 'android:name=".VoiceOverlayService"' android/app/src/main/AndroidManifest.xml
 grep -q 'android.permission.SYSTEM_ALERT_WINDOW' android/app/src/main/AndroidManifest.xml
 grep -q 'android.permission.READ_CONTACTS' android/app/src/main/AndroidManifest.xml
