@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: mosharrof-apk-webview-real-chat
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   apk-webview-real-chat:
