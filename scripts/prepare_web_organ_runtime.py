@@ -56,7 +56,7 @@ def main() -> int:
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
     # Bundle the same memory modules at the runtime path used by the injected module script.
-    for name in ("personal-memory-engine.js", "personal-memory-bridge.js"):
+    for name in ("personal-memory-engine.js", "personal-memory-bridge.js", "chatgpt-conversation-import.js", "knowledge-continuity-bridge.js"):
         src = ROOT / "core" / name
         dst = ROOT / "web/runtime/core" / name
         dst.parent.mkdir(parents=True, exist_ok=True)
