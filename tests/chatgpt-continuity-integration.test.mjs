@@ -17,6 +17,9 @@ test("ChatGPT export parser extracts visible user/assistant messages in chronolo
   assert.equal(snapshot.entries[1].kind, "assistant");
   assert.equal(snapshot.entries[0].source.provider, "chatgpt");
   assert.equal(snapshot.entries[0].source.captureMethod, "user-export-import");
+  assert.equal(snapshot.entries[0].previousId, null);
+  assert.equal(snapshot.entries[1].previousId, snapshot.entries[0].id);
+  assert.equal(snapshot.entries[2].previousId, snapshot.entries[1].id);
 });
 
 test("parser requires valid export and excludes tool/system records and credential-like messages", () => {
