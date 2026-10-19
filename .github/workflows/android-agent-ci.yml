@@ -1,0 +1,104 @@
+name: Android Agent CI
+
+on:
+  pull_request:
+    paths:
+      - "android-agent/**"
+      - ".github/workflows/android-agent-ci.yml"
+  push:
+    branches: ["main", "feat/**"]
+    paths:
+      - "android-agent/**"
+      - ".github/workflows/android-agent-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-agent-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: android-agent
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Build debug APK
+        run: gradle --no-daemon assembleDebug
+      - name: Run unit tests
+        run: gradle --no-daemon testDebugUnitTest
+      - name: Run emulator smoke tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: default
+          arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          heap-size: 1024M
+          emulator-port: 5554
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -camera-back none
+          disable-animations: true
+          disable-spellchecker: true
+          # Stabilize ADB and wait for responsive system services before Gradle probes the device.
+          script: >-
+            adb wait-for-device;
+            for attempt in $(seq 1 90); do sdk="$(timeout 10s adb shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"; packages="$(timeout 10s adb shell pm list packages android 2>/dev/null | head -n 1 || true)"; if [ "$sdk" = "30" ] && [ -n "$packages" ]; then break; fi; sleep 2; done;
+            test "$(timeout 10s adb shell getprop ro.build.version.sdk | tr -d '\r')" = "30";
+            test -n "$(timeout 10s adb shell pm path android | head -n 1)";
+            test "$(timeout 10s adb shell getprop sys.boot_completed | tr -d '\r')" = "1";
+            test "$(timeout 10s adb shell getprop init.svc.bootanim | tr -d '\r')" = "stopped";
+            sleep 20;
+            timeout 10s adb devices -l || true;
+            timeout 10s adb shell wm dismiss-keyguard || true;
+            timeout 10s adb shell input keyevent 224 || true;
+            timeout 10s adb shell settings put global window_animation_scale 0 || true;
+            timeout 10s adb shell settings put global transition_animation_scale 0 || true;
+            timeout 10s adb shell settings put global animator_duration_scale 0 || true;
+            cd android-agent;
+            mkdir -p app/build/reports/androidTests/connected/debug;
+            if ! timeout 300s gradle --no-daemon assembleDebugAndroidTest; then adb logcat -d -t 3000 || true; exit 1; fi;
+            if ! timeout 60s adb install -r app/build/outputs/apk/debug/app-debug.apk; then adb logcat -d -t 3000 || true; exit 1; fi;
+            if ! timeout 60s adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk; then adb logcat -d -t 3000 || true; exit 1; fi;
+            instrumentation_list="$(timeout 20s adb shell pm list instrumentation 2>&1 | tr -d '\r' || true)";
+            printf '%s\n' "$instrumentation_list" | tee app/build/reports/androidTests/connected/debug/ci-instrumentation-list.log;
+            instrumentation="$(printf '%s\n' "$instrumentation_list" | grep 'androidx.test.runner.AndroidJUnitRunner' | head -n 1 | sed -E 's/^instrumentation:([^ ]+).*/\1/')";
+            if [ -z "$instrumentation" ]; then adb logcat -d -t 3000 || true; exit 1; fi;
+            set +e;
+            output="$(timeout 300s adb shell am instrument -w -r "$instrumentation" 2>&1)";
+            status=$?;
+            set -e;
+            printf '%s\n' "$output" | tee app/build/reports/androidTests/connected/debug/ci-instrumentation.log;
+            if [ "$status" -ne 0 ] || ! printf '%s\n' "$output" | grep -Eq 'OK \([1-9][0-9]* tests?\)' || printf '%s\n' "$output" | grep -q 'FAILURES!!!'; then adb logcat -d -t 3000 || true; exit 1; fi
+      - name: Upload Android instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-instrumentation-reports-${{ github.run_id }}
+          path: android-agent/app/build/reports/androidTests/connected/debug/**
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-android-agent-debug
+          path: android-agent/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
