@@ -198,6 +198,8 @@ public class MainActivity extends BridgeActivity {
 }
 JAVA
 set -x
+grep -n 'WebView.setWebContentsDebuggingEnabled' android/app/src/main/java/com/mosharrof/ai/MainActivity.java || true
+grep -n 'DEBUGGABLE\|BuildConfig.DEBUG' android/app/src/main/java/com/mosharrof/ai/MainActivity.java || true
 grep -q 'WindowCompat.setDecorFitsSystemWindows' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
 grep -Eq 'BuildConfig.DEBUG.*WebView.setWebContentsDebuggingEnabled\\(true\\)|WebView.setWebContentsDebuggingEnabled\\(BuildConfig.DEBUG\\)|FLAG_DEBUGGABLE.*WebView.setWebContentsDebuggingEnabled\\(true\\)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
 grep -q 'android:name=".VoiceOverlayService"' android/app/src/main/AndroidManifest.xml
