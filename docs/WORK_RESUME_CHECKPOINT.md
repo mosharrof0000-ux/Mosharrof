@@ -1,58 +1,49 @@
 # MOSHARROF Work Resume Checkpoint
 
-Last updated: 2026-10-18 21:15 UTC (2026-10-19 03:15 Bangladesh time)
+Last updated: 2026-10-19 03:20 UTC (2026-10-19 09:20 Bangladesh time)
 
-Purpose: resume from verified current evidence after a ChatGPT page/session change. Recheck exact SHAs and run states before acting. Preserve `main` and Live Pages; promote only through a clean PR with green required checks.
+Purpose: resume from current verified evidence after a ChatGPT page/session change. Recheck exact SHAs and run states before acting. Preserve `main` and Live Pages; promote only through a clean PR with green required checks.
 
-## Current repository and deployment
+## Repository and main state
 
 - Repository: https://github.com/mosharrof0000-ux/Mosharrof
 - Live Pages: https://mosharrof0000-ux.github.io/Mosharrof/
-- Main commit at checkpoint: `e7e47ed6fc1357f60b10f240bb3b8072735b335a`
-- Latest Pages deployment for this commit: QUEUED at checkpoint — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39155582626.
-- Main CI at e7e47: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39155582834
+- Current main commit: `1264df1462f33725cbd68aba6a86f55a45d568c8` (merged PR #731, Android agent foundation).
+- Pages deployment workflow #39191904000: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191904000
+- Main CI #39191903974: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191903974
+- Main tests #39191904008: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191904008
+- Component audit #39191904013: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191904013
+- Recovery checkpoint #39191903940: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191903940
 
-## Nightly Backlog Triage (2026-10-18 21:15 UTC)
+## Latest verified automation and Android results
 
-1. **Android UI Smoke Test PR #745**:
-   - PR: https://github.com/mosharrof0000-ux/Mosharrof/pull/745 (`fix/android-ui-smoke-test-view-hierarchy-2026-10-19`)
-   - Status: Draft, UNSTABLE.
-   - Action Run #39159817033 (Android Agent CI) completed with failure due to emulator view hierarchy lookup timeout / platform UTP runner environment constraints.
-   - Root cause: Emulator instrumentation requires physical device or dedicated Android runner setup not available in standard headless runner; non-workflow source fix documented.
-2. **Autonomous Engine Scheduled Run #39161743809**:
-   - Action Run #39161743809 completed with failure; active cycle run #39166474877 in progress on main.
-3. **Open Issues**:
-   - Issue #740 ("Resume stalled backlog: verify night-duty automation") triaged; night-duty automation active.
+- Android APK build #39191903953: SUCCESS; artifact `MOSHARROF-AI-Android-APK` available — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191903953
+- Android Agent CI #39191904204: SUCCESS; build-and-test job and emulator smoke test workflow completed; instrumentation report and debug APK artifacts available — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191904204
+- Full-System Interaction QA #39191985434: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191985434
+- Personal Memory Browser Smoke Test #39191985503: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39191985503
+- Automatic Work Engine #39191985461 and follow-up #39192045722: SUCCESS.
+- Scheduled Autonomous Health Cycle #39192055809: SUCCESS — https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39192055809
 
-## Completed and verified
+## Remaining gaps — do not call the whole project complete
 
-1. **Full-app interaction QA merged** — PR #727: https://github.com/mosharrof0000-ux/Mosharrof/pull/727
-   - Mobile browser/PWA UI inspection, drawer/composer interactions, screenshots and JSON evidence.
-   - Superseded PR #692 was closed: https://github.com/mosharrof0000-ux/Mosharrof/pull/692
-2. **Hourly overnight backlog cycle is on main** — PR #728 added the scheduler; PR #734 changed it to hourly and merged.
-   - Current cron in `.github/workflows/autonomous-cycle.yml`: `0 0-2,14-23 * * *` UTC, covering 20:00–08:00 Bangladesh time hourly.
-   - Each pass is bounded (25-minute job timeout), collects open PRs/issues and recent workflow runs, prioritizes existing work, and writes a reviewable patch only after its own checks pass.
-3. **Resumable/reviewable automation merged** — PR #732: https://github.com/mosharrof0000-ux/Mosharrof/pull/732
-4. **Autonomous PR checks token fix merged** — PR #736: https://github.com/mosharrof0000-ux/Mosharrof/pull/736
-5. **Real live-chat round-trip is proven on two deployed commits**
-   - Run #39153647185 SUCCESS on commit a9250
-   - Run #39154827007 SUCCESS on commit e2f66
-6. **Live PWA UI and browser memory checks**
-   - UI report #39152903268: 50/50 interaction checks passed
-   - Browser memory round-trip passed: #3915290286
+1. PR #747 (https://github.com/mosharrof0000-ux/Mosharrof/pull/747) changes only this checkpoint file. Its prior browser-smoke workflow #39166548014 is `action_required`, not a pass. A user saying they approve does not itself operate GitHub's workflow approval gate. Do not claim that gate was cleared unless a new run actually starts and finishes.
+2. Re-evaluate PR #747 after this checkpoint refresh. Do not merge if the required check is still action_required, pending, or red.
+3. The main APK workflow builds and contract-checks an APK; it does not by itself prove a real chat round-trip inside the installed APK/WebView. Keep APK/WebView chat testing distinct from Live PWA chat.
+4. Emulator smoke tests are not physical-phone acceptance. Do not claim Accessibility permissions, floating chat behavior, or full device control verified on a real phone without an authorized physical-device test.
+5. Live interaction QA and Pages deployment workflows are green, but that alone is not proof of a manual end-to-end test of every provider and UI control on the current deployment.
 
-## Android native assistant: current blocker and recovery
+## Safe next actions
 
-- **Clean foundation PR #731**: https://github.com/mosharrof0000-ux/Mosharrof/pull/731
-  - Branch: `feat/android-agent-foundation-clean-2026-10-18`
-- **Draft UI fix PR #745**: https://github.com/mosharrof0000-ux/Mosharrof/pull/745
-  - Failed run #39159817033 (Android Agent CI). Emulator UI lookup blocked on headless runner limitations. Requires physical-device access or runner permission update for full verification.
-- **Root cause learned**: old instrumentation runs showed an unresponsive emulator/UTP installer reporting API level 1 despite APK compilation and JVM unit tests passing. Direct ADB installation plus `am instrument` passed on the earlier assistant branch; the clean foundation branch adds bounded ADB preflight/install/test commands.
+1. Recheck current main SHA and newest workflow runs before starting further changes.
+2. Inspect PR #747's new exact-head checks; if the approval gate remains, record the blocker and do not merge.
+3. Prioritize adding/validating an isolated APK/WebView real-chat round-trip test on a feature branch, with backend/CORS diagnostics and a report artifact.
+4. Continue backlog triage through the hourly overnight workflow. Each cycle is bounded; it is repeated hourly work, not one uninterrupted 12-hour job.
 
 ## Safety and evidence rules
 
-- No direct edits to main; use isolated branches and PRs.
+- No direct edits to `main`; use isolated branches and PRs.
 - Never merge/deploy with pending/red required checks, unresolved conflicts, or dirty merge state.
 - Mocked browser chat, real web chat, native Android instrumentation, APK/WebView chat, and physical-phone tests are separate evidence categories.
-- Never claim real-provider chat passed unless the real-chat step ran and its response assertion passed.
+- Never claim a real-provider chat pass unless the real-chat step ran and its response assertion passed.
 - Never claim physical-phone acceptance unless an authorized physical device was actually connected and tested.
+- User priorities may change during night duty; automation must not lock the project or override newer user priorities.
