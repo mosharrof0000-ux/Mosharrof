@@ -114,7 +114,9 @@ export function initializeComposerEnhancements() {
 
   document.addEventListener("input", event => {
     if (event.target?.id === "input") {
-      inputRevision += 1;
+      // Only real user edits supersede the pending apply; internal synthetic
+      // events from resize/refresh must not cancel the exact-draft restoration.
+      if (event.isTrusted) inputRevision += 1;
       syncVisibility();
     }
   });
