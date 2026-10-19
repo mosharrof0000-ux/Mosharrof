@@ -44,6 +44,9 @@ jobs:
       - name: Validate smoke-test script syntax
         run: python -m py_compile scripts/android/apk_webview_real_chat_smoke.py
 
+      - name: Validate emulator shell script syntax
+        run: bash -n scripts/android/run_apk_webview_smoke.sh
+
       - name: Install Playwright CDP client
         run: python -m pip install --disable-pip-version-check playwright
 
