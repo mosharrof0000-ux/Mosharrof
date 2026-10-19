@@ -1,0 +1,21 @@
+name: MOSHARROF Repository Knowledge Tests
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  knowledge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test searchable repository knowledge index
+        run: node --test tests/repository-knowledge-index.test.mjs tests/repository-knowledge-crawler.test.mjs
+      - name: Build a non-published repository knowledge snapshot
+        run: node scripts/build-repository-knowledge-index.mjs --out /tmp/repository-knowledge-index.json
