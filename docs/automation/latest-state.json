@@ -1,102 +1,29 @@
 {
-  "timestamp_utc": "2026-10-19T03:38:20+00:00",
+  "timestamp_utc": "2026-10-19T03:41:20+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39195622571",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39195622571",
-  "source_run_id": "39195465692",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39195465692",
+  "run_id": "39195847726",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39195847726",
+  "source_run_id": "39195832273",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39195832273",
   "repository": "mosharrof0000-ux/Mosharrof",
-  "branch": "main",
-  "sha": "1b2b850f903b0d5d38670079453e4dd131e5a02b",
+  "branch": "feat/apk-webview-real-chat-smoke-2026-10-19",
+  "sha": "42deb088f2ce94f658594c6ee0a8e417e3844ea1",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = success",
-    "Source commit: 1b2b850f903b0d5d38670079453e4dd131e5a02b",
-    "Job: build-apk — completed/success"
+    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
+    "Source commit: 42deb088f2ce94f658594c6ee0a8e417e3844ea1"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
-  "source_workflow": "Build MOSHARROF Android APK",
-  "source_conclusion": "success",
+  "next_step": "Resume at failed workflow/job: Deploy Mosharrof Pages. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Deploy Mosharrof Pages",
+  "source_conclusion": "cancelled",
   "changed_files": [],
-  "check_results": [
-    {
-      "job": "build-apk",
-      "status": "completed",
-      "conclusion": "success",
-      "steps": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout MOSHARROF",
-          "conclusion": "success"
-        },
-        {
-          "name": "Setup Node",
-          "conclusion": "success"
-        },
-        {
-          "name": "Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify edge-to-edge web contract",
-          "conclusion": "success"
-        },
-        {
-          "name": "Prepare Android full-screen voice manager",
-          "conclusion": "success"
-        },
-        {
-          "name": "Enforce file and folder size budgets",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify Android agent contract suite",
-          "conclusion": "success"
-        },
-        {
-          "name": "Build debug APK",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify APK",
-          "conclusion": "success"
-        },
-        {
-          "name": "Upload APK artifact",
-          "conclusion": "success"
-        },
-        {
-          "name": "Publish GitHub Release",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Java",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Setup Node",
-          "conclusion": "success"
-        },
-        {
-          "name": "Post Checkout MOSHARROF",
-          "conclusion": "success"
-        },
-        {
-          "name": "Complete job",
-          "conclusion": "success"
-        }
-      ]
-    }
-  ],
+  "check_results": [],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-19T03:38:26+00:00",
+  "finished_at_utc": "2026-10-19T03:41:26+00:00",
   "outcome": "success"
 }
