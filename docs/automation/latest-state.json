@@ -1,32 +1,32 @@
 {
-  "timestamp_utc": "2026-10-19T03:20:38+00:00",
+  "timestamp_utc": "2026-10-19T03:21:30+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39194224366",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39194224366",
-  "source_run_id": "39194116086",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39194116086",
+  "run_id": "39194291405",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39194291405",
+  "source_run_id": "39194147800",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39194147800",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feat/apk-webview-real-chat-smoke-2026-10-19",
-  "sha": "86a9af2ac7d77fa0781bbfb6b656b08735739a16",
+  "sha": "e684395fc1505f0fa54e75389475a12c99b10afe",
   "checked": [
-    "Completed workflow result: Build MOSHARROF Android APK = failure",
-    "Source commit: 86a9af2ac7d77fa0781bbfb6b656b08735739a16",
-    "Job: build-apk — completed/failure"
+    "Completed workflow result: Build MOSHARROF Android APK = success",
+    "Source commit: e684395fc1505f0fa54e75389475a12c99b10afe",
+    "Job: build-apk — completed/success"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: build-apk. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
   "source_workflow": "Build MOSHARROF Android APK",
-  "source_conclusion": "failure",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
       "job": "build-apk",
       "status": "completed",
-      "conclusion": "failure",
+      "conclusion": "success",
       "steps": [
         {
           "name": "Set up job",
@@ -62,15 +62,15 @@
         },
         {
           "name": "Build debug APK",
-          "conclusion": "failure"
+          "conclusion": "success"
         },
         {
           "name": "Verify APK",
-          "conclusion": "skipped"
+          "conclusion": "success"
         },
         {
           "name": "Upload APK artifact",
-          "conclusion": "skipped"
+          "conclusion": "success"
         },
         {
           "name": "Publish GitHub Release",
@@ -82,7 +82,7 @@
         },
         {
           "name": "Post Setup Node",
-          "conclusion": "skipped"
+          "conclusion": "success"
         },
         {
           "name": "Post Checkout MOSHARROF",
@@ -97,6 +97,6 @@
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-19T03:20:44+00:00",
+  "finished_at_utc": "2026-10-19T03:21:35+00:00",
   "outcome": "success"
 }
