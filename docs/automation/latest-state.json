@@ -1,33 +1,33 @@
 {
-  "timestamp_utc": "2026-10-19T03:41:44+00:00",
+  "timestamp_utc": "2026-10-19T03:42:07+00:00",
   "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "39195864680",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39195864680",
-  "source_run_id": "39195815344",
-  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39195815344",
+  "run_id": "39195912405",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39195912405",
+  "source_run_id": "39195844321",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39195844321",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "feat/apk-webview-real-chat-smoke-2026-10-19",
-  "sha": "37c83e060049c9ccd686b27676181a7ac24dfee0",
+  "sha": "71049d9eaef71a49924aeb3d3af1cdf651583d9f",
   "checked": [
-    "Completed workflow result: Deploy Mosharrof Pages = cancelled",
-    "Source commit: 37c83e060049c9ccd686b27676181a7ac24dfee0",
-    "Job: test — completed/cancelled",
-    "Job: deploy — completed/cancelled"
+    "Completed workflow result: Deploy Mosharrof Pages = success",
+    "Source commit: 71049d9eaef71a49924aeb3d3af1cdf651583d9f",
+    "Job: test — completed/success",
+    "Job: deploy — completed/skipped"
   ],
   "planned": [
     "Record the completed workflow result, job-level checks and evidence URL.",
     "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "next_step": "Inspect the source workflow artifacts and continue from the project's first pending checkpoint item; do not infer physical-device acceptance.",
   "source_workflow": "Deploy Mosharrof Pages",
-  "source_conclusion": "cancelled",
+  "source_conclusion": "success",
   "changed_files": [],
   "check_results": [
     {
       "job": "test",
       "status": "completed",
-      "conclusion": "cancelled",
+      "conclusion": "success",
       "steps": [
         {
           "name": "Set up job",
@@ -90,12 +90,12 @@
     {
       "job": "deploy",
       "status": "completed",
-      "conclusion": "cancelled",
+      "conclusion": "skipped",
       "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-19T03:41:50+00:00",
+  "finished_at_utc": "2026-10-19T03:42:12+00:00",
   "outcome": "success"
 }
