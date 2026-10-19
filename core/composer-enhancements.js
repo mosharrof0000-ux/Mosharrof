@@ -59,6 +59,7 @@ export function initializeComposerEnhancements() {
   editor.innerHTML = '<div class="mosharrof-expand-head"><div class="mosharrof-expand-title" id="mosharrofExpandTitle">বার্তা সম্পাদনা</div><button class="mosharrof-expand-btn" type="button" data-expand-cancel>ফিরে যান</button><button class="mosharrof-expand-btn mosharrof-expand-apply" type="button" data-expand-apply>লেখা ব্যবহার করুন</button></div><textarea class="mosharrof-expand-text" aria-label="সম্পূর্ণ বার্তা সম্পাদনা করুন" placeholder="এখানে আপনার সম্পূর্ণ বার্তা লিখুন..."></textarea><div class="mosharrof-expand-hint">সম্পাদিত লেখা মূল মেসেজ বক্সে নিতে “লেখা ব্যবহার করুন” চাপুন।</div>';
   document.body.appendChild(editor);
   const largeInput = editor.querySelector("textarea");
+  let inputRevision = 0;
 
   function currentInput() {
     return document.getElementById("input") || input;
@@ -91,6 +92,7 @@ export function initializeComposerEnhancements() {
       activeInput.dispatchEvent(new Event("input", { bubbles: true }));
       activeInput.dispatchEvent(new Event("change", { bubbles: true }));
     }
+    const revisionAfterApply = inputRevision;
     editor.classList.remove("open");
     editor.setAttribute("aria-hidden", "true");
     expand.setAttribute("aria-expanded", "false");
@@ -100,6 +102,8 @@ export function initializeComposerEnhancements() {
       // input dispatch. Reacquire the live node on the next frame and restore the
       // exact edited draft without firing another event that could clear it again.
       requestAnimationFrame(() => {
+        // Do not overwrite text typed after the editor was applied.
+        if (inputRevision !== revisionAfterApply) return;
         const latestInput = currentInput();
         latestInput.value = value;
         syncVisibility();
@@ -109,7 +113,10 @@ export function initializeComposerEnhancements() {
   }
 
   document.addEventListener("input", event => {
-    if (event.target?.id === "input") syncVisibility();
+    if (event.target?.id === "input") {
+      inputRevision += 1;
+      syncVisibility();
+    }
   });
   document.addEventListener("composer:line-limit", event => {
     if (event.target?.id === "input") syncVisibility();
