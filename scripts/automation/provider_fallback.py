@@ -23,7 +23,7 @@ def request_openai_compatible(provider, endpoint, api_key, models, prompt, extra
         }).encode()
         req = urllib.request.Request(endpoint, data=payload, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=150) as response:
+            with urllib.request.urlopen(req, timeout=20) as response:
                 result = json.load(response)
             text = result["choices"][0]["message"]["content"]
             if isinstance(text, str) and text.strip():
