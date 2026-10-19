@@ -24,6 +24,12 @@ if not branch.startswith("agent/autonomous-"):
 changed = run(["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"])
 if not changed:
     raise SystemExit("Autonomous branch has no committed file changes; refusing empty PR.")
+changed_paths = {path.strip() for path in changed.splitlines() if path.strip()}
+if changed_paths == {"docs/WORK_RESUME_CHECKPOINT.md"}:
+    raise SystemExit(
+        "Refusing a checkpoint-only autonomous PR; select a concrete implementation/test blocker "
+        "or report why no safe code change is justified."
+    )
 existing_raw = run(["gh", "pr", "list", "--repo", repo, "--state", "open", "--head", branch, "--json", "number,url"])
 try:
     existing = json.loads(existing_raw or "[]")

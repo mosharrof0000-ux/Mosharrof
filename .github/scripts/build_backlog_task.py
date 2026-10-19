@@ -15,7 +15,10 @@ if EVENT == "schedule":
         "First triage open PRs, failed or still-running Actions, merge conflicts, and existing web/PWA plus Android chat verification. "
         "Prioritize red checks and stalled work, then the oldest mergeable backlog items. Inspect evidence, identify root causes, make the smallest safe patch only in the allowed source/test/docs paths, and run the full test suite. "
         "Never modify deployment/security workflows, bypass protection, merge PRs, or claim success without evidence. If a blocker needs unavailable permissions, physical-device access, or protected workflow changes, document it and continue to another safe task. "
-        "Keep main/Live safe. Do not add unrelated features until existing backlog is cleared."
+        "Keep main/Live safe. Do not add unrelated features until existing backlog is cleared. "
+        "Never choose docs/WORK_RESUME_CHECKPOINT.md or status/checkpoint docs as the sole change; never create checkpoint-only PRs. "
+        "Prioritize concrete implementation/test blockers; inspect PR #748 and verify fresh main-branch APK/WebView real-chat evidence, fixing the smallest safe gap if stale or missing. "
+        "If no safe code fix is justified, report the blocker rather than changing docs alone."
     )
 elif EVENT == "workflow_dispatch":
     task = (
