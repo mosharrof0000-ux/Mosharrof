@@ -18,8 +18,8 @@ key = os.environ.get("GEMINI_API_KEY", "").strip()
 model = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash").strip()
 run_id = os.environ.get("GITHUB_RUN_ID", "local")
 
-if not key:
-    raise SystemExit("GEMINI_API_KEY is required.")
+# Gemini is preferred, but an invalid or unavailable Gemini credential must not
+# prevent configured alternate providers from completing the guarded planning step.
 
 blocked = re.compile(
     r"(rm\s+-rf|git\s+push\s+--force|git\s+reset\s+--hard|gh\s+repo\s+delete|delete[-_ ]repository|drop\s+database)",
@@ -98,13 +98,17 @@ def request_model(model_name, attempts=4):
     raise RuntimeError(f"Gemini model {model_name} remained unavailable after {attempts} attempts ({last_error}).")
 
 last_error = None
-try:
-    data = request_model(model)
-except RuntimeError as exc:
-    data = None
-    last_error = str(exc)
+data = None
+if key:
+    try:
+        data = request_model(model)
+    except RuntimeError as exc:
+        data = None
+        last_error = str(exc)
+else:
+    print("Gemini key is not configured; trying alternate providers.")
 
-if data is None:
+if data is None and key and not any(marker in (last_error or "") for marker in ("HTTP 400", "HTTP 401", "HTTP 403", "API_KEY_INVALID")):
     req = urllib.request.Request(f"{base}/models", headers={"x-goog-api-key": key})
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
@@ -140,13 +144,86 @@ if data is None:
         except RuntimeError as exc:
             last_error = str(exc)
             print(f"Gemini fallback {candidate} unavailable; trying the next supported model.")
-    if data is None:
-        raise SystemExit(last_error or "No API-listed Gemini Flash model accepted the request.")
+def request_openai_compatible(provider, endpoint, api_key, models, extra_headers=None):
+    """Try compatible chat-completions routes without logging credentials or response bodies."""
+    if not api_key or not endpoint:
+        return None
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+    headers.update(extra_headers or {})
+    for model_name in models:
+        payload = json.dumps({
+            "model": model_name,
+            "messages": [
+                {"role": "system", "content": "Return exactly one valid JSON object matching the requested schema. Do not use Markdown fences."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.1,
+        }).encode()
+        req = urllib.request.Request(endpoint, data=payload, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=150) as response:
+                result = json.load(response)
+            text = result["choices"][0]["message"]["content"]
+            if isinstance(text, str) and text.strip():
+                print(f"Alternate provider selected: {provider} ({model_name}).")
+                return text.strip()
+            print(f"{provider} returned an empty response for {model_name}; trying next model.")
+        except urllib.error.HTTPError as exc:
+            print(f"{provider} fallback model {model_name} unavailable (HTTP {exc.code}); trying next model/provider.")
+        except (urllib.error.URLError, TimeoutError, KeyError, IndexError, TypeError, ValueError) as exc:
+            print(f"{provider} fallback model {model_name} failed ({type(exc).__name__}); trying next model/provider.")
+    return None
+
+
+def request_alternate_provider():
+    """Free-first fallback chain: Cloudflare Workers AI, Groq, then OpenRouter."""
+    cf_token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
+    cf_account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
+    if cf_token and cf_account:
+        endpoint = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/ai/v1/chat/completions"
+        text = request_openai_compatible(
+            "Cloudflare Workers AI", endpoint, cf_token,
+            ["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/meta/llama-3.1-8b-instruct"],
+        )
+        if text:
+            return text
+
+    groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+    if groq_key:
+        text = request_openai_compatible(
+            "Groq", "https://api.groq.com/openai/v1/chat/completions", groq_key,
+            ["openai/gpt-oss-120b", "llama-3.3-70b-versatile"],
+        )
+        if text:
+            return text
+
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if openrouter_key:
+        text = request_openai_compatible(
+            "OpenRouter", "https://openrouter.ai/api/v1/chat/completions", openrouter_key,
+            ["openai/gpt-oss-20b:free", "meta-llama/llama-3.3-70b-instruct:free"],
+            {"HTTP-Referer": "https://mosharrof0000-ux.github.io/Mosharrof/", "X-Title": "MOSHARROF Autonomous Engine"},
+        )
+        if text:
+            return text
+    return None
+
+
+provider_text = None
+if data is None:
+    if last_error:
+        print(f"Gemini unavailable ({last_error[:180]}); trying configured alternate providers.")
+    provider_text = request_alternate_provider()
+if data is None and provider_text is None:
+    raise SystemExit(last_error or "No configured AI provider accepted the guarded planning request.")
 
 try:
-    proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+    if provider_text is not None:
+        proposal = json.loads(provider_text)
+    else:
+        proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
 except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-    raise SystemExit(f"Gemini returned an invalid structured plan: {exc}")
+    raise SystemExit(f"AI provider returned an invalid structured plan: {exc}")
 changes = proposal.get("files", [])
 if not isinstance(changes, list):
     raise SystemExit("Invalid agent response.")
