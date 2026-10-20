@@ -14,6 +14,8 @@ on:
     branches:
       - "feature/action-bar-module-registry-*"
     paths:
+      - "web/sidebar-recovery.js"
+      - "scripts/prepare_web_organ_runtime.py"
       - "web/index.html"
       - "core/action-contributions/**"
       - "scripts/validate_action_contributions.py"
