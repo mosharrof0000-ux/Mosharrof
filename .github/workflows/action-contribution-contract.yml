@@ -3,6 +3,7 @@ name: Action Contribution Contract
 on:
   pull_request:
     paths:
+      - "web/sidebar-recovery.js"
       - "web/index.html"
       - "web/modules/action-contributions/**"
       - "scripts/validate_action_contributions.py"
