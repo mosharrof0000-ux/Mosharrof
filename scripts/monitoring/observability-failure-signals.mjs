@@ -1,4 +1,4 @@
-export async function getFailureSignals(run, { owner, repo, token }) {
+export async function getFailureSignals(run, { owner, repo, token, api }) {
   try {
     const payload = await api(`/actions/runs/${run.id}/jobs?per_page=100`);
     const failedJobs = (payload.jobs || []).filter((job) => job.conclusion === "failure").slice(0, 2);
