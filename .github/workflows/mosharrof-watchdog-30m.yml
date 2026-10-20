@@ -45,7 +45,7 @@ jobs:
             [[ "$name" == "Mosharrof 30-Minute Watchdog" ]] && continue
 
             case "$name" in
-              "Mosharrof Tests"|"MOSHARROF Repository Knowledge Tests"|"Personal Memory Browser Smoke Test"|"Mosharrof Verification Gate"|"Android APK WebView Real Chat QA"|"Full App Interactive QA"|"Full System Interaction QA")
+              "Mosharrof Tests"|"MOSHARROF Repository Knowledge Tests"|"Personal Memory Browser Smoke Test"|"Mosharrof Verification Gate"|"MOSHARROF Android APK WebView Real Chat QA"|"Full App Interactive QA"|"Full System Interaction QA")
                 eligible=true ;;
               *)
                 eligible=false ;;
