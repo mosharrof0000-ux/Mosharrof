@@ -29,12 +29,21 @@ Rules: never delete; never touch .github/, CODEOWNERS, secrets, deployment polic
 Snapshot:
 {snapshot}"""
 out=generate_content(prompt,KEY,MODEL)
-data=json.loads(out["candidates"][0]["content"]["parts"][0]["text"])
+try:
+    data=json.loads(out["candidates"][0]["content"]["parts"][0]["text"])
+except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+    raise SystemExit(f"REFUSED invalid model JSON: {exc}")
+if not isinstance(data, dict):
+    raise SystemExit("REFUSED model response must be a JSON object")
+summary=data.get("summary","")
+patch=data.get("patch","")
+if not isinstance(summary,str) or not isinstance(patch,str):
+    raise SystemExit("REFUSED summary and patch must be strings")
 
 if not patch.strip(): print("NO_ACTION"); raise SystemExit(0)
 if "deleted file mode" in patch or ".github/" in patch or "CODEOWNERS" in patch: raise SystemExit("REFUSED protected/deletion patch")
 paths=[x[6:] for x in patch.splitlines() if x.startswith("+++ b/")]
-if any(not p.startswith(ALLOWED) for p in paths): raise SystemExit("REFUSED path")
+if not paths or any(not p.startswith(ALLOWED) for p in paths): raise SystemExit("REFUSED path")
 if len(patch.splitlines())>500: raise SystemExit("REFUSED patch too large")
 pathlib.Path("/tmp/mosharrof.patch").write_text(patch,encoding="utf-8")
 subprocess.run(["git","apply","--check","/tmp/mosharrof.patch"],check=True)
