@@ -42,8 +42,19 @@ report = {
 }
 
 
+current_stage = "initialization"
+
+
+def stage(name: str) -> None:
+    global current_stage
+    current_stage = name
+    print(f"[apk-chat-qa] stage={name}", flush=True)
+
+
 def record(name: str, passed: bool, detail: str = "") -> None:
-    report["checks"].append({"name": name, "passed": bool(passed), "detail": detail})
+    item = {"name": name, "passed": bool(passed), "detail": detail}
+    report["checks"].append(item)
+    print(f"[apk-chat-qa] check={name} passed={bool(passed)} detail={detail[:240]}", flush=True)
     if not passed:
         report["errors"].append({"check": name, "detail": detail})
 
@@ -63,17 +74,23 @@ class PageCDP:
     def command(self, method: str, params: dict | None = None, timeout: float = 30) -> dict:
         self.next_id += 1
         command_id = self.next_id
-        self.ws.settimeout(timeout)
         self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
         deadline = time.monotonic() + timeout
+        # CDP emits unrelated events as well as command replies. A short socket
+        # receive timeout must not abort the whole command; keep polling until
+        # its actual deadline and report the exact method if it never replies.
+        self.ws.settimeout(min(1.0, timeout))
         while time.monotonic() < deadline:
-            message = json.loads(self.ws.recv())
+            try:
+                message = json.loads(self.ws.recv())
+            except websocket.WebSocketTimeoutException:
+                continue
             if message.get("id") != command_id:
                 continue
             if "error" in message:
                 raise RuntimeError(f"CDP {method} failed: {message['error']}")
             return message.get("result", {})
-        raise TimeoutError(f"Timed out waiting for CDP command {method}")
+        raise TimeoutError(f"Timed out waiting for CDP command {method} after {timeout}s")
 
     def evaluate(self, expression: str, timeout: float = 15):
         result = self.command(
@@ -108,6 +125,7 @@ def main() -> int:
     stage = "load WebView target list"
     try:
         print(f"[chat-smoke] {stage}", flush=True)
+        stage("read_webview_targets")
         targets = get_targets()
         target = next(
             (item for item in targets if item.get("type") == "page" and
@@ -133,6 +151,7 @@ def main() -> int:
 
         stage = "wait for visible chat composer"
         print(f"[chat-smoke] {stage}", flush=True)
+        stage("wait_for_visible_chat_composer")
         deadline = time.monotonic() + 30
         ready = False
         while time.monotonic() < deadline:
@@ -156,6 +175,7 @@ def main() -> int:
         prompt_js = json.dumps(prompt, ensure_ascii=False)
         stage = "submit synthetic prompt through composer"
         print(f"[chat-smoke] {stage}", flush=True)
+        stage("submit_synthetic_prompt")
         submitted = cdp.evaluate(
             f"""(() => {{
               const input = document.querySelector('#input');
@@ -175,6 +195,7 @@ def main() -> int:
 
         stage = "wait for real backend assistant response"
         print(f"[chat-smoke] {stage}", flush=True)
+        stage("wait_for_real_backend_reply")
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
@@ -237,6 +258,7 @@ def main() -> int:
             except Exception:
                 pass
     finally:
+        report["last_stage"] = current_stage
         (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         if cdp is not None:
             try:
