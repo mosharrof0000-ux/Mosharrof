@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: mosharrof-apk-webview-real-chat
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   apk-webview-real-chat:
@@ -72,11 +72,25 @@ jobs:
           set -euo pipefail
           run_id=""
           for attempt in $(seq 1 150); do
-            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
-            if [ -n "$run_id" ]; then break; fi
+            matching="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA))')"
+            if [ -n "$matching" ] && [ "$matching" != "null" ]; then
+              build_status="$(printf '%s' "$matching" | jq -r '.status')"
+              build_conclusion="$(printf '%s' "$matching" | jq -r '.conclusion // ""')"
+              if [ "$build_status" = "completed" ] && [ "$build_conclusion" = "success" ]; then
+                run_id="$(printf '%s' "$matching" | jq -r '.databaseId')"
+                break
+              fi
+              if [ "$build_status" = "completed" ] && [ "$build_conclusion" != "success" ]; then
+                echo "::error::Matching APK build $SOURCE_SHA completed with conclusion '$build_conclusion'; failing fast instead of holding the Android QA concurrency slot."
+                exit 1
+              fi
+            fi
             sleep 10
           done
-          test -n "$run_id"
+          if [ -z "$run_id" ]; then
+            echo "::error::No completed successful APK build found for exact source SHA $SOURCE_SHA after 25 minutes."
+            exit 1
+          fi
           mkdir -p artifacts/apk
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
           test -s artifacts/apk/app-debug.apk
