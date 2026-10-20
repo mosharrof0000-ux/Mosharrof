@@ -16,6 +16,7 @@ def test_chat_response_timer_reuses_existing_voice_timer_box_with_color_only_cha
     assert "filter:" not in response_css
     assert "box-shadow:" not in response_css
 
+
 def test_chat_timer_shows_live_elapsed_time_and_compact_provider_route():
     html = Path("web/index.html").read_text(encoding="utf-8")
     assert 'প্রথম চেষ্টা: Gemini' in html
@@ -36,3 +37,11 @@ def test_chat_provider_metadata_is_taken_from_worker_and_persisted_in_history():
     assert 'rm.responseMeta' in html
     assert 'm.responseMeta' in html
     assert 'failure.responseMeta={provider:null,model:null,attempted:responseMeta.attempted,failed:true}' in html
+
+
+def test_provider_failure_status_and_fallback_order_are_explicit():
+    worker = Path("worker/screenshot-analysis.js").read_text(encoding="utf-8")
+    assert 'error:"chat_provider_failed"' in worker
+    assert 'reason:"not_configured"' in worker
+    assert 'chat_provider_order:["gemini","cloudflare-workers-ai","groq","openrouter"]' in worker
+    assert "AbortSignal.timeout" in worker
