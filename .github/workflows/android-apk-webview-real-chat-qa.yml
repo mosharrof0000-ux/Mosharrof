@@ -17,7 +17,8 @@ permissions:
   actions: read
 
 concurrency:
-  group: mosharrof-apk-webview-real-chat
+  # Isolate PR/branch runs so a long emulator job cannot hold main QA pending.
+  group: mosharrof-apk-webview-real-chat-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
