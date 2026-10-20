@@ -3,8 +3,16 @@ name: MOSHARROF Android APK WebView Real Chat QA
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: ["feat/current-main-apk-real-chat-qa-20261019"]
+    paths:
+      - "android/**"
+      - "scripts/android/**"
+      - "web/**"
+      - "*.html"
+      - "*.js"
+      - "*.css"
+      - "package.json"
+      - ".github/workflows/android-apk-webview-real-chat-qa.yml"
+      - ".github/workflows/build-apk.yml"
   workflow_run:
     workflows: ["Build MOSHARROF Android APK"]
     types: [completed]
@@ -17,14 +25,13 @@ permissions:
   actions: read
 
 concurrency:
-  # Isolate PR/branch runs so a long emulator job cannot hold main QA pending.
+  # Keep the emulator QA isolated per ref; new commits replace stale runs on that ref.
   group: mosharrof-apk-webview-real-chat-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   apk-webview-real-chat:
     if: >-
-      github.event_name == 'push' ||
       github.event_name == 'pull_request' ||
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
@@ -37,7 +44,7 @@ jobs:
       - name: Checkout APK source revision
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event_name == 'pull_request' && github.event.pull_request.head.sha) || (github.event_name == 'push' && github.sha) || 'main' }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event_name == 'pull_request' && github.event.pull_request.head.sha) || 'main' }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -63,12 +70,12 @@ jobs:
           github-token: ${{ github.token }}
           path: artifacts/apk
 
-      - name: Download APK from the matching branch build
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
+      - name: Download APK from the matching PR build
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
-          SOURCE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
-          SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           run_id=""
