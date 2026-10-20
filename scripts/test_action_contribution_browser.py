@@ -73,9 +73,46 @@ def main() -> int:
         assert page.evaluate("window.__actionRegistryExistingHandlerCalled") is True, (
             "registry adapter replaced or broke an existing click handler"
         )
+        registration = page.evaluate("""() => {
+          const api = window.MOSHARROF_ACTION_CONTRIBUTIONS;
+          const handlers = {
+            manual: () => { window.__manualActionCalled = true; return "manual-ok"; },
+            automatic: () => { window.__automaticActionCalled = true; return "auto-ok"; },
+            authorizeAutomatic: context => context.allow === true,
+            verify: result => result === "manual-ok" || result === "auto-ok"
+          };
+          const missingPolicyAccepted = api.register({
+            id: "test.missing-policy", module_id: "test-module", group_id: "message-actions",
+            placement: "message_action_bar", label: "অবৈধ", operation_modes: ["manual", "automatic"],
+            automatic_ready: true
+          }, handlers);
+          const registered = api.register({
+            id: "test.module-action", module_id: "test-module", group_id: "message-actions",
+            placement: "message_action_bar", label: "পরীক্ষা", operation_modes: ["manual", "automatic"],
+            automatic_ready: true, automatic_policy_id: "test-policy-v1"
+          }, handlers);
+          return { missingPolicyAccepted, registered };
+        }""")
+        assert registration == {"missingPolicyAccepted": False, "registered": True}, registration
+        page.wait_for_function(
+            "() => document.querySelector('#action-registry-fixture [data-action-contribution="test.module-action"]')",
+            timeout=5000,
+        )
+        page.locator('[data-action-contribution="test.module-action"]').evaluate("(element) => element.click()")
+        manual_status = page.locator('[data-action-contribution="test.module-action"]').get_attribute("data-execution-status")
+        assert manual_status == "VERIFIED", manual_status
+        assert page.evaluate("window.__manualActionCalled") is True
+
+        blocked = page.evaluate("window.MOSHARROF_ACTION_CONTRIBUTIONS.runAutomatic('test.module-action', {allow:false})")
+        assert blocked["status"] == "BLOCKED_APPROVAL", blocked
+        assert page.evaluate("window.__automaticActionCalled || false") is False
+        verified = page.evaluate("window.MOSHARROF_ACTION_CONTRIBUTIONS.runAutomatic('test.module-action', {allow:true})")
+        assert verified["status"] == "VERIFIED", verified
+        assert verified["result"] == "auto-ok", verified
+        assert page.evaluate("window.__automaticActionCalled") is True
         browser.close()
 
-    print("ACTION CONTRIBUTION BROWSER CHECK: PASS — 1 existing group, 9 mapped controls, handlers preserved")
+    print("ACTION CONTRIBUTION BROWSER CHECK: PASS — group mapping, existing handlers, manual mode, and policy-gated automatic mode")
     return 0
 
 
