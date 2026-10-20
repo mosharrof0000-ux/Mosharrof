@@ -152,18 +152,8 @@ def main() -> int:
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
 
-            visible_state = cdp.evaluate("""(() => {
-              const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
-              const last = nodes[nodes.length - 1];
-              const body = last && last.querySelector('.rich-content');
-              if (!body) return {visible:false, reason:'assistant answer element missing'};
-              const rect = body.getBoundingClientRect();
-              const style = getComputedStyle(body);
-              const visible = rect.width > 0 && rect.height > 0 &&
-                style.display !== 'none' && style.visibility !== 'hidden' &&
-                Number(style.opacity || 1) > 0;
-              return {visible, width:rect.width, height:rect.height, textChars:(body.innerText || '').trim().length};
-            })()""")
+            from apk_webview_visibility import inspect_visible_answer
+            visible_state = inspect_visible_answer(cdp)
             record("assistant_answer_visibly_rendered_in_apk",
                    bool(visible_state and visible_state.get("visible")),
                    json.dumps(visible_state, ensure_ascii=False)[:500])
