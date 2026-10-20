@@ -97,3 +97,28 @@ These are design-level interface names; they must be mapped to the project's exi
 - Failure, quota exhaustion, missing secrets, unsupported capability, and provider outage produce truthful blocked/fallback states.
 - No module can silently bypass global policy or claim verification without passing its postconditions.
 - Existing Live behavior remains unchanged until the pilot is reviewed, tested, approved, and deployed.
+
+
+## Menu groups and contextual action-bar integration
+
+The UI placement is part of each module's contract, not an afterthought.
+
+- Reuse the existing menu-bar group taxonomy and the existing message action bar. Do not create a parallel, disconnected menu or duplicate action strip for the same feature.
+- Each module declares a UI contribution manifest: `group_id`, placement (`menu_group`, `message_action_bar`, or both when justified), supported context, label/icon key, primary action, secondary actions, permission requirements, and visibility conditions.
+- Group related capabilities under the existing menu groups. Keep message-specific actions attached to the relevant message's existing action bar; do not place message-only controls as unrelated global buttons.
+- A control may appear in both places only when the two entry points serve distinct, documented purposes and call the same validated module service.
+- Primary tap performs the declared safe primary action. Long-press may open a compact options/provider/style picker only where the interaction is discoverable and accessible; provide an equivalent accessible alternative for users who cannot long-press.
+- Manual/automatic mode is a module-level setting or action, not a duplicate feature implementation. Show clear status when automatic execution is disabled, paused, waiting for approval, or unavailable.
+- Keep existing action-bar actions, ordering, keyboard/screen-reader labels, mobile touch targets, and responsive behavior intact unless a reviewed UI change explicitly changes them.
+- UI controls must be generated from registered module contributions or validated against the same registry; unregistered, untested, unauthorized, or unhealthy module actions remain hidden/disabled with a truthful reason.
+- UI integration tests must verify group placement, message context, tap and long-press behavior, manual/automatic state, permission denial, provider failure, and no regression to existing action-bar controls.
+- A UI contribution does not mean the feature is implemented: the underlying module must pass its own health, permission, behavior, and end-to-end checks before its control is enabled.
+
+### UI integration acceptance checks
+
+1. Each new control maps to exactly one registered module and an existing menu group or contextual action-bar slot.
+2. No duplicate action is introduced without a documented distinct purpose.
+3. Tapping a message action affects the correct message only.
+4. Long-press options work on touch devices and have an accessible alternative.
+5. Manual and automatic modes expose the same capability and policy checks.
+6. Existing menu groups and action-bar controls pass regression tests before deployment.
