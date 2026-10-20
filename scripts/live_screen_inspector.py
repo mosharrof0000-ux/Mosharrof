@@ -116,7 +116,7 @@ async def main():
             if floating:
                 # Consume the synthetic long-press click before tapping to restore fullscreen.
                 await button.dispatch_event("click", {"button": 0, "detail": 1})
-                await button.click()
+                await button.dispatch_event("click", {"button": 0, "detail": 1})
                 await page.wait_for_function(
                     "() => !document.body.classList.contains('chat-floating')", timeout=4000
                 )
