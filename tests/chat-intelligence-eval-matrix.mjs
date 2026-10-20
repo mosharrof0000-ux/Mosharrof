@@ -17,8 +17,8 @@ const lanes = [
 const responseDoc=process.argv[2]?JSON.parse(fs.readFileSync(process.argv[2],"utf8")):{};
 const answers=new Map((responseDoc.responses||[]).map(r=>[r.case_id,r]));
 const hasBengali=s=>/[\u0980-\u09FF]/.test(s);
-function score(lane,id){
- const response=answers.get(id),answer=String(response?.answer||"").trim();
+function score(lane,id,response=answers.get(id)){
+ const answer=String(response?.answer||"").trim();
  if(!answer)return {case_id:id,status:"NOT TESTED",failed_rules:["answer_missing"]};
  const s=answer.toLocaleLowerCase("bn"),failed=[];
  if(lane.any?.length&&!lane.any.some(x=>s.includes(x.toLocaleLowerCase("bn"))))failed.push("must_include_any");
@@ -38,6 +38,16 @@ const dimensions=Object.fromEntries(lanes.map(l=>{
  const r=results.filter(x=>x.dimension===l.id),pass=r.filter(x=>x.status==="PASS").length,fail=r.filter(x=>x.status==="FAIL").length,nt=r.filter(x=>x.status==="NOT TESTED").length,n=pass+fail;
  return [l.id,{title:l.title,total:r.length,pass,fail,not_tested:nt,score_percent:n?Math.round(pass*1000/n)/10:null}];
 }));
+assert.ok(Object.values(dimensions).every(d=>d.not_tested===2&&d.score_percent===null));
+const math=lanes.find(l=>l.id==="reasoning_arithmetic");
+assert.equal(score(math,"fixture-good",{answer:"১৭ × ২৪ = 408"}).status,"PASS");
+assert.equal(score(math,"fixture-bad",{answer:"১৭ × ২৪ = 418"}).status,"FAIL");
+const evidence=lanes.find(l=>l.id==="evidence_action_status");
+assert.equal(score(evidence,"fixture-claim",{answer:"deploy সফল হয়েছে"}).status,"FAIL");
+assert.equal(score(evidence,"fixture-unknown",{answer:"যাচাই করা যায়নি"}).status,"PASS");
+assert.equal(score(math,"fixture-missing",null).status,"NOT TESTED");
+console.log("PASS: deterministic scorer handles fixture PASS/FAIL/NOT TESTED and per-dimension counts.");
+
 const real=responseDoc.source==="real_model"&&responseDoc.provider&&responseDoc.timestamp;
 const allAnswered=results.every(x=>x.status!=="NOT TESTED");
 const report={benchmark_status:!real?"NOT TESTED":allAnswered?"REAL MODEL RUN RECORDED":"INCOMPLETE REAL MODEL RUN",source:responseDoc.source||"no_response_file",provider:real?responseDoc.provider:null,timestamp:real?responseDoc.timestamp:null,dimensions,cases:results,limitations:["Phrase checks are heuristics, not semantic truth.","Evidence entries are not independently fetched or verified.","Mock answers never count as a real-model benchmark."]};
