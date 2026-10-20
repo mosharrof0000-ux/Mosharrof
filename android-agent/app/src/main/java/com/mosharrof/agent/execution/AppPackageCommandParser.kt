@@ -17,7 +17,7 @@ object AppPackageCommandParser {
         if (lower in setOf("install app", "install apk", "অ্যাপ ইনস্টল করো", "অ্যাপ ইনস্টল করুন", "ইনস্টল করো", "ইনস্টল করুন")) {
             return AppPackageCommand.PickApk
         }
-        val installPrefixes = listOf("install ", "install app ", "অ্যাপ ইনস্টল ", "ইনস্টল করো ", "ইনস্টল করুন ")
+        val installPrefixes = listOf("install app ", "install ", "অ্যাপ ইনস্টল ", "ইনস্টল করো ", "ইনস্টল করুন ")
         val installTarget = installPrefixes.firstOrNull { lower.startsWith(it) }?.let { command.drop(it.length).trim() }
         if (installTarget != null) {
             if (installTarget.isBlank() || installTarget.equals("apk", true) || installTarget.equals("app", true) ||
