@@ -28,6 +28,8 @@ def main() -> int:
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
+        "core/action-contributions/index.js": "web/runtime/core/action-contributions/index.js",
+        "core/action-contributions/manifest.json": "web/runtime/core/action-contributions/manifest.json",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
         "core/composer-layout.js": "web/composer-layout.js",
