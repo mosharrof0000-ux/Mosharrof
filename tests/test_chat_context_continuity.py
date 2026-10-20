@@ -9,7 +9,6 @@ def test_worker_uses_bounded_conversation_history_for_all_chat_providers():
     assert "buildChatContext(body.text,body.history,body.memory_context)" in chat
     assert "historyInput.slice(-12)" in helper
     assert "Math.min(6000, 12000 - current.length - memory.length - 200)" in helper
-    assert "historyInput.slice(-12)" in helper
     assert "Current user message:" in helper
     assert "generateWithCloudflareChat(fallbackText,env,report,targetWords)" in chat
     assert '"llama-3.1-8b-instant").trim(),fallbackText,{},report,targetWords' in chat
@@ -24,6 +23,7 @@ def test_prepared_frontend_sends_prior_turns_without_current_message_as_history(
     assert "chat request shape changed" in patch
     wrapper = Path("scripts/android/prepare-wrapper.sh").read_text(encoding="utf-8")
     assert "python3 scripts/prepare_web_organ_runtime.py" in wrapper
+
 
 def test_context_boundary_bengali_and_current_request_contract():
     helper = Path("core/chat-context.js").read_text(encoding="utf-8")
