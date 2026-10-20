@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise one real chat round-trip inside the installed MOSHARROF Android APK.
 
-Uses the Android WebView page-level Chrome DevTools Protocol directly. Browser-level
-Playwright CDP setup is not supported by Android WebView's browser-context API.
-"""
 from __future__ import annotations
 
 import argparse
@@ -38,15 +34,12 @@ report = {
     "errors": [],
 }
 
-
 def record(name: str, passed: bool, detail: str = "") -> None:
     report["checks"].append({"name": name, "passed": bool(passed), "detail": detail})
     if not passed:
         report["errors"].append({"check": name, "detail": detail})
 
-
 from apk_webview_cdp import PageCDP
-
 
 def get_targets() -> list[dict]:
     target_file = out / "webview-targets.json"
@@ -55,7 +48,6 @@ def get_targets() -> list[dict]:
     endpoint = args.cdp_endpoint.rstrip("/") + "/json/list"
     with urlopen(endpoint, timeout=15) as response:
         return json.load(response)
-
 
 def main() -> int:
     cdp = None
@@ -160,7 +152,6 @@ def main() -> int:
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
 
-            # Verify the returned answer has visible layout geometry in the installed WebView.
             visible_state = cdp.evaluate("""(() => {
               const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
               const last = nodes[nodes.length - 1];
@@ -198,7 +189,6 @@ def main() -> int:
                 pass
 
     return 0 if report["checks"] and all(check["passed"] for check in report["checks"]) else 1
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
