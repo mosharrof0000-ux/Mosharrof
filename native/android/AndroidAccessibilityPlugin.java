@@ -19,6 +19,32 @@ public class AndroidAccessibilityPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void performGlobalAction(PluginCall call) {
+        String action = call.getString("action", "");
+        if (action == null || !java.util.Arrays.asList(
+                "back", "home", "notifications", "quick_settings",
+                "recents", "power_dialog", "screenshot").contains(action)) {
+            call.reject("অনুমোদিত কাজ: back, home, notifications, quick_settings, recents, power_dialog, screenshot।");
+            return;
+        }
+        if (!AgentAccessibilityService.isConnected()) {
+            call.reject("প্রথমে Android Settings থেকে MOSHARROF AI Accessibility চালু করুন।");
+            return;
+        }
+        boolean dispatched = AgentAccessibilityService.performSafeGlobalAction(action);
+        if (!dispatched) {
+            call.reject("Android এই মুহূর্তে কাজটি গ্রহণ করেনি: " + action);
+            return;
+        }
+        JSObject result = new JSObject();
+        result.put("action", action);
+        result.put("dispatched", true);
+        result.put("verified", false);
+        result.put("note", "কাজ পাঠানো হয়েছে; বর্তমান স্ক্রিন/ডিভাইসের অবস্থা পুনরায় পড়ে ফল যাচাই করতে হবে।");
+        call.resolve(result);
+    }
+
+    @PluginMethod
     public void inspectVisibleUi(PluginCall call) {
         if (!AgentAccessibilityService.isConnected()) {
             call.reject("প্রথমে Android Settings থেকে MOSHARROF AI Accessibility চালু করুন।");
