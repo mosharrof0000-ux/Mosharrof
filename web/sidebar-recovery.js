@@ -130,3 +130,8 @@ import("./core/personal-memory-bridge.js")
 
 // Load the isolated New Chat / floating-window organ without growing the legacy entrypoint.
 import("./core/new-chat-floating/index.js").catch(function (error) { console.error("[MOSHARROF Floating Chat] Initialization failed:", error); });
+
+
+// Load the registered message action-bar contribution module from its isolated folder.
+import("./modules/action-contributions/index.js")
+  .catch(function (error) { console.error("[MOSHARROF Action Registry] Initialization failed:", error); });
