@@ -10,6 +10,12 @@ on:
 permissions:
   contents: write
 
+# Cancel only superseded APK builds for the same source branch and event type.
+# Keep push and pull_request lanes separate because Android QA needs the exact head-SHA push artifact.
+concurrency:
+  group: mosharrof-apk-build-${{ github.event_name }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
