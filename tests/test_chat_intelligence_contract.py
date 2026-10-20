@@ -53,3 +53,10 @@ def test_memory_claims_are_limited_to_available_evidence():
 def test_tool_permissions_and_final_verification_are_explicit():
     assert "A plan is not permission to act" in PROMPT
     assert "distinguishes plans from completed actions" in PROMPT
+
+def test_shared_system_prompt_includes_the_shared_rules_module():
+    prompt_module = Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8")
+    rules_module = Path("core/reflective-intelligence-rules.js").read_text(encoding="utf-8")
+    assert 'import { REFLECTIVE_INTELLIGENCE_RULES } from "./reflective-intelligence-rules.js";' in prompt_module
+    assert "...REFLECTIVE_INTELLIGENCE_RULES" in prompt_module
+    assert "export const REFLECTIVE_INTELLIGENCE_RULES" in rules_module
