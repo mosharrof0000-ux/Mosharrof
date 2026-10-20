@@ -33,3 +33,7 @@ Existing controls remain manual and are marked `data-automatic-ready="false"` wi
 - `python -m unittest discover -s tests/ui -p 'test_*.py' -v`
 - `python scripts/prepare_web_organ_runtime.py`
 - `python scripts/test_action_contribution_browser.py` after installing Playwright Chromium and serving `web/` locally
+
+## Promotion gate
+
+A successful static/browser registry test does not substitute for the APK WebView real-chat workflow. A cancelled or not-started Android QA run is not a pass; keep the PR unmerged until that workflow completes successfully or an authorized reviewer explicitly waives the device-level check.
