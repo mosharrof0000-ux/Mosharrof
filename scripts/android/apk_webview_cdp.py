@@ -103,5 +103,16 @@ class PageCDP:
         )
         path.write_bytes(base64.b64decode(result["data"]))
 
+    def answer_visibility(self) -> dict:
+        return self.evaluate("""(() => {
+          const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
+          const body = nodes[nodes.length - 1]?.querySelector('.rich-content');
+          if (!body) return {visible:false, reason:'assistant answer element missing'};
+          const rect = body.getBoundingClientRect(), style = getComputedStyle(body);
+          return {visible:rect.width > 0 && rect.height > 0 && style.display !== 'none' &&
+            style.visibility !== 'hidden' && Number(style.opacity || 1) > 0,
+            width:rect.width, height:rect.height, textChars:(body.innerText || '').trim().length};
+        })()""")
+
     def close(self) -> None:
         self.ws.close()
