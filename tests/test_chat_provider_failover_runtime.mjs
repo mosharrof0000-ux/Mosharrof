@@ -139,6 +139,34 @@ try {
   assert.equal(result.data.provider, "openrouter");
   assert.match(result.data.text, /OpenRouter answer/);
 
+  // Intelligence regression: HTTP 503 from Gemini must not be reported as a successful Gemini answer.
+  globalThis.fetch = async (url) => String(url).includes("generativelanguage.googleapis.com")
+    ? response({ error: { message: "simulated service unavailable" } }, 503)
+    : response({});
+  result = await ask({
+    GEMINI_API_KEY: "test-key",
+    AI: { run: async () => ({ response: "Fallback after Gemini 503" }) }
+  });
+  assert.equal(result.status, 200);
+  assert.equal(result.data.provider, "cloudflare-workers-ai");
+  assert.match(result.data.text, /Fallback after Gemini 503/);
+  assert.ok(result.data.attempted.some(x => x.provider === "gemini" && x.status === 503));
+
+  // Intelligence regression: a timed-out primary provider should yield to a healthy fallback.
+  globalThis.fetch = async (url) => {
+    if (String(url).includes("generativelanguage.googleapis.com")) {
+      throw new DOMException("simulated provider timeout", "AbortError");
+    }
+    return response({});
+  };
+  result = await ask({
+    GEMINI_API_KEY: "test-key",
+    AI: { run: async () => ({ response: "Fallback after Gemini timeout" }) }
+  });
+  assert.equal(result.status, 200);
+  assert.equal(result.data.provider, "cloudflare-workers-ai");
+  assert.match(result.data.text, /Fallback after Gemini timeout/);
+
   globalThis.fetch = originalFetch;
   const health = await worker.fetch(new Request("https://worker.test/health"), {
     GEMINI_API_KEY: "secret-must-not-leak",
