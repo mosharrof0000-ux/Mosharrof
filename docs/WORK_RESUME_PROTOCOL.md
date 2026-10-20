@@ -82,3 +82,34 @@ Checkpoint ID: `MOSHARROF-2026-10-19-CORRECTED-STATUS-03`. This is a documentati
 - The post-merge six-hour run `39266014801` succeeded as a workflow but the log showed a safe pause because `AGENT_ACCESS_TOKEN` was empty. This was a real blocker, not a claim that all automation was working.
 - PR #764 `fix(automation): keep six-hour agent running without dedicated token` was subsequently merged. Its implementation uses `MOSHARROF_RECOVERY_TOKEN || github.token`, scoped workflow write permissions, and bounded Gemini retries/fallback attempts isolated in `scripts/automation/gemini_provider.py`. The merge fixes the identified token fallback path, but the next scheduled/dispatch run still needs log-level verification for actual work or an explicit safe no-op.
 - Do not treat a successful workflow conclusion alone as proof that backlog work was completed. Inspect its logs, outputs, and any resulting commit/PR; keep the APK/live real-chat acceptance criteria separate.
+
+
+## Watchdog checkpoint — 2026-10-20 20:04 Asia/Dhaka
+
+Task ID: `6ad50372e0f481918b124ed67e0d8ded` (Mosharrof Intelligence 11-20). This checkpoint was prepared on isolated branch `docs/checkpoint-watchdog-20261020-2004` from main `9c01e73308235a13a63c00d42cbe5ff6c9b5bbac`; it is not a direct main write and has not been merged or deployed.
+
+### Automation status
+- Enabled: Mosharrof Intelligence 01-10, 11-20, and 21-30. The exact display titles “Mosharrof Backlog Recovery” and “Mosharrof Morning Report” were not present in the current automation list; 01-10 and 21-30 are the enabled automations whose saved prompts cover backlog recovery and morning reporting respectively. Do not claim continuous monitoring: checks occur only when scheduled runs wake.
+- Latest main SHA observed: `9c01e73308235a13a63c00d42cbe5ff6c9b5bbac`.
+- Recent autonomous-engine activity: [Parallel Engine Builder run 39430054991](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39430054991) FAILED because it attempted to open a checkpoint-only PR; [run 39430183174](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39430183174) succeeded as a safe no-op (“No autonomous patch branch was created; no PR is needed”). Several downstream `workflow_run` jobs were skipped; do not treat skipped as passes or as useful work completed.
+
+### Priority continuity PR #776
+- Status: PENDING REVIEW; open, mergeable, not merged. Branch `feature/chatgpt-continuity-integration-20261020`, head `9211d1e6e061fe3812f12f85e9928ecf39f1fc6e`.
+- Exact-head Actions listed for this commit completed successfully, including [Android WebView Real Chat QA #39310736563](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39310736563). The `apk-webview-real-chat` job passed: matching branch APK downloaded, emulator installed/launched the APK, and the WebView real-chat smoke completed. Evidence artifact: [mosharrof-apk-webview-real-chat-39310736563](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39310736563/artifacts/12216467257).
+- Limitations: this is emulator evidence only, not physical-phone acceptance. Provider identity and an independent current Live/PWA round-trip remain NOT TESTED. A Codex review summary on an older commit reported unresolved findings; no formal review objects were returned. Do not merge until the current diff/review findings and required checks are re-reviewed.
+
+### Android QA blocker
+- [PR #799](https://github.com/mosharrof0000-ux/Mosharrof/pull/799), branch `fix/android-qa-fail-fast-artifact-lookup-20261020`, head `165f1e463d0aa65d3e0bed7c1357f18ec41ed7fa`: [matching APK build #39430040528](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39430040528) PASS; [Android real-chat QA #39430040417](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39430040417) FAIL.
+- Logs show emulator/device setup had repeated transient ADB errors and an ActivityManager launch timeout, but the app WebView target `https://localhost/` was eventually discovered and before/failed screenshots were captured. The failure occurred in “Run real chat round-trip and capture screenshots”; 18 diagnostic artifacts were uploaded ([artifact 12268815632](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39430040417/artifacts/12268815632)). The connector could not inspect the ZIP contents, so the precise assertion/provider failure is NOT YET CONFIRMED. Do not blindly retry before the report/screenshots are inspected.
+- Related open PR #780 changes WebView CDP reconnection; review overlap before combining. PR #799 is not merged; main/live remains protected.
+
+### Chat-intelligence lanes 11–20
+- PASS — [PR #793](https://github.com/mosharrof0000-ux/Mosharrof/pull/793) merged as `9c01e73308235a13a63c00d42cbe5ff6c9b5bbac`, adding `tests/test_chat_intelligence_eval_behavior.py` with 20 deterministic cases across 10 lanes, positive/negative fixtures, independent score dimensions, and no network/model calls. Exact-head [Mosharrof Tests run #39394381869](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39394381869) and CI gates passed before merge.
+- The deterministic fixture/evaluator coverage is not a live-model benchmark. Real-model semantic quality remains NOT TESTED. The separate PR #790 matrix is a scaffold for lanes 1–10; do not describe its phrase-based scores as semantic proof.
+
+### Evidence matrix and next actions
+- PASS: PR #776 exact-head CI and emulator WebView real-chat smoke; PR #793 deterministic 11–20 case suite; PR #789 mocked provider 503/timeout fallback; PR #790 1–10 matrix scaffold.
+- FAIL: PR #799 Android real-chat smoke #39430040417; Parallel Engine Builder #39430054991.
+- PENDING: PR #776 current review/continuity acceptance; PR #799 artifact/report diagnosis; PR #780 overlap review; verify current Live/PWA chat independently.
+- NOT TESTED: physical Android device; real-model benchmark/provider identity; independent current Live/PWA real-chat round-trip.
+- Next safe action: inspect artifact `12268815632` report/screenshots and identify the failing check before changing or retrying the Android test. In parallel, review PR #776’s current diff against its stale Codex review and keep it unmerged until all findings/checks are resolved. No production deployment was initiated in this watchdog pass.
