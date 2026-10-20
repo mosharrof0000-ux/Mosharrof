@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "web/modules/action-contributions/manifest.json"
 RUNTIME = ROOT / "web/modules/action-contributions/index.js"
 ENTRYPOINT = ROOT / "web/index.html"
+BOOTSTRAP = ROOT / "web/sidebar-recovery.js"
 
 
 def require(condition, message):
@@ -20,6 +21,7 @@ def validate():
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     runtime = RUNTIME.read_text(encoding="utf-8")
     html = ENTRYPOINT.read_text(encoding="utf-8")
+    bootstrap = BOOTSTRAP.read_text(encoding="utf-8")
 
     require(manifest.get("registry_id") == "mosharrof.ui.action_contributions",
             "unexpected registry id")
@@ -44,8 +46,8 @@ def validate():
             require(bool(item.get("automatic_block_reason")),
                     f"blocked automatic action needs a reason: {item.get('id')}")
 
-    require('./modules/action-contributions/index.js' in html,
-            "web/index.html does not load the action contribution runtime")
+    require('import("./modules/action-contributions/index.js")' in bootstrap,
+            "web/sidebar-recovery.js does not load the action contribution runtime")
     require("message-actions" in html and "function addMessageToolbar" in html,
             "existing message toolbar hook not found in entrypoint")
     require("MOSHARROF_ACTION_CONTRIBUTIONS" in runtime,
