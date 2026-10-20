@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import base64
 import json
-import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -43,19 +42,8 @@ report = {
 }
 
 
-current_stage = "initialization"
-
-
-def stage(name: str) -> None:
-    global current_stage
-    current_stage = name
-    print(f"[apk-chat-qa] stage={name}", flush=True)
-
-
 def record(name: str, passed: bool, detail: str = "") -> None:
-    item = {"name": name, "passed": bool(passed), "detail": detail}
-    report["checks"].append(item)
-    print(f"[apk-chat-qa] check={name} passed={bool(passed)} detail={detail[:240]}", flush=True)
+    report["checks"].append({"name": name, "passed": bool(passed), "detail": detail})
     if not passed:
         report["errors"].append({"check": name, "detail": detail})
 
@@ -64,34 +52,53 @@ class PageCDP:
     """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
 
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(
-            ws_url,
-            timeout=30,
-            http_proxy_host=None,
-            http_no_proxy=["127.0.0.1", "localhost"],
-        )
+        # Android WebView CDP can publish its target before the page socket is
+        # ready. Retry the page target and avoid an Origin header, which some
+        # embedded WebView builds reject or leave hanging.
+        self.ws = None
+        errors = []
+        candidates = [ws_url]
+        if "127.0.0.1" in ws_url:
+            candidates.append(ws_url.replace("127.0.0.1", "localhost", 1))
+        for attempt in range(1, 7):
+            for candidate in candidates:
+                try:
+                    self.ws = websocket.create_connection(
+                        candidate,
+                        timeout=6,
+                        suppress_origin=True,
+                        http_proxy_host=None,
+                        http_proxy_port=None,
+                        http_no_proxy=["127.0.0.1", "localhost"],
+                    )
+                    break
+                except Exception as exc:
+                    errors.append(f"attempt={attempt} url={candidate}: {type(exc).__name__}: {str(exc)[:160]}")
+            if self.ws is not None:
+                break
+            time.sleep(min(attempt * 2, 8))
+        if self.ws is None:
+            raise RuntimeError(
+                "Could not open Android WebView CDP page socket after retries. "
+                "Check adb forward target, WebView DevTools socket, and local proxy bypass. "
+                + " | ".join(errors[-8:])
+            )
         self.next_id = 0
 
-    def command(self, method: str, params: dict | None = None, timeout: float = 30) -> dict:
+    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
         self.next_id += 1
         command_id = self.next_id
+        self.ws.settimeout(timeout)
         self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
         deadline = time.monotonic() + timeout
-        # CDP emits unrelated events as well as command replies. A short socket
-        # receive timeout must not abort the whole command; keep polling until
-        # its actual deadline and report the exact method if it never replies.
-        self.ws.settimeout(min(1.0, timeout))
         while time.monotonic() < deadline:
-            try:
-                message = json.loads(self.ws.recv())
-            except websocket.WebSocketTimeoutException:
-                continue
+            message = json.loads(self.ws.recv())
             if message.get("id") != command_id:
                 continue
             if "error" in message:
                 raise RuntimeError(f"CDP {method} failed: {message['error']}")
             return message.get("result", {})
-        raise TimeoutError(f"Timed out waiting for CDP command {method} after {timeout}s")
+        raise TimeoutError(f"Timed out waiting for CDP command {method}")
 
     def evaluate(self, expression: str, timeout: float = 15):
         result = self.command(
@@ -104,24 +111,7 @@ class PageCDP:
         return result.get("result", {}).get("value")
 
     def screenshot(self, path: Path) -> None:
-        # Prefer Android's native screencap: CDP Page.captureScreenshot can hang on
-        # some Android System WebView versions and block the chat test before submit.
-        try:
-            shot = subprocess.run(
-                ["adb", "exec-out", "screencap", "-p"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=20,
-                check=True,
-            )
-            if shot.stdout.startswith(b"\x89PNG\r\n\x1a\n"):
-                path.write_bytes(shot.stdout)
-                print(f"[chat-smoke] screenshot captured via adb: {path}", flush=True)
-                return
-            raise RuntimeError("adb screencap returned non-PNG output")
-        except Exception as adb_exc:
-            print(f"[chat-smoke] adb screenshot unavailable: {type(adb_exc).__name__}: {str(adb_exc)[:180]}; trying CDP", flush=True)
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False}, timeout=10)
+        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
         path.write_bytes(base64.b64decode(result["data"]))
 
     def close(self) -> None:
@@ -139,10 +129,7 @@ def get_targets() -> list[dict]:
 
 def main() -> int:
     cdp = None
-    stage = "load WebView target list"
     try:
-        print(f"[chat-smoke] {stage}", flush=True)
-        stage("read_webview_targets")
         targets = get_targets()
         target = next(
             (item for item in targets if item.get("type") == "page" and
@@ -154,11 +141,7 @@ def main() -> int:
         if target is None:
             return 1
 
-        stage = "connect to WebView DevTools"
-        print(f"[chat-smoke] {stage}", flush=True)
         cdp = PageCDP(target["webSocketDebuggerUrl"])
-        stage = "enable Page and Runtime domains"
-        print(f"[chat-smoke] {stage}", flush=True)
         cdp.command("Page.enable")
         cdp.command("Runtime.enable")
         try:
@@ -166,9 +149,6 @@ def main() -> int:
         except Exception:
             pass
 
-        stage = "wait for visible chat composer"
-        print(f"[chat-smoke] {stage}", flush=True)
-        stage("wait_for_visible_chat_composer")
         deadline = time.monotonic() + 30
         ready = False
         while time.monotonic() < deadline:
@@ -183,16 +163,9 @@ def main() -> int:
         if not ready:
             raise TimeoutError("APK chat composer did not become visible")
 
-        stage = "capture pre-chat screenshot"
-        print(f"[chat-smoke] {stage}", flush=True)
         cdp.screenshot(out / "apk-webview-before.png")
-        stage = "count baseline assistant messages"
-        print(f"[chat-smoke] {stage}", flush=True)
         baseline = int(cdp.evaluate("document.querySelectorAll('#messages .message.ai:not(.typing)').length") or 0)
         prompt_js = json.dumps(prompt, ensure_ascii=False)
-        stage = "submit synthetic prompt through composer"
-        print(f"[chat-smoke] {stage}", flush=True)
-        stage("submit_synthetic_prompt")
         submitted = cdp.evaluate(
             f"""(() => {{
               const input = document.querySelector('#input');
@@ -210,9 +183,6 @@ def main() -> int:
         if not submitted:
             raise RuntimeError("Could not submit synthetic prompt through the app composer")
 
-        stage = "wait for real backend assistant response"
-        print(f"[chat-smoke] {stage}", flush=True)
-        stage("wait_for_real_backend_reply")
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
@@ -259,23 +229,37 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+
+            # Verify the returned answer has visible layout geometry in the installed WebView.
+            visible_state = cdp.evaluate("""(() => {
+              const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
+              const last = nodes[nodes.length - 1];
+              const body = last && last.querySelector('.rich-content');
+              if (!body) return {visible:false, reason:'assistant answer element missing'};
+              const rect = body.getBoundingClientRect();
+              const style = getComputedStyle(body);
+              const visible = rect.width > 0 && rect.height > 0 &&
+                style.display !== 'none' && style.visibility !== 'hidden' &&
+                Number(style.opacity || 1) > 0;
+              return {visible, width:rect.width, height:rect.height, textChars:(body.innerText || '').trim().length};
+            })()""")
+            record("assistant_answer_visibly_rendered_in_apk",
+                   bool(visible_state and visible_state.get("visible")),
+                   json.dumps(visible_state, ensure_ascii=False)[:500])
+            time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
-            stage = "capture failed-chat screenshot"
-            print(f"[chat-smoke] {stage}", flush=True)
             cdp.screenshot(out / "apk-webview-failed.png")
     except Exception as exc:
-        print(f"[chat-smoke] FAILED stage={stage}: {type(exc).__name__}: {str(exc)[:300]}", flush=True)
-        record("cdp_connection_and_chat", False, f"stage={stage}; {type(exc).__name__}: {str(exc)[:500]}")
+        record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:
                 cdp.screenshot(out / "apk-webview-failed.png")
             except Exception:
                 pass
     finally:
-        report["last_stage"] = current_stage
         (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         if cdp is not None:
             try:
