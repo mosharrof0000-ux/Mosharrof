@@ -52,10 +52,10 @@ class PageCDP:
     """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
 
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
+        self.ws = websocket.create_connection(ws_url, timeout=30)
         self.next_id = 0
 
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
+    def command(self, method: str, params: dict | None = None, timeout: float = 30) -> dict:
         self.next_id += 1
         command_id = self.next_id
         self.ws.settimeout(timeout)
@@ -81,7 +81,8 @@ class PageCDP:
         return result.get("result", {}).get("value")
 
     def screenshot(self, path: Path) -> None:
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
+        # Android WebView may stall on captureBeyondViewport; capture the visible viewport only.
+        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False}, timeout=30)
         path.write_bytes(base64.b64decode(result["data"]))
 
     def close(self) -> None:
@@ -99,7 +100,9 @@ def get_targets() -> list[dict]:
 
 def main() -> int:
     cdp = None
+    stage = "load WebView target list"
     try:
+        print(f"[chat-smoke] {stage}", flush=True)
         targets = get_targets()
         target = next(
             (item for item in targets if item.get("type") == "page" and
@@ -111,7 +114,11 @@ def main() -> int:
         if target is None:
             return 1
 
+        stage = "connect to WebView DevTools"
+        print(f"[chat-smoke] {stage}", flush=True)
         cdp = PageCDP(target["webSocketDebuggerUrl"])
+        stage = "enable Page and Runtime domains"
+        print(f"[chat-smoke] {stage}", flush=True)
         cdp.command("Page.enable")
         cdp.command("Runtime.enable")
         try:
@@ -119,6 +126,8 @@ def main() -> int:
         except Exception:
             pass
 
+        stage = "wait for visible chat composer"
+        print(f"[chat-smoke] {stage}", flush=True)
         deadline = time.monotonic() + 30
         ready = False
         while time.monotonic() < deadline:
@@ -133,9 +142,15 @@ def main() -> int:
         if not ready:
             raise TimeoutError("APK chat composer did not become visible")
 
+        stage = "capture pre-chat screenshot"
+        print(f"[chat-smoke] {stage}", flush=True)
         cdp.screenshot(out / "apk-webview-before.png")
+        stage = "count baseline assistant messages"
+        print(f"[chat-smoke] {stage}", flush=True)
         baseline = int(cdp.evaluate("document.querySelectorAll('#messages .message.ai:not(.typing)').length") or 0)
         prompt_js = json.dumps(prompt, ensure_ascii=False)
+        stage = "submit synthetic prompt through composer"
+        print(f"[chat-smoke] {stage}", flush=True)
         submitted = cdp.evaluate(
             f"""(() => {{
               const input = document.querySelector('#input');
@@ -153,6 +168,8 @@ def main() -> int:
         if not submitted:
             raise RuntimeError("Could not submit synthetic prompt through the app composer")
 
+        stage = "wait for real backend assistant response"
+        print(f"[chat-smoke] {stage}", flush=True)
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
@@ -203,9 +220,12 @@ def main() -> int:
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
+            stage = "capture failed-chat screenshot"
+            print(f"[chat-smoke] {stage}", flush=True)
             cdp.screenshot(out / "apk-webview-failed.png")
     except Exception as exc:
-        record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
+        print(f"[chat-smoke] FAILED stage={stage}: {type(exc).__name__}: {str(exc)[:300]}", flush=True)
+        record("cdp_connection_and_chat", False, f"stage={stage}; {type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:
                 cdp.screenshot(out / "apk-webview-failed.png")
