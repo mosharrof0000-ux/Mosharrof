@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import os
-from playwright.sync_api import sync_playwright
 
 PAGE_URL = os.environ.get("PAGE_URL", "http://127.0.0.1:4173/").rstrip("/") + "/"
 
 
 def main() -> int:
+    from playwright.sync_api import sync_playwright
+
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page()
