@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import subprocess
 import time
 
 import websocket
@@ -49,17 +50,23 @@ class PageCDP:
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
         self.next_id += 1
         command_id = self.next_id
-        self.ws.settimeout(timeout)
         self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
         deadline = time.monotonic() + timeout
+        # WebView sends asynchronous events on the same socket. A receive timeout
+        # is only a polling interval; keep waiting for this command's reply until
+        # its overall deadline, rather than failing on the first quiet second.
+        self.ws.settimeout(min(1.0, timeout))
         while time.monotonic() < deadline:
-            message = json.loads(self.ws.recv())
+            try:
+                message = json.loads(self.ws.recv())
+            except websocket.WebSocketTimeoutException:
+                continue
             if message.get("id") != command_id:
                 continue
             if "error" in message:
                 raise RuntimeError(f"CDP {method} failed: {message['error']}")
             return message.get("result", {})
-        raise TimeoutError(f"Timed out waiting for CDP command {method}")
+        raise TimeoutError(f"Timed out waiting for CDP command {method} after {timeout}s")
 
     def evaluate(self, expression: str, timeout: float = 15):
         result = self.command(
@@ -72,7 +79,28 @@ class PageCDP:
         return result.get("result", {}).get("value")
 
     def screenshot(self, path: Path) -> None:
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
+        # Native Android screencap is more reliable than Page.captureScreenshot
+        # on some System WebView versions and preserves useful failure evidence.
+        try:
+            shot = subprocess.run(
+                ["adb", "exec-out", "screencap", "-p"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=20,
+                check=True,
+            )
+            if shot.stdout.startswith(b"\x89PNG\r\n\x1a\n"):
+                path.write_bytes(shot.stdout)
+                print(f"[android-qa] screenshot captured via adb: {path}", flush=True)
+                return
+            raise RuntimeError("adb screencap returned non-PNG output")
+        except Exception as exc:
+            print(f"[android-qa] adb screenshot unavailable: {type(exc).__name__}: {str(exc)[:160]}; trying CDP", flush=True)
+        result = self.command(
+            "Page.captureScreenshot",
+            {"format": "png", "captureBeyondViewport": False},
+            timeout=10,
+        )
         path.write_bytes(base64.b64decode(result["data"]))
 
     def close(self) -> None:
