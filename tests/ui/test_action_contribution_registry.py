@@ -17,13 +17,13 @@ class ActionContributionRegistryTests(unittest.TestCase):
 
     def test_existing_action_bar_is_the_only_registered_placement(self):
         import json
-        manifest = json.loads((ROOT / "web/modules/action-contributions/manifest.json").read_text(encoding="utf-8"))
+        manifest = json.loads((ROOT / "core/action-contributions/manifest.json").read_text(encoding="utf-8"))
         self.assertEqual({item["placement"] for item in manifest["contributions"]}, {"message_action_bar"})
         self.assertTrue(all(item["group_id"] == "message-actions" for item in manifest["contributions"]))
 
     def test_automatic_execution_fails_closed_until_policy_and_handler_exist(self):
         import json
-        manifest = json.loads((ROOT / "web/modules/action-contributions/manifest.json").read_text(encoding="utf-8"))
+        manifest = json.loads((ROOT / "core/action-contributions/manifest.json").read_text(encoding="utf-8"))
         for item in manifest["contributions"]:
             self.assertFalse(item["automatic_ready"])
             self.assertTrue(item["automatic_block_reason"])
