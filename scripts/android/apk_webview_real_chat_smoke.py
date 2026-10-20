@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -103,8 +104,24 @@ class PageCDP:
         return result.get("result", {}).get("value")
 
     def screenshot(self, path: Path) -> None:
-        # Android WebView may stall on captureBeyondViewport; capture the visible viewport only.
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False}, timeout=30)
+        # Prefer Android's native screencap: CDP Page.captureScreenshot can hang on
+        # some Android System WebView versions and block the chat test before submit.
+        try:
+            shot = subprocess.run(
+                ["adb", "exec-out", "screencap", "-p"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=20,
+                check=True,
+            )
+            if shot.stdout.startswith(b"\x89PNG\r\n\x1a\n"):
+                path.write_bytes(shot.stdout)
+                print(f"[chat-smoke] screenshot captured via adb: {path}", flush=True)
+                return
+            raise RuntimeError("adb screencap returned non-PNG output")
+        except Exception as adb_exc:
+            print(f"[chat-smoke] adb screenshot unavailable: {type(adb_exc).__name__}: {str(adb_exc)[:180]}; trying CDP", flush=True)
+        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False}, timeout=10)
         path.write_bytes(base64.b64decode(result["data"]))
 
     def close(self) -> None:
