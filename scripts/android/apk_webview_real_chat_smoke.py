@@ -64,8 +64,12 @@ class PageCDP:
             for candidate in candidates:
                 try:
                     self.ws = websocket.create_connection(
-                        candidate, timeout=10, suppress_origin=True,
-                        http_proxy_host=None, http_proxy_port=None,
+                        candidate,
+                        timeout=6,
+                        suppress_origin=True,
+                        http_proxy_host=None,
+                        http_proxy_port=None,
+                        http_no_proxy=["127.0.0.1", "localhost"],
                     )
                     break
                 except Exception as exc:
@@ -74,7 +78,11 @@ class PageCDP:
                 break
             time.sleep(min(attempt * 2, 8))
         if self.ws is None:
-            raise RuntimeError("Could not open Android WebView CDP page socket after retries: " + " | ".join(errors[-6:]))
+            raise RuntimeError(
+                "Could not open Android WebView CDP page socket after retries. "
+                "Check adb forward target, WebView DevTools socket, and local proxy bypass. "
+                + " | ".join(errors[-8:])
+            )
         self.next_id = 0
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
