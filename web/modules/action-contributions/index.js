@@ -1,10 +1,7 @@
 (function () {
   "use strict";
 
-  var scriptUrl = document.currentScript && document.currentScript.src
-    ? document.currentScript.src
-    : window.location.href;
-  var manifestUrl = new URL("./manifest.json", scriptUrl).toString();
+  var manifestUrl = new URL("./modules/action-contributions/manifest.json", window.location.href).toString();
   var knownGroups = Object.create(null);
   var knownContributions = Object.create(null);
   var state = { status: "loading", error: null, manifest: null, annotated: 0 };
