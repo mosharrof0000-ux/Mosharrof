@@ -133,5 +133,5 @@ import("./core/new-chat-floating/index.js").catch(function (error) { console.err
 
 
 // Load the registered message action-bar contribution module from its isolated folder.
-import("./modules/action-contributions/index.js")
+import("./runtime/core/action-contributions/index.js")
   .catch(function (error) { console.error("[MOSHARROF Action Registry] Initialization failed:", error); });
