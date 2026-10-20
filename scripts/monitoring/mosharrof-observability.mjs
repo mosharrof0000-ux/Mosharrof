@@ -139,7 +139,7 @@ const skippedRuns = runs.filter((run) => run.status === "completed" && run.concl
 const latestBy = (predicate) => runs.find(predicate) || null;
 const latestAndroid = latestBy(isAndroidQA);
 const latestMonitor = latestBy(isMonitor);
-const latestMainPages = latestBy((run) => isPages(run) && run.branch === "main" && run.event === "push");
+const latestMainPages = latestBy((run) => isPages(run) && run.branch === "main");
 const selectedForJobs = [...new Map(
   [...failedRuns.slice(0, 5), latestAndroid, latestMonitor,
    ...activeRuns, ...cancelledRuns.slice(0, 5)]
@@ -268,5 +268,6 @@ console.log(JSON.stringify({
   generated_at: report.generated_at, overall_status: report.overall_status, counts: report.counts,
   live_pages: live, key_run_status: report.key_run_status,
   failed_runs: failedRuns.map(({id,name,conclusion,url}) => ({id,name,conclusion,url})),
+  failure_diagnostics: failureDiagnostics.map(({run_id,run_name,job,status,error_signals,job_url}) => ({run_id,run_name,job,status,error_signals,job_url})),
   possibly_stalled: activeRuns.filter((run) => run.possibly_stalled).map(({id,name,status,age_since_update_minutes,url}) => ({id,name,status,age_since_update_minutes,url}))
 }, null, 2));
