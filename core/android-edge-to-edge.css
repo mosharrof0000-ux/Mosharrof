@@ -220,3 +220,26 @@ header.top .right-btn, .top .right-btn {
 
 /* Keep assistant answer flex items visible in Android WebView. */
 .message.ai{width:100% !important;max-width:min(92%,760px) !important;}
+
+/* Android WebView: guarantee the message column has a measurable width. */
+#messages {
+  width: 100% !important;
+  max-width: 900px !important;
+  min-width: 0 !important;
+  margin: 0 auto !important;
+  flex: 0 0 auto !important;
+  box-sizing: border-box !important;
+}
+#messages > .message.ai {
+  align-self: flex-start !important;
+  width: 100% !important;
+  max-width: 760px !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+#messages > .message.ai > .rich-content {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
