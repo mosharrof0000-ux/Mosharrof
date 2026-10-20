@@ -55,8 +55,11 @@ class MainActivitySmokeTest {
                     target.getLocationOnScreen(targetLocation)
                     scroll.scrollTo(0, (targetLocation[1] - scrollLocation[1]).coerceAtLeast(0))
                 }
+                // Scrolling schedules a layout pass; inspect visibility only after it settles.
+                InstrumentationRegistry.getInstrumentation().waitForIdleSync()
                 val visibleRect = Rect()
-                visible = target.isShown && target.getGlobalVisibleRect(visibleRect)
+                visible = target.isShown && target.getGlobalVisibleRect(visibleRect) &&
+                    visibleRect.width() > 0 && visibleRect.height() > 0
             }
         }
         device.waitForIdle()
