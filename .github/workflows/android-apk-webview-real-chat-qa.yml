@@ -113,6 +113,19 @@ jobs:
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
           test -s artifacts/apk/app-debug.apk
 
+      - name: Initialize durable QA evidence before emulator boot
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/apk-webview-chat
+          {
+            echo "run_id=$GITHUB_RUN_ID"
+            echo "source_sha=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
+            echo "event=$GITHUB_EVENT_NAME"
+            echo "runner_os=$RUNNER_OS"
+            echo "emulator_stage=pre_boot"
+            echo "note=If emulator startup fails before the smoke script runs, this file proves the run reached pre-boot and preserves context."
+          } > artifacts/apk-webview-chat/preflight.txt
+
       - name: Install APK and test real chat inside its WebView
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -126,6 +139,9 @@ jobs:
           heap-size: 512M
           emulator-port: 5554
           emulator-boot-timeout: 900
+          # Previous run hit adb Broken pipe during the action animation setup.
+          # Avoid this extra adb mutation; smoke script handles app diagnostics.
+          disable-animations: false
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
           script: bash scripts/android/run_apk_webview_smoke.sh
 
