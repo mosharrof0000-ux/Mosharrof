@@ -1,27 +1,42 @@
-# MOSHARROF observability and status protocol
+# MOSHARROF Automation & Work Observability Engine
 
 ## Purpose
-Provide an evidence-backed, read-only snapshot for repository work so status answers can distinguish active, completed, failed, cancelled, skipped, and potentially stalled GitHub Actions jobs.
+A read-only, evidence-backed monitor for repository work. It creates a JSON machine-readable report and a Markdown human-readable report, uploaded as a 30-day GitHub Actions artifact. It is designed to answer what is running, what passed, failed, was cancelled, was skipped, or looks stale.
 
-## Sources
-- Open pull requests, branches, head SHAs, draft state, and PR links.
-- The 30 most recent GitHub Actions runs, including status, conclusion, branch, SHA, timestamps, and run links.
-- A run updated 45 minutes ago or earlier is flagged for inspection only; it is not automatically declared stopped.
-- Snapshot JSON and Markdown are uploaded as a workflow artifact.
+## Run and schedule
+- Workflow: **MOSHARROF Read-only Observability**.
+- Manual run: repository Actions tab → workflow → Run workflow.
+- Scheduled run: hourly at minute 17 (UTC), after this workflow is present on the default branch.
+- Pull requests changing the monitor script/workflow run the monitor automatically.
+- Artifact name: `mosharrof-observability-<run-id>`.
+- First verified execution: https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39391962486
 
-## How to run
-Open the repository Actions tab, select **MOSHARROF Read-only Observability**, then **Run workflow**. After completion, open the run and download the `mosharrof-observability-<run-id>` artifact. The workflow also schedules an hourly read-only snapshot once this workflow exists on the default branch.
+## Data collected
+- All open PRs and open issues (paginated).
+- Up to 100 most recent GitHub Actions runs with branch, SHA, event, timestamps, status, conclusion, and links.
+- Job/step detail for active runs and selected recent Android QA / monitor runs.
+- Explicit totals for active, potentially stale, failed, cancelled and skipped runs.
+- Latest Android WebView Real Chat QA, latest monitor run, and latest main-branch push Pages workflow.
+- Basic live Pages HTTP status and MOSHARROF AI brand-marker smoke check.
 
-## Status rules
-- **RUNNING**: GitHub reports a non-completed run.
-- **CHECK STALE**: a non-completed run has not updated for at least 45 minutes; inspect job steps/logs before deciding it is stuck.
+## Status interpretation
+- **RUNNING / QUEUED / PENDING**: GitHub reports a non-completed run.
+- **CHECK STALE**: no run update for at least 45 minutes; inspect job logs before concluding it is stuck.
 - **PASS**: completed with conclusion `success`.
-- **FAIL**: completed with `failure`, `timed_out`, or `action_required`.
-- **CANCELLED** and **SKIPPED** remain separate categories; never silently count them as passes.
-- **NOT TESTED**: no direct evidence exists for the requested behavior.
+- **FAIL**: completed with `failure`, `timed_out`, `action_required`, or `startup_failure`.
+- **CANCELLED** and **SKIPPED** are separate states, never counted as passes.
+- **ATTENTION REQUIRED / UNKNOWN**: the source is unreachable or the check has no evidence.
+- A Live HTTP/brand check is only a basic smoke test, not proof that chat, model providers, or Android behavior work.
 
-## Explicit boundaries
-This monitor is read-only. It never reruns jobs, merges PRs, writes to main, or deploys. It does not report ChatGPT internal task-automation execution, actual Pages/Worker runtime health, model-provider quality, or physical Android-device behavior. Those require their own source and direct verification. CI success does not establish that live chat or installed-APK real chat works.
+## Safety
+This monitor is read-only. It never retries jobs, cancels jobs, merges PRs, writes to main, or deploys. Stale age is a warning, not a diagnosis. It is safer to inspect job logs before retrying a failed/cancelled run. Do not merge a candidate with required checks pending or failing.
 
-## When asked for status
-Refresh live GitHub evidence first; do not rely on this artifact if a newer state is available. Report each task with a direct link, status, last update, evidence, blocker, and next safe action. For real-chat verification, inspect the dedicated Android WebView Real Chat QA run and its uploaded evidence separately.
+## Coverage boundaries
+GitHub Actions can report GitHub workflow state; it cannot read the private execution state of ChatGPT's internal task automations. Those must be queried through the separate Automations connection. The report records this as a coverage gap rather than fabricating a state.
+- Cloudflare Worker/provider runtime is not checked until a verified health endpoint is configured.
+- A GitHub-hosted runner cannot observe the user's physical Android phone.
+- Android real-chat proof requires the dedicated Android WebView Real Chat QA run and its evidence artifact.
+- The Live Pages check is an HTTP/brand marker probe only.
+
+## How to answer a status request
+Refresh current GitHub evidence instead of relying only on an old artifact. Report status, direct link, last update, evidence, blocker, and next safe action for each relevant lane. Distinguish branch/PR checks from main-branch production deployment and from physical-device testing.
