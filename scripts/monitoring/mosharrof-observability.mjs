@@ -60,6 +60,45 @@ async function getRunJobs(runId) {
   }
 }
 
+async function getFailureSignals(run) {
+  try {
+    const payload = await api(`/actions/runs/${run.id}/jobs?per_page=100`);
+    const failedJobs = (payload.jobs || []).filter((job) => job.conclusion === "failure").slice(0, 4);
+    const signals = [];
+    for (const job of failedJobs) {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/jobs/${job.id}/logs`, {
+          headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${token}`,
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": "mosharrof-read-only-observability"
+          },
+          redirect: "follow",
+          signal: AbortSignal.timeout(15000)
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const log = await response.text();
+        const matched = log.split("\\n").filter((line) =>
+          /##\\[error\\]|::error::|Error:|fatal:|exit code [1-9]|failed with exit code/i.test(line)
+        ).slice(-8).map((line) =>
+          line.replace(/(Bearer\\s+)[^\\s]+/gi, "$1[REDACTED]")
+              .replace(/(GEMINI_API_KEY|API_KEY|TOKEN|SECRET)=([^\\s]+)/gi, "$1=[REDACTED]")
+              .slice(-500)
+        );
+        signals.push({ run_id: run.id, run_name: run.name, job: job.name, job_url: job.html_url,
+          status: "LOG_INSPECTED", error_signals: matched.length ? matched : ["No standard error marker found; inspect full job log." ] });
+      } catch (error) {
+        signals.push({ run_id: run.id, run_name: run.name, job: job.name, job_url: job.html_url,
+          status: "LOG_UNAVAILABLE", error_signals: [String(error)] });
+      }
+    }
+    return signals;
+  } catch (error) {
+    return [{ run_id: run.id, run_name: run.name, status: "JOB_LOOKUP_FAILED", error_signals: [String(error)] }];
+  }
+}
+
 async function liveHealth() {
   const started = Date.now();
   try {
@@ -102,10 +141,10 @@ const latestAndroid = latestBy(isAndroidQA);
 const latestMonitor = latestBy(isMonitor);
 const latestMainPages = latestBy((run) => isPages(run) && run.branch === "main" && run.event === "push");
 const selectedForJobs = [...new Map(
-  [...activeRuns, ...runs.filter((run) => isAndroidQA(rawRuns.find((r) => r.id === run.id) || {})).slice(0, 3),
-   ...runs.filter((run) => isMonitor(rawRuns.find((r) => r.id === run.id) || {})).slice(0, 2)]
-    .map((run) => [run.id, run])
-).values()].slice(0, 25);
+  [...failedRuns.slice(0, 8), latestAndroid, latestMonitor,
+   ...activeRuns, ...cancelledRuns.slice(0, 5)]
+    .filter(Boolean).map((run) => [run.id, run])
+).values()].slice(0, 30);
 
 let cursor = 0;
 const jobDetails = {};
@@ -115,6 +154,7 @@ await Promise.all(Array.from({ length: Math.min(6, selectedForJobs.length) }, as
     jobDetails[run.id] = await getRunJobs(run.id);
   }
 }));
+const failureDiagnostics = (await Promise.all(failedRuns.slice(0, 8).map(getFailureSignals))).flat();
 
 const openPrs = pullRequests.map((pr) => ({
   number: pr.number, title: pr.title, draft: pr.draft, branch: pr.head.ref,
@@ -160,6 +200,7 @@ const report = {
   },
   active_runs: activeRuns,
   failed_runs: failedRuns,
+  failure_diagnostics: failureDiagnostics,
   cancelled_runs: cancelledRuns,
   skipped_runs: skippedRuns,
   selected_job_details: jobDetails,
@@ -199,6 +240,10 @@ const lines = [
   ...(activeRuns.length ? activeRuns.map(runLine) : ["- No active runs among the 100 most recent runs."]), "",
   "## Recent failures", "",
   ...(failedRuns.length ? failedRuns.map(runLine) : ["- No failures among the 100 most recent runs."]), "",
+  "## Failure diagnostics from job logs", "",
+  ...(failureDiagnostics.length ? failureDiagnostics.map((item) =>
+    `- Run #${item.run_id} ${item.run_name}; job ${item.job || "unknown"}; ${item.status}; ${(item.error_signals || []).join(" | ")}; ${item.job_url || ""}`
+  ) : ["- No failed-job log diagnostics available in the recent run window."]), "",
   "## Cancelled runs", "",
   ...(cancelledRuns.length ? cancelledRuns.slice(0, 20).map(runLine) : ["- No cancellations among the 100 most recent runs."]), "",
   "## Skipped runs", "",
