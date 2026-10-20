@@ -84,7 +84,8 @@ class MainActivitySmokeTest {
             "কণ্ঠ থামান",
             "কাজ বাতিল করুন",
             "ডিভাইসের অবস্থা পরীক্ষা করুন",
-            "Accessibility সেটিংস খুলুন"
+            "Accessibility সেটিংস খুলুন",
+            "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
         ).forEach(::assertActivityTextVisible)
     }
 
