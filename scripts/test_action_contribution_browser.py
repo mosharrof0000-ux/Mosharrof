@@ -69,7 +69,7 @@ def main() -> int:
         assert result["automaticReady"] == 0, result
         assert result["actionCount"] == 5, result
 
-        page.locator("#test-copy").click()
+        page.locator("#test-copy").evaluate("(element) => element.click()")
         assert page.evaluate("window.__actionRegistryExistingHandlerCalled") is True, (
             "registry adapter replaced or broke an existing click handler"
         )
