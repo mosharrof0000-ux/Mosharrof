@@ -52,7 +52,12 @@ class PageCDP:
     """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
 
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=30)
+        self.ws = websocket.create_connection(
+            ws_url,
+            timeout=30,
+            http_proxy_host=None,
+            http_no_proxy=["127.0.0.1", "localhost"],
+        )
         self.next_id = 0
 
     def command(self, method: str, params: dict | None = None, timeout: float = 30) -> dict:
