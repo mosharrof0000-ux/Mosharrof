@@ -1,5 +1,9 @@
 name: MOSHARROF Read-only Observability
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/mosharrof-observability.yml'
+      - 'scripts/monitoring/mosharrof-observability.mjs'
   workflow_dispatch:
   schedule:
     - cron: "17 * * * *"
