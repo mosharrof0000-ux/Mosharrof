@@ -41,28 +41,29 @@ class MainActivitySmokeTest {
     }
 
     private fun assertActivityTextVisible(expected: String) {
-        var visible = false
+        lateinit var target: TextView
         activityRule.scenario.onActivity { activity ->
             val decor = activity.window.decorView
-            val target = findTextView(decor, expected)
-            assertNotNull("Expected TextView in the activity hierarchy: $expected", target)
-            if (target != null) {
-                val scroll = findScrollView(decor)
-                if (scroll != null) {
-                    val scrollLocation = IntArray(2)
-                    val targetLocation = IntArray(2)
-                    scroll.getLocationOnScreen(scrollLocation)
-                    target.getLocationOnScreen(targetLocation)
-                    scroll.scrollTo(0, (targetLocation[1] - scrollLocation[1]).coerceAtLeast(0))
-                }
-                // Scrolling schedules a layout pass; inspect visibility only after it settles.
-                InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-                val visibleRect = Rect()
-                visible = target.isShown && target.getGlobalVisibleRect(visibleRect) &&
-                    visibleRect.width() > 0 && visibleRect.height() > 0
+            target = findTextView(decor, expected)
+                ?: throw AssertionError("Expected TextView in the activity hierarchy: $expected")
+            val scroll = findScrollView(decor)
+            if (scroll != null) {
+                val scrollLocation = IntArray(2)
+                val targetLocation = IntArray(2)
+                scroll.getLocationOnScreen(scrollLocation)
+                target.getLocationOnScreen(targetLocation)
+                scroll.scrollTo(0, (targetLocation[1] - scrollLocation[1]).coerceAtLeast(0))
             }
         }
-        device.waitForIdle()
+        // Wait outside the Activity's UI-thread callback so Android can complete layout.
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        var visible = false
+        activityRule.scenario.onActivity {
+            val visibleRect = Rect()
+            visible = target.isShown && target.getGlobalVisibleRect(visibleRect) &&
+                visibleRect.width() > 0 && visibleRect.height() > 0
+        }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
         assertTrue("Expected visible activity text: $expected", visible)
     }
 
