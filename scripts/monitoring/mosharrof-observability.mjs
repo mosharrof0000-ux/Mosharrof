@@ -63,7 +63,7 @@ async function getRunJobs(runId) {
 async function getFailureSignals(run) {
   try {
     const payload = await api(`/actions/runs/${run.id}/jobs?per_page=100`);
-    const failedJobs = (payload.jobs || []).filter((job) => job.conclusion === "failure").slice(0, 4);
+    const failedJobs = (payload.jobs || []).filter((job) => job.conclusion === "failure").slice(0, 2);
     const signals = [];
     for (const job of failedJobs) {
       try {
@@ -141,7 +141,7 @@ const latestAndroid = latestBy(isAndroidQA);
 const latestMonitor = latestBy(isMonitor);
 const latestMainPages = latestBy((run) => isPages(run) && run.branch === "main" && run.event === "push");
 const selectedForJobs = [...new Map(
-  [...failedRuns.slice(0, 8), latestAndroid, latestMonitor,
+  [...failedRuns.slice(0, 5), latestAndroid, latestMonitor,
    ...activeRuns, ...cancelledRuns.slice(0, 5)]
     .filter(Boolean).map((run) => [run.id, run])
 ).values()].slice(0, 30);
@@ -154,7 +154,7 @@ await Promise.all(Array.from({ length: Math.min(6, selectedForJobs.length) }, as
     jobDetails[run.id] = await getRunJobs(run.id);
   }
 }));
-const failureDiagnostics = (await Promise.all(failedRuns.slice(0, 8).map(getFailureSignals))).flat();
+const failureDiagnostics = (await Promise.all(failedRuns.slice(0, 5).map(getFailureSignals))).flat();
 
 const openPrs = pullRequests.map((pr) => ({
   number: pr.number, title: pr.title, draft: pr.draft, branch: pr.head.ref,
