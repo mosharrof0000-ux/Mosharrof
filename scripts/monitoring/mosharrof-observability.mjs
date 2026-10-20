@@ -79,11 +79,11 @@ async function getFailureSignals(run) {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const log = await response.text();
-        const matched = log.split(/\\r\\n|\\n|\\r/).filter((line) =>
-          /##\\[error\\]|::error::|Error:|fatal:|exit code [1-9]|failed with exit code|not configured|permission denied|unauthorized|timed out/i.test(line)
+        const matched = log.split(/\r\n|\n|\r/).filter((line) =>
+          /##\[error\]|::error::|Error:|fatal:|exit code [1-9]|failed with exit code|not configured|permission denied|unauthorized|timed out/i.test(line)
         ).slice(-8).map((line) =>
-          line.replace(/(Bearer\\s+)[^\\s]+/gi, "$1[REDACTED]")
-              .replace(/(GEMINI_API_KEY|API_KEY|TOKEN|SECRET)=([^\\s]+)/gi, "$1=[REDACTED]")
+          line.replace(/(Bearer\s+)[^\s]+/gi, "$1[REDACTED]")
+              .replace(/(GEMINI_API_KEY|API_KEY|TOKEN|SECRET)=([^\s]+)/gi, "$1=[REDACTED]")
               .slice(-500)
         );
         signals.push({ run_id: run.id, run_name: run.name, job: job.name, job_url: job.html_url,
