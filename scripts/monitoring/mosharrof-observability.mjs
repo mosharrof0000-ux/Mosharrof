@@ -66,7 +66,7 @@ const [pullRequests, issues, runsPayload, live] = await Promise.all([
   pages("/pulls?state=open"),
   pages("/issues?state=open"),
   api("/actions/runs?per_page=100"),
-  liveHealth()
+  liveHealth(liveUrl)
 ]);
 const rawRuns = runsPayload.workflow_runs || [];
 const runs = rawRuns.map(mapRun);
@@ -93,7 +93,7 @@ await Promise.all(Array.from({ length: Math.min(6, selectedForJobs.length) }, as
   }
 }));
 const failureDiagnostics = (await Promise.all(failedRuns.slice(0, 5).map((run) =>
-  getFailureSignals(run, { owner, repo, token })
+  getFailureSignals(run, { owner, repo, token, api })
 ))).flat();
 
 const openPrs = pullRequests.map((pr) => ({
