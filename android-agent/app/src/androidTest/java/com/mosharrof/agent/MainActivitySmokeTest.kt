@@ -52,7 +52,11 @@ class MainActivitySmokeTest {
                 val targetLocation = IntArray(2)
                 scroll.getLocationOnScreen(scrollLocation)
                 target.getLocationOnScreen(targetLocation)
-                scroll.scrollTo(0, (targetLocation[1] - scrollLocation[1]).coerceAtLeast(0))
+                // targetLocation is viewport-relative after earlier assertions have scrolled.
+                // Add the current scroll offset to recover the child's content coordinate.
+                val targetContentY = scroll.scrollY + targetLocation[1] - scrollLocation[1]
+                scroll.scrollTo(0, targetContentY.coerceAtLeast(0))
+                target.requestRectangleOnScreen(Rect(0, 0, target.width, target.height), true)
             }
         }
         // Wait outside the Activity's UI-thread callback so Android can complete layout.
