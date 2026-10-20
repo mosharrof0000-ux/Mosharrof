@@ -62,6 +62,14 @@ class TaskCoordinatorTests(unittest.TestCase):
         self.assertEqual(result["state"], "DENIED")
         self.assertEqual(result["decision"]["reason"], "UNKNOWN_CAPABILITY")
 
+    def test_permanently_blocked_capability_fails_closed(self):
+        args = {**self.task_args, "capability": "video.delete", "granted_permissions": ["video.*"]}
+        self.coordinator.create_task(**args, task_id="delete-task")
+        self.coordinator.approve_task("delete-task", approved=True)
+        result = self.coordinator.authorize_task("delete-task")
+        self.assertEqual(result["state"], "DENIED")
+        self.assertEqual(result["decision"]["reason"], "PERMANENT_SAFETY_BLOCK")
+
     def test_only_authorized_tasks_can_be_marked_running(self):
         self.coordinator.create_task(**self.task_args, task_id="not-ready")
         with self.assertRaises(ValueError):
