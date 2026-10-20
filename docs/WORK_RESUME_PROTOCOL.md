@@ -82,3 +82,43 @@ Checkpoint ID: `MOSHARROF-2026-10-19-CORRECTED-STATUS-03`. This is a documentati
 - The post-merge six-hour run `39266014801` succeeded as a workflow but the log showed a safe pause because `AGENT_ACCESS_TOKEN` was empty. This was a real blocker, not a claim that all automation was working.
 - PR #764 `fix(automation): keep six-hour agent running without dedicated token` was subsequently merged. Its implementation uses `MOSHARROF_RECOVERY_TOKEN || github.token`, scoped workflow write permissions, and bounded Gemini retries/fallback attempts isolated in `scripts/automation/gemini_provider.py`. The merge fixes the identified token fallback path, but the next scheduled/dispatch run still needs log-level verification for actual work or an explicit safe no-op.
 - Do not treat a successful workflow conclusion alone as proof that backlog work was completed. Inspect its logs, outputs, and any resulting commit/PR; keep the APK/live real-chat acceptance criteria separate.
+
+
+## Latest durable checkpoint — 2026-10-20 14:02 Asia/Dhaka
+
+Checkpoint ID: `MOSHARROF-2026-10-20-CHAT-INTELLIGENCE-01`. This checkpoint supersedes the 2026-10-19 status for current work; it does not claim that stale runs are current evidence. Main/Live were not changed by this checkpoint.
+
+### Priority A — resume protocol and backlog evidence
+
+- **Task MOSHARROF-CHK-640 — PASS/CLOSED:** PR [#640](https://github.com/mosharrof0000-ux/Mosharrof/pull/640) is merged; merge commit `7dc901b499716fd7a77114e4761f279f6288d854`. Its former head branch `fix/resumable-task-progress-20261016` still points at `7b9a216bbf867e2e21c0e65f5da417e4c368ab0b`, but it is no longer the active PR branch. Do not reopen or update that merged PR.
+- **Main snapshot:** `bbcebb2f80d7ab19bafc73f8132d28cdbcab8863` (commit message `Auto: guarded Mosharrof task (#787)`). Latest checkpoint text on main before this update was the 2026-10-19 night-duty section; no newer committed checkpoint was present.
+- **Task CHAT-788 — PENDING review:** PR [#788](https://github.com/mosharrof0000-ux/Mosharrof/pull/788) is open/draft/mergeable, branch `feature/chat-intelligence-truthfulness-2026-10-20`, exact head `eaab3a4cd65d9757630302539e679de02b0c9080`. Changed paths: `core/reflective-chat-prompt.js`, new `core/reflective-intelligence-rules.js`, `tests/test_chat_intelligence_contract.py`, `tests/worker-loader.mjs`. Current-head tests [#39390011698](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390011698), CI [#39390011653](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390011653), ecosystem [#39390011683](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390011683), verification gate [#39390011629](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390011629), and candidate interaction QA [#39390011570](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390011570) passed. Candidate Pages deploy job was skipped in [#39390011578](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390011578); this is not a deployment or current Live verification.
+- **CHAT-788 Android candidate QA — NOT TESTED/PENDING:** PR-head APK real-chat run [#39390011644](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390011644) was cancelled. The separate main workflow-run [#39390196486](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390196486) concluded skipped, job `apk-webview-real-chat` skipped. Do not transfer older PR #785 evidence [#39377849198](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39377849198) to PR #788. Next action: inspect trigger/skip condition and run only the necessary current-head APK chat gate.
+- **Live/PWA and Worker health — NOT TESTED for current main head:** current PR candidate interaction QA is not deployment proof; no direct fresh Worker `/health` response was collected in this run. Keep Live deployment blocked until approved current-head evidence is available.
+- **Memory continuity — PARTIAL PASS:** PR #788 candidate browser-memory roundtrip [#39390011651](https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39390011651) passed; this is a browser smoke check, not proof of real-model quality or permanent memory.
+- **Android physical device — NOT TESTED:** no physical handset acceptance evidence is available. Emulator evidence does not establish full device-control acceptance.
+- **Open PR #739 — BLOCKED/duplicate-risk:** [#739](https://github.com/mosharrof0000-ux/Mosharrof/pull/739) remains draft and mergeability false; current-main APK QA was already merged via #766, so do not treat #739 as required duplicate QA without a concrete unique delta.
+- **Prior failed exact-head tests:** earlier PR #788 push at SHA `30d541370b638e4d5f5d3779b0692dc742a12ca6` failed 3 runtime tests (chat provider failover, Cloudflare model rotation, image fallback). Current head's repository test run passed; keep the older failure as historical, not current-head status. Inspect if those tests regress again.
+
+### Priority B — independent chat-intelligence evaluation lanes
+
+The sprint plan and ten-lane scope are recorded in [issue #740 comment](https://github.com/mosharrof0000-ux/Mosharrof/issues/740#issuecomment-6286146072). PR #788's branch and overlapping prompt/contract files must remain untouched by parallel work. No claim that ten separate workers are active.
+
+- **CI-EVAL-01 factuality/uncertainty + per-dimension report — PENDING:** create a separate branch/PR using new case/scorecard paths; mocked deterministic scorer only. Real model output benchmark remains NOT TESTED until authorized provider output is available.
+- **CI-BN-02 Bengali clarity + multi-step completion — PENDING:** independent test file/branch; test requested language, ordered steps, constraints, and explicit partial completion.
+- **CI-CTX-03 contradiction/correction + history — PENDING:** independent test file/branch; distinguish current user correction from stale memory and keep history as context rather than proof.
+- **CI-MATH-04 arithmetic verification — PENDING:** deterministic arithmetic regression cases and explicit assumption/verification expectations.
+- **CI-INJ-05 untrusted-source/prompt-injection — PENDING:** tests that retrieved/quoted content cannot override trusted instructions or authorize actions.
+- **CI-MEM-06 memory boundaries — PENDING:** tests for relevant-only memory, current-request precedence, correction and avoid/forget honesty.
+- **CI-PROV-07 provider failures — PENDING:** deterministic mocks for 429, 503, timeout, missing credentials and fallback ordering; no real secrets required.
+- **CI-EVID-08 source/action-status honesty — PENDING:** tests that planned/queued/running actions are not reported as completed without postcondition evidence.
+- **CI-REPORT-09 scorecard — PENDING:** separate dimension scores and sample-counts; no single aggregate pass can hide a failed dimension.
+- **CI-REAL-10 real-model benchmark — NOT TESTED:** credentials/runtime availability not yet established for this run; do not invent output, score or provider identity.
+
+### Next actions
+
+1. Inspect and correct the current-head APK QA skip/cancellation condition for PR #788 without touching its active branch; preserve and poll any genuinely active job.
+2. Implement one non-overlapping deterministic evaluation harness branch first, then separate small branches for Bengali/instruction/context/memory/injection/arithmetic and provider fallback tests.
+3. Run focused pytest/Node checks on each candidate and record exact run links, artifacts and per-dimension results; real-model benchmark stays NOT TESTED unless actually run.
+4. Update this checkpoint again only after new verified results, preserving this entry as the last durable state until a newer one is committed.
+5. Never merge or deploy with red/pending required checks; do not claim live, real-model, or physical-device behavior from mocked tests.
