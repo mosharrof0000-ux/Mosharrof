@@ -37,7 +37,5 @@ export function createFailureSignalInspector({ owner, repo, token, api }) {
     } catch (error) {
       return [{ run_id: run.id, run_name: run.name, status: "JOB_LOOKUP_FAILED", error_signals: [String(error)] }];
     }
-  }
-    };
-  }
-  
+  };
+}
