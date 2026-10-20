@@ -14,7 +14,8 @@ A read-only, evidence-backed monitor for repository work. It creates a JSON mach
 ## Data collected
 - All open PRs and open issues (paginated).
 - Up to 100 most recent GitHub Actions runs with branch, SHA, event, timestamps, status, conclusion, and links.
-- Job/step detail for active runs and selected recent Android QA / monitor runs.
+- Job/step detail for active runs, recent failed runs, selected cancelled runs, and Android QA / monitor runs.
+- Extracted root-cause signals from failed job logs (bounded lines, token-like values redacted), with direct links to full job logs.
 - Explicit totals for active, potentially stale, failed, cancelled and skipped runs.
 - Latest Android WebView Real Chat QA, latest monitor run, and latest main-branch push Pages workflow.
 - Basic live Pages HTTP status and MOSHARROF AI brand-marker smoke check.
@@ -34,6 +35,7 @@ This monitor is read-only. It never retries jobs, cancels jobs, merges PRs, writ
 ## Coverage boundaries
 GitHub Actions can report GitHub workflow state; it cannot read the private execution state of ChatGPT's internal task automations. Those must be queried through the separate Automations connection. The report records this as a coverage gap rather than fabricating a state.
 - Cloudflare Worker/provider runtime is not checked until a verified health endpoint is configured.
+- Failed-job log signals are best-effort summaries; open the linked full logs for diagnosis if the excerpt is incomplete.
 - A GitHub-hosted runner cannot observe the user's physical Android phone.
 - Android real-chat proof requires the dedicated Android WebView Real Chat QA run and its evidence artifact.
 - The Live Pages check is an HTTP/brand marker probe only.
