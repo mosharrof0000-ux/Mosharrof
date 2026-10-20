@@ -4,10 +4,11 @@ import { EntityState } from "../../web/entities/core/entity-state.js";
 import { icons } from "../../web/entities/shared/entity-icons.js";
 
 export const organId = (function(parts){return parts[parts.length-2]})(new URL(import.meta.url).pathname.split("/"));
-if (typeof document !== "undefined" && !document.querySelector('style[data-mosharrof-android-chat-layout]')) {
-  const layoutStyle = document.createElement("style");
+if (typeof document !== "undefined" && !document.querySelector('link[data-mosharrof-android-chat-layout]')) {
+  const layoutStyle = document.createElement("link");
+  layoutStyle.rel = "stylesheet";
+  layoutStyle.href = new URL("../../runtime/android-edge-to-edge.css", import.meta.url).href;
   layoutStyle.dataset.mosharrofAndroidChatLayout = "true";
-  layoutStyle.textContent = "html,body,.content,.hero,#chatScroll{min-width:0;max-width:100%;box-sizing:border-box}#chatScroll{width:100%;left:0;right:0}#messages,.messages{display:flex;flex-direction:column;width:100%;max-width:900px;min-width:0;align-self:stretch;flex:0 0 auto;box-sizing:border-box}#messages>.message.ai,.messages>.message.ai{width:100%;max-width:760px;min-width:0;align-self:flex-start;box-sizing:border-box}#messages>.message.ai>.rich-content,.messages>.message.ai>.rich-content{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-wrap:anywhere}";
   document.head.appendChild(layoutStyle);
 }
 export function initialize(runtime) {
