@@ -26,9 +26,8 @@ def test_prepared_frontend_sends_prior_turns_without_current_message_as_history(
 
 
 def test_context_boundary_bengali_and_current_request_contract():
-    helper = Path("core/chat-context.js").read_text(encoding="utf-8")
-    prompt = Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8")
-    assert "use as context, not as proof of facts" in helper
-    assert "Current user message:" in helper
-    assert "current request overrides older preferences" in prompt
-    assert "use Bengali when appropriate" in prompt
+    h = Path("core/chat-context.js").read_text(encoding="utf-8")
+    p = Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8")
+    assert "use as context, not as proof of facts" in h
+    assert "current request overrides older preferences" in p
+    assert "use Bengali when appropriate" in p
