@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/mosharrof-observability.yml'
       - 'scripts/monitoring/mosharrof-observability.mjs'
+      - 'docs/MOSHARROF_OBSERVABILITY.md'
   workflow_dispatch:
   schedule:
     - cron: "17 * * * *"
@@ -11,15 +12,16 @@ permissions:
   contents: read
   actions: read
   pull-requests: read
+  issues: read
   checks: read
 concurrency:
   group: mosharrof-read-only-observability
   cancel-in-progress: false
 jobs:
   snapshot:
-    name: Collect PR and Actions status snapshot
+    name: Collect PR, issue, workflow, and Live Pages status
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,6 +32,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          MOSHARROF_LIVE_URL: https://mosharrof0000-ux.github.io/Mosharrof/
+          STALE_AFTER_MINUTES: "45"
         run: node scripts/monitoring/mosharrof-observability.mjs
       - name: Upload status snapshot
         uses: actions/upload-artifact@v4
