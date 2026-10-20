@@ -58,9 +58,11 @@ object AppPackageControl {
         return try {
             val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
             @Suppress("DEPRECATION")
-            activity.packageManager.queryIntentActivities(launcherIntent, 0)
-                .firstOrNull { info -> info.loadLabel(activity.packageManager).toString().trim().lowercase() == wanted }
-                ?.activityInfo?.packageName
+            val matches = activity.packageManager.queryIntentActivities(launcherIntent, 0)
+                .filter { info -> info.loadLabel(activity.packageManager).toString().trim().lowercase() == wanted }
+                .map { it.activityInfo.packageName }
+                .distinct()
+            matches.singleOrNull()
         } catch (_: Exception) { null }
     }
 
@@ -89,8 +91,8 @@ object AppPackageControl {
 
     fun requestUninstall(activity: Activity, packageName: String, status: TextView) {
         val normalized = packageName.trim()
-        if (!PACKAGE_NAME.matches(normalized) || !isInstalled(activity, normalized)) {
-            status.text = "ইনস্টল করা অ্যাপের সঠিক package name মেলেনি; কিছু সরানো হয়নি।"
+        if (!PACKAGE_NAME.matches(normalized) || normalized == activity.packageName || !isInstalled(activity, normalized)) {
+            status.text = "অ্যাপের package name ভুল, নিজের অ্যাপ, বা ইনস্টল করা অ্যাপের সঙ্গে মেলেনি; কিছু সরানো হয়নি।"
             return
         }
         AlertDialog.Builder(activity)
