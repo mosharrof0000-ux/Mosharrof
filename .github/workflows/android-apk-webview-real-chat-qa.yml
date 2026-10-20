@@ -122,11 +122,11 @@ jobs:
           # The app initializes many isolated organs/scripts; give WebView and
           # System UI enough resources to avoid emulator ANRs during first load.
           cores: 4
-          ram-size: 4096M
-          heap-size: 1024M
+          ram-size: 6144M
+          heap-size: 2048M
           emulator-port: 5554
           emulator-boot-timeout: 900
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -wipe-data -gpu swiftshader_indirect
           script: bash scripts/android/run_apk_webview_smoke.sh
 
       - name: Upload APK WebView chat evidence
