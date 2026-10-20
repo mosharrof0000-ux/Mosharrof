@@ -1,0 +1,1707 @@
+{
+  "checkpoint_id": "MOSHARROF-2026-10-20T040832Z",
+  "timestamp_utc": "2026-10-20T04:08:32Z",
+  "timezone_reference": "Asia/Dhaka",
+  "repository": "mosharrof0000-ux/Mosharrof",
+  "main_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+  "live_url": "https://mosharrof0000-ux.github.io/Mosharrof/",
+  "automation_status": [
+    {
+      "id": "6ad50372e0f481918b124ed67e0d8ded",
+      "title": "Mosharrof Backlog Recovery",
+      "enabled": true,
+      "last_run_utc": "2026-10-20T03:09:14.260026Z",
+      "next_run_time": "not returned by API"
+    },
+    {
+      "id": "6ad50c7e21b48191924df3efc4e0db48",
+      "title": "Mosharrof Morning Report",
+      "enabled": true,
+      "last_run_utc": "2026-10-20T03:12:35.215010Z",
+      "next_run_time": "not returned by API"
+    },
+    {
+      "id": "6ad51b8bbbe08191aa33e12da4b96841",
+      "title": "Mosharrof Backlog Continuation",
+      "enabled": true,
+      "last_run_utc": "2026-10-20T03:05:34.041934Z",
+      "next_run_time": "not returned by API"
+    }
+  ],
+  "inventory": {
+    "open_prs": 61,
+    "open_issues_excluding_prs": 56,
+    "pagination": "Per-page 100 API calls returned all open PRs and issues on page 1; no additional pages were required.",
+    "distinct_work_clusters_estimate": 25,
+    "duplicate_or_stacked_pr_count": "not finalized; do not infer exact count from title grouping",
+    "review_threads": [
+      {
+        "pr": 363,
+        "count": 3,
+        "topics": [
+          "phone-width drawers",
+          "browser-local App Builder queue has no backend consumer",
+          "safe-area insets for positioned controls"
+        ]
+      },
+      {
+        "pr": 358,
+        "count": 1,
+        "topics": [
+          "module icon grid CSS selector overrides icon styles"
+        ]
+      },
+      {
+        "pr": 354,
+        "count": 1,
+        "topics": [
+          "speech synthesis not cancelled when voice action turns off"
+        ]
+      },
+      {
+        "pr": 776,
+        "count": 0,
+        "note": "No inline threads or submitted reviews returned, but Codex summary comment reports failed review with unresolved findings; details are not present in the thread list."
+      }
+    ],
+    "groups": [
+      {
+        "name": "ChatGPT continuity/repository knowledge",
+        "prs": [
+          776,
+          775,
+          774,
+          773,
+          772,
+          771
+        ]
+      },
+      {
+        "name": "Android chat QA and device-agent dependencies",
+        "prs": [
+          780,
+          777,
+          739,
+          723,
+          653,
+          651,
+          647,
+          645,
+          643
+        ]
+      },
+      {
+        "name": "Memory runtime assets/regressions",
+        "prs": [
+          676,
+          675,
+          674,
+          673,
+          671
+        ]
+      },
+      {
+        "name": "Legacy PWA/UI/runtime/security",
+        "prs": [
+          404,
+          401,
+          367,
+          365,
+          363,
+          358,
+          354,
+          348,
+          347,
+          345,
+          344,
+          342,
+          341,
+          340,
+          338,
+          337,
+          334,
+          333,
+          332,
+          331,
+          330,
+          328,
+          327,
+          326
+        ]
+      },
+      {
+        "name": "Autonomous generated PRs",
+        "prs": [
+          760,
+          758,
+          755,
+          754,
+          744,
+          743,
+          705
+        ]
+      },
+      {
+        "name": "Existing voice-cloning plans",
+        "prs": [
+          527,
+          526,
+          525,
+          524,
+          523
+        ]
+      }
+    ],
+    "pr_inventory": [
+      {
+        "number": 781,
+        "title": "docs: add faceless YouTube Shorts workflow",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/781",
+        "head_branch": "docs/faceless-youtube-shorts-workflow-20261020",
+        "head_sha": "b4c6527df10962024e82bd12ca6a6e85ab796862",
+        "base_branch": "main",
+        "base_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+        "draft": true,
+        "updated_at": "2026-10-20T03:59:45Z"
+      },
+      {
+        "number": 780,
+        "title": "fix(android): retry WebView CDP socket connection",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/780",
+        "head_branch": "fix/android-webview-cdp-reconnect-20261020",
+        "head_sha": "d670c6a0260a1eb91a805f5711c5b783cdf38307",
+        "base_branch": "main",
+        "base_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+        "draft": false,
+        "updated_at": "2026-10-20T03:50:32Z"
+      },
+      {
+        "number": 777,
+        "title": "feat(automation): add safe 30-minute workflow watchdog",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/777",
+        "head_branch": "feature/30m-watchdog-20261020",
+        "head_sha": "a638bfbda7357411b876050120a88585b920d311",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": true,
+        "updated_at": "2026-10-20T03:35:14Z"
+      },
+      {
+        "number": 776,
+        "title": "feat(memory): connect ChatGPT exports to MOSHARROF continuity memory",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/776",
+        "head_branch": "feature/chatgpt-continuity-integration-20261020",
+        "head_sha": "9211d1e6e061fe3812f12f85e9928ecf39f1fc6e",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": false,
+        "updated_at": "2026-10-19T19:24:44Z"
+      },
+      {
+        "number": 775,
+        "title": "feat(knowledge): crawl repository files into a searchable knowledge snapshot",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/775",
+        "head_branch": "feature/repository-knowledge-crawler-20261020",
+        "head_sha": "7ae6a848ede774972b6833342d6cf9f3d005424f",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": false,
+        "updated_at": "2026-10-19T19:14:11Z"
+      },
+      {
+        "number": 774,
+        "title": "feat(knowledge): index repository files and reports for evidence-based answers",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/774",
+        "head_branch": "feature/repository-knowledge-index-20261020",
+        "head_sha": "31c7dd67626f5b91d51e80df81ce118e3aa6a471",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": false,
+        "updated_at": "2026-10-19T19:07:12Z"
+      },
+      {
+        "number": 773,
+        "title": "docs: define ChatGPT-first library and continuity contract",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/773",
+        "head_branch": "docs/chatgpt-library-continuity-20261020",
+        "head_sha": "097aef7f0b8a14b66a15aed874fc737a9bd05f55",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": false,
+        "updated_at": "2026-10-19T19:03:34Z"
+      },
+      {
+        "number": 772,
+        "title": "feat(memory): import ChatGPT conversation exports and draft style profile",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/772",
+        "head_branch": "feature/chatgpt-memory-import-bridge-20261020",
+        "head_sha": "60df1220e9463b15a1a3ff13c3ec523076c2bf4a",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": false,
+        "updated_at": "2026-10-19T19:01:41Z"
+      },
+      {
+        "number": 771,
+        "title": "docs: plan unified AI conversation and style memory bridge",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/771",
+        "head_branch": "docs/unified-ai-conversation-memory-bridge-20261020",
+        "head_sha": "7261528eaff300e7c054ef97329cf88135049b35",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": false,
+        "updated_at": "2026-10-19T18:56:04Z"
+      },
+      {
+        "number": 770,
+        "title": "docs: roadmap for memory, sensory and incremental self-build engine",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/770",
+        "head_branch": "docs/memory-sensory-self-build-roadmap-20261019",
+        "head_sha": "194fe3fc0cb50f444713636b9eec84532a7d7a4c",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": false,
+        "updated_at": "2026-10-19T18:40:51Z"
+      },
+      {
+        "number": 769,
+        "title": "Fix fast provider fallback and truthful automation status",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/769",
+        "head_branch": "fix/fast-provider-fallback-20261019",
+        "head_sha": "03e7d5c3b6fa62228e9f3b5de5280ab7d70ba642",
+        "base_branch": "main",
+        "base_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "draft": false,
+        "updated_at": "2026-10-19T17:38:19Z"
+      },
+      {
+        "number": 760,
+        "title": "Auto: verified Mosharrof autonomous improvement",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/760",
+        "head_branch": "agent/autonomous-2698",
+        "head_sha": "e3b58499f6a7b0e0d318b39b0dd2d1de52b01536",
+        "base_branch": "main",
+        "base_sha": "5538683010f2a18301e4803e0173012584fa26c5",
+        "draft": false,
+        "updated_at": "2026-10-19T11:18:08Z"
+      },
+      {
+        "number": 758,
+        "title": "Auto: verified Mosharrof autonomous improvement",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/758",
+        "head_branch": "agent/autonomous-2687",
+        "head_sha": "54e5d396fa9d179672a89c64dc1e95b3707185c3",
+        "base_branch": "main",
+        "base_sha": "5538683010f2a18301e4803e0173012584fa26c5",
+        "draft": false,
+        "updated_at": "2026-10-19T10:34:24Z"
+      },
+      {
+        "number": 755,
+        "title": "Auto: verified Mosharrof autonomous improvement",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/755",
+        "head_branch": "agent/autonomous-2686",
+        "head_sha": "bb9c4848103debf307cbe0c7bb5ccef117daaeb9",
+        "base_branch": "main",
+        "base_sha": "23d370f6fdcc30f05ebe84bcf33fcd0d1b30aff0",
+        "draft": false,
+        "updated_at": "2026-10-19T10:20:49Z"
+      },
+      {
+        "number": 754,
+        "title": "Auto: verified Mosharrof autonomous improvement",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/754",
+        "head_branch": "agent/autonomous-2706",
+        "head_sha": "c00a7e32a0325994a0cb9ee6f492548c7f39b785",
+        "base_branch": "main",
+        "base_sha": "23d370f6fdcc30f05ebe84bcf33fcd0d1b30aff0",
+        "draft": false,
+        "updated_at": "2026-10-19T10:19:45Z"
+      },
+      {
+        "number": 744,
+        "title": "Auto: verified Mosharrof autonomous improvement",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/744",
+        "head_branch": "agent/autonomous-2641",
+        "head_sha": "16ece9626f9aa181bb251239e12107985e033964",
+        "base_branch": "main",
+        "base_sha": "bd5484d302a4ab243e419e9b59d67e62c7b6304e",
+        "draft": false,
+        "updated_at": "2026-10-18T19:11:40Z"
+      },
+      {
+        "number": 743,
+        "title": "Auto: verified Mosharrof autonomous improvement",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/743",
+        "head_branch": "agent/autonomous-2672",
+        "head_sha": "8ea5cdc931fbe670a2d054665a3e535ff8ece3b8",
+        "base_branch": "main",
+        "base_sha": "bd5484d302a4ab243e419e9b59d67e62c7b6304e",
+        "draft": false,
+        "updated_at": "2026-10-18T19:04:11Z"
+      },
+      {
+        "number": 739,
+        "title": "test(android): verify real chat inside installed APK",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/739",
+        "head_branch": "qa/android-apk-chat-smoke-2026-10-19",
+        "head_sha": "b0c1bb0f5e0e7e44166188384f9946626fd7239d",
+        "base_branch": "main",
+        "base_sha": "775c7a97a806e8479efe810a8d12bda9f41a46e3",
+        "draft": true,
+        "updated_at": "2026-10-18T18:51:32Z"
+      },
+      {
+        "number": 723,
+        "title": "feat(android): add permission-gated media and device assistant",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/723",
+        "head_branch": "feat/android-control-plugin-bridge-2026-10-18",
+        "head_sha": "36fd11cf8b814cbb0b3977f73dc82f629c7105a7",
+        "base_branch": "feat/android-autonomous-agent-foundation-2026-10-16",
+        "base_sha": "68d6d6bbf75cc4530cfbd843ad5e66265372762c",
+        "draft": true,
+        "updated_at": "2026-10-18T18:30:32Z"
+      },
+      {
+        "number": 705,
+        "title": "Auto: Mosharrof guarded task",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/705",
+        "head_branch": "agent/auto-scheduled-mosharrof-maintenance-audit-inspect-fo-39026525315",
+        "head_sha": "dbd3892dfe3eae3b5e75a74dfc5acdb98a71392b",
+        "base_branch": "main",
+        "base_sha": "a63f8579858a87a419a935ed040005b064a473c1",
+        "draft": false,
+        "updated_at": "2026-10-17T10:54:04Z"
+      },
+      {
+        "number": 676,
+        "title": "fix: package personal memory bridge for Pages runtime",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/676",
+        "head_branch": "fix/pages-memory-bridge-assets-20261017",
+        "head_sha": "8132bb4059e1c76225c3fa38bb5eaa8dac6902b6",
+        "base_branch": "main",
+        "base_sha": "91df8416ef598aff645e62b9f74842dbd349cb68",
+        "draft": false,
+        "updated_at": "2026-10-16T21:02:06Z"
+      },
+      {
+        "number": 675,
+        "title": "fix: publish personal memory bridge for GitHub Pages",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/675",
+        "head_branch": "feature/memory-engine-live-validation",
+        "head_sha": "750d3bbf186dbf6b46e2dbbf2fdf4fe22d0c189f",
+        "base_branch": "main",
+        "base_sha": "91df8416ef598aff645e62b9f74842dbd349cb68",
+        "draft": false,
+        "updated_at": "2026-10-16T20:57:55Z"
+      },
+      {
+        "number": 674,
+        "title": "Fix personal memory runtime assets on Pages",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/674",
+        "head_branch": "fix/personal-memory-runtime-assets",
+        "head_sha": "ca3bb7c0f12e0732eb72e7902b6db42a90825206",
+        "base_branch": "main",
+        "base_sha": "91df8416ef598aff645e62b9f74842dbd349cb68",
+        "draft": false,
+        "updated_at": "2026-10-16T21:03:01Z"
+      },
+      {
+        "number": 673,
+        "title": "[Frozen candidate] Personal memory engine — stable CI snapshot",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/673",
+        "head_branch": "release/memory-engine-ci-freeze-20261017",
+        "head_sha": "1bf4703f7f56cdb5aa6521e562c33e1215967883",
+        "base_branch": "main",
+        "base_sha": "91df8416ef598aff645e62b9f74842dbd349cb68",
+        "draft": true,
+        "updated_at": "2026-10-16T20:53:09Z"
+      },
+      {
+        "number": 671,
+        "title": "Complete memory continuity and fix regression tests",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/671",
+        "head_branch": "fix/personal-memory-regression-test-20261017",
+        "head_sha": "fb1c850c6b47685379a13bf85a30acca61924686",
+        "base_branch": "main",
+        "base_sha": "91df8416ef598aff645e62b9f74842dbd349cb68",
+        "draft": false,
+        "updated_at": "2026-10-16T21:02:39Z"
+      },
+      {
+        "number": 653,
+        "title": "feat(android): add bounded task execution coordinator",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/653",
+        "head_branch": "feat/android-agent-task-execution-coordinator-2026-10-16",
+        "head_sha": "185543dbdb36de1bbd55afc141490e4657f7f8c3",
+        "base_branch": "feat/android-autonomous-agent-foundation-2026-10-16",
+        "base_sha": "2c59476bc62b57557580e01ce6a459f3e7a6c703",
+        "draft": false,
+        "updated_at": "2026-10-18T16:55:58Z"
+      },
+      {
+        "number": 651,
+        "title": "feat(android): add bounded cancellable task execution engine",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/651",
+        "head_branch": "feat/android-agent-task-engine-v2-2026-10-16",
+        "head_sha": "2e83ddc2aa5e27765aa3e278d98db04d3cbcd451",
+        "base_branch": "feat/android-autonomous-agent-foundation-2026-10-16",
+        "base_sha": "04ee0ce9712c92613747c712d29c2dc3bdb9f43e",
+        "draft": true,
+        "updated_at": "2026-10-16T12:34:05Z"
+      },
+      {
+        "number": 647,
+        "title": "[Frozen candidate] Android agent foundation — PR #645 snapshot",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/647",
+        "head_branch": "release/android-agentic-automation-freeze-20261016",
+        "head_sha": "f76e95e142da2f759298bb55866e01cd3f5dae7b",
+        "base_branch": "main",
+        "base_sha": "c6be2f18e096992a75ce38c50011d4242455b440",
+        "draft": true,
+        "updated_at": "2026-10-16T11:10:07Z"
+      },
+      {
+        "number": 645,
+        "title": "feat(android): build safe MOSHARROF Android agent foundations",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/645",
+        "head_branch": "feat/android-agentic-automation-foundation-20261016",
+        "head_sha": "ea033608d6f23ae6fdb3232a3a3df4a2186d8e15",
+        "base_branch": "main",
+        "base_sha": "bae5884d2ff5fdf801affa27efa27b1501fea029",
+        "draft": false,
+        "updated_at": "2026-10-16T12:10:47Z"
+      },
+      {
+        "number": 643,
+        "title": "feat(android): add safe user-confirmed communication actions",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/643",
+        "head_branch": "feat/android-safe-actions-20261016",
+        "head_sha": "bdd3a3e439323bf3896b56760a8872905ad75263",
+        "base_branch": "main",
+        "base_sha": "e20356d6e318ad1238303e54fbfca3fb8e7d6a84",
+        "draft": false,
+        "updated_at": "2026-10-16T09:09:42Z"
+      },
+      {
+        "number": 601,
+        "title": "docs: roadmap for creative AI studio, memory, and gated automation",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/601",
+        "head_branch": "docs/creative-ai-studio-roadmap-20261015",
+        "head_sha": "885cc028a37f271b5d2c73df19d82acb0cd7117a",
+        "base_branch": "main",
+        "base_sha": "ca81b272e21e6dc66df6192f00ec3a3b233ffd81",
+        "draft": true,
+        "updated_at": "2026-10-15T16:31:13Z"
+      },
+      {
+        "number": 582,
+        "title": "fix: stop routing photo and duplicate-file requests to memory metrics",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/582",
+        "head_branch": "fix/device-command-routing",
+        "head_sha": "6de9d9acbd64054b305cdde836c23ad0c2dac260",
+        "base_branch": "feat/device-action-broker",
+        "base_sha": "4b45cd5232d0febb8390e3163894f915803548a5",
+        "draft": true,
+        "updated_at": "2026-10-13T15:10:39Z"
+      },
+      {
+        "number": 527,
+        "title": "Add isolated personal voice cloning inference prototype",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/527",
+        "head_branch": "feature/personal-voice-inference-prototype",
+        "head_sha": "2f9f7633bc98f67b75353d39923aee6a5a28a0f2",
+        "base_branch": "main",
+        "base_sha": "32f7158bece9c7899132c89bb6cae35bbd0b39fb",
+        "draft": true,
+        "updated_at": "2026-10-11T08:41:01Z"
+      },
+      {
+        "number": 526,
+        "title": "Build consent-gated personal voice cloning foundation",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/526",
+        "head_branch": "feature/personal-voice-cloning-v1-foundation",
+        "head_sha": "45c80f6db6752d8f9bf318577c337cd475ae35e7",
+        "base_branch": "main",
+        "base_sha": "32f7158bece9c7899132c89bb6cae35bbd0b39fb",
+        "draft": true,
+        "updated_at": "2026-10-11T08:39:01Z"
+      },
+      {
+        "number": 525,
+        "title": "Add personal voice and reading-style controls foundation",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/525",
+        "head_branch": "feature/personal-voice-foundation-v1",
+        "head_sha": "19fefd3c2e3a32cbf084352976ec6aa9c0c54bd1",
+        "base_branch": "main",
+        "base_sha": "32f7158bece9c7899132c89bb6cae35bbd0b39fb",
+        "draft": true,
+        "updated_at": "2026-10-11T08:47:56Z"
+      },
+      {
+        "number": 524,
+        "title": "Plan consent-based multi-user personal voice cloning",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/524",
+        "head_branch": "feature/personal-voice-cloning-architecture-v1",
+        "head_sha": "5e865c68c8022582480e2357dea852d616e7ac49",
+        "base_branch": "main",
+        "base_sha": "32f7158bece9c7899132c89bb6cae35bbd0b39fb",
+        "draft": true,
+        "updated_at": "2026-10-11T08:29:59Z"
+      },
+      {
+        "number": 523,
+        "title": "Design consent-first multi-user personal voice cloning",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/523",
+        "head_branch": "feature/personal-voice-cloning-v1-design",
+        "head_sha": "f61f4a72a24fc1c5a6a139e6a1154f0a63ff3fa5",
+        "base_branch": "main",
+        "base_sha": "32f7158bece9c7899132c89bb6cae35bbd0b39fb",
+        "draft": true,
+        "updated_at": "2026-10-11T08:29:47Z"
+      },
+      {
+        "number": 404,
+        "title": "Update theme color and restructure HTML layout",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/404",
+        "head_branch": "mosharrof0000-ux-patch-9",
+        "head_sha": "18ac9ac00c1b68875c53221790624053425671f7",
+        "base_branch": "main",
+        "base_sha": "d1a3f810fd93e5ee467eccd92a78f77f0ca77784",
+        "draft": false,
+        "updated_at": "2026-10-08T18:18:10Z"
+      },
+      {
+        "number": 401,
+        "title": "Fix console log formatting in app.js",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/401",
+        "head_branch": "mosharrof0000-ux-patch-6",
+        "head_sha": "adff29328a9d4544c992676c4e6d0bb77938a2d8",
+        "base_branch": "main",
+        "base_sha": "8bd54f48f6d68d88608563843df44b1cbd641aaa",
+        "draft": false,
+        "updated_at": "2026-10-08T15:58:08Z"
+      },
+      {
+        "number": 367,
+        "title": "Fix MOSHARROF PWA install and true fullscreen mode",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/367",
+        "head_branch": "fix/mosharrof-true-fullscreen-pwa",
+        "head_sha": "80252a5c882709b9f3dbee9b796c7ed3fbef9bd4",
+        "base_branch": "main",
+        "base_sha": "fb87ebf81ac4b2fdefac2477db2e0def404bc810",
+        "draft": false,
+        "updated_at": "2026-10-02T16:52:09Z"
+      },
+      {
+        "number": 365,
+        "title": "Make MOSHARROF installable as a standalone app",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/365",
+        "head_branch": "feature/mosharrof-installable-pwa",
+        "head_sha": "af234246f6476c07d2974e197d7176628eafd467",
+        "base_branch": "main",
+        "base_sha": "62b112afdd688af31209ec3811b24d5f176f1cbe",
+        "draft": false,
+        "updated_at": "2026-10-08T15:46:42Z"
+      },
+      {
+        "number": 363,
+        "title": "Build MOSHARROF adaptive app foundation",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/363",
+        "head_branch": "feature/mosharrof-adaptive-app-foundation",
+        "head_sha": "ccb86add5680a448d15c84cc75d720c2bca173b4",
+        "base_branch": "main",
+        "base_sha": "62b112afdd688af31209ec3811b24d5f176f1cbe",
+        "draft": false,
+        "updated_at": "2026-10-02T16:44:03Z"
+      },
+      {
+        "number": 358,
+        "title": "Build original glass entity family across MOSHARROF UI",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/358",
+        "head_branch": "feature/mosharrof-site-entity-family",
+        "head_sha": "915e942b1e4d7eefbea18fa18aabb12bdde1f27a",
+        "base_branch": "main",
+        "base_sha": "a4a7fb9b2c30a38c399f03e059e201471c111196",
+        "draft": false,
+        "updated_at": "2026-10-02T13:46:16Z"
+      },
+      {
+        "number": 354,
+        "title": "Add adaptive message action entities",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/354",
+        "head_branch": "feature/aware-message-actions",
+        "head_sha": "2531afcda21cd874109554937ed3adb26d7fbe17",
+        "base_branch": "main",
+        "base_sha": "71e50cff49de9e7373116b009cf5c3a5fa9ccb7a",
+        "draft": false,
+        "updated_at": "2026-10-02T13:17:36Z"
+      },
+      {
+        "number": 348,
+        "title": "Fix verified Gemini and chat runtime issues",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/348",
+        "head_branch": "fix/runtime-audit-gemini-and-chat-v2",
+        "head_sha": "57c8be4fc724788a4be7a627d8630c8c0ee24d59",
+        "base_branch": "main",
+        "base_sha": "3a0d5f87cf43f245808a51b0cb696d1ee961b781",
+        "draft": false,
+        "updated_at": "2026-10-02T05:23:59Z"
+      },
+      {
+        "number": 347,
+        "title": "Fix autonomous engine workflow expressions",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/347",
+        "head_branch": "fix/repo-workflow-audit-2026-10-02",
+        "head_sha": "81240e90a15a930dab6785893551071a48137ea0",
+        "base_branch": "main",
+        "base_sha": "775f3ea414088146ff1e034b310a2136ded1d101",
+        "draft": false,
+        "updated_at": "2026-10-02T05:23:46Z"
+      },
+      {
+        "number": 345,
+        "title": "Fix verified Gemini and chat runtime issues",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/345",
+        "head_branch": "fix/runtime-audit-gemini-and-chat",
+        "head_sha": "6eb4bf5944158659a1f5b56855ae9eb7dd935a01",
+        "base_branch": "main",
+        "base_sha": "439729737f9a75f5ae22923263e708339734c4af",
+        "draft": false,
+        "updated_at": "2026-10-02T05:23:40Z"
+      },
+      {
+        "number": 344,
+        "title": "Fix confirmed HTML injection paths",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/344",
+        "head_branch": "fix/security-html-injection-clean",
+        "head_sha": "fa860ea925d77815b83490ff4eabee5320317349",
+        "base_branch": "main",
+        "base_sha": "8be691f221fc0e569d2069030b41e08c3076ed4d",
+        "draft": false,
+        "updated_at": "2026-10-02T05:23:27Z"
+      },
+      {
+        "number": 342,
+        "title": "Fix chat stream concurrency and PWA lifecycle",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/342",
+        "head_branch": "fix/audit-code-2026-10-02",
+        "head_sha": "3129cc306846214d1080e0cd7af3bcf1aa743568",
+        "base_branch": "main",
+        "base_sha": "8be691f221fc0e569d2069030b41e08c3076ed4d",
+        "draft": false,
+        "updated_at": "2026-10-02T05:23:14Z"
+      },
+      {
+        "number": 341,
+        "title": "Fix runtime safety and duplicate deployment workflows",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/341",
+        "head_branch": "fix/runtime-and-deploy-collisions",
+        "head_sha": "4678f521856472c2a63627fe2794d47cebcc4817",
+        "base_branch": "main",
+        "base_sha": "8be691f221fc0e569d2069030b41e08c3076ed4d",
+        "draft": false,
+        "updated_at": "2026-10-02T05:23:06Z"
+      },
+      {
+        "number": 340,
+        "title": "Fix PWA registration and concurrent chat streaming",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/340",
+        "head_branch": "fix/code-audit-pwa-streaming",
+        "head_sha": "cb915d6e4c317ffbe8e5bc539cca11036cd6038b",
+        "base_branch": "main",
+        "base_sha": "8be691f221fc0e569d2069030b41e08c3076ed4d",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:47Z"
+      },
+      {
+        "number": 338,
+        "title": "Fix workflow secret handling and autonomous engine expressions",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/338",
+        "head_branch": "fix/workflow-secret-expressions",
+        "head_sha": "ad8bd26d2d854f23b81c5a29074d541d2a999edc",
+        "base_branch": "main",
+        "base_sha": "8be691f221fc0e569d2069030b41e08c3076ed4d",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:39Z"
+      },
+      {
+        "number": 337,
+        "title": "Fix frontend cache cleanup and concurrent chat streaming",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/337",
+        "head_branch": "fix/frontend-html-escaping",
+        "head_sha": "855ac3bc346eefd736b7b2f41cff1489126d9a0e",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:25Z"
+      },
+      {
+        "number": 334,
+        "title": "Fix HTML injection paths in Mosharrof UI",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/334",
+        "head_branch": "feature/ai-30s-countup-timer",
+        "head_sha": "524998b1f1a1c83fa9d9b3652635dabf97ab8f14",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:06Z"
+      },
+      {
+        "number": 333,
+        "title": "Fix Service Worker lifecycle on MOSHARROF Pages",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/333",
+        "head_branch": "fix/service-worker-lifecycle",
+        "head_sha": "760387824aa44e9f43de61469e3d9a8a7954cb68",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:00Z"
+      },
+      {
+        "number": 332,
+        "title": "Fix concurrent AI response streaming",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/332",
+        "head_branch": "fix/chat-stream-concurrency",
+        "head_sha": "e2215d5567eb36a2b6d849142446ccd6c79b6ccd",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:10Z"
+      },
+      {
+        "number": 331,
+        "title": "Remove duplicate deployment workflows",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/331",
+        "head_branch": "fix/duplicate-deploy-workflows",
+        "head_sha": "c9461a0583e1da493f6d987e9d45794467686125",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:23Z"
+      },
+      {
+        "number": 330,
+        "title": "Fix MOSHARROF chat streaming and preserve PWA state",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/330",
+        "head_branch": "feature/ai-30s-timer-bugfix-v2",
+        "head_sha": "8f539e34ab5978c4a59da02cee47cc10aa2ff45f",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:12Z"
+      },
+      {
+        "number": 328,
+        "title": "Fix chat rendering, streaming concurrency, and PWA lifecycle",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/328",
+        "head_branch": "bugfix/chat-output-and-streaming",
+        "head_sha": "cea2d10cd9d5676f3e33244f2c97b922ba605886",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:22:59Z"
+      },
+      {
+        "number": 327,
+        "title": "Fix concurrent AI response streaming",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/327",
+        "head_branch": "fix/concurrent-ai-streaming",
+        "head_sha": "4e474192ad19357d839ef3822ade99045d330429",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:21:17Z"
+      },
+      {
+        "number": 326,
+        "title": "Disable duplicate Worker deployment workflow",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/326",
+        "head_branch": "fix/cleanup-duplicate-worker-deploy",
+        "head_sha": "b5e0e36337194721931ed5f413cbd4b6c9989f20",
+        "base_branch": "main",
+        "base_sha": "ed1586df8614779b3f247875c30e16e6a4918a97",
+        "draft": false,
+        "updated_at": "2026-10-02T05:21:12Z"
+      }
+    ],
+    "issue_inventory": [
+      {
+        "number": 778,
+        "title": "Autonomous audit PASS — 2026-10-19T22:19:37.128Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/778",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-19T22:19:37Z"
+      },
+      {
+        "number": 762,
+        "title": "Autonomous audit PASS — 2026-10-19T13:07:55.999Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/762",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-19T13:07:56Z"
+      },
+      {
+        "number": 756,
+        "title": "MOSHARROF Universal Automation Control Center",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/756",
+        "labels": [],
+        "updated_at": "2026-10-19T15:21:05Z"
+      },
+      {
+        "number": 751,
+        "title": "Autonomous audit PASS — 2026-10-19T04:36:41.840Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/751",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-19T04:36:42Z"
+      },
+      {
+        "number": 746,
+        "title": "Autonomous audit PASS — 2026-10-18T20:38:47.118Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/746",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-18T20:38:47Z"
+      },
+      {
+        "number": 740,
+        "title": "Resume stalled backlog: verify night-duty automation and recover highest-priority live/Android work",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/740",
+        "labels": [],
+        "updated_at": "2026-10-19T10:15:17Z"
+      },
+      {
+        "number": 726,
+        "title": "Autonomous audit PASS — 2026-10-18T15:49:45.551Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/726",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-18T15:49:45Z"
+      },
+      {
+        "number": 724,
+        "title": "Autonomous audit PASS — 2026-10-18T10:59:59.914Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/724",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-18T11:00:00Z"
+      },
+      {
+        "number": 717,
+        "title": "Autonomous audit PASS — 2026-10-18T04:28:15.322Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/717",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-18T04:28:15Z"
+      },
+      {
+        "number": 716,
+        "title": "Autonomous audit PASS — 2026-10-17T20:34:09.584Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/716",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-17T20:34:09Z"
+      },
+      {
+        "number": 712,
+        "title": "Autonomous audit PASS — 2026-10-17T15:30:46.930Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/712",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-17T15:30:47Z"
+      },
+      {
+        "number": 704,
+        "title": "Autonomous audit PASS — 2026-10-17T10:39:33.663Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/704",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-17T10:39:34Z"
+      },
+      {
+        "number": 689,
+        "title": "Autonomous audit PASS — 2026-10-17T04:21:45.526Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/689",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-17T04:21:45Z"
+      },
+      {
+        "number": 682,
+        "title": "Add real-browser live-site memory persistence test for MOSHARROF AI",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/682",
+        "labels": [],
+        "updated_at": "2026-10-16T22:19:08Z"
+      },
+      {
+        "number": 655,
+        "title": "Autonomous audit PASS — 2026-10-16T16:35:57.485Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/655",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-16T16:35:57Z"
+      },
+      {
+        "number": 649,
+        "title": "Autonomous audit PASS — 2026-10-16T11:19:18.992Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/649",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-16T11:19:19Z"
+      },
+      {
+        "number": 628,
+        "title": "Autonomous audit PASS — 2026-10-16T04:27:56.302Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/628",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-16T04:27:56Z"
+      },
+      {
+        "number": 617,
+        "title": "Autonomous audit PASS — 2026-10-15T21:20:25.190Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/617",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-15T21:20:25Z"
+      },
+      {
+        "number": 604,
+        "title": "Autonomous audit PASS — 2026-10-15T16:58:00.090Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/604",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-15T16:58:00Z"
+      },
+      {
+        "number": 600,
+        "title": "Roadmap: Complete organ-based AI entities, memory, feedback, and Universal AI Engine",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/600",
+        "labels": [],
+        "updated_at": "2026-10-15T15:42:42Z"
+      },
+      {
+        "number": 599,
+        "title": "Autonomous audit PASS — 2026-10-14T21:38:49.791Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/599",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-14T21:38:50Z"
+      },
+      {
+        "number": 598,
+        "title": "Autonomous audit PASS — 2026-10-14T17:07:26.752Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/598",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-14T17:07:27Z"
+      },
+      {
+        "number": 594,
+        "title": "Autonomous audit PASS — 2026-10-14T11:48:06.431Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/594",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-14T11:48:06Z"
+      },
+      {
+        "number": 593,
+        "title": "Autonomous audit PASS — 2026-10-14T04:49:36.761Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/593",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-14T04:49:37Z"
+      },
+      {
+        "number": 592,
+        "title": "Autonomous audit PASS — 2026-10-13T22:42:24.623Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/592",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-13T22:42:24Z"
+      },
+      {
+        "number": 579,
+        "title": "Autonomous audit PASS — 2026-10-13T14:07:36.178Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/579",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-13T14:07:36Z"
+      },
+      {
+        "number": 559,
+        "title": "Autonomous audit PASS — 2026-10-13T00:36:58.547Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/559",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-13T00:36:58Z"
+      },
+      {
+        "number": 553,
+        "title": "Autonomous audit PASS — 2026-10-12T15:18:01.990Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/553",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-12T15:18:02Z"
+      },
+      {
+        "number": 552,
+        "title": "Autonomous audit PASS — 2026-10-12T05:52:47.096Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/552",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-12T05:52:47Z"
+      },
+      {
+        "number": 546,
+        "title": "Autonomous audit PASS — 2026-10-11T21:55:22.457Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/546",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-11T21:55:22Z"
+      },
+      {
+        "number": 535,
+        "title": "Autonomous audit PASS — 2026-10-11T12:45:28.340Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/535",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-11T12:45:28Z"
+      },
+      {
+        "number": 528,
+        "title": "Add automatic Gemini TTS model and project-key failover",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/528",
+        "labels": [],
+        "updated_at": "2026-10-11T10:10:12Z"
+      },
+      {
+        "number": 520,
+        "title": "Autonomous audit PASS — 2026-10-11T05:42:39.384Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/520",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-11T05:42:39Z"
+      },
+      {
+        "number": 515,
+        "title": "Autonomous audit PASS — 2026-10-10T21:40:55.597Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/515",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-10T21:40:55Z"
+      },
+      {
+        "number": 495,
+        "title": "Autonomous audit PASS — 2026-10-10T12:28:03.944Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/495",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-10T12:28:04Z"
+      },
+      {
+        "number": 494,
+        "title": "Autonomous audit PASS — 2026-10-10T05:48:40.460Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/494",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-10T05:48:40Z"
+      },
+      {
+        "number": 493,
+        "title": "Autonomous audit PASS — 2026-10-09T22:36:01.659Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/493",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-09T22:36:01Z"
+      },
+      {
+        "number": 440,
+        "title": "Autonomous audit PASS — 2026-10-09T13:12:53.078Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/440",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-09T13:12:53Z"
+      },
+      {
+        "number": 439,
+        "title": "Autonomous audit PASS — 2026-10-09T06:05:05.427Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/439",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-09T06:05:05Z"
+      },
+      {
+        "number": 424,
+        "title": "Autonomous audit PASS — 2026-10-08T23:19:07.214Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/424",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-08T23:19:07Z"
+      },
+      {
+        "number": 393,
+        "title": "Autonomous audit PASS — 2026-10-07T13:18:34.938Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/393",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-07T13:18:35Z"
+      },
+      {
+        "number": 392,
+        "title": "Autonomous audit PASS — 2026-10-07T05:55:41.668Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/392",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-07T05:55:42Z"
+      },
+      {
+        "number": 390,
+        "title": "Autonomous audit PASS — 2026-10-06T22:38:27.590Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/390",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-06T22:38:27Z"
+      },
+      {
+        "number": 389,
+        "title": "Autonomous audit PASS — 2026-10-06T13:22:11.508Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/389",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-06T13:22:11Z"
+      },
+      {
+        "number": 387,
+        "title": "Autonomous audit PASS — 2026-10-06T06:16:54.720Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/387",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-06T06:16:54Z"
+      },
+      {
+        "number": 386,
+        "title": "Autonomous audit PASS — 2026-10-06T00:01:28.736Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/386",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-06T00:01:29Z"
+      },
+      {
+        "number": 384,
+        "title": "Autonomous audit PASS — 2026-10-05T14:32:09.506Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/384",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-05T14:32:09Z"
+      },
+      {
+        "number": 383,
+        "title": "Autonomous audit PASS — 2026-10-05T05:35:10.122Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/383",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-05T05:35:10Z"
+      },
+      {
+        "number": 382,
+        "title": "Autonomous audit PASS — 2026-10-04T21:21:17.989Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/382",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-04T21:21:18Z"
+      },
+      {
+        "number": 380,
+        "title": "Autonomous audit PASS — 2026-10-04T12:18:20.862Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/380",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-04T12:18:21Z"
+      },
+      {
+        "number": 379,
+        "title": "Autonomous audit PASS — 2026-10-04T05:48:55.766Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/379",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-04T05:48:56Z"
+      },
+      {
+        "number": 378,
+        "title": "Autonomous audit PASS — 2026-10-03T21:11:57.555Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/378",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-03T21:11:57Z"
+      },
+      {
+        "number": 377,
+        "title": "Autonomous audit PASS — 2026-10-03T16:15:26.992Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/377",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-03T16:15:27Z"
+      },
+      {
+        "number": 375,
+        "title": "Autonomous audit PASS — 2026-10-03T11:36:35.506Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/375",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-03T11:36:35Z"
+      },
+      {
+        "number": 371,
+        "title": "Autonomous audit PASS — 2026-10-03T05:15:09.768Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/371",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-03T05:15:09Z"
+      },
+      {
+        "number": 368,
+        "title": "Autonomous audit PASS — 2026-10-02T22:11:24.877Z",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/issues/368",
+        "labels": [
+          "autonomous-audit"
+        ],
+        "updated_at": "2026-10-02T22:11:25Z"
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "T-776",
+      "status": "PASS CI / BLOCKED REVIEW / DO NOT MERGE",
+      "pr": 776,
+      "url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/776",
+      "branch": "feature/chatgpt-continuity-integration-20261020",
+      "head_sha": "9211d1e6e061fe3812f12f85e9928ecf39f1fc6e",
+      "base_branch": "main",
+      "current_main_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+      "compare": {
+        "status": "diverged",
+        "ahead_by": 29,
+        "behind_by": 1,
+        "mergeable_reported": true
+      },
+      "checks": "16 workflow runs for the exact head were completed successfully, including Android WebView real-chat QA, repository knowledge tests, CI, architecture gate, memory smoke, interaction QA, Visual QA, and APK build.",
+      "review_blocker": "Codex review summary comment says status=failed, has_any_findings=true, has_unresolved_findings=true. No inline threads or submitted reviews returned; actual finding details are not available. Do not merge until reviewed and branch/base/checks are refreshed.",
+      "next_action": "Resolve review findings/obtain valid review evidence; refresh head SHA, base SHA, mergeability, and required checks before any promotion."
+    },
+    {
+      "id": "T-ANDROID-776",
+      "status": "PASS — EMULATOR ONLY",
+      "pr": 776,
+      "run_id": 39310736563,
+      "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39310736563",
+      "head_sha": "9211d1e6e061fe3812f12f85e9928ecf39f1fc6e",
+      "conclusion": "success",
+      "evidence": "Installed APK WebView target/composer found and a non-mock backend answer was recorded in artifact 12216467257.",
+      "physical_device": "NOT TESTED",
+      "next_action": "Reuse this evidence only for the exact PR head; do not treat it as current-main or physical-phone evidence."
+    },
+    {
+      "id": "T-ANDROID-780",
+      "status": "FAIL — REPRODUCED CDP TIMEOUT",
+      "pr": 780,
+      "url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/780",
+      "branch": "fix/android-webview-cdp-reconnect-20261020",
+      "head_sha": "d670c6a0260a1eb91a805f5711c5b783cdf38307",
+      "run_id": 39366380194,
+      "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39366380194",
+      "job_id": 118444076244,
+      "artifact_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39366380194/artifacts/12239862678",
+      "changed_paths_by_this_worker": [],
+      "evidence": "Emulator booted and APK installed; report.json says target_url=https://localhost/ and visible #input/#sendBtn passed, then cdp_connection_and_chat failed with WebSocketTimeoutException: Connection timed out. No synthetic_prompt_submitted check was recorded; therefore this run did NOT complete a chat round-trip. Screenshot artifacts show the blank chat UI and model-connection status. The prior PR #777 run 39365063611 failed with the same error (artifact 12239955184).",
+      "write_attempt": "A minimal change to increase CDP command/evaluate timeout and include command-specific timeout diagnostics on this existing branch was blocked by OpenAI safety checks. No source file changed; no workaround attempted.",
+      "retry_decision": "Do not retry unchanged code: the same failure has occurred on two branches and the attempted correction did not commit. The available retry tools rerun jobs, but a retry without code change is unlikely to resolve the reproduced timeout.",
+      "next_action": "Use an authorized write path to update this same branch with safe CDP timeout/diagnostic changes, then rerun the exact-head Android QA. Keep PR unmerged."
+    },
+    {
+      "id": "T-WATCHDOG-777",
+      "status": "PENDING / ANDROID CHECK RED",
+      "pr": 777,
+      "url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/777",
+      "branch": "feature/30m-watchdog-20261020",
+      "head_sha": "a638bfbda7357411b876050120a88585b920d311",
+      "failed_run_id": 39365063611,
+      "failed_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39365063611",
+      "evidence": "The failed job is apk-webview-real-chat; same WebSocketTimeoutException before any chat prompt was submitted. This is a test-harness/CDP failure, not proof of the watchdog feature working or failing.",
+      "next_action": "Do not merge. After an authorized shared harness fix, rerun this exact PR's failed Android job; separately review its retry allowlist/log-inspection logic before promotion."
+    },
+    {
+      "id": "T-MAIN-APK",
+      "status": "NOT TESTED ON CURRENT MAIN SHA",
+      "current_main_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+      "latest_main_build_run": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39362936712",
+      "cancelled_runs": [
+        {
+          "id": 39366512685,
+          "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39366512685",
+          "status": "cancelled",
+          "jobs_allocated": 0
+        },
+        {
+          "id": 39365150201,
+          "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39365150201",
+          "status": "cancelled",
+          "jobs_allocated": 0
+        }
+      ],
+      "skipped_run": {
+        "id": 39362224914,
+        "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39362224914",
+        "status": "completed/skipped",
+        "jobs_allocated": 0
+      },
+      "retry_limitation": "No job ID exists for the cancelled runs, and the connected GitHub tools expose job-level rerun but not a run-level rerun for a run with no allocated job. Do not claim it restarted.",
+      "previous_evidence": "Run 39321330102 passed on the earlier main SHA c59fa5f049fc08acb226302e2aac454dda520827, not current main.",
+      "next_action": "Use an authorized workflow-dispatch path or wait for an eligible current-main APK build/QA trigger; do not duplicate the pending PR #781 QA as main evidence.",
+      "physical_device": "NOT TESTED"
+    },
+    {
+      "id": "T-LIVE",
+      "status": "LAST REAL CHAT PASS ON PREVIOUS MAIN; CURRENT SHA NOT RE-TESTED",
+      "live_url": "https://mosharrof0000-ux.github.io/Mosharrof/",
+      "latest_deploy_run": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39362936758",
+      "deployed_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+      "latest_real_live_smoke": {
+        "run_id": 39316955824,
+        "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39316955824",
+        "tested_sha": "c59fa5f049fc08acb226302e2aac454dda520827",
+        "result": "pass"
+      },
+      "current_main_live_round_trip": "NOT TESTED in this run",
+      "next_action": "Run/obtain a fresh real Live/PWA chat round-trip on the currently deployed SHA; CI and deploy success alone are not sufficient."
+    },
+    {
+      "id": "T-AUTO-779",
+      "status": "MERGED BY EXISTING AUTOMATION; CRITICAL SAFETY GAP REMAINS",
+      "pr": 779,
+      "url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/779",
+      "merge_commit_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+      "verified_code_fact": "scripts/autonomous_agent.py on main still contains gh pr merge --auto --squash at line 62. PR #779 fixed response validation/NameError but did not remove auto-merge.",
+      "write_blocker": "Attempted isolated-branch source update was blocked by OpenAI safety checks. No source change/commit made by this worker.",
+      "next_action": "Create a safe isolated correction removing auto-merge and adding regression coverage when an authorized write path is available; keep all agent-created PRs unmerged until independent verification."
+    },
+    {
+      "id": "T-PR-781",
+      "status": "DRAFT / OUT OF CURRENT SCOPE / DO NOT MERGE",
+      "pr": 781,
+      "url": "https://github.com/mosharrof0000-ux/Mosharrof/pull/781",
+      "branch": "docs/faceless-youtube-shorts-workflow-20261020",
+      "head_sha": "b4c6527df10962024e82bd12ca6a6e85ab796862",
+      "note": "This docs-only YouTube Shorts workflow is not part of the user's existing backlog scope. Leave draft and do not promote; healthy PR checks were allowed to continue. The Pages deploy job was skipped, so no PR deployment was performed."
+    },
+    {
+      "id": "T-ENGINE-39367173622",
+      "status": "SUCCESS — REVIEW-ONLY JOB",
+      "run_id": 39367173622,
+      "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39367173622",
+      "head_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+      "artifact_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39367173622/artifacts/12239621792",
+      "conclusion": "success",
+      "note": "Job completed all verification and uploaded its task artifact. It did not change main. A sibling issue_comment run 39367174431 was still pending with no jobs allocated at last poll; do not duplicate it."
+    },
+    {
+      "id": "T-ENGINE-FAIL-39364994754",
+      "status": "FAIL — SAFE NO-OP GUARD",
+      "run_id": 39364994754,
+      "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39364994754",
+      "cause": "323 tests passed and protected change-surface check passed; Open PR step refused a checkpoint-only autonomous PR (exit 1).",
+      "next_action": "No retry until a concrete existing implementation/test blocker is selected."
+    },
+    {
+      "id": "T-DEPLOY",
+      "status": "PASS DEPLOY / LIVE CHAT CURRENT SHA NOT TESTED",
+      "run_id": 39362936758,
+      "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39362936758",
+      "sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+      "conclusion": "success",
+      "note": "Deploy job on PR #780 run 39366380119 and PR #781 run 39367167200 was skipped; no PR branch was deployed to Pages."
+    }
+  ],
+  "action_log": [
+    {
+      "time_utc": "2026-10-20T03:59:13Z",
+      "action": "Read automation inventory, open PRs/issues, current Actions, latest durable checkpoint, PR #776 and target Android run.",
+      "result": "PASS read-only inventory; all three Mosharrof duty automations enabled."
+    },
+    {
+      "time_utc": "2026-10-20T04:01:20Z",
+      "action": "Inspected PR #780 Android QA job steps, logs, and artifact report.json.",
+      "result": "FAIL confirmed WebSocketTimeoutException after composer visibility; no prompt submission."
+    },
+    {
+      "time_utc": "2026-10-20T04:02:00Z",
+      "action": "Attempted minimal source fix on isolated PR #780 branch.",
+      "result": "BLOCKED by OpenAI safety checks; no file changed and no bypass attempted."
+    },
+    {
+      "time_utc": "2026-10-20T04:04:54Z",
+      "action": "Attempted a REQUEST_CHANGES review on PR #776 for the oversized-file read order at core/knowledge-continuity-bridge.js:35.",
+      "result": "Blocked by OpenAI safety checks; no review was submitted. Finding remains open."
+    }
+  ],
+  "safety": {
+    "main_edited_by_this_worker": false,
+    "pr_merged_by_this_worker": false,
+    "deployment_started_by_this_worker": false,
+    "physical_android_device_tested": false,
+    "current_main_live_chat_round_trip_tested": false,
+    "healthy_runs_cancelled_by_this_worker": false,
+    "failed_job_retries_started": false
+  },
+  "blockers": [
+    "Authorized source-write path is needed to correct the Android WebView CDP timeout and remove the autonomous agent's auto-merge command; the attempted update_file operation was blocked by OpenAI safety checks.",
+    "Current-main APK WebView QA runs were cancelled/skipped before allocating a job; available retry actions operate on job IDs, so there is no job to rerun for those runs.",
+    "PR #776 has a failed Codex review summary reporting unresolved findings, but no inline finding details were returned; it is 1 commit behind current main and must remain unmerged.",
+    "Current-main real Live/PWA chat round-trip was not re-tested after main advanced to 632ac0c5a0d9bba84bbc330612138556ceb26fb3.",
+    "PR #776: concrete oversized-file memory-pressure finding at core/knowledge-continuity-bridge.js:35; review submission blocked by OpenAI safety checks.",
+    "PR #780: Android WebView CDP timeout remains unfixed because source update was blocked by OpenAI safety checks."
+  ],
+  "next_actions": [
+    "When authorized write access is available, patch scripts/android/apk_webview_real_chat_smoke.py on the existing PR #780 branch with safe CDP timeout/method diagnostics; rerun exact-head Android QA and then re-evaluate PR #777.",
+    "Remove gh pr merge --auto --squash from scripts/autonomous_agent.py on a new isolated branch and add regression coverage; never merge without refreshed checks/review/mergeability.",
+    "Resolve PR #776's review findings, refresh base/head/checks, and decide whether to treat #776 as a stacked integration of #775/#774/#772.",
+    "Obtain a fresh real Live/PWA chat smoke on current deployed SHA and an exact-current-main Android APK WebView QA run.",
+    "Review #777 retry logic and allowlist; keep draft/unmerged while checks or safety gaps remain.",
+    "Continue grouping memory PRs #671/#673-#676, Android device-agent PRs #723/#653/#651/#647/#645/#643, and the five known review threads on #363/#358/#354.",
+    "Refresh the repository checkpoint after the next verified change; do not overwrite this newer checkpoint with stale automation output."
+  ],
+  "actions_snapshot": {
+    "captured_at_utc": "2026-10-20T04:08:32Z",
+    "recent_runs_sampled": 100,
+    "attention_runs": [
+      {
+        "id": 39367167224,
+        "name": "MOSHARROF Android APK WebView Real Chat QA",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T03:59:28Z",
+        "updated_at": "2026-10-20T04:01:29Z",
+        "head_sha": "b4c6527df10962024e82bd12ca6a6e85ab796862",
+        "head_branch": "docs/faceless-youtube-shorts-workflow-20261020",
+        "event": "pull_request",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39367167224"
+      },
+      {
+        "id": 39366512685,
+        "name": "MOSHARROF Android APK WebView Real Chat QA",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T03:51:55Z",
+        "updated_at": "2026-10-20T03:59:29Z",
+        "head_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+        "head_branch": "main",
+        "event": "workflow_run",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39366512685"
+      },
+      {
+        "id": 39366380194,
+        "name": "MOSHARROF Android APK WebView Real Chat QA",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-20T03:50:22Z",
+        "updated_at": "2026-10-20T04:01:40Z",
+        "head_sha": "d670c6a0260a1eb91a805f5711c5b783cdf38307",
+        "head_branch": "fix/android-webview-cdp-reconnect-20261020",
+        "event": "pull_request",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39366380194"
+      },
+      {
+        "id": 39365150201,
+        "name": "MOSHARROF Android APK WebView Real Chat QA",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T03:36:04Z",
+        "updated_at": "2026-10-20T03:37:07Z",
+        "head_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+        "head_branch": "main",
+        "event": "workflow_run",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39365150201"
+      },
+      {
+        "id": 39365063611,
+        "name": "MOSHARROF Android APK WebView Real Chat QA",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-20T03:35:05Z",
+        "updated_at": "2026-10-20T03:47:28Z",
+        "head_sha": "a638bfbda7357411b876050120a88585b920d311",
+        "head_branch": "feature/30m-watchdog-20261020",
+        "event": "pull_request",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39365063611"
+      },
+      {
+        "id": 39364994754,
+        "name": "MOSHARROF Parallel Engine Builder",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-20T03:34:18Z",
+        "updated_at": "2026-10-20T03:35:03Z",
+        "head_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+        "head_branch": "main",
+        "event": "workflow_run",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39364994754"
+      },
+      {
+        "id": 39364987679,
+        "name": "Mosharrof Verification Gate",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T03:34:13Z",
+        "updated_at": "2026-10-20T03:35:09Z",
+        "head_sha": "997049fb793f6e798df109ea5a47a1c296031922",
+        "head_branch": "feature/30m-watchdog-20261020",
+        "event": "pull_request",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39364987679"
+      },
+      {
+        "id": 39364987634,
+        "name": "MOSHARROF Android APK WebView Real Chat QA",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T03:34:13Z",
+        "updated_at": "2026-10-20T03:35:06Z",
+        "head_sha": "997049fb793f6e798df109ea5a47a1c296031922",
+        "head_branch": "feature/30m-watchdog-20261020",
+        "event": "pull_request",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39364987634"
+      },
+      {
+        "id": 39364474946,
+        "name": "MOSHARROF Android APK WebView Real Chat QA",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T03:28:31Z",
+        "updated_at": "2026-10-20T03:28:54Z",
+        "head_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+        "head_branch": "main",
+        "event": "workflow_run",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39364474946"
+      },
+      {
+        "id": 39364328448,
+        "name": "MOSHARROF Parallel Engine Builder",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T03:26:48Z",
+        "updated_at": "2026-10-20T03:26:51Z",
+        "head_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+        "head_branch": "main",
+        "event": "issue_comment",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39364328448"
+      },
+      {
+        "id": 39364327965,
+        "name": "MOSHARROF Parallel Engine Builder",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T03:26:48Z",
+        "updated_at": "2026-10-20T03:26:49Z",
+        "head_sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+        "head_branch": "main",
+        "event": "issue_comment",
+        "html_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39364327965"
+      }
+    ],
+    "latest_main_deploy": {
+      "id": 39362936758,
+      "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39362936758",
+      "sha": "632ac0c5a0d9bba84bbc330612138556ceb26fb3",
+      "conclusion": "success"
+    },
+    "current_main_apk_qa": {
+      "status": "NOT TESTED on current main SHA",
+      "cancelled_runs": [
+        {
+          "id": 39366512685,
+          "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39366512685",
+          "jobs_allocated": 0
+        },
+        {
+          "id": 39365150201,
+          "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39365150201",
+          "jobs_allocated": 0
+        },
+        {
+          "id": 39364474946,
+          "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39364474946",
+          "jobs_allocated": 0
+        }
+      ]
+    },
+    "current_main_live_chat": {
+      "status": "NOT TESTED on current main SHA",
+      "last_successful_real_live_smoke": {
+        "id": 39316955824,
+        "url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/39316955824",
+        "tested_sha": "c59fa5f049fc08acb226302e2aac454dda520827"
+      }
+    }
+  },
+  "manual_review_finding": {
+    "pr": 776,
+    "path": "core/knowledge-continuity-bridge.js",
+    "line": 35,
+    "status": "FOUND / NOT SUBMITTED",
+    "issue": "await file.text() is executed before checking file.size > 100 MB, so oversized JSON is loaded into browser memory before rejection.",
+    "minimal_fix": "Check file.size before await file.text(); rerun exact-head checks and refresh base/head before merge.",
+    "review_write": "Blocked by OpenAI safety checks; no GitHub review/comment was created."
+  }
+}
