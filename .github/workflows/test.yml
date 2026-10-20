@@ -20,6 +20,8 @@ jobs:
         run: node --test tests/personal-memory-engine.test.mjs
       - name: Check memory bridge syntax
         run: node --check core/personal-memory-bridge.js
+      - name: Validate supplemental chat intelligence evaluation matrix
+        run: node tests/chat-intelligence-eval-matrix.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
