@@ -1,0 +1,22 @@
+{
+  "entity_id": "core",
+  "lifecycle": "ALIVE",
+  "born_at": "2026-10-20T04:54:01.585362+00:00",
+  "retired_at": null,
+  "archived_at": null,
+  "created_at": "2026-10-20T04:54:01.585128+00:00",
+  "name": "Mosharrof",
+  "brain": "core",
+  "scope": "sovereign",
+  "delete_allowed": false,
+  "born_by": "core",
+  "birth_reason": "Sovereign self-instantiation",
+  "updated_at": "2026-10-20T04:54:01.585397+00:00",
+  "last_transition": {
+    "from": "UNBORN",
+    "to": "ALIVE",
+    "actor": "core",
+    "reason": "Sovereign self-instantiation",
+    "at": "2026-10-20T04:54:01.585355+00:00"
+  }
+}
