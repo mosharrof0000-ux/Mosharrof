@@ -1,0 +1,35 @@
+name: Action Contribution Contract
+
+on:
+  pull_request:
+    paths:
+      - "web/index.html"
+      - "web/modules/action-contributions/**"
+      - "scripts/validate_action_contributions.py"
+      - "tests/ui/test_action_contribution_registry.py"
+      - ".github/workflows/action-contribution-contract.yml"
+  push:
+    branches:
+      - "feature/action-bar-module-registry-*"
+    paths:
+      - "web/index.html"
+      - "web/modules/action-contributions/**"
+      - "scripts/validate_action_contributions.py"
+      - "tests/ui/test_action_contribution_registry.py"
+      - ".github/workflows/action-contribution-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-action-contribution-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate module boundaries and UI placements
+        run: python scripts/validate_action_contributions.py
+      - name: Run focused action contribution tests
+        run: python -m unittest discover -s tests/ui -p 'test_*.py' -v
