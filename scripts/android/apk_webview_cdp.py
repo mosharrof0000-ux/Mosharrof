@@ -47,7 +47,7 @@ class PageCDP:
             )
         self.next_id = 0
 
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
+    def command(self, method: str, params: dict | None = None, timeout: float = 45) -> dict:
         self.next_id += 1
         command_id = self.next_id
         self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
@@ -68,7 +68,7 @@ class PageCDP:
             return message.get("result", {})
         raise TimeoutError(f"Timed out waiting for CDP command {method} after {timeout}s")
 
-    def evaluate(self, expression: str, timeout: float = 15):
+    def evaluate(self, expression: str, timeout: float = 45):
         result = self.command(
             "Runtime.evaluate",
             {"expression": expression, "returnByValue": True, "awaitPromise": True},
