@@ -46,7 +46,7 @@ def validate():
             require(bool(item.get("automatic_block_reason")),
                     f"blocked automatic action needs a reason: {item.get('id')}")
 
-    require('import("./modules/action-contributions/index.js")' in bootstrap,
+    require('import("./runtime/core/action-contributions/index.js")' in bootstrap,
             "web/sidebar-recovery.js does not load the prepared core action contribution runtime")
     prep = (ROOT / "scripts/prepare_web_organ_runtime.py").read_text(encoding="utf-8")
     require('"core/action-contributions/index.js": "web/runtime/core/action-contributions/index.js"' in prep,
