@@ -28,6 +28,7 @@ def main() -> int:
           fixture.id = 'action-registry-fixture';
           fixture.className = 'message ai';
           fixture.innerHTML = [
+            '<div class="message-actions-wrap open">',
             '<button class="message-actions-toggle" aria-label="মেসেজের কাজ দেখান">⋯</button>',
             '<button class="message-feedback-shortcut" title="লাইক / আনলাইক" aria-label="লাইক বা আনলাইক">♥</button>',
             '<button class="message-feedback-shortcut online-feedback-shortcut" title="অনলাইন ব্যবহারের কারণ" aria-label="অনলাইন ব্যবহারের কারণ">◎</button>',
@@ -38,6 +39,7 @@ def main() -> int:
             '<button class="message-action">আবার চেষ্টা</button>',
             '<button class="message-action">শেয়ার</button>',
             '<button class="message-action">পড়ে শোনান</button>',
+            '</div>',
             '</div>'
           ].join('');
           document.body.appendChild(fixture);
