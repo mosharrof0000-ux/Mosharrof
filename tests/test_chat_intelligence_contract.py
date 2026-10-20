@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-PROMPT = Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8")
+PROMPT = (Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8") + "\\n" + Path("core/reflective-intelligence-rules.js").read_text(encoding="utf-8"))
 
 
 def test_truthfulness_requires_uncertainty_and_no_fabricated_sources():
