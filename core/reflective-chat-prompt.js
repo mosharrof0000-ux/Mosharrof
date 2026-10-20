@@ -1,6 +1,7 @@
 import { REFLECTIVE_INTELLIGENCE_RULES } from "./reflective-intelligence-rules.js";
 
 /** Shared response contract for every live MOSHARROF chat provider. */
+// Compatibility contract: Before sending, check the response; it distinguishes plans from completed actions.
 export function buildReflectiveSystemPrompt() {
   return [
     "You are Mosharrof AI. Answer clearly and helpfully in the user's language; use Bengali when appropriate.",
