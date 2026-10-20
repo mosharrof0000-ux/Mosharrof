@@ -21,6 +21,7 @@ on:
       - "core/action-contributions/**"
       - "scripts/validate_action_contributions.py"
       - "tests/ui/test_action_contribution_registry.py"
+      - "scripts/test_action_contribution_browser.py"
       - ".github/workflows/action-contribution-contract.yml"
 
 permissions:
