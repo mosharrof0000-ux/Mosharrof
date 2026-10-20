@@ -95,7 +95,7 @@ def main() -> int:
         }""")
         assert registration == {"missingPolicyAccepted": False, "registered": True}, registration
         page.wait_for_function(
-            "() => document.querySelector('#action-registry-fixture [data-action-contribution="test.module-action"]')",
+            """() => document.querySelector('#action-registry-fixture [data-action-contribution="test.module-action"]')""",
             timeout=5000,
         )
         page.locator('[data-action-contribution="test.module-action"]').evaluate("(element) => element.click()")
