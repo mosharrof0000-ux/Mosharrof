@@ -98,8 +98,8 @@ def main() -> int:
             """() => document.querySelector('#action-registry-fixture [data-action-contribution="test.module-action"]')""",
             timeout=5000,
         )
-        page.locator('[data-action-contribution="test.module-action"]').evaluate("(element) => element.click()")
-        manual_status = page.locator('[data-action-contribution="test.module-action"]').get_attribute("data-execution-status")
+        page.locator('#action-registry-fixture [data-action-contribution="test.module-action"]').evaluate("(element) => element.click()")
+        manual_status = page.locator('#action-registry-fixture [data-action-contribution="test.module-action"]').get_attribute("data-execution-status")
         assert manual_status == "VERIFIED", manual_status
         assert page.evaluate("window.__manualActionCalled") is True
 
