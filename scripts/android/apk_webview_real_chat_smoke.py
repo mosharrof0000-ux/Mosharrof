@@ -52,7 +52,29 @@ class PageCDP:
     """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
 
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
+        # Android WebView CDP can publish its target before the page socket is
+        # ready. Retry the page target and avoid an Origin header, which some
+        # embedded WebView builds reject or leave hanging.
+        self.ws = None
+        errors = []
+        candidates = [ws_url]
+        if "127.0.0.1" in ws_url:
+            candidates.append(ws_url.replace("127.0.0.1", "localhost", 1))
+        for attempt in range(1, 7):
+            for candidate in candidates:
+                try:
+                    self.ws = websocket.create_connection(
+                        candidate, timeout=10, suppress_origin=True,
+                        http_proxy_host=None, http_proxy_port=None,
+                    )
+                    break
+                except Exception as exc:
+                    errors.append(f"attempt={attempt} url={candidate}: {type(exc).__name__}: {str(exc)[:160]}")
+            if self.ws is not None:
+                break
+            time.sleep(min(attempt * 2, 8))
+        if self.ws is None:
+            raise RuntimeError("Could not open Android WebView CDP page socket after retries: " + " | ".join(errors[-6:]))
         self.next_id = 0
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
