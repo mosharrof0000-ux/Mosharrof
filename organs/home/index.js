@@ -4,6 +4,13 @@ import { EntityState } from "../../web/entities/core/entity-state.js";
 import { icons } from "../../web/entities/shared/entity-icons.js";
 
 export const organId = (function(parts){return parts[parts.length-2]})(new URL(import.meta.url).pathname.split("/"));
+if (typeof document !== "undefined" && !document.querySelector('link[data-mosharrof-android-chat-layout]')) {
+  const layoutStyle = document.createElement("link");
+  layoutStyle.rel = "stylesheet";
+  layoutStyle.href = new URL("./android-edge-to-edge.css", import.meta.url).href;
+  layoutStyle.dataset.mosharrofAndroidChatLayout = "true";
+  document.head.appendChild(layoutStyle);
+}
 export function initialize(runtime) {
   EntityRegistry.register({
     id: organId, icon: icons[organId],
