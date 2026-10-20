@@ -142,18 +142,19 @@ async function coreRespond(userText) {
   await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
 
   const lower = userText.toLowerCase();
+  let text = "";
   if (/কুরআন|কোরান|আয়াত|সূরা|তাফসীর/.test(userText)) {
-    return "কুরআন গবেষণা মডিউল (quran_research entity) প্রস্তুত। নির্দিষ্ট আয়াত বা বিষয় বললে আমি প্রেক্ষাপট ও ভাষা বিশ্লেষণের কাঠামো দিতে পারি। মডেল অ্যাডাপ্টার কানেক্ট হলে পূর্ণ উত্তর আসবে।";
-  }
-  if (/ভয়েস|voice|শুন/.test(userText)) {
-    return "Voice entity সক্রিয়। + বাটনে চাপ দিয়ে বাংলায় কথা বলুন — কনটেক্সট কারেকশন ও স্মার্ট পাঙ্কচুয়েশন স্বয়ংক্রিয়ভাবে কাজ করবে।";
-  }
-  if (/এন্টিটি|entity|রেজিস্ট্রি|registry|সিস্টেম/.test(userText)) {
-    return Object.entries(REGISTRY)
+    text = "কুরআন গবেষণা মডিউল (quran_research entity) প্রস্তুত। নির্দিষ্ট আয়াত বা বিষয় বললে আমি প্রেক্ষাপট ও ভাষা বিশ্লেষণের কাঠামো দিতে পারি। মডেল অ্যাডাপ্টার কানেক্ট হলে পূর্ণ উত্তর আসবে।";
+  } else if (/ভয়েস|voice|শুন/.test(userText)) {
+    text = "Voice entity সক্রিয়। + বাটনে চাপ দিয়ে বাংলায় কথা বলুন — কনটেক্সট কারেকশন ও স্মার্ট পাঙ্কচুয়েশন স্বয়ংক্রিয়ভাবে কাজ করবে।";
+  } else if (/এন্টিটি|entity|রেজিস্ট্রি|registry|সিস্টেম/.test(userText)) {
+    text = Object.entries(REGISTRY)
       .map(([id, e]) => `• ${id} — ${e.responsibility}`)
       .join("\n");
+  } else {
+    text = "Foundation UI অনলাইন। Core entity সক্রিয়। মডেল অ্যাডাপ্টার কানেক্ট করলে পূর্ণ AI জেনারেশন চালু হবে। আপনি কী জানতে চান?";
   }
-  return "Foundation UI অনলাইন। Core entity সক্রিয়। মডেল অ্যাডাপ্টার কানেক্ট করলে পূর্ণ AI জেনারেশন চালু হবে। আপনি কী জানতে চান?";
+  return { text, provider: "core-mock" };
 }
 
 /* ── Send flow ── */
@@ -181,7 +182,9 @@ async function sendMessage() {
   try {
     const reply = await coreRespond(text);
     removeTyping();
-    renderMessage("ai", reply);
+    const replyText = typeof reply === 'object' ? reply.text : reply;
+    const replyProvider = typeof reply === 'object' ? reply.provider : 'core';
+    renderMessage("ai", replyText, "MOSHARROF AI · " + replyProvider);
   } catch (err) {
     removeTyping();
     renderMessage("ai", "Core-এ সাময়িক সমস্যা হয়েছে। আবার চেষ্টা করুন।");
