@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "web/modules/action-contributions/manifest.json"
-RUNTIME = ROOT / "web/modules/action-contributions/index.js"
+MANIFEST = ROOT / "core/action-contributions/manifest.json"
+RUNTIME = ROOT / "core/action-contributions/index.js"
 ENTRYPOINT = ROOT / "web/index.html"
 BOOTSTRAP = ROOT / "web/sidebar-recovery.js"
 
@@ -47,7 +47,12 @@ def validate():
                     f"blocked automatic action needs a reason: {item.get('id')}")
 
     require('import("./modules/action-contributions/index.js")' in bootstrap,
-            "web/sidebar-recovery.js does not load the action contribution runtime")
+            "web/sidebar-recovery.js does not load the prepared core action contribution runtime")
+    prep = (ROOT / "scripts/prepare_web_organ_runtime.py").read_text(encoding="utf-8")
+    require('"core/action-contributions/index.js": "web/runtime/core/action-contributions/index.js"' in prep,
+            "Pages preparation does not copy the action runtime into the browser artifact")
+    require('"core/action-contributions/manifest.json": "web/runtime/core/action-contributions/manifest.json"' in prep,
+            "Pages preparation does not copy the action manifest into the browser artifact")
     require("message-actions" in html and "function addMessageToolbar" in html,
             "existing message toolbar hook not found in entrypoint")
     require("MOSHARROF_ACTION_CONTRIBUTIONS" in runtime,
