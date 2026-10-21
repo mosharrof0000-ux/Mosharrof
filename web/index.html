@@ -227,6 +227,19 @@ header.top{
 .audio-setting-row label{font-size:12px;color:#e5e5e5;font-weight:650}
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
+
+/* Full-draft composer expansion editor; remains hidden until the user asks. */
+#composerExpandBtn{display:none;flex:0 0 auto;align-self:center;width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:inherit;place-items:center;cursor:pointer}
+#composerExpandBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#composerExpandBtn.is-visible{display:grid}
+#mosharrofExpandEditor{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.64)}
+#mosharrofExpandEditor.is-open{display:flex}
+#mosharrofExpandEditor .expand-card{display:flex;flex-direction:column;gap:12px;width:min(760px,100%);height:min(82dvh,760px);padding:16px;border:1px solid var(--border,rgba(255,255,255,.16));border-radius:16px;background:var(--surface,#171717);color:var(--text,#f5f5f5);box-shadow:0 12px 40px rgba(0,0,0,.32)}
+#mosharrofExpandEditor .expand-title{display:flex;align-items:center;justify-content:space-between;font-weight:600}
+#mosharrofExpandEditor textarea{display:block;flex:1;min-height:0;width:100%;resize:none;padding:12px;border:1px solid var(--border,rgba(255,255,255,.16));border-radius:10px;background:var(--bg,#000);color:inherit;line-height:1.55}
+#mosharrofExpandEditor .expand-actions{display:flex;justify-content:flex-end;gap:8px}
+#mosharrofExpandEditor button{min-height:38px;padding:7px 14px;border:1px solid var(--border,rgba(255,255,255,.16));border-radius:9px;background:var(--surface2,#202123);color:inherit;cursor:pointer}
+#mosharrofExpandEditor [data-expand-apply]{background:#2457d6;border-color:#2457d6;color:white}
 </style>
 </head>
 <body>
@@ -256,11 +269,19 @@ header.top{
         </div>
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
+      <button id="composerExpandBtn" type="button" aria-label="সম্পূর্ণ লেখা বড় করে সম্পাদনা" title="সম্পূর্ণ লেখা বড় করে সম্পাদনা"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/><path d="M8 8 3 3M16 8l5-5M8 16l-5 5M16 16l5 5"/></svg></button>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
   </div>
   <div class="voice-bar" id="voiceStatus" role="status" aria-live="polite">Voice ready</div>
+  <div id="mosharrofExpandEditor" role="dialog" aria-modal="true" aria-labelledby="mosharrofExpandTitle">
+    <div class="expand-card">
+      <div class="expand-title" id="mosharrofExpandTitle"><span>সম্পূর্ণ লেখা সম্পাদনা</span><button type="button" data-expand-close aria-label="বন্ধ করুন">বন্ধ</button></div>
+      <textarea aria-label="সম্পূর্ণ বার্তার লেখা" spellcheck="true"></textarea>
+      <div class="expand-actions"><button type="button" data-expand-close>বাতিল</button><button type="button" data-expand-apply>লেখা প্রয়োগ করুন</button></div>
+    </div>
+  </div>
   <aside class="drawer left" id="drawerLeft" aria-hidden="true"></aside>
   <aside class="drawer right" id="drawerRight" aria-hidden="true"></aside>
   <div class="scrim" id="scrim"></div>
@@ -302,6 +323,22 @@ header.top{
   function showV(t){vStatus.textContent=t;vStatus.classList.add("show");}
   function hideV(){vStatus.classList.remove("show");}
   function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
+  var expandButton=$("#composerExpandBtn"),expandDialog=$("#mosharrofExpandEditor"),expandInput=expandDialog.querySelector("textarea");
+  function updateExpandVisibility(){
+    var lines=(input.value||"").split("\\n").length;
+    var visible=lines>8 || input.scrollHeight>Math.max(120,input.clientHeight+4);
+    expandButton.classList.toggle("is-visible",visible);
+    expandButton.setAttribute("aria-hidden",visible?"false":"true");
+  }
+  function closeExpandEditor(){expandDialog.classList.remove("is-open");}
+  expandButton.addEventListener("click",function(){
+    expandInput.value=input.value;expandDialog.classList.add("is-open");expandInput.focus();expandInput.setSelectionRange(expandInput.value.length,expandInput.value.length);
+  });
+  expandDialog.addEventListener("click",function(event){
+    if(event.target===expandDialog||event.target.closest("[data-expand-close]")){closeExpandEditor();return;}
+    if(event.target.closest("[data-expand-apply]")){input.value=expandInput.value;input.dispatchEvent(new Event("input",{bubbles:true}));resize();updateExpandVisibility();closeExpandEditor();input.focus();}
+  });
+  expandInput.addEventListener("keydown",function(event){if(event.key==="Escape"){closeExpandEditor();input.focus();}if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();input.value=expandInput.value;input.dispatchEvent(new Event("input",{bubbles:true}));resize();updateExpandVisibility();closeExpandEditor();input.focus();}});
   function bottom(){requestAnimationFrame(function(){scrollEl.scrollTop=scrollEl.scrollHeight;});}
   function iconSvg(kind){
     var paths={like:'<path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"/><path d="M7 10 12 3a2 2 0 0 1 2 2l-1 5h5.5a2.5 2.5 0 0 1 2.4 3.2l-1.8 6A2.5 2.5 0 0 1 16.7 21H7"/>',online:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/>',speak:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4Z"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',retry:'<path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6"/><path d="M18.4 15A7 7 0 0 1 6 18l-2-6"/>',share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/>',download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'};
@@ -1244,7 +1281,7 @@ header.top{
   imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);closeComposerTools();});
   removeImage.onclick=clearImage;
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
-  input.addEventListener("input",resize);
+  input.addEventListener("input",function(){resize();updateExpandVisibility();});
   function closeComposerTools(){composerToolsMenu.classList.remove("open");plusBtn.setAttribute("aria-expanded","false");}
   plusBtn.onclick=function(e){e.stopPropagation();var open=composerToolsMenu.classList.toggle("open");plusBtn.setAttribute("aria-expanded",open?"true":"false");};
   composerToolsMenu.addEventListener("click",function(e){e.stopPropagation();});
@@ -1255,7 +1292,7 @@ header.top{
   rightBtn.onclick=function(){openD("right");};
   scrim.onclick=closeD;
   document.addEventListener("click",function(e){var target=e.target.closest&&e.target.closest("button");if(!target)return;if(target.id==="cL"||target.id==="cR")closeD();if(target.id==="historyBtn")showHistory();if(target.id==="newChat")newChat();if(target.id==="clearMsg")clearMsg();if(target.id==="voiceBtn"){closeD();startV();}});
-  restoreMessages();initV();resize();input.focus();
+  restoreMessages();initV();resize();updateExpandVisibility();input.focus();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
 })();
 </script>
