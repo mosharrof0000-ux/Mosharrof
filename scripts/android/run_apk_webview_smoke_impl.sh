@@ -52,6 +52,9 @@ fi
 sleep 8
 test "$(timeout 10s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1"
 timeout 15s adb shell pm list packages > "$OUT/package-manager-final-probe.txt" 2>&1
+timeout 15s adb shell settings put global window_animation_scale 0 || true
+timeout 15s adb shell settings put global transition_animation_scale 0 || true
+timeout 15s adb shell settings put global animator_duration_scale 0 || true
 step "Install APK with retry and captured output"
 install_ok=0
 for attempt in 1 2; do
