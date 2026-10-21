@@ -50,7 +50,7 @@ jobs:
       - name: Validate smoke-test script syntax
         run: python -m py_compile scripts/android/apk_webview_real_chat_smoke.py
       - name: Validate emulator shell script syntax
-        run: bash -n scripts/android/run_apk_webview_smoke.sh
+        run: bash -n scripts/android/run_apk_webview_smoke.sh scripts/android/run_apk_webview_smoke_impl.sh
       - name: Install WebView CDP WebSocket client
         run: python -m pip install --disable-pip-version-check websocket-client
       - name: Download APK from the matching source build
@@ -112,11 +112,11 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
-          target: google_apis
+          target: default
           arch: x86_64
-          cores: 2
-          ram-size: 2048M
-          heap-size: 512M
+          cores: 3
+          ram-size: 3072M
+          heap-size: 768M
           emulator-port: 5554
           emulator-boot-timeout: 900
           disable-animations: false
