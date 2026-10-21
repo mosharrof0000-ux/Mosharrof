@@ -325,7 +325,7 @@ header.top{
   function resize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";}
   var expandButton=$("#composerExpandBtn"),expandDialog=$("#mosharrofExpandEditor"),expandInput=expandDialog.querySelector("textarea");
   function updateExpandVisibility(){
-    var lines=(input.value||"").split("\\n").length;
+    var lines=(input.value||"").split("\n").length;
     var visible=lines>8 || input.scrollHeight>Math.max(120,input.clientHeight+4);
     expandButton.classList.toggle("is-visible",visible);
     expandButton.setAttribute("aria-hidden",visible?"false":"true");
