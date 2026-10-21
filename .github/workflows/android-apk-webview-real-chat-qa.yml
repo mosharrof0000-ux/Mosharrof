@@ -2,34 +2,8 @@ name: MOSHARROF Android APK WebView Real Chat QA
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "android/**"
-      - "scripts/android/**"
-      - "core/**"
-      - "organs/**"
-      - "runtime/**"
-      - "web/**"
-      - "*.html"
-      - "*.js"
-      - "*.css"
-      - "package.json"
-      - ".github/workflows/android-apk-webview-real-chat-qa.yml"
-      - ".github/workflows/build-apk.yml"
   push:
     branches: [main]
-    paths:
-      - "android/**"
-      - "scripts/android/**"
-      - "core/**"
-      - "organs/**"
-      - "runtime/**"
-      - "web/**"
-      - "*.html"
-      - "*.js"
-      - "*.css"
-      - "package.json"
-      - ".github/workflows/android-apk-webview-real-chat-qa.yml"
-      - ".github/workflows/build-apk.yml"
   schedule:
     - cron: "30 15 * * *"
   workflow_dispatch:
