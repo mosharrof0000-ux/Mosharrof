@@ -21,7 +21,7 @@ trap 'status=$?; collect_diagnostics "$status"; exit "$status"' ERR
 step "Validate APK artifact"
 test -s "$APK"
 ls -lh "$APK" | tee "$OUT/apk-file.txt"
-step "Wait for emulator boot and package manager"
+step "Wait for emulator boot and stable package manager"
 adb wait-for-device
 boot=""
 for attempt in $(seq 1 120); do
@@ -30,12 +30,28 @@ for attempt in $(seq 1 120); do
   sleep 2
 done
 test "$boot" = "1"
-pm_ready=0
-for attempt in $(seq 1 30); do
-  if timeout 15s adb shell pm list packages >/dev/null 2>&1; then pm_ready=1; break; fi
-  sleep 2
+# Do not proceed on a transient package-manager response while Android services
+# are still crashing/restarting after boot. Require 3 consecutive healthy probes.
+pm_streak=0
+for attempt in $(seq 1 60); do
+  boot="$(timeout 10s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+  if [ "$boot" = "1" ] && timeout 15s adb shell pm list packages > "$OUT/package-manager-probe.txt" 2>&1; then
+    pm_streak=$((pm_streak + 1))
+    if [ "$pm_streak" -ge 3 ]; then break; fi
+  else
+    pm_streak=0
+    echo "Package manager not healthy on probe $attempt" | tee -a "$OUT/package-manager-probe-errors.txt"
+  fi
+  sleep 5
 done
-test "$pm_ready" = "1"
+if [ "$pm_streak" -lt 3 ]; then
+  echo "Emulator booted but package manager did not remain healthy for 3 consecutive probes." > "$OUT/emulator-readiness-error.txt"
+  exit 1
+fi
+# Final short stability interval catches system_server failures before APK install.
+sleep 8
+test "$(timeout 10s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1"
+timeout 15s adb shell pm list packages > "$OUT/package-manager-final-probe.txt" 2>&1
 step "Install APK with retry and captured output"
 install_ok=0
 for attempt in 1 2; do
