@@ -39,6 +39,7 @@ def redact(value: str) -> str:
     for pattern in SECRET_PATTERNS:
         value = pattern.sub(lambda m: (m.group(1) if m.lastindex else "") + "[REDACTED]", value)
     value = re.sub(r"https?://[^/\s:@]+:[^/@\s]+@", "https://[REDACTED]@", value)
+    value = re.sub(r"(?i)([?&](?:api[_-]?key|access[_-]?token|auth|token|password|secret|key)=)[^&\\s]+", r"\\1[REDACTED]", value)
     value = re.sub(r"(?i)(cookie|set-cookie)\s*[:=]\s*[^\n]+", r"\1: [REDACTED]", value)
     return value[:500].strip()
 
