@@ -5,6 +5,9 @@ on:
     paths:
       - "android/**"
       - "scripts/android/**"
+      - "core/**"
+      - "organs/**"
+      - "runtime/**"
       - "web/**"
       - "*.html"
       - "*.js"
@@ -17,6 +20,9 @@ on:
     paths:
       - "android/**"
       - "scripts/android/**"
+      - "core/**"
+      - "organs/**"
+      - "runtime/**"
       - "web/**"
       - "*.html"
       - "*.js"
