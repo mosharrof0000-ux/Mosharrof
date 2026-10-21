@@ -100,4 +100,4 @@ jobs:
       - name: Find a successful install-launch-chat-screenshot attempt
         env:
           GH_TOKEN: ${{ github.token }}
-        run: bash scripts/android/verify_real_chat_attempts.sh
+        run: bash .github/scripts/verify_real_chat_attempts.sh
