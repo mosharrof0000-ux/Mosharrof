@@ -1,0 +1,86 @@
+name: MOSHARROF Automatic Failure Research
+
+on:
+  workflow_run:
+    workflows:
+      - MOSHARROF Android APK WebView Real Chat QA
+      - Build MOSHARROF Android APK
+      - MOSHARROF Parallel Engine Builder
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Failed GitHub Actions run ID to investigate
+        required: true
+        type: string
+      run_url:
+        description: Optional browser URL for the run
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: mosharrof-failure-research-${{ github.event.workflow_run.id || inputs.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  research:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion != 'success' &&
+       github.event.workflow_run.conclusion != 'skipped' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout trusted default branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Collect failed-step logs without checking out failed code
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+          SOURCE_RUN_URL: ${{ github.event.workflow_run.html_url || inputs.run_url }}
+          SOURCE_RUN_NAME: ${{ github.event.workflow_run.name || 'Manually selected workflow run' }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/failure-research
+          printf '%s\n' "Run: $SOURCE_RUN_URL" "Workflow: $SOURCE_RUN_NAME" > artifacts/failure-research/source.txt
+          gh run view "$SOURCE_RUN_ID" --repo "$GH_REPO" --log-failed > artifacts/failure-research/failed.log 2>&1 || true
+          if ! grep -Eiq 'error|failed|failure|exception|timeout|broken pipe|device offline|not responding|HTTP 4[0-9][0-9]|HTTP 5[0-9][0-9]|traceback|permission denied|connection refused|adb:' artifacts/failure-research/failed.log; then
+            printf '%s\n' "No failure text was returned by gh; run may still be in progress, logs may be unavailable, or the run may have been cancelled." >> artifacts/failure-research/failed.log
+          fi
+
+      - name: Search public developer reports and generate diagnosis leads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+          SOURCE_RUN_URL: ${{ github.event.workflow_run.html_url || inputs.run_url }}
+          SOURCE_RUN_NAME: ${{ github.event.workflow_run.name || 'Manually selected workflow run' }}
+        run: |
+          python scripts/automation/failure_research.py \
+            --input artifacts/failure-research/failed.log \
+            --output artifacts/failure-research/research-report.md \
+            --run-url "$SOURCE_RUN_URL" \
+            --run-name "$SOURCE_RUN_NAME"
+
+      - name: Upload research report and redacted signatures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-failure-research-${{ github.run_id }}
+          path: artifacts/failure-research/
+          if-no-files-found: warn
+          retention-days: 90
