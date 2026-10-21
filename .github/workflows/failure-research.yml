@@ -76,6 +76,10 @@ jobs:
             --run-url "$SOURCE_RUN_URL" \
             --run-name "$SOURCE_RUN_NAME"
 
+      - name: Remove raw logs before artifact upload
+        if: always()
+        run: rm -f artifacts/failure-research/failed.log
+
       - name: Upload research report and redacted signatures
         if: always()
         uses: actions/upload-artifact@v4
