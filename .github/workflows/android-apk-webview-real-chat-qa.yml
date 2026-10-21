@@ -45,32 +45,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SOURCE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-          run_id=""
-          for attempt in $(seq 1 150); do
-            matching="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA))')"
-            if [ -n "$matching" ] && [ "$matching" != "null" ]; then
-              build_status="$(printf '%s' "$matching" | jq -r '.status')"
-              build_conclusion="$(printf '%s' "$matching" | jq -r '.conclusion // ""')"
-              if [ "$build_status" = "completed" ] && [ "$build_conclusion" = "success" ]; then
-                run_id="$(printf '%s' "$matching" | jq -r '.databaseId')"
-                break
-              fi
-              if [ "$build_status" = "completed" ] && [ "$build_conclusion" != "success" ]; then
-                echo "::error::Matching APK build $SOURCE_SHA completed with conclusion '$build_conclusion'; failing fast."
-                exit 1
-              fi
-            fi
-            sleep 10
-          done
-          if [ -z "$run_id" ]; then
-            echo "::error::No successful APK build for $SOURCE_SHA after 25 minutes."
-            exit 1
-          fi
-          mkdir -p artifacts/apk
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
-          test -s artifacts/apk/app-debug.apk
+        run: bash scripts/android/download_matching_apk.sh
       - name: Download latest successful main APK for scheduled/manual runs
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         env:
@@ -125,22 +100,4 @@ jobs:
       - name: Find a successful install-launch-chat-screenshot attempt
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/retries
-          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern "mosharrof-apk-webview-real-chat-${GITHUB_RUN_ID}-attempt-*" --dir artifacts/retries
-          echo "Attempt artifacts and success markers:"
-          find artifacts/retries -name success-marker.txt -type f -print
-          marker="$(find artifacts/retries -name success-marker.txt -type f -print -quit)"
-          if [ -z "$marker" ]; then
-            echo "::error::All three Android emulator attempts failed to prove a visible real-chat answer and screenshot. Inspect each attempt artifact before changing app code."
-            exit 1
-          fi
-          echo "Verified success marker: $marker"
-          cat "$marker"
-          screenshot="$(find "$(dirname "$marker")" -maxdepth 1 -type f \\( -iname "*.png" -o -iname "*.jpg" \\) -print -quit)"
-          if [ -z "$screenshot" ]; then
-            echo "::error::Success marker exists but no screenshot file is present in that attempt artifact."
-            exit 1
-          fi
-          echo "Screenshot proof file: $screenshot"
+        run: bash scripts/android/verify_real_chat_attempts.sh
