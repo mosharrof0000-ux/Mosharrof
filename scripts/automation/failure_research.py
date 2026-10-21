@@ -20,26 +20,26 @@ from pathlib import Path
 from typing import Any
 
 SECRET_PATTERNS = [
-    re.compile(r"(?i)(authorization\\s*[:=]\\s*bearer\\s+)\\S+"),
-    re.compile(r"(?i)(api[_-]?key|token|password|secret|client_secret)(\\s*[:=]\\s*)[^\\s,;]+"),
+    re.compile(r"(?i)(authorization\s*[:=]\s*bearer\s+)\S+"),
+    re.compile(r"(?i)(api[_-]?key|token|password|secret|client_secret)(\s*[:=]\s*)[^\s,;]+"),
     re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"),
     re.compile(r"(?i)AIza[0-9A-Za-z_-]{20,}"),
-    re.compile(r"(?i)(cloudflare_api_token|gemini_api_key)\\s*[:=]\\s*[^\\s,;]+"),
+    re.compile(r"(?i)(cloudflare_api_token|gemini_api_key)\s*[:=]\s*[^\s,;]+"),
 ]
 ERROR_HINTS = re.compile(
     r"(?i)(error|failed|failure|exception|timed? ?out|timeout|broken pipe|"
-    r"can't find service|cannot find service|device offline|unknown \\(-1\\)|"
-    r"HTTP 4\\d\\d|HTTP 5\\d\\d|status code|traceback|not responding|"
+    r"can't find service|cannot find service|device offline|unknown \(-1\)|"
+    r"HTTP 4\d\d|HTTP 5\d\d|status code|traceback|not responding|"
     r"no such file|permission denied|connection refused|websocket|adb:)"
 )
-NOISE = re.compile(r"(?i)(^\\s*at \\S+\\(|^\\s*#\\d+|downloaded [0-9]+ bytes|^\\s*progress:)")
+NOISE = re.compile(r"(?i)(^\s*at \S+\(|^\s*#\d+|downloaded [0-9]+ bytes|^\s*progress:)")
 
 def redact(value: str) -> str:
     value = html.unescape(value)
     for pattern in SECRET_PATTERNS:
         value = pattern.sub(lambda m: (m.group(1) if m.lastindex else "") + "[REDACTED]", value)
-    value = re.sub(r"https?://[^/\\s:@]+:[^/@\\s]+@", "https://[REDACTED]@", value)
-    value = re.sub(r"(?i)(cookie|set-cookie)\\s*[:=]\\s*[^\\n]+", r"\\1: [REDACTED]", value)
+    value = re.sub(r"https?://[^/\s:@]+:[^/@\s]+@", "https://[REDACTED]@", value)
+    value = re.sub(r"(?i)(cookie|set-cookie)\s*[:=]\s*[^\n]+", r"\1: [REDACTED]", value)
     return value[:500].strip()
 
 def signatures(log_text: str, limit: int = 8) -> list[str]:
@@ -49,8 +49,8 @@ def signatures(log_text: str, limit: int = 8) -> list[str]:
         if not line or not ERROR_HINTS.search(line) or NOISE.search(line):
             continue
         clean = redact(line)
-        clean = re.sub(r"\\x1b\\[[0-9;]*m", "", clean)
-        clean = re.sub(r"\\s+", " ", clean)
+        clean = re.sub(r"\x1b\[[0-9;]*m", "", clean)
+        clean = re.sub(r"\s+", " ", clean)
         if clean and clean not in found:
             found.append(clean)
         if len(found) >= limit:
