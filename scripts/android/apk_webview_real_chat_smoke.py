@@ -12,6 +12,7 @@ import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 from urllib.request import urlopen
 
 import websocket
@@ -52,7 +53,35 @@ class PageCDP:
     """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
 
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
+        # Android WebView may advertise an emulator-local hostname in the target
+        # URL even though the test reaches CDP through adb forward on localhost.
+        # Reuse the forwarded endpoint host/port and retry transient startup races.
+        advertised = urlsplit(ws_url)
+        endpoint = urlsplit(args.cdp_endpoint)
+        if advertised.scheme not in ("ws", "wss") or not advertised.path:
+            raise ValueError(f"Invalid WebView CDP WebSocket URL: {ws_url!r}")
+        host = endpoint.hostname or "127.0.0.1"
+        port = endpoint.port or (443 if advertised.scheme == "wss" else 80)
+        normalized_url = urlunsplit((
+            advertised.scheme, f"{host}:{port}", advertised.path,
+            advertised.query, ""
+        ))
+        last_error = None
+        for attempt in range(1, 7):
+            try:
+                self.ws = websocket.create_connection(
+                    normalized_url, timeout=30, suppress_origin=True
+                )
+                break
+            except Exception as exc:
+                last_error = exc
+                if attempt == 6:
+                    raise TimeoutError(
+                        f"Unable to connect to WebView CDP after {attempt} attempts "
+                        f"via {endpoint.scheme}://{host}:{port}; "
+                        f"target path={advertised.path}: {type(exc).__name__}: {exc}"
+                    ) from exc
+                time.sleep(min(attempt * 2, 8))
         self.next_id = 0
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
