@@ -18,6 +18,11 @@ class FailureResearchTests(unittest.TestCase):
         self.assertNotIn("supersecretvalue", sig)
         self.assertIn("[REDACTED]", sig)
 
+    def test_redacts_secrets_in_url_query_parameters(self):
+        value = module.redact("ERROR https://example.test/api?access_token=privatevalue&mode=chat failed")
+        self.assertNotIn("privatevalue", value)
+        self.assertIn("[REDACTED]", value)
+
     def test_report_contains_multiple_search_sources_and_safety_note(self):
         original = module.search_sources
         module.search_sources = lambda sig, token: {
