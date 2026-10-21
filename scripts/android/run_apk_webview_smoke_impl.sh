@@ -77,6 +77,12 @@ timeout 20s adb shell pm grant com.mosharrof.ai android.permission.READ_CONTACTS
 timeout 20s adb shell pm grant com.mosharrof.ai android.permission.CALL_PHONE || true
 timeout 20s adb shell appops set com.mosharrof.ai SYSTEM_ALERT_WINDOW allow || true
 timeout 30s adb shell am start -W -n com.mosharrof.ai/.MainActivity 2>&1 | tee "$OUT/app-launch.txt"
+# am start can time out while WebView is frozen; do not treat a discoverable CDP
+# socket as proof that the Android UI is responsive.
+if grep -Eiq "Status: timeout|LaunchState: UNKNOWN" "$OUT/app-launch.txt"; then
+  echo "Android Activity launch timed out or returned UNKNOWN; likely app/UI ANR." | tee "$OUT/app-launch-error.txt"
+  exit 1
+fi
 step "Wait for debug WebView socket"
 socket=""
 for attempt in $(seq 1 60); do
