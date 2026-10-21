@@ -15,6 +15,12 @@ concurrency:
   cancel-in-progress: true
 jobs:
   apk-webview-real-chat:
+    name: apk-webview-real-chat-attempt-${{ matrix.attempt }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        attempt: [1, 2, 3]
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -95,16 +101,46 @@ jobs:
           target: google_apis
           arch: x86_64
           cores: 4
-          ram-size: 4096M
-          heap-size: 1024M
+          ram-size: 6144M
+          heap-size: 2048M
           emulator-boot-timeout: 900
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -wipe-data -gpu swiftshader_indirect
-          script: bash scripts/android/run_apk_webview_smoke.sh
+          script: QA_ATTEMPT=${{ matrix.attempt }} bash scripts/android/run_apk_webview_smoke.sh
       - name: Upload APK WebView chat evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-apk-webview-real-chat-${{ github.run_id }}
+          name: mosharrof-apk-webview-real-chat-${{ github.run_id }}-attempt-${{ matrix.attempt }}
           path: artifacts/apk-webview-chat/**
           if-no-files-found: warn
           retention-days: 30
+
+  require-visible-real-chat-proof:
+    name: require-visible-real-chat-proof
+    if: always()
+    needs: apk-webview-real-chat
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Find a successful install-launch-chat-screenshot attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/retries
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern "mosharrof-apk-webview-real-chat-${GITHUB_RUN_ID}-attempt-*" --dir artifacts/retries
+          echo "Attempt artifacts and success markers:"
+          find artifacts/retries -name success-marker.txt -type f -print
+          marker="$(find artifacts/retries -name success-marker.txt -type f -print -quit)"
+          if [ -z "$marker" ]; then
+            echo "::error::All three Android emulator attempts failed to prove a visible real-chat answer and screenshot. Inspect each attempt artifact before changing app code."
+            exit 1
+          fi
+          echo "Verified success marker: $marker"
+          cat "$marker"
+          screenshot="$(find "$(dirname "$marker")" -maxdepth 1 -type f \\( -iname "*.png" -o -iname "*.jpg" \\) -print -quit)"
+          if [ -z "$screenshot" ]; then
+            echo "::error::Success marker exists but no screenshot file is present in that attempt artifact."
+            exit 1
+          fi
+          echo "Screenshot proof file: $screenshot"
