@@ -18,6 +18,11 @@ collect_diagnostics() {
   timeout 20s adb exec-out screencap -p > "$OUT/failure-screen.png" 2> "$OUT/screencap-error.txt" || true
 }
 trap 'status=$?; collect_diagnostics "$status"; exit "$status"' ERR
+fail_with_diagnostics() {
+  local status="${1:-1}"
+  collect_diagnostics "$status"
+  exit "$status"
+}
 step "Validate APK artifact"
 test -s "$APK"
 ls -lh "$APK" | tee "$OUT/apk-file.txt"
@@ -46,7 +51,7 @@ for attempt in $(seq 1 60); do
 done
 if [ "$pm_streak" -lt 3 ]; then
   echo "Emulator booted but package manager did not remain healthy for 3 consecutive probes." > "$OUT/emulator-readiness-error.txt"
-  exit 1
+  fail_with_diagnostics 1
 fi
 # Final short stability interval catches system_server failures before APK install.
 sleep 8
@@ -81,7 +86,7 @@ timeout 30s adb shell am start -W -n com.mosharrof.ai/.MainActivity 2>&1 | tee "
 # socket as proof that the Android UI is responsive.
 if grep -Eiq "Status: timeout|LaunchState: UNKNOWN" "$OUT/app-launch.txt"; then
   echo "Android Activity launch timed out or returned UNKNOWN; likely app/UI ANR." | tee "$OUT/app-launch-error.txt"
-  exit 1
+  fail_with_diagnostics 1
 fi
 step "Wait for debug WebView socket"
 socket=""
@@ -92,7 +97,7 @@ for attempt in $(seq 1 60); do
 done
 if [ -z "$socket" ]; then
   echo "No WebView DevTools socket found after app launch." > "$OUT/webview-socket-error.txt"
-  exit 1
+  fail_with_diagnostics 1
 fi
 printf '%s\n' "$socket" | tee "$OUT/webview-socket.txt"
 timeout 20s adb forward tcp:9222 "localabstract:$socket"
