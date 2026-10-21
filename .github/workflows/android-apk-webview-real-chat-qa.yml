@@ -36,7 +36,7 @@ jobs:
       - name: Validate smoke-test script syntax
         run: python -m py_compile scripts/android/apk_webview_real_chat_smoke.py
       - name: Validate emulator shell script syntax
-        run: bash -n scripts/android/run_apk_webview_smoke.sh scripts/android/run_apk_webview_smoke_impl.sh scripts/android/download_matching_apk.sh scripts/android/verify_real_chat_attempts.sh
+        run: bash -n scripts/android/run_apk_webview_smoke.sh scripts/android/run_apk_webview_smoke_impl.sh scripts/android/download_matching_apk.sh .github/scripts/verify_real_chat_attempts.sh
       - name: Install WebView CDP WebSocket client
         run: python -m pip install --disable-pip-version-check websocket-client
       - name: Download APK from the matching source build
