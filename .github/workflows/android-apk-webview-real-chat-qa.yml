@@ -117,9 +117,7 @@ jobs:
           cores: 3
           ram-size: 3072M
           heap-size: 768M
-          emulator-port: 5554
           emulator-boot-timeout: 900
-          disable-animations: false
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
           script: bash scripts/android/run_apk_webview_smoke.sh
       - name: Upload APK WebView chat evidence
