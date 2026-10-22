@@ -63,10 +63,7 @@ apk_webview_install_and_launch() {
     adb logcat -d -t 3000 > artifacts/apk-webview-chat/logcat.txt 2>&1 || true
     return 1
   fi
-  adb -s "$device" shell pm grant com.mosharrof.ai android.permission.RECORD_AUDIO || true
-  adb -s "$device" shell pm grant com.mosharrof.ai android.permission.READ_CONTACTS || true
-  adb -s "$device" shell pm grant com.mosharrof.ai android.permission.CALL_PHONE || true
-  adb -s "$device" shell appops set com.mosharrof.ai SYSTEM_ALERT_WINDOW allow || true
+  # This test submits text only; do not grant microphone, contacts, phone, or overlay privileges.
   adb -s "$device" shell am start -n com.mosharrof.ai/.MainActivity
   sleep 15
 }
