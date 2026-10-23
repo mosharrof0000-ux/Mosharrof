@@ -1,6 +1,8 @@
 name: MOSHARROF Parallel APK Failure Triage
 
 on:
+  pull_request:
+    branches: [main]
   workflow_run:
     workflows: ["MOSHARROF Android APK WebView Real Chat QA"]
     types: [completed]
@@ -10,12 +12,41 @@ permissions:
   actions: read
 
 concurrency:
-  group: apk-failure-triage-${{ github.event.workflow_run.id }}
+  group: apk-failure-triage-${{ github.event.workflow_run.id || github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout proposed triage code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile triage script
+        run: python3 -m py_compile scripts/android/parallel_failure_triage.py
+      - name: Exercise every diagnostic lane without claiming a fix
+        run: |
+          mkdir -p /tmp/triage-test
+          : > /tmp/triage-test/empty.log
+          for lane in artifact emulator cdp composer backend evidence; do
+            python3 scripts/android/parallel_failure_triage.py \
+              --lane "$lane" \
+              --log /tmp/triage-test/empty.log \
+              --output /tmp/triage-test/out \
+              --source-root .
+            test -s "/tmp/triage-test/out/$lane.json"
+            test -s "/tmp/triage-test/out/$lane.md"
+          done
+
   triage:
-    if: github.event.workflow_run.conclusion == 'failure'
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure'
     name: "Triage / ${{ matrix.lane }}"
     runs-on: ubuntu-latest
     timeout-minutes: 8
