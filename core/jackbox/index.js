@@ -104,12 +104,12 @@ export function createJackboxControlBox({
     requireModule(id);
     const current = attached.get(id);
     let disposeError = null;
+    runtime.setEnabled(id, false);
     if (current) {
       try { await current.module.dispose(current.scoped); }
       catch (error) { disposeError = String(error?.message ?? error).slice(0, 240); }
       attached.delete(id);
     }
-    runtime.setEnabled(id, false);
     if (disposeError) {
       quarantined.set(id, "dispose failed: " + disposeError);
       runtime.reportIssue(id, "Jackbox module disabled after dispose failure");
