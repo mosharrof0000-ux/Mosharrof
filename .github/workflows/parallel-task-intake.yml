@@ -1,0 +1,206 @@
+name: MOSHARROF Parallel Task Intake
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_goal:
+        description: "One task goal to investigate (do not include secrets)"
+        required: true
+        type: string
+      acceptance_criteria:
+        description: "Measurable acceptance criteria for the task"
+        required: true
+        type: string
+      max_lanes:
+        description: "Number of independent diagnostic lanes (6 default; maximum 10)"
+        required: true
+        default: "6"
+        type: choice
+        options: ["6", "8", "10"]
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: read
+  actions: read
+
+concurrency:
+  group: parallel-task-${{ github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  intake:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'parallel-task'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      goal: ${{ steps.spec.outputs.goal }}
+      acceptance: ${{ steps.spec.outputs.acceptance }}
+      lanes: ${{ steps.spec.outputs.lanes }}
+    steps:
+      - name: Resolve task specification and enforce guardrails
+        id: spec
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_GOAL: ${{ inputs.task_goal }}
+          INPUT_ACCEPTANCE: ${{ inputs.acceptance_criteria }}
+          INPUT_LANES: ${{ inputs.max_lanes }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          event = os.environ["EVENT_NAME"]
+          if event == "workflow_dispatch":
+              goal = os.environ.get("INPUT_GOAL", "").strip()
+              acceptance = os.environ.get("INPUT_ACCEPTANCE", "").strip()
+              lanes = os.environ.get("INPUT_LANES", "6").strip()
+          else:
+              title = os.environ.get("ISSUE_TITLE", "").strip()
+              body = os.environ.get("ISSUE_BODY", "")
+              goal_match = re.search(r"(?im)^goal:\\s*(.+)$", body)
+              accept_match = re.search(r"(?im)^acceptance(?: criteria)?:\\s*(.+)$", body)
+              goal = goal_match.group(1).strip() if goal_match else title
+              acceptance = accept_match.group(1).strip() if accept_match else ""
+              lanes = "6"
+          if not goal or not acceptance:
+              raise SystemExit("Task blocked: provide a clear Goal and measurable Acceptance criteria. For an issue, include lines 'Goal: ...' and 'Acceptance: ...'.")
+          if len(goal) > 1000 or len(acceptance) > 2000:
+              raise SystemExit("Task blocked: goal/acceptance text exceeds the safe input limit.")
+          if lanes not in {"6", "8", "10"}:
+              raise SystemExit("Invalid lane count.")
+          # Prevent accidental secret-like input from being copied into logs/artifacts.
+          combined = goal + "\\n" + acceptance
+          if re.search(r"(?i)(gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|api[_-]?key\\s*[:=]\\s*\\S+)", combined):
+              raise SystemExit("Task blocked: possible credential detected. Remove secrets and store credentials only in repository Actions Secrets.")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write("goal=" + goal.replace("%", "%25").replace("\\n", "%0A").replace("\\r", "%0D") + "\\n")
+              f.write("acceptance=" + acceptance.replace("%", "%25").replace("\\n", "%0A").replace("\\r", "%0D") + "\\n")
+              f.write("lanes=" + lanes + "\\n")
+          print("Task specification validated; no code has been changed.")
+          PY
+
+  inspect:
+    needs: intake
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        lane: [source, tests, workflows, dependencies, configuration, security, performance, interfaces, regressions, acceptance]
+    if: needs.intake.outputs.lanes == '10' || (needs.intake.outputs.lanes == '8' && !contains(fromJSON('["performance","interfaces"]'), matrix.lane)) || (needs.intake.outputs.lanes == '6' && contains(fromJSON('["source","tests","workflows","dependencies","configuration","security"]'), matrix.lane))
+    steps:
+      - name: Checkout read-only task revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Gather independent evidence and write lane report
+        env:
+          TASK_GOAL: ${{ needs.intake.outputs.goal }}
+          ACCEPTANCE: ${{ needs.intake.outputs.acceptance }}
+          LANE: ${{ matrix.lane }}
+          SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p "artifacts/task-lanes/${LANE}"
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          from pathlib import Path
+          lane = os.environ["LANE"]
+          goal = os.environ["TASK_GOAL"]
+          acceptance = os.environ["ACCEPTANCE"]
+          root = Path(".")
+          patterns = {
+            "source": r"(^|/)(src|app|web|lib)/|\\.(py|js|ts|tsx|java|kt|dart)$",
+            "tests": r"(^|/)(test|tests|__tests__|spec)/|(^|/)[^/]*(test|spec)[^/]*\\.(py|js|ts|tsx)$",
+            "workflows": r"^\\.github/workflows/|(^|/)(Makefile|justfile)$",
+            "dependencies": r"(^|/)(package(-lock)?\\.json|pyproject\\.toml|requirements[^/]*|gradle\\.kts|build\\.gradle|Cargo\\.toml|go\\.mod)$",
+            "configuration": r"(^|/)([^/]*config[^/]*|\\.env\\.example|manifest\\.json|AndroidManifest\\.xml)$",
+            "security": r"(^|/)(SECURITY\\.md|CODEOWNERS|dependabot\\.yml)|secret|token|permission",
+            "performance": r"benchmark|performance|timeout|retry|cache",
+            "interfaces": r"api|endpoint|route|interface|schema|contract",
+            "regressions": r"regression|smoke|e2e|visual|snapshot",
+            "acceptance": r"acceptance|real.chat|integration|e2e|smoke|assert"
+          }
+          files = []
+          for p in root.rglob("*"):
+              if not p.is_file() or any(part in {".git","node_modules","vendor","build","dist"} for part in p.parts):
+                  continue
+              rel = p.as_posix()
+              if re.search(patterns[lane], rel, re.I):
+                  files.append(rel)
+          files = sorted(files)[:250]
+          matches = []
+          terms = [t.lower() for t in re.findall(r"[A-Za-z0-9_./-]{4,}", goal) if len(t) < 80][:12]
+          for name in files[:100]:
+              p = root / name
+              try:
+                  content = p.read_text(encoding="utf-8", errors="replace")
+              except Exception:
+                  continue
+              for i, line in enumerate(content.splitlines(), 1):
+                  if any(term in line.lower() for term in terms):
+                      matches.append({"file":name,"line":i,"excerpt":line.strip()[:240]})
+                      if len(matches) >= 40:
+                          break
+              if len(matches) >= 40:
+                  break
+          report = {
+            "schema_version":1, "lane":lane, "status":"DIAGNOSTIC_ONLY",
+            "task_goal":goal, "acceptance_criteria":acceptance,
+            "commit_sha":os.environ["SHA"], "run_url":os.environ["RUN_URL"],
+            "candidate_files":files, "goal_term_matches":matches,
+            "fix_applied":False, "acceptance_test_executed":False,
+            "warning":"This lane gathers evidence only. It does not edit code, prove a root cause, or declare a winner."
+          }
+          out=Path("artifacts/task-lanes")/lane/"report.json"
+          out.write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\\n",encoding="utf-8")
+          md=["# Task lane: "+lane,"","- Status: DIAGNOSTIC_ONLY","- Goal: "+goal,"- Acceptance: "+acceptance,"- Commit: "+os.environ["SHA"],"- Run: "+os.environ["RUN_URL"],"","## Candidate files"]
+          md += ["- "+x for x in files] or ["- No candidate files matched this lane's scan."]
+          md += ["","## Goal-term matches"]
+          md += [f"- {m['file']}:{m['line']} — {m['excerpt']}" for m in matches] or ["- No direct text matches found."]
+          md += ["","## Limitation","This is an evidence-gathering lane, not an autonomous code-fix agent. No changes were made and the acceptance condition was not run."]
+          (out.parent/"report.md").write_text("\\n".join(md)+"\\n",encoding="utf-8")
+          print(f"lane={lane} candidate_files={len(files)} matches={len(matches)}")
+          PY
+      - name: Upload lane evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-task-${{ matrix.lane }}-${{ github.run_id }}
+          path: artifacts/task-lanes/${{ matrix.lane }}/
+          if-no-files-found: warn
+          retention-days: 30
+
+  summary:
+    if: always() && needs.intake.result == 'success'
+    needs: [intake, inspect]
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Write honest run summary
+        env:
+          GOAL: ${{ needs.intake.outputs.goal }}
+          ACCEPTANCE: ${{ needs.intake.outputs.acceptance }}
+          LANES: ${{ needs.intake.outputs.lanes }}
+          INSPECT_RESULT: ${{ needs.inspect.result }}
+        run: |
+          {
+            echo "# Parallel task intake"
+            echo
+            echo "- Goal: ${GOAL}"
+            echo "- Acceptance: ${ACCEPTANCE}"
+            echo "- Requested lanes: ${LANES}"
+            echo "- Diagnostic job result: ${INSPECT_RESULT}"
+            echo "- Code changes: none"
+            echo "- Acceptance condition proven: no"
+            echo "- Winner selected: no"
+            echo
+            echo "Lane artifacts contain independent evidence scans. A remediation agent and narrowly scoped write permissions are required for autonomous code repair; this workflow intentionally has read-only permissions."
+          } >> "$GITHUB_STEP_SUMMARY"
