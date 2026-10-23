@@ -18,6 +18,7 @@ import com.mosharrof.agent.accessibility.ScreenshotAnalysisControl
 import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
+import com.mosharrof.agent.execution.AppPackageControl
 import com.mosharrof.agent.execution.DeviceIntentControl
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.voice.AgentSpeechOutput
@@ -45,6 +46,10 @@ class MainActivity : ComponentActivity() {
     }
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
+    }
+    private val apkPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status)
+        else status.text = "APK নির্বাচন বাতিল করা হয়েছে; কোনো অ্যাপ ইনস্টল হয়নি।"
     }
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -118,6 +123,10 @@ class MainActivity : ComponentActivity() {
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
             addView(Button(this@MainActivity).apply {
+                text = "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
+                setOnClickListener { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) }
+            })
+            addView(Button(this@MainActivity).apply {
                 text = "সমস্ত runtime permission চাইুন"
                 setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
             })
@@ -149,6 +158,9 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun prepareCommand(command: String) {
+        if (AppPackageControl.handleCommand(this, command, status) {
+                apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
+            }) return
         if (DeviceIntentControl.handle(this, command, status)) return
         if (taskController.prepareTask(command)) return
         status.text = "স্থানীয় কমান্ডে কাজটি বোঝা যায়নি; AI-কে সমর্থিত Android কমান্ডে রূপান্তর করতে বলা হচ্ছে…"
