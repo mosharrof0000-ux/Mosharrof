@@ -1,0 +1,24 @@
+# Python bytecode and interpreter caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python test, coverage, and virtual environments
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Local editor and operating-system noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local temporary/debug output
+*.tmp
+*.temp
+debug_*
+scratch_*
