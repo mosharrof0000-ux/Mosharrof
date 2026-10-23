@@ -80,18 +80,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SOURCE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-          run_id=""
-          for attempt in $(seq 1 150); do
-            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
-            if [ -n "$run_id" ]; then break; fi
-            sleep 10
-          done
-          test -n "$run_id"
-          mkdir -p artifacts/apk
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
-          test -s artifacts/apk/app-debug.apk
+        run: bash scripts/android/download_matching_branch_apk.sh
 
       - name: Download latest successful main APK for scheduled/manual runs
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
