@@ -121,6 +121,26 @@ def validate_registry(root: Path = ROOT) -> list[str]:
     return errors
 
 
+def manifest_paths(data: object, label: str) -> set[str]:
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must be a JSON object")
+    entries = data.get("locked_files")
+    if not isinstance(entries, list):
+        raise ValueError(f"{label} locked_files must be a list")
+    paths: set[str] = set()
+    for index, item in enumerate(entries):
+        if not isinstance(item, dict):
+            raise ValueError(f"{label} locked_files[{index}] must be an object")
+        path = safe_repo_path(item.get("path"))
+        digest = item.get("sha256")
+        if not isinstance(digest, str) or len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ValueError(f"{label} locked_files[{index}] has an invalid sha256")
+        if path in paths:
+            raise ValueError(f"{label} has duplicate locked path {path}")
+        paths.add(path)
+    return paths
+
+
 def changed_paths(base_ref: str) -> list[str]:
     result = subprocess.run(
         ["git", "diff", "--name-only", "--diff-filter=ACDMRT", f"{base_ref}...HEAD"],
@@ -150,26 +170,12 @@ def validate_changed_locked_files(base_ref: str) -> list[str]:
                 cwd=ROOT, text=True, capture_output=True, check=True,
             )
             base_data = json.loads(base_manifest.stdout)
-            base_entries = base_data.get("locked_files", [])
-            if not isinstance(base_entries, list):
-                raise ValueError("base locked_files must be a list")
-            base_locked = {
-                safe_repo_path(item.get("path"))
-                for item in base_entries
-                if isinstance(item, dict)
-            }
+            base_locked = manifest_paths(base_data, "base manifest")
         else:
             # Bootstrap PR: no lock manifest existed on the base branch yet.
             base_locked = set()
         head_data = read_json(MANIFEST)
-        head_entries = head_data.get("locked_files", [])
-        if not isinstance(head_entries, list):
-            raise ValueError("PR locked_files must be a list")
-        head_locked = {
-            safe_repo_path(item.get("path"))
-            for item in head_entries
-            if isinstance(item, dict)
-        }
+        head_locked = manifest_paths(head_data, "PR manifest")
         changed = set(changed_paths(base_ref))
     except (ValueError, json.JSONDecodeError, subprocess.CalledProcessError) as exc:
         return [f"cannot compare changed files against {base_ref}: {exc}"]
