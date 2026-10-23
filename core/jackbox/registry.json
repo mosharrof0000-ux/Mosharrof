@@ -1,12 +1,5 @@
 {
   "schema_version": 1,
   "policy": "modules-must-be-separate-and-explicitly-registered",
-  "modules": [
-    {
-      "id": "jackbox-diagnostics",
-      "path": "organs/jackbox-diagnostics",
-      "entry": "organs/jackbox-diagnostics/index.js",
-      "enabled": false
-    }
-  ]
+  "modules": []
 }
