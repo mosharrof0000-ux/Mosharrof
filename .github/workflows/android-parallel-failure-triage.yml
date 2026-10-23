@@ -10,13 +10,13 @@ permissions:
   actions: read
 
 concurrency:
-  group: apk-failure-triage-${{ github.event.workflow_run.id }}
+  group: apk-failure-triage-\${{ github.event.workflow_run.id }}
   cancel-in-progress: false
 
 jobs:
   triage:
     if: github.event.workflow_run.conclusion == 'failure'
-    name: "Triage / ${{ matrix.lane }}"
+    name: "Triage / \${{ matrix.lane }}"
     runs-on: ubuntu-latest
     timeout-minutes: 8
     strategy:
@@ -25,22 +25,30 @@ jobs:
       matrix:
         lane: [artifact, emulator, cdp, composer, backend, evidence]
     steps:
-      - name: Checkout exact failing revision
+      - name: Checkout triage code from default branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-          fetch-depth: 1
+          ref: main
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Fetch exact failed source revision separately
+        env:
+          SOURCE_SHA: \${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "$SOURCE_SHA"
+          git worktree add --detach /tmp/mosharrof-failed-source "$SOURCE_SHA"
+
       - name: Fetch failed run log and available evidence
         env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          GH_TOKEN: \${{ github.token }}
+          RUN_ID: \${{ github.event.workflow_run.id }}
+          RUN_URL: \${{ github.event.workflow_run.html_url }}
         run: |
           set +e
           mkdir -p artifacts/triage
@@ -54,22 +62,23 @@ jobs:
 
       - name: Run independent diagnostic lane
         env:
-          LANE: ${{ matrix.lane }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          LANE: \${{ matrix.lane }}
+          RUN_ID: \${{ github.event.workflow_run.id }}
+          RUN_URL: \${{ github.event.workflow_run.html_url }}
         run: |
           python3 scripts/android/parallel_failure_triage.py \
             --lane "$LANE" \
             --log artifacts/failure.log \
             --output artifacts/triage \
             --run-id "$RUN_ID" \
-            --run-url "$RUN_URL"
+            --run-url "$RUN_URL" \
+            --source-root /tmp/mosharrof-failed-source
 
       - name: Upload lane report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-apk-triage-${{ matrix.lane }}-${{ github.event.workflow_run.id }}
+          name: mosharrof-apk-triage-\${{ matrix.lane }}-\${{ github.event.workflow_run.id }}
           path: artifacts/triage/
           if-no-files-found: warn
           retention-days: 30
