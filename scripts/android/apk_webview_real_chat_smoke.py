@@ -97,6 +97,15 @@ def get_targets() -> list[dict]:
         return json.load(response)
 
 
+def capture_screenshot(cdp: PageCDP, path: Path) -> None:
+    """Capture evidence only after the chat outcome has been evaluated, then verify the PNG."""
+    cdp.screenshot(path)
+    payload = path.read_bytes()
+    valid_png = payload.startswith(b"\\x89PNG\\r\\n\\x1a\\n") and len(payload) > 1024
+    record(f"screenshot_valid_png_{path.stem}", valid_png,
+           f"file={path.name}; bytes={len(payload)}; png_signature={payload.startswith(b'\\x89PNG\\r\\n\\x1a\\n')}")
+
+
 def main() -> int:
     cdp = None
     try:
@@ -133,7 +142,6 @@ def main() -> int:
         if not ready:
             raise TimeoutError("APK chat composer did not become visible")
 
-        cdp.screenshot(out / "apk-webview-before.png")
         baseline = int(cdp.evaluate("document.querySelectorAll('#messages .message.ai:not(.typing)').length") or 0)
         prompt_js = json.dumps(prompt, ensure_ascii=False)
         submitted = cdp.evaluate(
@@ -199,16 +207,16 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
-            cdp.screenshot(out / "apk-webview-after.png")
+            capture_screenshot(cdp, out / "apk-webview-after.png")
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
-            cdp.screenshot(out / "apk-webview-failed.png")
+            capture_screenshot(cdp, out / "apk-webview-failed.png")
     except Exception as exc:
         record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:
-                cdp.screenshot(out / "apk-webview-failed.png")
+                capture_screenshot(cdp, out / "apk-webview-failed.png")
             except Exception:
                 pass
     finally:
