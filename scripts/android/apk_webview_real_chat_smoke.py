@@ -15,6 +15,7 @@ from pathlib import Path
 from urllib.request import urlopen
 
 import websocket
+from apk_visible_answer import ensure_visible_answer
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
@@ -52,7 +53,37 @@ class PageCDP:
     """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
 
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
+        # Android WebView CDP can publish its target before the page socket is
+        # ready. Retry the page target and avoid an Origin header, which some
+        # embedded WebView builds reject or leave hanging.
+        self.ws = None
+        errors = []
+        candidates = [ws_url]
+        if "127.0.0.1" in ws_url:
+            candidates.append(ws_url.replace("127.0.0.1", "localhost", 1))
+        for attempt in range(1, 7):
+            for candidate in candidates:
+                try:
+                    self.ws = websocket.create_connection(
+                        candidate,
+                        timeout=6,
+                        suppress_origin=True,
+                        http_proxy_host=None,
+                        http_proxy_port=None,
+                        http_no_proxy=["127.0.0.1", "localhost"],
+                    )
+                    break
+                except Exception as exc:
+                    errors.append(f"attempt={attempt} url={candidate}: {type(exc).__name__}: {str(exc)[:160]}")
+            if self.ws is not None:
+                break
+            time.sleep(min(attempt * 2, 8))
+        if self.ws is None:
+            raise RuntimeError(
+                "Could not open Android WebView CDP page socket after retries. "
+                "Check adb forward target, WebView DevTools socket, and local proxy bypass. "
+                + " | ".join(errors[-8:])
+            )
         self.next_id = 0
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
@@ -199,6 +230,13 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+
+            # A DOM answer is not enough: bring the latest assistant bubble into
+            # the visible viewport and require visible geometry/style before PASS.
+            visible_state = ensure_visible_answer(cdp)
+            record("assistant_answer_visibly_rendered_in_apk", bool(visible_state and visible_state.get("visible")),
+                   json.dumps(visible_state, ensure_ascii=False)[:500])
+            time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
         else:
             record("real_backend_returned_non_mock_answer", False,
