@@ -1,0 +1,86 @@
+name: Mosharrof 30-Minute Watchdog
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: mosharrof-30-minute-watchdog
+  cancel-in-progress: false
+
+jobs:
+  inspect-and-recover:
+    name: Inspect workflow health and safely retry eligible failures
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Inspect recent runs and retry eligible failed QA jobs once
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          summary="$GITHUB_STEP_SUMMARY"
+          echo "# Mosharrof 30-Minute Watchdog" >> "$summary"
+          echo "" >> "$summary"
+          echo "- Checked at (UTC): $(date -u +'%Y-%m-%d %H:%M:%S')" >> "$summary"
+          echo "- Policy: never restart healthy running jobs; retry only allowlisted QA/test workflows that failed on attempt 1." >> "$summary"
+          echo "- Stale in-progress jobs are reported for diagnosis, not force-cancelled or duplicated." >> "$summary"
+          echo "" >> "$summary"
+
+          runs="$(gh api "repos/$GH_REPO/actions/runs?per_page=100")"
+          now_epoch="$(date -u +%s)"
+          retries=0
+          stale=0
+          failures=0
+
+          while IFS=$'\t' read -r run_id name status conclusion attempt started_at url; do
+            [[ -n "$run_id" ]] || continue
+            [[ "$name" == "Mosharrof 30-Minute Watchdog" ]] && continue
+
+            case "$name" in
+              "Mosharrof Tests"|"MOSHARROF Repository Knowledge Tests"|"Personal Memory Browser Smoke Test"|"Mosharrof Verification Gate"|"MOSHARROF Android APK WebView Real Chat QA"|"Full App Interactive QA"|"MOSHARROF Full-System Interaction QA")
+                eligible=true ;;
+              *)
+                eligible=false ;;
+            esac
+
+            if [[ "$status" == "in_progress" ]]; then
+              start_epoch="$(date -u -d "$started_at" +%s 2>/dev/null || echo "$now_epoch")"
+              age_minutes=$(( (now_epoch - start_epoch) / 60 ))
+              if (( age_minutes >= 90 )); then
+                echo "- POSSIBLY STALLED (${age_minutes} min; not restarted): [$name #$run_id]($url)" >> "$summary"
+                stale=$((stale + 1))
+              fi
+            elif [[ "$status" == "completed" && "$conclusion" == "failure" ]]; then
+              echo "- FAILED: [$name #$run_id]($url) (attempt $attempt)" >> "$summary"
+              failures=$((failures + 1))
+              if [[ "$eligible" == "true" && "$attempt" == "1" ]]; then
+                echo "Attempting one retry of failed jobs for allowlisted QA/test run $run_id ($name)"
+                if gh run rerun "$run_id" --failed --repo "$GH_REPO"; then
+                  echo "  - RETRY REQUESTED once: [$name #$run_id]($url)" >> "$summary"
+                  retries=$((retries + 1))
+                else
+                  echo "  - RETRY FAILED / PERMISSION REQUIRED: [$name #$run_id]($url)" >> "$summary"
+                fi
+              elif [[ "$attempt" != "1" ]]; then
+                echo "  - No automatic retry: this run already had a retry attempt." >> "$summary"
+              else
+                echo "  - No automatic retry: workflow is outside the safe QA/test allowlist." >> "$summary"
+              fi
+            fi
+          done < <(jq -r '.workflow_runs[] | [.id, .name, .status, (.conclusion // ""), (.run_attempt|tostring), (.run_started_at // .created_at), .html_url] | @tsv' <<< "$runs")
+
+          echo "" >> "$summary"
+          echo "## Totals" >> "$summary"
+          echo "- Failed runs observed: $failures" >> "$summary"
+          echo "- One-time retry requests: $retries" >> "$summary"
+          echo "- Possibly stalled runs (report only): $stale" >> "$summary"
+          echo "" >> "$summary"
+          echo "A retry request is not proof of recovery. Check the linked run's latest attempt and logs." >> "$summary"
