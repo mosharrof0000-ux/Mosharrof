@@ -111,13 +111,28 @@ def validate_registry(root: Path = ROOT) -> list[str]:
         except ValueError as exc:
             errors.append(f"{module_id}: {exc}")
             continue
-        expected_dir = f"jackbox/modules/{module_id}"
+        expected_dir = f"organs/{module_id}"
+        expected_entry = f"{expected_dir}/index.js"
         if module_dir != expected_dir:
             errors.append(f"{module_id}: path must be {expected_dir}")
-        if entry == expected_dir or not entry.startswith(expected_dir + "/"):
-            errors.append(f"{module_id}: entry must remain inside its own module directory")
-        elif not (root / entry).is_file():
-            errors.append(f"{module_id}: entry file does not exist: {entry}")
+        if entry != expected_entry:
+            errors.append(f"{module_id}: entry must be {expected_entry}")
+        else:
+            target = root / entry
+            manifest_path = root / expected_dir / "organ.json"
+            if target.is_symlink() or manifest_path.is_symlink():
+                errors.append(f"{module_id}: module entry and organ manifest cannot be symbolic links")
+            elif not target.is_file() or not manifest_path.is_file():
+                errors.append(f"{module_id}: organ index.js and organ.json must exist")
+            else:
+                try:
+                    organ_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                    target.resolve(strict=True).relative_to(root.resolve(strict=True))
+                    manifest_path.resolve(strict=True).relative_to(root.resolve(strict=True))
+                    if organ_manifest.get("id") != module_id:
+                        errors.append(f"{module_id}: organ.json id must match the Jackbox module id")
+                except (OSError, ValueError, json.JSONDecodeError, AttributeError) as exc:
+                    errors.append(f"{module_id}: invalid organ manifest or path: {exc}")
     return errors
 
 
