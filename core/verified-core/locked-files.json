@@ -21,7 +21,7 @@
     },
     {
       "path": "scripts/mosharrof_registry.py",
-      "sha256": "096238a2fa24b30826c23f6179f7d3e84920fe5394d98805b882149858c47394",
+      "sha256": "ad4f769be0f3a7a80a0fe9be34af89d62ae7a906da51b59ad5ff22c63c0de179",
       "evidence": {
         "verified_commit": "c5b772da8108e8bd93efc03987793f4d54446d9f",
         "test_runs": [
