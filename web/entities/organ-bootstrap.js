@@ -76,17 +76,28 @@ async function startOrganRuntime() {
     entity.el.dataset.state = "active";
     if (registry.has(entity.id)) runtime.reportSuccess(entity.id, "UI entity activated");
   });
-  const jackboxResponse = await fetch(new URL("../runtime/core/jackbox/registry.json", import.meta.url), { cache: "no-store" });
-  if (!jackboxResponse.ok) throw new Error("Jackbox manifest unavailable: HTTP " + jackboxResponse.status);
-  const jackboxManifest = await jackboxResponse.json();
-  const jackbox = createJackboxControlBox({
-    manifest: jackboxManifest,
-    registry,
-    runtime,
-    reservedIds: uiOrgans.map((organ) => organ.organId),
-    loadModule: (id) => import(new URL("../organs/" + id + "/index.js", import.meta.url).href)
-  });
-  await jackbox.initialize();
+  let jackbox;
+  try {
+    const jackboxResponse = await fetch(new URL("../runtime/core/jackbox/registry.json", import.meta.url), { cache: "no-store" });
+    if (!jackboxResponse.ok) throw new Error("Jackbox manifest unavailable: HTTP " + jackboxResponse.status);
+    const jackboxManifest = await jackboxResponse.json();
+    jackbox = createJackboxControlBox({
+      manifest: jackboxManifest,
+      registry,
+      runtime,
+      reservedIds: uiOrgans.map((organ) => organ.organId),
+      loadModule: (id) => import(new URL("../organs/" + id + "/index.js", import.meta.url).href)
+    });
+    await jackbox.initialize();
+  } catch (error) {
+    console.error("[MOSHARROF Jackbox] optional module manager unavailable; core runtime remains active", error);
+    jackbox = Object.freeze({
+      list: () => [Object.freeze({ id: "jackbox", status: "quarantined", error: String(error?.message ?? error).slice(0, 240) })],
+      initialize: async () => [],
+      enable: async () => { throw new Error("Jackbox is unavailable; core runtime remains active"); },
+      disable: async () => { throw new Error("Jackbox is unavailable; core runtime remains active"); }
+    });
+  }
   window.MosharrofEntitySystem = {
     registry: EntityRegistry, bus: EntityBus, organRegistry: registry, links, organRuntime: runtime, jackbox,
     version: "2.1-organ-runtime-jackbox", ready: true
