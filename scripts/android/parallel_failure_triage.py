@@ -17,22 +17,24 @@ p.add_argument("--log",default="artifacts/failure.log")
 p.add_argument("--output",default="artifacts/triage")
 p.add_argument("--run-id",default="")
 p.add_argument("--run-url",default="")
+p.add_argument("--source-root",default=".")
 a=p.parse_args()
+root=Path(a.source_root)
 files, pattern=LANES[a.lane]
 checks=[]
 for name in files.split():
- path=Path(name); exists=path.is_file()
+ path=root/name; exists=path.is_file()
  found=bool(re.search(pattern,path.read_text(encoding="utf-8",errors="replace"),re.I)) if exists else False
  checks.append({"file":name,"exists":exists,"pattern_found":found})
 log_path=Path(a.log)
 log=log_path.read_text(encoding="utf-8",errors="replace") if log_path.exists() else ""
 matches=[line.strip()[:400] for line in log.splitlines() if re.search(pattern,line,re.I)]
 out=Path(a.output); out.mkdir(parents=True,exist_ok=True)
-report={"schema_version":1,"lane":a.lane,"timestamp_utc":datetime.now(timezone.utc).isoformat(),"run_id":a.run_id,"run_url":a.run_url,"diagnostic_only":True,"fix_applied":False,"log_available":bool(log),"source_checks":checks,"log_matches":matches[:40],"interpretation":"Matches are leads, not proof of root cause. Inspect full logs and rerun the real end-to-end acceptance test after a fix."}
+report={"schema_version":1,"lane":a.lane,"timestamp_utc":datetime.now(timezone.utc).isoformat(),"run_id":a.run_id,"run_url":a.run_url,"source_root":str(root),"diagnostic_only":True,"fix_applied":False,"log_available":bool(log),"source_checks":checks,"log_matches":matches[:40],"interpretation":"Matches are leads, not proof of root cause. Inspect full logs and rerun the real end-to-end acceptance test after a fix."}
 (out/(a.lane+".json")).write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-lines=["Parallel failure triage: "+a.lane,"","Run: "+(a.run_url or a.run_id or "not supplied"),"Log available: "+str(bool(log)),"Fix applied: no","","Source checks"]
+lines=["Parallel failure triage: "+a.lane,"","Run: "+(a.run_url or a.run_id or "not supplied"),"Source revision: "+str(root),"Log available: "+str(bool(log)),"Fix applied: no","","Source checks"]
 lines += [("PASS" if c["exists"] and c["pattern_found"] else "REVIEW")+" - "+c["file"]+" (exists="+str(c["exists"])+", expected pattern="+str(c["pattern_found"])+")" for c in checks]
-lines += ["","Matching log lines"] + matches[:30] if matches else ["","Matching log lines","No lane-specific pattern found; inspect the complete run log."]
+lines += ["","Matching log lines"] + (matches[:30] if matches else ["No lane-specific pattern found; inspect the complete run log."])
 lines += ["","Interpretation",report["interpretation"],""]
 (out/(a.lane+".md")).write_text("\n".join(lines),encoding="utf-8")
 print("lane="+a.lane+" log_available="+str(bool(log))+" matches="+str(len(matches))+" checks="+str(len(checks)))
