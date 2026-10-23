@@ -103,10 +103,10 @@ def validate_registry(root: Path = ROOT) -> list[str]:
         except ValueError as exc:
             errors.append(f"{module_id}: {exc}")
             continue
-        expected_prefix = f"jackbox/modules/{module_id}/"
-        if not module_dir.startswith(expected_prefix) or module_dir.rstrip("/") != f"jackbox/modules/{module_id}":
-            errors.append(f"{module_id}: path must be jackbox/modules/{module_id}")
-        if not entry.startswith(expected_prefix):
+        expected_dir = f"jackbox/modules/{module_id}"
+        if module_dir != expected_dir:
+            errors.append(f"{module_id}: path must be {expected_dir}")
+        if entry == expected_dir or not entry.startswith(expected_dir + "/"):
             errors.append(f"{module_id}: entry must remain inside its own module directory")
         elif not (root / entry).is_file():
             errors.append(f"{module_id}: entry file does not exist: {entry}")
