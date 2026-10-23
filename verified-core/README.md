@@ -14,6 +14,11 @@ been reviewed.
 Each entry in `core/verified-core/locked-files.json` must contain:
 - `path`: repository-relative path to one regular file.
 - `sha256`: lowercase SHA-256 of the exact UTF-8/binary file bytes.
+- `evidence.verified_commit`: full commit SHA whose source and regressions were checked.
+- `evidence.test_runs`: one or more verified GitHub Actions run URLs.
+- `evidence.dependency_review`: concise description of reviewed callers/dependencies.
+- `evidence.acceptance`: the acceptance checks that passed.
+- `evidence.verified_at`: ISO date of the evidence review.
 
 The CI gate fails when a locked file changes in a pull request or its current hash no
 longer matches the recorded baseline. Intentional replacement requires a separate,
