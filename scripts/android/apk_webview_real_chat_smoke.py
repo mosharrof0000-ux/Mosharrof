@@ -101,9 +101,9 @@ def capture_screenshot(cdp: PageCDP, path: Path) -> None:
     """Capture evidence only after the chat outcome has been evaluated, then verify the PNG."""
     cdp.screenshot(path)
     payload = path.read_bytes()
-    valid_png = payload.startswith(b"\\x89PNG\\r\\n\\x1a\\n") and len(payload) > 1024
+    valid_png = payload.startswith(b"\x89PNG\r\n\x1a\n") and len(payload) > 1024
     record(f"screenshot_valid_png_{path.stem}", valid_png,
-           f"file={path.name}; bytes={len(payload)}; png_signature={payload.startswith(b'\\x89PNG\\r\\n\\x1a\\n')}")
+           f"file={path.name}; bytes={len(payload)}; png_signature={payload.startswith(b'\x89PNG\r\n\x1a\n')}"
 
 
 def main() -> int:
