@@ -6,26 +6,7 @@ trap 'status=$?; echo "APK WebView smoke failed with exit $status; collecting em
 
 test -s artifacts/apk/app-debug.apk
 
-# Recover a stale/unavailable ADB daemon before waiting for the emulator.
-adb start-server || true
-adb devices -l > artifacts/apk-webview-chat/adb-devices-initial.txt 2>&1 || true
-adb_ready=false
-for attempt in $(seq 1 12); do
-  if timeout 10s adb get-state >/dev/null 2>&1; then
-    adb_ready=true
-    break
-  fi
-  adb kill-server >/dev/null 2>&1 || true
-  sleep 2
-  adb start-server >/dev/null 2>&1 || true
-  sleep 2
-done
-if [ "$adb_ready" != "true" ]; then
-  adb devices -l > artifacts/apk-webview-chat/adb-devices-failed.txt 2>&1 || true
-  echo "ADB daemon did not become ready after 12 recovery attempts." >&2
-  exit 1
-fi
-
+bash scripts/android/ensure_adb_ready.sh artifacts/apk-webview-chat
 for attempt in $(seq 1 60); do
   boot="$(timeout 10s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
   if [ "$boot" = "1" ]; then
