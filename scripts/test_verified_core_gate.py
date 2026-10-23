@@ -42,7 +42,7 @@ class VerifiedCoreGateTests(unittest.TestCase):
             "schema_version": 1,
             "locked_files": [{"path": "example.txt", "sha256": "0" * 64}]
         }
-        (self.root / "verified-core/locked-files.json").write_text(json.dumps(manifest), encoding="utf-8")
+        (self.root / "core/verified-core/locked-files.json").write_text(json.dumps(manifest), encoding="utf-8")
         self.assertTrue(any("SHA-256 mismatch" in e for e in validate_manifest(self.root)))
 
     def test_valid_module_registry(self):
@@ -58,13 +58,13 @@ class VerifiedCoreGateTests(unittest.TestCase):
                 "enabled": False
             }]
         }
-        (self.root / "jackbox/registry.json").write_text(json.dumps(registry), encoding="utf-8")
+        (self.root / "core/jackbox/registry.json").write_text(json.dumps(registry), encoding="utf-8")
         self.assertTrue(validate_registry(self.root))
 
     def test_duplicate_module_ids_are_rejected(self):
-        registry = json.loads((self.root / "jackbox/registry.json").read_text(encoding="utf-8"))
+        registry = json.loads((self.root / "core/jackbox/registry.json").read_text(encoding="utf-8"))
         registry["modules"].append(dict(registry["modules"][0]))
-        (self.root / "jackbox/registry.json").write_text(json.dumps(registry), encoding="utf-8")
+        (self.root / "core/jackbox/registry.json").write_text(json.dumps(registry), encoding="utf-8")
         self.assertTrue(any("duplicate module id" in e for e in validate_registry(self.root)))
 
 
