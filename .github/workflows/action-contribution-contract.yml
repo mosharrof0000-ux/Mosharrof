@@ -1,0 +1,61 @@
+name: Action Contribution Contract
+
+on:
+  pull_request:
+    paths:
+      - "web/sidebar-recovery.js"
+      - "scripts/prepare_web_organ_runtime.py"
+      - "web/index.html"
+      - "core/action-contributions/**"
+      - "scripts/validate_action_contributions.py"
+      - "tests/ui/test_action_contribution_registry.py"
+      - "scripts/test_action_contribution_browser.py"
+      - ".github/workflows/action-contribution-contract.yml"
+  push:
+    branches:
+      - "feature/action-bar-module-registry-*"
+    paths:
+      - "web/sidebar-recovery.js"
+      - "scripts/prepare_web_organ_runtime.py"
+      - "web/index.html"
+      - "core/action-contributions/**"
+      - "scripts/validate_action_contributions.py"
+      - "tests/ui/test_action_contribution_registry.py"
+      - "scripts/test_action_contribution_browser.py"
+      - ".github/workflows/action-contribution-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-action-contribution-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate module boundaries and UI placements
+        run: python scripts/validate_action_contributions.py
+      - name: Run focused action contribution tests
+        run: python -m unittest discover -s tests/ui -p 'test_*.py' -v
+      - name: Prepare Pages runtime assets
+        run: python scripts/prepare_web_organ_runtime.py
+      - name: Install Playwright Chromium
+        run: |
+          python -m pip install playwright
+          python -m playwright install chromium
+      - name: Start candidate Pages server
+        run: python -m http.server 4173 --directory web >/tmp/action-registry-pages.log 2>&1 &
+      - name: Wait for candidate Pages server
+        run: |
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/action-registry-pages.log
+          exit 1
+      - name: Verify browser action registration and handler preservation
+        env:
+          PAGE_URL: http://127.0.0.1:4173/
+        run: python scripts/test_action_contribution_browser.py
