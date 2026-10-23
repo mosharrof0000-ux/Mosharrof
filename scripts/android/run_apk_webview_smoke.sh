@@ -4,13 +4,7 @@ mkdir -p artifacts/apk-webview-chat
 trap 'status=$?; echo "APK WebView smoke failed with exit $status; collecting emulator diagnostics."; adb logcat -d -t 3000 > artifacts/apk-webview-chat/logcat.txt 2>&1 || true; adb shell cat /proc/net/unix > artifacts/apk-webview-chat/unix-sockets.txt 2>&1 || true; exit "$status"' ERR
 
 test -s artifacts/apk/app-debug.apk
-QA_STRATEGY="${QA_STRATEGY:-direct}"
-case "$QA_STRATEGY" in
-  direct) CHAT_TIMEOUT_MS=90000 ;;
-  recover) CHAT_TIMEOUT_MS=90000 ;;
-  retry) CHAT_TIMEOUT_MS=180000 ;;
-  *) echo "Unknown QA_STRATEGY: $QA_STRATEGY"; exit 2 ;;
-esac
+QA_STRATEGY="${QA_STRATEGY:-direct}"; case "$QA_STRATEGY" in direct|recover) CHAT_TIMEOUT_MS=90000;; retry) CHAT_TIMEOUT_MS=180000;; *) exit 2;; esac
 
 bash scripts/android/ensure-adb-daemon.sh
 for attempt in $(seq 1 60); do
