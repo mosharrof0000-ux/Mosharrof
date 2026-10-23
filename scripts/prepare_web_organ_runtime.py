@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.mosharrof_registry import build_registry  # noqa: E402
 from scripts.manual_provider_runtime_patch import apply_manual_provider_patches  # noqa: E402
+from scripts.verified_core_gate import validate_registry  # noqa: E402
 
 
 def main() -> int:
@@ -19,12 +20,20 @@ def main() -> int:
         raise SystemExit(f"ORGAN ASSET PREP: invalid registry artifact: {exc}")
     if actual != expected:
         raise SystemExit("ORGAN ASSET PREP: registry artifact differs from organ manifests")
+    jackbox_errors = validate_registry()
+    if jackbox_errors:
+        raise SystemExit("ORGAN ASSET PREP: invalid Jackbox registry: " + "; ".join(jackbox_errors))
+    jackbox_data = json.loads((ROOT / "core/jackbox/registry.json").read_text(encoding="utf-8"))
+    jackbox_ids = {item["id"] for item in jackbox_data["modules"]}
+
     copies = {
         "core/organ-registry/index.js": "web/runtime/core/organ-registry/index.js",
         "core/link-manager/index.js": "web/runtime/core/link-manager/index.js",
         "core/organ-runtime/index.js": "web/runtime/core/organ-runtime/index.js",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
+        "core/jackbox/index.js": "web/runtime/core/jackbox/index.js",
+        "core/jackbox/registry.json": "web/runtime/core/jackbox/registry.json",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
@@ -144,9 +153,14 @@ def main() -> int:
         if not {"getHealth", "reportIssue"}.issubset(set(manifest.get("public_api", []))):
             continue
         organ_id, source = manifest["id"], folder / "index.js"
-        if not source.is_file() or f'"../organs/{organ_id}/index.js"' not in import_contract:
-            raise SystemExit(f"ORGAN ASSET PREP: UI organ {organ_id} is not wired in bootstrap")
+        if not source.is_file():
+            raise SystemExit(f"ORGAN ASSET PREP: missing source for organ {organ_id}")
+        if organ_id not in jackbox_ids and f'"../organs/{organ_id}/index.js"' not in import_contract:
+            raise SystemExit(f"ORGAN ASSET PREP: UI organ {organ_id} is not wired in bootstrap or Jackbox registry")
         content = source.read_text(encoding="utf-8").replace("../../web/entities/", "../../entities/").replace("../../core/ui-module-adapter/", "../../runtime/core/ui-module-adapter/")
+        content = content.replace("../../core/organ-runtime/", "../../runtime/core/organ-runtime/")
+        content = content.replace("../../core/organ-registry/", "../../runtime/core/organ-registry/")
+        content = content.replace("../../core/link-manager/", "../../runtime/core/link-manager/")
         if "../../web/entities/" in content:
             raise SystemExit(f"ORGAN ASSET PREP: invalid import in {source}")
         dst = ROOT / "web/organs" / organ_id / "index.js"
