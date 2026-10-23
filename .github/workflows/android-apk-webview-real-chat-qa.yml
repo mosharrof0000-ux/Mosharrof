@@ -50,6 +50,9 @@ jobs:
       - name: Validate emulator shell script syntax
         run: bash -n scripts/android/run_apk_webview_smoke.sh
 
+      - name: Validate ADB recovery helper syntax
+        run: bash -n scripts/android/ensure_adb_ready.sh
+
       - name: Install WebView CDP WebSocket client
         run: python -m pip install --disable-pip-version-check websocket-client
 
