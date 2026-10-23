@@ -1,0 +1,11 @@
+{
+  "id": "jackbox-diagnostics",
+  "name": "Jackbox Diagnostics",
+  "description": "Optional health and lifecycle diagnostics for the Jackbox module control box.",
+  "public_api": [
+    "getHealth",
+    "reportIssue",
+    "runSelfCheck"
+  ],
+  "dependencies": []
+}
