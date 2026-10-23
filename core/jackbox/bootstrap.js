@@ -10,7 +10,7 @@ export async function initializeJackbox({ registry, runtime, reservedIds = [] } 
       registry,
       runtime,
       reservedIds,
-      loadModule: (id) => import(new URL("../../organs/" + id + "/index.js", import.meta.url).href)
+      loadModule: (id) => import(new URL("../../../organs/" + id + "/index.js", import.meta.url).href)
     });
     await jackbox.initialize();
     return jackbox;
