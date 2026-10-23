@@ -72,7 +72,7 @@ def validate_manifest(root: Path = ROOT) -> list[str]:
             errors.append(f"{path}: evidence.verified_commit must be a full commit SHA")
         test_runs = evidence.get("test_runs")
         if not isinstance(test_runs, list) or not test_runs or any(
-            not isinstance(url, str) or not re.fullmatch(r"https://github\\.com/[^/]+/[^/]+/actions/runs/[0-9]+", url)
+            not isinstance(url, str) or not re.fullmatch(r"https://github\.com/[^/]+/[^/]+/actions/runs/[0-9]+", url)
             for url in test_runs
         ):
             errors.append(f"{path}: evidence.test_runs must contain verified GitHub Actions run URLs")
