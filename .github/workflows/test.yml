@@ -18,6 +18,8 @@ jobs:
         run: node tests/test_personal_memory_engine.mjs
       - name: Test memory retrieval and timeline regressions
         run: node --test tests/personal-memory-engine.test.mjs
+      - name: Test repository knowledge index
+        run: node --test tests/repository-knowledge-index.test.mjs
       - name: Check memory bridge syntax
         run: node --check core/personal-memory-bridge.js
       - name: Validate supplemental chat intelligence evaluation matrix
