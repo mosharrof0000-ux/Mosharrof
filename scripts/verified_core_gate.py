@@ -123,17 +123,26 @@ def changed_paths(base_ref: str) -> list[str]:
 
 def validate_changed_locked_files(base_ref: str) -> list[str]:
     try:
-        data = read_json(MANIFEST)
-        locked = {
+        # Read the base manifest as well as the PR manifest. Otherwise a PR could
+        # remove a lock entry and edit that file in the same change.
+        base_manifest = subprocess.run(
+            ["git", "show", f"{base_ref}:verified-core/locked-files.json"],
+            cwd=ROOT, text=True, capture_output=True, check=True,
+        )
+        base_data = json.loads(base_manifest.stdout)
+        base_entries = base_data.get("locked_files", [])
+        if not isinstance(base_entries, list):
+            raise ValueError("base locked_files must be a list")
+        base_locked = {
             safe_repo_path(item.get("path"))
-            for item in data.get("locked_files", [])
+            for item in base_entries
             if isinstance(item, dict)
         }
         changed = set(changed_paths(base_ref))
-    except (ValueError, subprocess.CalledProcessError) as exc:
+    except (ValueError, json.JSONDecodeError, subprocess.CalledProcessError) as exc:
         return [f"cannot compare changed files against {base_ref}: {exc}"]
-    blocked = sorted(locked & changed)
-    return [f"locked file changed in this pull request: {path}" for path in blocked]
+    blocked = sorted(base_locked & changed)
+    return [f"locked file changed in this pull request (base manifest): {path}" for path in blocked]
 
 
 def main() -> int:
