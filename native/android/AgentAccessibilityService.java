@@ -116,6 +116,22 @@ public class AgentAccessibilityService extends AccessibilityService {
             ? AccessibilityNodeInfo.ACTION_SCROLL_FORWARD : AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
     }
 
+    /** Narrow allowlist of non-destructive Android-wide navigation actions. */
+    public static boolean performSafeGlobalAction(String action) {
+        AgentAccessibilityService s = instance;
+        if (s == null || action == null) return false;
+        switch (action) {
+            case "back": return s.performGlobalAction(GLOBAL_ACTION_BACK);
+            case "home": return s.performGlobalAction(GLOBAL_ACTION_HOME);
+            case "notifications": return s.performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS);
+            case "quick_settings": return s.performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS);
+            case "recents": return s.performGlobalAction(GLOBAL_ACTION_RECENTS);
+            case "power_dialog": return s.performGlobalAction(GLOBAL_ACTION_POWER_DIALOG);
+            case "screenshot": return s.performGlobalAction(GLOBAL_ACTION_TAKE_SCREENSHOT);
+            default: return false;
+        }
+    }
+
     public interface GestureResult { void onResult(boolean success); }
 
     private boolean containsSensitiveNode(AccessibilityNodeInfo node, int depth) {
