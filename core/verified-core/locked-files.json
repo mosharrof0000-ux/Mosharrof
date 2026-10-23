@@ -1,6 +1,23 @@
 {
   "schema_version": 1,
   "policy": "sha256-and-change-gate",
-  "status": "pilot-not-yet-locked",
-  "locked_files": []
+  "status": "locked",
+  "locked_files": [
+    {
+      "path": "core/organ-registry/index.js",
+      "sha256": "be08f01148dc20304cfa50e5bde965e02dd4af3702ab3d7496360625d7db9901",
+      "evidence": {
+        "verified_commit": "60a39e73e34061f50d0f3bad023b9357967ba6e9",
+        "test_runs": [
+          "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40002149812",
+          "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40002149756",
+          "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40002149804",
+          "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40002149753"
+        ],
+        "dependency_review": "No imports in this file; it is consumed by the organ bootstrap/runtime composition and validated with organ-runtime registry contract tests for unique IDs, public APIs, dependency targets, and the 20-link cap.",
+        "acceptance": "Mandatory Architecture Gate, Verified Core Lock Gate, Mosharrof Tests, and candidate Pages Chromium runtime health smoke all passed at the evidence commit.",
+        "verified_at": "2026-10-23"
+      }
+    }
+  ]
 }
