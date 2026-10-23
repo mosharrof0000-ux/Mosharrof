@@ -125,7 +125,6 @@ jobs:
           QA_STRATEGY: ${{ matrix.strategy }}
         run: |
           mkdir -p artifacts/apk-webview-chat
-          printf '%s\n' "strategy=$QA_STRATEGY" "strategy_name=$STRATEGY_NAME" "source_sha=$SOURCE_SHA" "run_id=$GITHUB_RUN_ID" > artifacts/apk-webview-chat/strategy-metadata.txt
           if [ -s artifacts/apk/app-debug.apk ]; then sha256sum artifacts/apk/app-debug.apk > artifacts/apk-webview-chat/apk-sha256.txt; fi
 
       - name: Upload APK WebView chat evidence
