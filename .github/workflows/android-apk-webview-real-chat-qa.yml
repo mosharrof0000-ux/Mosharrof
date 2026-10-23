@@ -123,8 +123,6 @@ jobs:
         if: always()
         env:
           QA_STRATEGY: ${{ matrix.strategy }}
-          STRATEGY_NAME: ${{ matrix.strategy_name }}
-          SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: |
           mkdir -p artifacts/apk-webview-chat
           printf '%s\n' "strategy=$QA_STRATEGY" "strategy_name=$STRATEGY_NAME" "source_sha=$SOURCE_SHA" "run_id=$GITHUB_RUN_ID" > artifacts/apk-webview-chat/strategy-metadata.txt
