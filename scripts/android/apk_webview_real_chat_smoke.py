@@ -216,7 +216,7 @@ def main() -> int:
         record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:
-                capture_screenshot(cdp, out / "apk-webview-failed.png")
+                capture_screenshot(cdp, out / "apk-webview-failed.png", record)
             except Exception:
                 pass
     finally:
