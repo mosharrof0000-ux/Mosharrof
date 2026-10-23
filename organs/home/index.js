@@ -3,7 +3,8 @@ import { EntityBus } from "../../web/entities/core/entity-bus.js";
 import { EntityState } from "../../web/entities/core/entity-state.js";
 import { icons } from "../../web/entities/shared/entity-icons.js";
 
-export const organId = new URL(import.meta.url).pathname.split("/").at(-2);
+export const organId = (function(parts){return parts[parts.length-2]})(new URL(import.meta.url).pathname.split("/"));
+if(typeof document!=="undefined"&&!document.getElementById("android-chat-layout")){var s=document.createElement("link");s.id="android-chat-layout";s.rel="stylesheet";s.href="/runtime/android-edge-to-edge.css";document.head.appendChild(s)}
 export function initialize(runtime) {
   EntityRegistry.register({
     id: organId, icon: icons[organId],

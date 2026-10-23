@@ -21,6 +21,7 @@ def main() -> int:
         raise SystemExit("ORGAN ASSET PREP: registry artifact differs from organ manifests")
     copies = {
         "core/organ-registry/index.js": "web/runtime/core/organ-registry/index.js",
+        "core/android-edge-to-edge.css": "web/runtime/android-edge-to-edge.css",
         "core/link-manager/index.js": "web/runtime/core/link-manager/index.js",
         "core/organ-runtime/index.js": "web/runtime/core/organ-runtime/index.js",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
