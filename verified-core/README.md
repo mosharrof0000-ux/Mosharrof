@@ -11,7 +11,7 @@ been reviewed.
 
 ## Lock entry
 
-Each entry in `locked-files.json` must contain:
+Each entry in `core/verified-core/locked-files.json` must contain:
 - `path`: repository-relative path to one regular file.
 - `sha256`: lowercase SHA-256 of the exact UTF-8/binary file bytes.
 
