@@ -3,7 +3,7 @@ import { EntityBus } from "./core/entity-bus.js";
 import { createOrganRegistry } from "../runtime/core/organ-registry/index.js";
 import { createLinkManager } from "../runtime/core/link-manager/index.js";
 import { createOrganRuntime } from "../runtime/core/organ-runtime/index.js";
-import { createJackboxControlBox } from "../runtime/core/jackbox/index.js";
+import { initializeJackbox } from "./jackbox-bootstrap.js";
 import * as HomeOrgan from "../organs/home/index.js";
 import * as ChatOrgan from "../organs/chat/index.js";
 import * as HistoryOrgan from "../organs/history/index.js";
@@ -76,28 +76,9 @@ async function startOrganRuntime() {
     entity.el.dataset.state = "active";
     if (registry.has(entity.id)) runtime.reportSuccess(entity.id, "UI entity activated");
   });
-  let jackbox;
-  try {
-    const jackboxResponse = await fetch(new URL("../runtime/core/jackbox/registry.json", import.meta.url), { cache: "no-store" });
-    if (!jackboxResponse.ok) throw new Error("Jackbox manifest unavailable: HTTP " + jackboxResponse.status);
-    const jackboxManifest = await jackboxResponse.json();
-    jackbox = createJackboxControlBox({
-      manifest: jackboxManifest,
-      registry,
-      runtime,
-      reservedIds: uiOrgans.map((organ) => organ.organId),
-      loadModule: (id) => import(new URL("../organs/" + id + "/index.js", import.meta.url).href)
-    });
-    await jackbox.initialize();
-  } catch (error) {
-    console.error("[MOSHARROF Jackbox] optional module manager unavailable; core runtime remains active", error);
-    jackbox = Object.freeze({
-      list: () => [Object.freeze({ id: "jackbox", status: "quarantined", error: String(error?.message ?? error).slice(0, 240) })],
-      initialize: async () => [],
-      enable: async () => { throw new Error("Jackbox is unavailable; core runtime remains active"); },
-      disable: async () => { throw new Error("Jackbox is unavailable; core runtime remains active"); }
-    });
-  }
+  const jackbox = await initializeJackbox({
+    registry, runtime, reservedIds: uiOrgans.map((organ) => organ.organId)
+  });
   window.MosharrofEntitySystem = {
     registry: EntityRegistry, bus: EntityBus, organRegistry: registry, links, organRuntime: runtime, jackbox,
     version: "2.1-organ-runtime-jackbox", ready: true
