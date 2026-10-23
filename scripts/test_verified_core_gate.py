@@ -40,7 +40,13 @@ class VerifiedCoreGateTests(unittest.TestCase):
         target.write_text("actual", encoding="utf-8")
         manifest = {
             "schema_version": 1,
-            "locked_files": [{"path": "example.txt", "sha256": "0" * 64}]
+            "locked_files": [{"path": "example.txt", "sha256": "0" * 64, "evidence": {
+                "verified_commit": "a" * 40,
+                "test_runs": ["https://github.com/example/repo/actions/runs/123"],
+                "dependency_review": "fixture dependency review",
+                "acceptance": "fixture acceptance tests passed",
+                "verified_at": "2026-10-23"
+            }}]
         }
         (self.root / "core/verified-core/locked-files.json").write_text(json.dumps(manifest), encoding="utf-8")
         self.assertTrue(any("SHA-256 mismatch" in e for e in validate_manifest(self.root)))
@@ -98,6 +104,16 @@ class VerifiedCoreGateTests(unittest.TestCase):
         entry = {"path": "src/stable.js", "sha256": "a" * 64}
         with self.assertRaises(ValueError):
             manifest_paths({"locked_files": [entry, dict(entry)]}, "test manifest")
+
+    def test_lock_without_evidence_is_rejected(self):
+        target = self.root / "example.txt"
+        target.write_text("actual", encoding="utf-8")
+        manifest = {
+            "schema_version": 1,
+            "locked_files": [{"path": "example.txt", "sha256": "a" * 64}]
+        }
+        (self.root / "core/verified-core/locked-files.json").write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertTrue(any("evidence object is required" in e for e in validate_manifest(self.root)))
 
 
 if __name__ == "__main__":
