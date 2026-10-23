@@ -6,6 +6,14 @@ trap 'status=$?; echo "APK WebView smoke failed with exit $status; collecting em
 
 test -s artifacts/apk/app-debug.apk
 
+QA_STRATEGY="${QA_STRATEGY:-direct}"
+case "$QA_STRATEGY" in
+  direct) CHAT_TIMEOUT_MS=90000 ;;
+  recover) CHAT_TIMEOUT_MS=90000 ;;
+  retry) CHAT_TIMEOUT_MS=180000 ;;
+  *) echo "Unknown QA_STRATEGY: $QA_STRATEGY"; exit 2 ;;
+esac
+
 # Keep ADB startup recovery isolated so this smoke runner stays within file-growth policy.
 bash scripts/android/ensure-adb-daemon.sh
 for attempt in $(seq 1 60); do
@@ -26,8 +34,11 @@ adb shell pm grant com.mosharrof.ai android.permission.RECORD_AUDIO || true
 adb shell pm grant com.mosharrof.ai android.permission.READ_CONTACTS || true
 adb shell pm grant com.mosharrof.ai android.permission.CALL_PHONE || true
 adb shell appops set com.mosharrof.ai SYSTEM_ALERT_WINDOW allow || true
+if [ "$QA_STRATEGY" = "recover" ]; then
+  adb shell am force-stop com.mosharrof.ai || true
+fi
 adb shell am start -n com.mosharrof.ai/.MainActivity
-sleep 15
+if [ "$QA_STRATEGY" = "recover" ]; then sleep 25; else sleep 15; fi
 
 socket=""
 for attempt in $(seq 1 30); do
@@ -40,4 +51,4 @@ done
 test -n "$socket"
 adb forward tcp:9222 "localabstract:$socket"
 timeout 30s curl --retry 10 --retry-delay 2 --retry-connrefused http://127.0.0.1:9222/json/list -o artifacts/apk-webview-chat/webview-targets.json
-python scripts/android/apk_webview_real_chat_smoke.py --cdp-endpoint http://127.0.0.1:9222 --output-dir artifacts/apk-webview-chat
+python scripts/android/apk_webview_real_chat_smoke.py --cdp-endpoint http://127.0.0.1:9222 --output-dir artifacts/apk-webview-chat --timeout-ms "$CHAT_TIMEOUT_MS"
