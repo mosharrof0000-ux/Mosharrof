@@ -4,10 +4,11 @@ This directory defines the evidence-backed file protection policy for Mosharrof.
 
 ## Status
 
-The initial manifest intentionally has no locked application files. A file is not marked
-verified just because it exists or because a hash can be calculated. Add a file only
-after its purpose, dependency edges, regression tests, and acceptance evidence have
-been reviewed.
+The first pilot lock is `core/organ-registry/index.js`; its SHA-256 and test/dependency
+evidence are recorded in `core/verified-core/locked-files.json`. Other application files
+remain unlocked until their own dependency review, focused tests, regression checks, and
+acceptance evidence are recorded. A file is not marked verified just because it exists or
+because a hash can be calculated.
 
 ## Lock entry
 
