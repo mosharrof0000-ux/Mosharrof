@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "policy": "modules-must-be-separate-and-explicitly-registered",
+  "modules": []
+}
