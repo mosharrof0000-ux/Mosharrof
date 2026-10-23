@@ -61,6 +61,20 @@ def main() -> int:
             timeout=30000,
         )
         assert page.evaluate("!!window.MosharrofEntitySystem.jackbox && Array.isArray(window.MosharrofEntitySystem.jackbox.list())"), "Jackbox control API missing"
+        jackbox_lifecycle = page.evaluate("""async () => {
+            const box = window.MosharrofEntitySystem.jackbox;
+            const id = "jackbox-diagnostics";
+            const before = box.list().find((item) => item.id === id);
+            if (!before || before.status !== "disabled") throw new Error("diagnostics module must start disabled");
+            const attached = await box.enable(id);
+            const during = box.list().find((item) => item.id === id);
+            const detached = await box.disable(id);
+            const after = box.list().find((item) => item.id === id);
+            return { attached: attached.status, during: during.status, detached: detached.status, after: after.status };
+        }""")
+        assert jackbox_lifecycle == {
+            "attached": "enabled", "during": "enabled", "detached": "disabled", "after": "disabled"
+        }, f"Jackbox lifecycle did not complete: {jackbox_lifecycle}"
         health = page.evaluate("window.MosharrofEntitySystem.organRuntime.health()")
         runtime_ids = {item["organId"] for item in health}
         assert REQUIRED_ORGANS.issubset(runtime_ids), (
