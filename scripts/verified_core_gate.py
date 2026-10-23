@@ -10,8 +10,8 @@ import sys
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "verified-core" / "locked-files.json"
-REGISTRY = ROOT / "jackbox" / "registry.json"
+MANIFEST = ROOT / "core" / "verified-core" / "locked-files.json"
+REGISTRY = ROOT / "core" / "jackbox" / "registry.json"
 
 
 def read_json(path: Path) -> dict:
@@ -79,10 +79,10 @@ def validate_registry(root: Path = ROOT) -> list[str]:
     except ValueError as exc:
         return [str(exc)]
     if data.get("schema_version") != 1:
-        errors.append("jackbox/registry.json: schema_version must be 1")
+        errors.append("core/jackbox/registry.json: schema_version must be 1")
     modules = data.get("modules")
     if not isinstance(modules, list):
-        return errors + ["jackbox/registry.json: modules must be a list"]
+        return errors + ["core/jackbox/registry.json: modules must be a list"]
     seen: set[str] = set()
     for module in modules:
         if not isinstance(module, dict):
@@ -126,12 +126,12 @@ def validate_changed_locked_files(base_ref: str) -> list[str]:
         # Read the base manifest as well as the PR manifest. Otherwise a PR could
         # remove a lock entry and edit that file in the same change.
         manifest_exists = subprocess.run(
-            ["git", "cat-file", "-e", f"{base_ref}:verified-core/locked-files.json"],
+            ["git", "cat-file", "-e", f"{base_ref}:core/verified-core/locked-files.json"],
             cwd=ROOT, text=True, capture_output=True,
         ).returncode == 0
         if manifest_exists:
             base_manifest = subprocess.run(
-                ["git", "show", f"{base_ref}:verified-core/locked-files.json"],
+                ["git", "show", f"{base_ref}:core/verified-core/locked-files.json"],
                 cwd=ROOT, text=True, capture_output=True, check=True,
             )
             base_data = json.loads(base_manifest.stdout)
