@@ -103,7 +103,8 @@ def main() -> int:
         targets = get_targets()
         target = next(
             (item for item in targets if item.get("type") == "page" and
-             ("localhost" in item.get("url", "").lower() or item.get("url", "").lower().startswith("capacitor://"))),
+             any(host in item.get("url", "").lower() for host in
+                 ("mosharrof", "localhost", "capacitor://", "127.0.0.1"))),
             None,
         )
         record("installed_apk_webview_target_found", target is not None,
