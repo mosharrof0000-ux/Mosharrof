@@ -11,15 +11,15 @@ class VerifiedCoreGateTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
-        (self.root / "verified-core").mkdir()
-        (self.root / "jackbox").mkdir()
+        (self.root / "core/verified-core").mkdir(parents=True)
+        (self.root / "core/jackbox").mkdir(parents=True)
         (self.root / "jackbox/modules/demo").mkdir(parents=True)
         (self.root / "jackbox/modules/demo/index.js").write_text("export default {};", encoding="utf-8")
-        (self.root / "verified-core/locked-files.json").write_text(json.dumps({
+        (self.root / "core/verified-core/locked-files.json").write_text(json.dumps({
             "schema_version": 1,
             "locked_files": []
         }), encoding="utf-8")
-        (self.root / "jackbox/registry.json").write_text(json.dumps({
+        (self.root / "core/jackbox/registry.json").write_text(json.dumps({
             "schema_version": 1,
             "modules": [{
                 "id": "demo",
