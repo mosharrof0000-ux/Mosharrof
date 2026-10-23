@@ -22,12 +22,18 @@ concurrency:
 
 jobs:
   apk-webview-real-chat:
-    name: "Replica ${{ matrix.replica }} — installed APK real-chat"
+    name: "${{ matrix.strategy_name }} — installed APK real-chat"
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 3
       matrix:
-        replica: [1, 2, 3, 4, 5, 6]
+        include:
+          - strategy_name: "CDP-direct"
+            strategy: direct
+          - strategy_name: "WebView-recovery"
+            strategy: recover
+          - strategy_name: "Network-retry"
+            strategy: retry
     if: >-
       github.event_name == 'push' ||
       github.event_name == 'pull_request' ||
@@ -111,23 +117,24 @@ jobs:
           emulator-port: 5554
           emulator-boot-timeout: 900
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
-          script: bash scripts/android/run_apk_webview_smoke.sh
+          script: QA_STRATEGY="${{ matrix.strategy }}" bash scripts/android/run_apk_webview_smoke.sh
 
       - name: Record replica metadata and APK hash
         if: always()
         env:
-          REPLICA: ${{ matrix.replica }}
+          QA_STRATEGY: ${{ matrix.strategy }}
+          STRATEGY_NAME: ${{ matrix.strategy_name }}
           SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: |
           mkdir -p artifacts/apk-webview-chat
-          printf '%s\n' "replica=$REPLICA" "source_sha=$SOURCE_SHA" "run_id=$GITHUB_RUN_ID" > artifacts/apk-webview-chat/replica-metadata.txt
+          printf '%s\n' "strategy=$QA_STRATEGY" "strategy_name=$STRATEGY_NAME" "source_sha=$SOURCE_SHA" "run_id=$GITHUB_RUN_ID" > artifacts/apk-webview-chat/strategy-metadata.txt
           if [ -s artifacts/apk/app-debug.apk ]; then sha256sum artifacts/apk/app-debug.apk > artifacts/apk-webview-chat/apk-sha256.txt; fi
 
       - name: Upload APK WebView chat evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-apk-webview-real-chat-replica-${{ matrix.replica }}-${{ github.run_id }}
+          name: mosharrof-apk-webview-real-chat-${{ matrix.strategy }}-${{ github.run_id }}
           path: artifacts/apk-webview-chat/**
           if-no-files-found: warn
           retention-days: 30
