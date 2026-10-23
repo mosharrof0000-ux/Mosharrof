@@ -12,10 +12,9 @@ import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlsplit, urlunsplit
 from urllib.request import urlopen
 
-import websocket
+from scripts.android.lib.webview_cdp_client import PageCDP
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
@@ -49,95 +48,6 @@ def record(name: str, passed: bool, detail: str = "") -> None:
         report["errors"].append({"check": name, "detail": detail})
 
 
-class PageCDP:
-    """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
-
-    def __init__(self, ws_url: str):
-        # Android WebView may advertise an emulator-local hostname in the target
-        # URL even though the test reaches CDP through adb forward on localhost.
-        # Reuse the forwarded endpoint host/port and retry transient startup races.
-        advertised = urlsplit(ws_url)
-        endpoint = urlsplit(args.cdp_endpoint)
-        if advertised.scheme not in ("ws", "wss") or not advertised.path:
-            raise ValueError(f"Invalid WebView CDP WebSocket URL: {ws_url!r}")
-        host = endpoint.hostname or "127.0.0.1"
-        port = endpoint.port or (443 if advertised.scheme == "wss" else 80)
-        normalized_url = urlunsplit((
-            advertised.scheme, f"{host}:{port}", advertised.path,
-            advertised.query, ""
-        ))
-        self.normalized_url = normalized_url
-        self.ws = self._connect_with_retry()
-
-    def _connect_with_retry(self):
-        last_error = None
-        for attempt in range(1, 4):
-            try:
-                return websocket.create_connection(
-                    self.normalized_url, timeout=20, suppress_origin=True
-                )
-            except Exception as exc:
-                last_error = exc
-                if attempt == 3:
-                    raise TimeoutError(
-                        f"Unable to connect to WebView CDP after {attempt} attempts "
-                        f"at {self.normalized_url}: {type(exc).__name__}: {exc}"
-                    ) from exc
-                time.sleep(attempt * 2)
-        raise TimeoutError(f"Unable to connect to WebView CDP: {last_error}")
-
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
-        # WebView can drop its debugging socket during initial renderer startup.
-        # Retry a command once on a fresh socket, and name the failed CDP method
-        # so the uploaded report tells us whether startup, evaluation, or capture failed.
-        last_error = None
-        for attempt in range(2):
-            self.next_id += 1
-            command_id = self.next_id
-            try:
-                self.ws.settimeout(timeout)
-                self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
-                deadline = time.monotonic() + timeout
-                while time.monotonic() < deadline:
-                    message = json.loads(self.ws.recv())
-                    if message.get("id") != command_id:
-                        continue
-                    if "error" in message:
-                        raise RuntimeError(f"CDP {method} failed: {message['error']}")
-                    return message.get("result", {})
-                raise TimeoutError(f"Timed out waiting for CDP command {method}")
-            except (websocket.WebSocketConnectionClosedException, OSError, TimeoutError) as exc:
-                last_error = exc
-                if attempt == 0:
-                    try:
-                        self.ws.close()
-                    except Exception:
-                        pass
-                    self.ws = self._connect_with_retry()
-                    continue
-                raise RuntimeError(
-                    f"CDP command {method} failed after reconnect: "
-                    f"{type(exc).__name__}: {exc}"
-                ) from exc
-        raise RuntimeError(f"CDP command {method} failed: {last_error}")
-
-    def evaluate(self, expression: str, timeout: float = 15):
-        result = self.command(
-            "Runtime.evaluate",
-            {"expression": expression, "returnByValue": True, "awaitPromise": True},
-            timeout=timeout,
-        )
-        if "exceptionDetails" in result:
-            raise RuntimeError(f"Page JavaScript exception: {result['exceptionDetails']}")
-        return result.get("result", {}).get("value")
-
-    def screenshot(self, path: Path) -> None:
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
-        path.write_bytes(base64.b64decode(result["data"]))
-
-    def close(self) -> None:
-        self.ws.close()
-
 
 def get_targets() -> list[dict]:
     target_file = out / "webview-targets.json"
@@ -162,7 +72,7 @@ def main() -> int:
         if target is None:
             return 1
 
-        cdp = PageCDP(target["webSocketDebuggerUrl"])
+        cdp = PageCDP(target["webSocketDebuggerUrl"], args.cdp_endpoint)
         cdp.command("Page.enable")
         cdp.command("Runtime.enable")
         try:
