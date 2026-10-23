@@ -14,7 +14,7 @@ on:
 
 permissions:
   contents: read
-  actions: read
+  actions: write
 
 concurrency:
   group: mosharrof-apk-webview-real-chat-${{ github.run_id }}
@@ -118,6 +118,13 @@ jobs:
           emulator-boot-timeout: 900
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
           script: QA_STRATEGY="${{ matrix.strategy }}" bash scripts/android/run_apk_webview_smoke.sh
+
+      - name: Cancel redundant lanes after first verified green result
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QA_STRATEGY_NAME: ${{ matrix.strategy_name }}
+        run: bash scripts/android/cancel_redundant_chat_qa_lanes.sh
 
       - name: Record replica metadata and APK hash
         if: always()
