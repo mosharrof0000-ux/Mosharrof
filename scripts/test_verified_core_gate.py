@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from verified_core_gate import validate_manifest, validate_registry
+from scripts.verified_core_gate import validate_manifest, validate_registry
 
 
 class VerifiedCoreGateTests(unittest.TestCase):
