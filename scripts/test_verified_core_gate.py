@@ -12,8 +12,9 @@ class VerifiedCoreGateTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         (self.root / "core/verified-core").mkdir(parents=True)
         (self.root / "core/jackbox").mkdir(parents=True)
-        (self.root / "jackbox/modules/demo").mkdir(parents=True)
-        (self.root / "jackbox/modules/demo/index.js").write_text("export default {};", encoding="utf-8")
+        (self.root / "organs/demo").mkdir(parents=True)
+        (self.root / "organs/demo/index.js").write_text("export default {};", encoding="utf-8")
+        (self.root / "organs/demo/organ.json").write_text(json.dumps({"id": "demo", "public_api": ["getHealth", "reportIssue"], "dependencies": []}), encoding="utf-8")
         (self.root / "core/verified-core/locked-files.json").write_text(json.dumps({
             "schema_version": 1,
             "locked_files": []
@@ -22,8 +23,8 @@ class VerifiedCoreGateTests(unittest.TestCase):
             "schema_version": 1,
             "modules": [{
                 "id": "demo",
-                "path": "jackbox/modules/demo",
-                "entry": "jackbox/modules/demo/index.js",
+                "path": "organs/demo",
+                "entry": "organs/demo/index.js",
                 "enabled": False
             }]
         }), encoding="utf-8")
@@ -53,7 +54,7 @@ class VerifiedCoreGateTests(unittest.TestCase):
             "modules": [{
                 "id": "demo",
                 "path": "jackbox/modules/demo",
-                "entry": "jackbox/modules/demo/../../../../index.html",
+                "entry": "organs/demo/../../../../index.html",
                 "enabled": False
             }]
         }
