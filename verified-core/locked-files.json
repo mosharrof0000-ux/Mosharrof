@@ -1,6 +1,0 @@
-{
-  "schema_version": 1,
-  "policy": "sha256-and-change-gate",
-  "status": "pilot-not-yet-locked",
-  "locked_files": []
-}
