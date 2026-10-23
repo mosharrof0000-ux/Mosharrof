@@ -32,7 +32,7 @@ export function createOrganRuntime({ registry, linkManager, limits = {}, storage
     safeId(id, "organ id");
     if (!registry.has(id)) throw new Error("unknown organ: " + id);
     if (!memory.has(id)) memory.set(id, new Map());
-    if (!health.has(id)) health.set(id, { status: "registered", successes: 0, issues: 0, lastEventAt: null });
+    if (!health.has(id)) health.set(id, { status: "registered", enabled: true, successes: 0, issues: 0, lastEventAt: null });
     return health.get(id);
   }
   function record(id, type, details = {}) {
@@ -40,8 +40,8 @@ export function createOrganRuntime({ registry, linkManager, limits = {}, storage
     audit.push(entry);
     if (audit.length > config.maxAuditEntries) audit.splice(0, audit.length - config.maxAuditEntries);
     state.lastEventAt = entry.at;
-    if (type === "success") { state.successes += 1; state.status = "ready"; }
-    if (type === "issue") { state.issues += 1; state.status = "degraded"; }
+    if (type === "success") { state.successes += 1; state.status = state.enabled ? "ready" : "disabled"; }
+    if (type === "issue") { state.issues += 1; state.status = state.enabled ? "degraded" : "disabled"; }
     return entry;
   }
   const persistent = createPersistentMemory({ storage, prefix: "mosharrof:organ-memory:v1:", maxEntries: config.maxMemoryEntries, maxValueBytes: config.maxValueBytes, requireOrgan, record, cloneJson, safeKey });
@@ -59,6 +59,7 @@ export function createOrganRuntime({ registry, linkManager, limits = {}, storage
     },
     register(id, organHandlers) {
       const state = requireOrgan(id);
+      if (!state.enabled) throw new Error("organ is disabled: " + id);
       if (!organHandlers || typeof organHandlers !== "object" || Array.isArray(organHandlers)) throw new TypeError("organ handlers must be an object");
       const manifest = registry.get(id), names = Object.keys(organHandlers);
       for (const api of names) {
@@ -105,7 +106,9 @@ export function createOrganRuntime({ registry, linkManager, limits = {}, storage
       persistentKeys: (id) => persistent.keys(id)
     }),
     async invoke(sourceId, targetId, api, payload = {}) {
-      requireOrgan(sourceId); requireOrgan(targetId);
+      const sourceState = requireOrgan(sourceId), targetState = requireOrgan(targetId);
+      if (!sourceState.enabled) throw new Error("source organ is disabled: " + sourceId);
+      if (!targetState.enabled) throw new Error("target organ is disabled: " + targetId);
       linkManager.connect(sourceId, targetId, api);
       const handler = handlers.get(targetId)?.get(api);
       if (typeof handler !== "function") throw new Error("target API is not registered: " + targetId + ":" + api);
@@ -120,6 +123,16 @@ export function createOrganRuntime({ registry, linkManager, limits = {}, storage
         throw error;
       }
     },
+    setEnabled(id, enabled) {
+      if (typeof enabled !== "boolean") throw new TypeError("enabled must be a boolean");
+      const state = requireOrgan(id);
+      state.enabled = enabled;
+      state.status = enabled ? (handlers.has(id) ? "ready" : "registered") : "disabled";
+      record(id, enabled ? "success" : "issue", { action: "set-enabled", enabled });
+      state.status = enabled ? (handlers.has(id) ? "ready" : "registered") : "disabled";
+      return Object.freeze({ organId: id, enabled: state.enabled, status: state.status });
+    },
+    isEnabled(id) { return requireOrgan(id).enabled; },
     reportSuccess(id, summary = "operation completed") {
       requireOrgan(id);
       return record(id, "success", { action: "report", summary: safeSummary(summary) });
