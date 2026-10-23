@@ -63,8 +63,16 @@ def validate_manifest(root: Path = ROOT) -> list[str]:
             errors.append(f"{path}: sha256 must be 64 lowercase hexadecimal characters")
             continue
         target = root / path
+        if target.is_symlink():
+            errors.append(f"{path}: symbolic links cannot be locked")
+            continue
+        try:
+            target.resolve(strict=True).relative_to(root.resolve(strict=True))
+        except (OSError, ValueError):
+            errors.append(f"{path}: locked file is missing or resolves outside the repository")
+            continue
         if not target.is_file():
-            errors.append(f"{path}: locked file does not exist")
+            errors.append(f"{path}: locked path is not a regular file")
             continue
         actual = hashlib.sha256(target.read_bytes()).hexdigest()
         if actual != digest:
@@ -121,6 +129,13 @@ def changed_paths(base_ref: str) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def locked_change_errors(base_locked: set[str], head_locked: set[str], changed: set[str]) -> list[str]:
+    # Use both manifests: this blocks removing a lock and editing the file in one PR,
+    # and blocks editing a file while adding its first lock entry in the same PR.
+    blocked = sorted((base_locked | head_locked) & changed)
+    return [f"locked file changed in this pull request: {path}" for path in blocked]
+
+
 def validate_changed_locked_files(base_ref: str) -> list[str]:
     try:
         # Read the base manifest as well as the PR manifest. Otherwise a PR could
@@ -146,11 +161,19 @@ def validate_changed_locked_files(base_ref: str) -> list[str]:
         else:
             # Bootstrap PR: no lock manifest existed on the base branch yet.
             base_locked = set()
+        head_data = read_json(MANIFEST)
+        head_entries = head_data.get("locked_files", [])
+        if not isinstance(head_entries, list):
+            raise ValueError("PR locked_files must be a list")
+        head_locked = {
+            safe_repo_path(item.get("path"))
+            for item in head_entries
+            if isinstance(item, dict)
+        }
         changed = set(changed_paths(base_ref))
     except (ValueError, json.JSONDecodeError, subprocess.CalledProcessError) as exc:
         return [f"cannot compare changed files against {base_ref}: {exc}"]
-    blocked = sorted(base_locked & changed)
-    return [f"locked file changed in this pull request (base manifest): {path}" for path in blocked]
+    return locked_change_errors(base_locked, head_locked, changed)
 
 
 def main() -> int:
