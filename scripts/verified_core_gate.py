@@ -125,19 +125,27 @@ def validate_changed_locked_files(base_ref: str) -> list[str]:
     try:
         # Read the base manifest as well as the PR manifest. Otherwise a PR could
         # remove a lock entry and edit that file in the same change.
-        base_manifest = subprocess.run(
-            ["git", "show", f"{base_ref}:verified-core/locked-files.json"],
-            cwd=ROOT, text=True, capture_output=True, check=True,
-        )
-        base_data = json.loads(base_manifest.stdout)
-        base_entries = base_data.get("locked_files", [])
-        if not isinstance(base_entries, list):
-            raise ValueError("base locked_files must be a list")
-        base_locked = {
-            safe_repo_path(item.get("path"))
-            for item in base_entries
-            if isinstance(item, dict)
-        }
+        manifest_exists = subprocess.run(
+            ["git", "cat-file", "-e", f"{base_ref}:verified-core/locked-files.json"],
+            cwd=ROOT, text=True, capture_output=True,
+        ).returncode == 0
+        if manifest_exists:
+            base_manifest = subprocess.run(
+                ["git", "show", f"{base_ref}:verified-core/locked-files.json"],
+                cwd=ROOT, text=True, capture_output=True, check=True,
+            )
+            base_data = json.loads(base_manifest.stdout)
+            base_entries = base_data.get("locked_files", [])
+            if not isinstance(base_entries, list):
+                raise ValueError("base locked_files must be a list")
+            base_locked = {
+                safe_repo_path(item.get("path"))
+                for item in base_entries
+                if isinstance(item, dict)
+            }
+        else:
+            # Bootstrap PR: no lock manifest existed on the base branch yet.
+            base_locked = set()
         changed = set(changed_paths(base_ref))
     except (ValueError, json.JSONDecodeError, subprocess.CalledProcessError) as exc:
         return [f"cannot compare changed files against {base_ref}: {exc}"]
