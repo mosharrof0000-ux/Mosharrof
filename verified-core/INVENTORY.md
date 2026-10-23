@@ -37,4 +37,4 @@ For each proposed file:
 
 ## Jackbox boundary
 
-Jackbox modules live separately under `jackbox/modules/<id>/` and register through `core/jackbox/registry.json`. The registry currently contains no modules and the first version does not execute code. The runtime adapter/API must be designed and reviewed as its own change before modules can call core functionality. New modules remain disabled until their compatibility and security tests pass.
+Mosharrof already has a per-feature `organs/<id>/` architecture and a contract-gated runtime. The Jackbox manifest is a declarative control-plane proposal; it is not yet wired into all runtime invocation paths. See `core/jackbox/README.md` for the lifecycle and the acceptance tests required before runtime enable/disable can be claimed. Do not add arbitrary dynamic imports or bypass the existing organ registry.
