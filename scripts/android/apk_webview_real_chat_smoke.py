@@ -66,38 +66,60 @@ class PageCDP:
             advertised.scheme, f"{host}:{port}", advertised.path,
             advertised.query, ""
         ))
+        self.normalized_url = normalized_url
+        self.ws = self._connect_with_retry()
+
+    def _connect_with_retry(self):
         last_error = None
-        for attempt in range(1, 7):
+        for attempt in range(1, 4):
             try:
-                self.ws = websocket.create_connection(
-                    normalized_url, timeout=30, suppress_origin=True
+                return websocket.create_connection(
+                    self.normalized_url, timeout=20, suppress_origin=True
                 )
-                break
             except Exception as exc:
                 last_error = exc
-                if attempt == 6:
+                if attempt == 3:
                     raise TimeoutError(
                         f"Unable to connect to WebView CDP after {attempt} attempts "
-                        f"via {endpoint.scheme}://{host}:{port}; "
-                        f"target path={advertised.path}: {type(exc).__name__}: {exc}"
+                        f"at {self.normalized_url}: {type(exc).__name__}: {exc}"
                     ) from exc
-                time.sleep(min(attempt * 2, 8))
-        self.next_id = 0
+                time.sleep(attempt * 2)
+        raise TimeoutError(f"Unable to connect to WebView CDP: {last_error}")
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
-        self.next_id += 1
-        command_id = self.next_id
-        self.ws.settimeout(timeout)
-        self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            message = json.loads(self.ws.recv())
-            if message.get("id") != command_id:
-                continue
-            if "error" in message:
-                raise RuntimeError(f"CDP {method} failed: {message['error']}")
-            return message.get("result", {})
-        raise TimeoutError(f"Timed out waiting for CDP command {method}")
+        # WebView can drop its debugging socket during initial renderer startup.
+        # Retry a command once on a fresh socket, and name the failed CDP method
+        # so the uploaded report tells us whether startup, evaluation, or capture failed.
+        last_error = None
+        for attempt in range(2):
+            self.next_id += 1
+            command_id = self.next_id
+            try:
+                self.ws.settimeout(timeout)
+                self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
+                deadline = time.monotonic() + timeout
+                while time.monotonic() < deadline:
+                    message = json.loads(self.ws.recv())
+                    if message.get("id") != command_id:
+                        continue
+                    if "error" in message:
+                        raise RuntimeError(f"CDP {method} failed: {message['error']}")
+                    return message.get("result", {})
+                raise TimeoutError(f"Timed out waiting for CDP command {method}")
+            except (websocket.WebSocketConnectionClosedException, OSError, TimeoutError) as exc:
+                last_error = exc
+                if attempt == 0:
+                    try:
+                        self.ws.close()
+                    except Exception:
+                        pass
+                    self.ws = self._connect_with_retry()
+                    continue
+                raise RuntimeError(
+                    f"CDP command {method} failed after reconnect: "
+                    f"{type(exc).__name__}: {exc}"
+                ) from exc
+        raise RuntimeError(f"CDP command {method} failed: {last_error}")
 
     def evaluate(self, expression: str, timeout: float = 15):
         result = self.command(
