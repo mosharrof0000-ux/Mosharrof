@@ -3,7 +3,7 @@ import { EntityBus } from "./core/entity-bus.js";
 import { createOrganRegistry } from "../runtime/core/organ-registry/index.js";
 import { createLinkManager } from "../runtime/core/link-manager/index.js";
 import { createOrganRuntime } from "../runtime/core/organ-runtime/index.js";
-import { initializeJackbox } from "./jackbox-bootstrap.js";
+import { initializeJackbox } from "../runtime/core/jackbox/bootstrap.js";
 import * as HomeOrgan from "../organs/home/index.js";
 import * as ChatOrgan from "../organs/chat/index.js";
 import * as HistoryOrgan from "../organs/history/index.js";
