@@ -128,7 +128,7 @@ export function createOrganRuntime({ registry, linkManager, limits = {}, storage
       const state = requireOrgan(id);
       state.enabled = enabled;
       state.status = enabled ? (handlers.has(id) ? "ready" : "registered") : "disabled";
-      record(id, enabled ? "success" : "issue", { action: "set-enabled", enabled });
+      record(id, "state", { action: "set-enabled", enabled });
       state.status = enabled ? (handlers.has(id) ? "ready" : "registered") : "disabled";
       return Object.freeze({ organId: id, enabled: state.enabled, status: state.status });
     },
