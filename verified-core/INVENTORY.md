@@ -37,4 +37,4 @@ For each proposed file:
 
 ## Jackbox boundary
 
-Jackbox modules live separately under `jackbox/modules/<id>/` and register through `jackbox/registry.json`. The registry currently contains no modules and the first version does not execute code. The runtime adapter/API must be designed and reviewed as its own change before modules can call core functionality. New modules remain disabled until their compatibility and security tests pass.
+Jackbox modules live separately under `jackbox/modules/<id>/` and register through `core/jackbox/registry.json`. The registry currently contains no modules and the first version does not execute code. The runtime adapter/API must be designed and reviewed as its own change before modules can call core functionality. New modules remain disabled until their compatibility and security tests pass.
