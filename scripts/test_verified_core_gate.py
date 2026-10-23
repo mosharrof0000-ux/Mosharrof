@@ -1,10 +1,9 @@
-import hashlib
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.verified_core_gate import validate_manifest, validate_registry
+from scripts.verified_core_gate import locked_change_errors, validate_manifest, validate_registry
 
 
 class VerifiedCoreGateTests(unittest.TestCase):
@@ -66,6 +65,29 @@ class VerifiedCoreGateTests(unittest.TestCase):
         registry["modules"].append(dict(registry["modules"][0]))
         (self.root / "core/jackbox/registry.json").write_text(json.dumps(registry), encoding="utf-8")
         self.assertTrue(any("duplicate module id" in e for e in validate_registry(self.root)))
+
+    def test_locked_file_cannot_be_changed_while_adding_its_lock(self):
+        errors = locked_change_errors(set(), {"src/stable.js"}, {"src/stable.js", "core/verified-core/locked-files.json"})
+        self.assertTrue(any("src/stable.js" in error for error in errors))
+
+    def test_locked_file_cannot_be_changed_while_removing_its_lock(self):
+        errors = locked_change_errors({"src/stable.js"}, set(), {"src/stable.js", "core/verified-core/locked-files.json"})
+        self.assertTrue(any("src/stable.js" in error for error in errors))
+
+    def test_symlink_cannot_be_locked(self):
+        target = self.root / "real.txt"
+        target.write_text("safe", encoding="utf-8")
+        link = self.root / "linked.txt"
+        try:
+            link.symlink_to(target)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks are not supported on this runner")
+        manifest = {
+            "schema_version": 1,
+            "locked_files": [{"path": "linked.txt", "sha256": "0" * 64}]
+        }
+        (self.root / "core/verified-core/locked-files.json").write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertTrue(any("symbolic links cannot be locked" in e for e in validate_manifest(self.root)))
 
 
 if __name__ == "__main__":
