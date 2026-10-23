@@ -17,7 +17,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: mosharrof-apk-webview-real-chat-${{ github.event.pull_request.number || github.event.workflow_run.id || github.run_id }}
+  group: mosharrof-apk-webview-real-chat-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:
