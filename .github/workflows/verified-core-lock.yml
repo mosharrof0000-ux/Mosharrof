@@ -33,6 +33,8 @@ jobs:
       - name: Validate manifest and module registry
         run: |
           python3 scripts/verified_core_gate.py
+      - name: Report pilot candidate digest for evidence review
+        run: sha256sum core/organ-registry/index.js
       - name: Fetch target branch
         run: git fetch --no-tags origin main:refs/remotes/origin/main
       - name: Block edits to locked files
