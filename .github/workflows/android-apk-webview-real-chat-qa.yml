@@ -22,6 +22,12 @@ concurrency:
 
 jobs:
   apk-webview-real-chat:
+    name: "Replica ${{ matrix.replica }} — installed APK real-chat"
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        replica: [1, 2, 3, 4, 5, 6]
     if: >-
       github.event_name == 'push' ||
       github.event_name == 'pull_request' ||
@@ -107,11 +113,21 @@ jobs:
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
           script: bash scripts/android/run_apk_webview_smoke.sh
 
+      - name: Record replica metadata and APK hash
+        if: always()
+        env:
+          REPLICA: ${{ matrix.replica }}
+          SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          mkdir -p artifacts/apk-webview-chat
+          printf 'replica=%s\\nsource_sha=%s\\nrun_id=%s\\n' "$REPLICA" "$SOURCE_SHA" "$GITHUB_RUN_ID" > artifacts/apk-webview-chat/replica-metadata.txt
+          if [ -s artifacts/apk/app-debug.apk ]; then sha256sum artifacts/apk/app-debug.apk > artifacts/apk-webview-chat/apk-sha256.txt; fi
+
       - name: Upload APK WebView chat evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-apk-webview-real-chat-${{ github.run_id }}
+          name: mosharrof-apk-webview-real-chat-replica-${{ matrix.replica }}-${{ github.run_id }}
           path: artifacts/apk-webview-chat/**
           if-no-files-found: warn
           retention-days: 30
