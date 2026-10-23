@@ -97,7 +97,7 @@ def get_targets() -> list[dict]:
         return json.load(response)
 
 
-def capture_screenshot(cdp: PageCDP, path: Path) -> None:
+def capture_screenshot(cdp: PageCDP, path: Path, record) -> None:
     """Capture evidence only after the chat outcome has been evaluated, then verify the PNG."""
     cdp.screenshot(path)
     payload = path.read_bytes()
@@ -207,11 +207,11 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
-            capture_screenshot(cdp, out / "apk-webview-after.png")
+            capture_screenshot(cdp, out / "apk-webview-after.png", record)
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
-            capture_screenshot(cdp, out / "apk-webview-failed.png")
+            capture_screenshot(cdp, out / "apk-webview-failed.png", record)
     except Exception as exc:
         record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
