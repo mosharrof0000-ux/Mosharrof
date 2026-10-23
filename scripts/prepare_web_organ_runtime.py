@@ -33,6 +33,7 @@ def main() -> int:
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/jackbox/index.js": "web/runtime/core/jackbox/index.js",
+        "core/jackbox/bootstrap.js": "web/runtime/core/jackbox/bootstrap.js",
         "core/jackbox/registry.json": "web/runtime/core/jackbox/registry.json",
         "core/organ-runtime/persistent-memory.js": "web/runtime/core/organ-runtime/persistent-memory.js",
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
