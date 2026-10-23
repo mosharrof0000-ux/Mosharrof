@@ -3,6 +3,7 @@ import { EntityBus } from "./core/entity-bus.js";
 import { createOrganRegistry } from "../runtime/core/organ-registry/index.js";
 import { createLinkManager } from "../runtime/core/link-manager/index.js";
 import { createOrganRuntime } from "../runtime/core/organ-runtime/index.js";
+import { initializeJackbox } from "../runtime/core/jackbox/bootstrap.js";
 import * as HomeOrgan from "../organs/home/index.js";
 import * as ChatOrgan from "../organs/chat/index.js";
 import * as HistoryOrgan from "../organs/history/index.js";
@@ -75,9 +76,12 @@ async function startOrganRuntime() {
     entity.el.dataset.state = "active";
     if (registry.has(entity.id)) runtime.reportSuccess(entity.id, "UI entity activated");
   });
+  const jackbox = await initializeJackbox({
+    registry, runtime, reservedIds: uiOrgans.map((organ) => organ.organId)
+  });
   window.MosharrofEntitySystem = {
-    registry: EntityRegistry, bus: EntityBus, organRegistry: registry, links, organRuntime: runtime,
-    version: "2.0-organ-runtime", ready: true
+    registry: EntityRegistry, bus: EntityBus, organRegistry: registry, links, organRuntime: runtime, jackbox,
+    version: "2.1-organ-runtime-jackbox", ready: true
   };
   window.dispatchEvent(new CustomEvent("mosharrof:organs-ready", { detail: { count: registry.list().length } }));
 }

@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: "22"
       - name: Test organ runtime and UI contracts
-        run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs tests/architecture/organ-runtime-services.test.mjs tests/architecture/organ-memory-persistence.test.mjs tests/architecture/ui-organ-migration.test.mjs tests/architecture/ui-organ-bootstrap.test.mjs
+        run: node --experimental-default-type=module --test tests/architecture/organ-runtime.test.mjs tests/architecture/organ-runtime-services.test.mjs tests/architecture/organ-memory-persistence.test.mjs tests/architecture/ui-organ-migration.test.mjs tests/architecture/ui-organ-bootstrap.test.mjs tests/architecture/jackbox-control-box.test.mjs
       - name: Fetch target branch
         run: git fetch --no-tags origin main:refs/remotes/origin/main
       - name: Enforce organ isolation, link caps, and file-size limits

@@ -6,6 +6,7 @@ trap 'status=$?; echo "APK WebView smoke failed with exit $status; collecting em
 
 test -s artifacts/apk/app-debug.apk
 
+bash scripts/android/ensure_adb_ready.sh artifacts/apk-webview-chat
 for attempt in $(seq 1 60); do
   boot="$(timeout 10s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
   if [ "$boot" = "1" ]; then
