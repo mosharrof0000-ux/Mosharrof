@@ -17,6 +17,7 @@ REQUIRED_ORGANS = {
 ASSETS = (
     "entities/bootstrap.js",
     "entities/organ-bootstrap.js",
+    "entities/jackbox-bootstrap.js",
     "entities/ui-organ-modules.js",
     "runtime/core/organ-runtime/index.js",
     "runtime/core/organ-runtime/persistent-memory.js",
