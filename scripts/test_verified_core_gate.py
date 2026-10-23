@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.verified_core_gate import locked_change_errors, validate_manifest, validate_registry
+from scripts.verified_core_gate import locked_change_errors, manifest_paths, validate_manifest, validate_registry
 
 
 class VerifiedCoreGateTests(unittest.TestCase):
@@ -88,6 +88,15 @@ class VerifiedCoreGateTests(unittest.TestCase):
         }
         (self.root / "core/verified-core/locked-files.json").write_text(json.dumps(manifest), encoding="utf-8")
         self.assertTrue(any("symbolic links cannot be locked" in e for e in validate_manifest(self.root)))
+
+    def test_malformed_lock_entry_fails_closed(self):
+        with self.assertRaises(ValueError):
+            manifest_paths({"locked_files": ["src/stable.js"]}, "test manifest")
+
+    def test_duplicate_locked_paths_fail_closed(self):
+        entry = {"path": "src/stable.js", "sha256": "a" * 64}
+        with self.assertRaises(ValueError):
+            manifest_paths({"locked_files": [entry, dict(entry)]}, "test manifest")
 
 
 if __name__ == "__main__":
