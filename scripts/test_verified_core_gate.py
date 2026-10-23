@@ -91,7 +91,13 @@ class VerifiedCoreGateTests(unittest.TestCase):
             self.skipTest("symlinks are not supported on this runner")
         manifest = {
             "schema_version": 1,
-            "locked_files": [{"path": "linked.txt", "sha256": "0" * 64}]
+            "locked_files": [{"path": "linked.txt", "sha256": "0" * 64, "evidence": {
+                "verified_commit": "a" * 40,
+                "test_runs": ["https://github.com/example/repo/actions/runs/123"],
+                "dependency_review": "fixture dependency review",
+                "acceptance": "fixture acceptance tests passed",
+                "verified_at": "2026-10-23"
+            }}]
         }
         (self.root / "core/verified-core/locked-files.json").write_text(json.dumps(manifest), encoding="utf-8")
         self.assertTrue(any("symbolic links cannot be locked" in e for e in validate_manifest(self.root)))
