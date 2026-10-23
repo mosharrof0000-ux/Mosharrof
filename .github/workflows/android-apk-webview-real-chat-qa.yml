@@ -25,7 +25,7 @@ jobs:
     name: "Replica ${{ matrix.replica }} — installed APK real-chat"
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 2
       matrix:
         replica: [1, 2, 3, 4, 5, 6]
     if: >-
