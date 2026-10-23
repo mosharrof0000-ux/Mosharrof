@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
@@ -62,6 +63,26 @@ def validate_manifest(root: Path = ROOT) -> list[str]:
         if not isinstance(digest, str) or len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
             errors.append(f"{path}: sha256 must be 64 lowercase hexadecimal characters")
             continue
+        evidence = entry.get("evidence")
+        if not isinstance(evidence, dict):
+            errors.append(f"{path}: evidence object is required before a file can be locked")
+            continue
+        verified_commit = evidence.get("verified_commit")
+        if not isinstance(verified_commit, str) or len(verified_commit) != 40 or any(c not in "0123456789abcdef" for c in verified_commit):
+            errors.append(f"{path}: evidence.verified_commit must be a full commit SHA")
+        test_runs = evidence.get("test_runs")
+        if not isinstance(test_runs, list) or not test_runs or any(
+            not isinstance(url, str) or not re.fullmatch(r"https://github\\.com/[^/]+/[^/]+/actions/runs/[0-9]+", url)
+            for url in test_runs
+        ):
+            errors.append(f"{path}: evidence.test_runs must contain verified GitHub Actions run URLs")
+        for field in ("dependency_review", "acceptance"):
+            value = evidence.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"{path}: evidence.{field} must explain the review")
+        verified_at = evidence.get("verified_at")
+        if not isinstance(verified_at, str) or not re.fullmatch(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}", verified_at):
+            errors.append(f"{path}: evidence.verified_at must be an ISO date")
         target = root / path
         if target.is_symlink():
             errors.append(f"{path}: symbolic links cannot be locked")
