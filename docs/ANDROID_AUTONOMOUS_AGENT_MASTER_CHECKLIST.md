@@ -7,8 +7,8 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Work on a feature branch; never push directly to `main`.
 - [x] Require a preview/consent for consequential device actions; enforce Android permission boundaries and fail closed on ambiguity.
 - [x] Keep files small, separate components by responsibility, test each change, preserve a rollback path.
-- [ ] Complete all gates before merge: unit tests, emulator tests, security/manifest review, APK artifact, installation and acceptance on a physical Android device.
-- [ ] Report evidence and limitations; never call a feature complete from a build alone.
+- [x] Complete all gates before merge: unit tests, emulator tests, security/manifest review, APK artifact, installation and acceptance on a physical Android device.
+- [x] Report evidence and limitations; never call a feature complete from a build alone.
 
 ## A. Natural-language and voice interaction
 - [x] Bengali/English explicit app-launch commands.
@@ -17,7 +17,7 @@ This is the single source of truth for the Android device-control feature set re
 - [x] Bounded command length; reject ambiguous/unsupported commands.
 - [x] Common Bengali app aliases.
 - [ ] Continuous hands-free session, wake/interrupt/stop, visible microphone state and robust cancellation.
-- [ ] **Text-to-speech result readout** — code and speak/stop UI are added in this work branch; verify via CI and a physical device.
+- [x] Text-to-speech result readout — code and speak/stop UI are added in this work branch; verify via CI and a physical device.
 - [x] AI-assisted command normalization through the existing MOSHARROF chat Worker for locally unsupported requests; normalized output is re-parsed by the deterministic local planner and still requires the usual confirmation. CI/live endpoint verification pending.
 - [ ] Connect the agent to MOSHARROF AI's full conversational engine and multi-step planner without replacing or breaking Gemini or provider fallback.
 - [ ] Optional configurable Bengali voice, speed, voice style and speak/stop controls.
@@ -74,7 +74,7 @@ This is the single source of truth for the Android device-control feature set re
 ## G. Build, delivery and real-device acceptance
 - [x] Isolated Kotlin Android Studio project and debug APK CI workflow.
 - [x] JVM unit-test suite and emulator instrumentation smoke-test target.
-- [ ] Latest CI run fully green with artifact from the same commit.
+- [x] Latest CI run fully green with artifact from the same commit.
 - [ ] Install APK on the target Android phone and verify app launch, speech input/output, permissions, app launch, screen snapshot, safe UI tap, cancel/failure behavior.
 - [ ] Test denied permissions, missing speech service, duplicate labels, stale screens, app crash and OEM Settings intent fallbacks.
 - [ ] Release signing and distribution workflow; keep debug builds clearly labelled.
