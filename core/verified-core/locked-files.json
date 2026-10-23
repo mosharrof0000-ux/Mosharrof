@@ -18,6 +18,21 @@
         "acceptance": "Mandatory Architecture Gate, Verified Core Lock Gate, Mosharrof Tests, and candidate Pages Chromium runtime health smoke all passed at the evidence commit.",
         "verified_at": "2026-10-23"
       }
+    },
+    {
+      "path": "scripts/mosharrof_registry.py",
+      "sha256": "096238a2fa24b30826c23f6179f7d3e84920fe5394d98805b882149858c47394",
+      "evidence": {
+        "verified_commit": "c5b772da8108e8bd93efc03987793f4d54446d9f",
+        "test_runs": [
+          "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40005510527",
+          "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40005510651",
+          "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40005510800"
+        ],
+        "dependency_review": "Deterministic generator reads organs/*/organ.json, validates IDs, public APIs and dependency edges, and writes web/runtime/organs.registry.json. scripts/run_organ_checks.py runs validate-only, regenerates the output, requires a clean generated-file diff, and runs scripts/test_mosharrof_registry.py plus architecture checks.",
+        "acceptance": "Mosharrof Tests and Mandatory Organ Isolation passed on the verified commit; registry validation, deterministic regeneration/clean-diff check, registry unit tests, and architecture tests completed successfully. This file is unchanged in this PR; the lock gate will revalidate its SHA-256 and enforce future changes.",
+        "verified_at": "2026-10-24"
+      }
     }
   ]
 }
