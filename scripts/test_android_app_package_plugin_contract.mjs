@@ -9,6 +9,7 @@ const activity = readFileSync("scripts/android/install-main-activity.sh", "utf8"
 const router = readFileSync("core/android-agent-command-router.js", "utf8");
 const packageRouter = readFileSync("core/android-app-package-command-router.js", "utf8");
 const contracts = readFileSync("scripts/android/test-agent-contracts.sh", "utf8");
+const voiceBridge = readFileSync("scripts/android/inject-android-voice-bridge.py", "utf8");
 
 assert.ok(plugin.includes('@CapacitorPlugin(name = "AppPackage")'));
 assert.ok(plugin.includes('startActivityForResult(call, picker, "apkPickerResult")'));
@@ -36,7 +37,9 @@ assert.ok(packageRouter.includes("parsePackageCommand"));
 assert.ok(packageRouter.includes("installAppFromPicker"));
 assert.ok(packageRouter.includes("searchPlayStore"));
 assert.ok(packageRouter.includes("uninstallApp"));
-assert.ok(router.includes("result.packageStateVerified === true"),
+assert.ok(packageRouter.includes("root.mosharrofAppendNativeResult"));
+assert.ok(voiceBridge.includes("window.mosharrofAppendNativeResult"));
+assert.ok(packageRouter.includes("result.packageStateVerified === true"),
   "chat UI must not announce success without verified package state");
 assert.ok(contracts.includes("scripts/test_android_app_package_command_router.mjs"));
 assert.ok(contracts.includes("scripts/test_android_app_package_plugin_contract.mjs"));
