@@ -27,6 +27,9 @@ assert.ok(platform.includes("queryIntentActivities"));
 assert.ok(platform.includes("NameNotFoundException"));
 assert.ok(pending.includes("request_id") && pending.includes("expected_version"));
 
+assert.ok(installer.includes("cp native/android/AppPackagePlugin.java"));
+assert.ok(installer.includes("cp native/android/AppPackagePlatform.java"));
+assert.ok(installer.includes("cp native/android/AppPackagePendingStore.java"));
 assert.ok(installer.includes("REQUEST_INSTALL_PACKAGES"));
 assert.ok(installer.includes("android.intent.category.LAUNCHER"));
 assert.ok(activity.includes("bash scripts/android/install-app-package-plugin.sh"));
