@@ -99,7 +99,7 @@
     });
     const confirm = options.confirm || ((message) => root.confirm(message));
     const prompt = options.prompt || ((message) => root.prompt(message));
-    const report = options.report || ((message) => {
+    const baseReport = options.report || ((message) => {
       const toast = root.document && root.document.getElementById("toast");
       if (toast) {
         toast.textContent = message;
@@ -107,6 +107,12 @@
         root.setTimeout(() => toast.classList.remove("show"), 3600);
       }
     });
+    const report = message => {
+      if (typeof root.mosharrofAppendNativeResult === "function") {
+        try { root.mosharrofAppendNativeResult(String(message || "")); } catch (_) {}
+      }
+      baseReport(message);
+    };
 
     function handle(command) {
       const parsed = parsePackageCommand(command);
