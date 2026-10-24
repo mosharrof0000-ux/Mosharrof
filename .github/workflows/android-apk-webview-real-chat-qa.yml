@@ -17,8 +17,10 @@ permissions:
   actions: read
 
 concurrency:
-  group: mosharrof-apk-webview-real-chat
-  cancel-in-progress: false
+  # Isolate each PR so a stale SHA cannot hold the single global QA lane.
+  # A newer commit supersedes older queued/running QA for the same PR only.
+  group: mosharrof-apk-webview-real-chat-${{ github.event.pull_request.number || github.event.workflow_run.head_branch || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   apk-webview-real-chat:
@@ -74,8 +76,17 @@ jobs:
           set -euo pipefail
           run_id=""
           for attempt in $(seq 1 150); do
-            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
+            build_runs="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion)"
+            run_id="$(jq -r --arg sha "$SOURCE_SHA" '[.[] | select(.headSha == $sha and .status == "completed" and .conclusion == "success")][0].databaseId // empty' <<<"$build_runs")"
             if [ -n "$run_id" ]; then break; fi
+
+            active="$(jq -r --arg sha "$SOURCE_SHA" 'any(.[]; .headSha == $sha and .status != "completed")' <<<"$build_runs")"
+            finished="$(jq -r --arg sha "$SOURCE_SHA" 'any(.[]; .headSha == $sha and .status == "completed")' <<<"$build_runs")"
+            if [ "$active" != "true" ] && [ "$finished" = "true" ]; then
+              echo "No successful APK build exists for source SHA $SOURCE_SHA; matching build run(s) already completed unsuccessfully."
+              jq -r --arg sha "$SOURCE_SHA" '.[] | select(.headSha == $sha) | [.databaseId, .status, (.conclusion // "none")] | @tsv' <<<"$build_runs"
+              exit 1
+            fi
             sleep 10
           done
           test -n "$run_id"
