@@ -51,7 +51,10 @@ class DeviceCommandAuthenticatorTest {
 
     @Test fun actionTargetsMustMatchTheAllowlistedAction() {
         val verifier = DeviceCommandAuthenticator()
-        val exactAppLabel = signed().copy(target = "YouTube")
+        val unsignedExactLabel = signed().copy(target = "YouTube")
+        val exactAppLabel = unsignedExactLabel.copy(
+            signatureHex = DeviceCommandAuthenticator.sign(secret, unsignedExactLabel.canonicalPayload())
+        )
         assertEquals(DeviceCommandRejection.NONE, verifier.verify(exactAppLabel, secret, now).rejection)
         val unsafeLabel = signed(nonce = "nonce-unsafe-label").copy(target = "YouTube; rm")
         val reSignedUnsafeLabel = unsafeLabel.copy(
