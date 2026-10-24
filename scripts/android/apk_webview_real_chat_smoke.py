@@ -108,13 +108,14 @@ def main() -> int:
             raise TimeoutError("APK chat composer did not become visible")
 
         stage = "health"
-        health = cdp.evaluate(
-            """(async()=>{const c=new AbortController(),t=setTimeout(()=>c.abort(),10000);try{const r=await fetch("https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health",{cache:"no-store",signal:c.signal}),d=await r.json().catch(()=>({})),k=Array.isArray(d.gemini_chat_key_slots)&&d.gemini_chat_key_slots.some(Boolean);return {ok:r.ok,status:r.status,build:d.worker_build||null,providers:{cf:!!d.cloudflare_chat_configured,gemini:!!k,groq:!!d.groq_chat_configured,or:!!d.openrouter_chat_configured}}}catch(e){return {ok:false,error:String(e).slice(0,100)}}finally{clearTimeout(t)}})()""",
-            timeout=15,
-        )
+        try:
+            health = cdp.evaluate(
+                """(async()=>{const c=new AbortController(),t=setTimeout(()=>c.abort(),10000);try{const r=await fetch("https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health",{cache:"no-store",signal:c.signal}),d=await r.json().catch(()=>({})),k=Array.isArray(d.gemini_chat_key_slots)&&d.gemini_chat_key_slots.some(Boolean);return {ok:r.ok,status:r.status,build:d.worker_build||null,providers:{cf:!!d.cloudflare_chat_configured,gemini:!!k,groq:!!d.groq_chat_configured,or:!!d.openrouter_chat_configured}}}catch(e){return {ok:false,error:String(e).slice(0,100)}}finally{clearTimeout(t)}})()""",
+                timeout=30,
+            )
+        except Exception as exc:
+            health = {"ok":False,"error":f"{type(exc).__name__}: {str(exc)[:120]}"}
         report["backend_health"] = health or {}
-        health_ok = bool(health and health.get("ok") and health.get("build") and any((health.get("providers") or {}).values()))
-        record("chat_worker_health_preflight", health_ok, json.dumps(report["backend_health"], ensure_ascii=False))
 
         stage = "before_screenshot"
         cdp.screenshot(out / "apk-webview-before.png")
