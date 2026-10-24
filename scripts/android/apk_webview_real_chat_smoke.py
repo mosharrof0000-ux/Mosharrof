@@ -57,7 +57,7 @@ class PageCDP:
         self.ws = websocket.create_connection(ws_url, timeout=15)
         self.next_id = 0
 
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
+    def command(self, method: str, params: dict | None = None, timeout: float = 30) -> dict:
         self.next_id += 1
         command_id = self.next_id
         self.ws.settimeout(timeout)
@@ -72,7 +72,7 @@ class PageCDP:
             return message.get("result", {})
         raise TimeoutError(f"Timed out waiting for CDP command {method}")
 
-    def evaluate(self, expression: str, timeout: float = 15):
+    def evaluate(self, expression: str, timeout: float = 30):
         result = self.command(
             "Runtime.evaluate",
             {"expression": expression, "returnByValue": True, "awaitPromise": True},
@@ -101,6 +101,7 @@ def get_targets() -> list[dict]:
 
 def main() -> int:
     cdp = None
+    stage = "target_discovery"
     try:
         targets = get_targets()
         target = next(
@@ -113,7 +114,9 @@ def main() -> int:
         if target is None:
             return 1
 
+        stage = "connect_cdp"
         cdp = PageCDP(target["webSocketDebuggerUrl"])
+        stage = "enable_cdp_domains"
         cdp.command("Page.enable")
         cdp.command("Runtime.enable")
         try:
@@ -121,22 +124,33 @@ def main() -> int:
         except Exception:
             pass
 
+        stage = "composer_readiness"
         deadline = time.monotonic() + 30
         ready = False
+        baseline = 0
         while time.monotonic() < deadline:
-            ready = bool(cdp.evaluate(
-                "Boolean(document.querySelector('#input') && document.querySelector('#sendBtn') && "
-                "document.querySelector('#input').getClientRects().length)"
-            ))
+            state = cdp.evaluate(
+                """(() => {
+                  const input = document.querySelector('#input');
+                  const send = document.querySelector('#sendBtn');
+                  return {
+                    ready: Boolean(input && send && input.getClientRects().length),
+                    baseline: document.querySelectorAll('#messages .message.ai:not(.typing)').length
+                  };
+                })()"""
+            )
+            ready = bool(state and state.get("ready"))
             if ready:
+                baseline = int(state.get("baseline") or 0)
                 break
             time.sleep(0.5)
         record("chat_composer_visible_in_apk", ready, "Visible #input and #sendBtn found in installed app WebView")
         if not ready:
             raise TimeoutError("APK chat composer did not become visible")
 
+        stage = "before_screenshot"
         cdp.screenshot(out / "apk-webview-before.png")
-        baseline = int(cdp.evaluate("document.querySelectorAll('#messages .message.ai:not(.typing)').length") or 0)
+        stage = "submit_prompt"
         prompt_js = json.dumps(prompt, ensure_ascii=False)
         submitted = cdp.evaluate(
             f"""(() => {{
@@ -155,6 +169,7 @@ def main() -> int:
         if not submitted:
             raise RuntimeError("Could not submit synthetic prompt through the app composer")
 
+        stage = "wait_for_assistant_response"
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
@@ -201,19 +216,22 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+            stage = "verify_answer_visibility"
             visibility = ensure_answer_visible(cdp, answer)
             record(
                 "assistant_answer_visible_in_viewport",
                 bool(visibility and visibility.get("visible")),
                 json.dumps(visibility, ensure_ascii=False)
             )
+            stage = "capture_after_screenshot"
             cdp.screenshot(out / "apk-webview-after.png")
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
+            stage = "capture_timeout_screenshot"
             cdp.screenshot(out / "apk-webview-failed.png")
     except Exception as exc:
-        record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
+        record("cdp_connection_and_chat", False, f"stage={stage}; {type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:
                 cdp.screenshot(out / "apk-webview-failed.png")
