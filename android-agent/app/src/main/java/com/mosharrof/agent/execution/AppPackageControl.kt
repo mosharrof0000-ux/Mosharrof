@@ -2,6 +2,8 @@ package com.mosharrof.agent.execution
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.os.Build
+import java.io.File
 import android.content.Intent
 import android.net.Uri
 import android.widget.TextView
@@ -90,36 +92,91 @@ object AppPackageControl {
     }
 
     fun requestInstallFromSelectedUri(activity: Activity, apkUri: Uri, status: TextView, onTaskResult: (AppPackageTaskResult) -> Unit = {}) {
+        val requestId = newRequestId()
         if (apkUri.scheme != "content") {
-            status.text = "নিরাপদ ইনস্টলের জন্য Android ফাইল পিকার থেকে APK নির্বাচন করুন।"
+            val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "নিরাপদ ইনস্টলের জন্য Android ফাইল পিকার থেকে APK নির্বাচন করুন।")
+            onTaskResult(outcome)
+            status.text = outcome.toDisplayText()
             return
         }
-        val requestId = newRequestId()
-        AlertDialog.Builder(activity)
-            .setTitle("অ্যাপ ইনস্টল করার আগে যাচাই")
-            .setMessage("Android-এর প্যাকেজ ইনস্টলার খুলবে। অচেনা উৎসের APK ইনস্টল করবেন না। Android-এর নিজস্ব অনুমতি ও নিশ্চিতকরণ লাগবে।")
-            .setNegativeButton("বাতিল") { _, _ ->
-                val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.CANCELLED, "ব্যবহারকারী ইনস্টলার খোলা বাতিল করেছেন।")
-                onTaskResult(outcome)
-                status.text = outcome.toDisplayText()
-            }
-            .setPositiveButton("ইনস্টলার খুলুন") { _, _ ->
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(apkUri, "application/vnd.android.package-archive")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
+
+        // Inspect the selected APK off the UI thread so large files do not freeze the screen.
+        Thread {
+            val inspected = runCatching {
+                val file = File.createTempFile("mosharrof-apk-", ".apk", activity.cacheDir)
                 try {
-                    activity.startActivity(intent)
-                    val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android ইনস্টলার খোলা হয়েছে; প্যাকেজ ইনস্টল হয়েছে কি না এখনো যাচাই করা হয়নি।")
-                    onTaskResult(outcome)
-                    status.text = outcome.toDisplayText()
-                } catch (_: Exception) {
-                    val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "এই ডিভাইসে উপযুক্ত প্যাকেজ ইনস্টলার খোলা যায়নি।")
-                    onTaskResult(outcome)
-                    status.text = outcome.toDisplayText()
+                    var copied = 0L
+                    val input = activity.contentResolver.openInputStream(apkUri)
+                        ?: throw IllegalArgumentException("APK ফাইলটি পড়া যায়নি।")
+                    input.use { source ->
+                        file.outputStream().use { target ->
+                            val buffer = ByteArray(8192)
+                            while (true) {
+                                val count = source.read(buffer)
+                                if (count < 0) break
+                                copied += count
+                                require(copied <= MAX_APK_BYTES) { "APK ফাইল ২০০ MB-এর বেশি; নিরাপত্তার জন্য থামানো হয়েছে।" }
+                                target.write(buffer, 0, count)
+                            }
+                        }
+                    }
+                    val info = activity.packageManager.getPackageArchiveInfo(file.absolutePath, 0)
+                        ?: throw IllegalArgumentException("নির্বাচিত ফাইলটি বৈধ APK হিসেবে পড়া যায়নি।")
+                    val version = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else info.versionCode.toLong()
+                    ApkMetadata(info.packageName, version)
+                } finally {
+                    file.delete()
                 }
-            }.show()
+            }
+            activity.runOnUiThread {
+                if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
+                val metadata = inspected.getOrNull()
+                if (metadata == null) {
+                    val reason = inspected.exceptionOrNull()?.message?.take(180) ?: "APK যাচাই করা যায়নি।"
+                    val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, reason)
+                    onTaskResult(outcome)
+                    status.text = outcome.toDisplayText()
+                    return@runOnUiThread
+                }
+
+                val baselineVersion = installedVersionCode(activity, metadata.packageName)
+                AlertDialog.Builder(activity)
+                    .setTitle("অ্যাপ ইনস্টল করার আগে যাচাই")
+                    .setMessage("APK package: ${metadata.packageName}\nAndroid-এর নিজস্ব ইনস্টলার খুলবে। ইনস্টল ও অনুমতির চূড়ান্ত সিদ্ধান্ত আপনার হাতে থাকবে।")
+                    .setNegativeButton("বাতিল") { _, _ ->
+                        val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.CANCELLED, "ব্যবহারকারী ইনস্টলার খোলা বাতিল করেছেন।", metadata.packageName)
+                        onTaskResult(outcome)
+                        status.text = outcome.toDisplayText()
+                    }
+                    .setPositiveButton("ইনস্টলার খুলুন") { _, _ ->
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(apkUri, "application/vnd.android.package-archive")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            activity.startActivity(intent)
+                            AppPackageTaskResultStore.saveVerificationTarget(activity, metadata.versionCode, baselineVersion ?: -1L)
+                            val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android ইনস্টলার খোলা হয়েছে; ফিরে এলে package/version state যাচাই করা হবে।", metadata.packageName)
+                            onTaskResult(outcome)
+                            status.text = outcome.toDisplayText()
+                        } catch (_: Exception) {
+                            val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "এই ডিভাইসে উপযুক্ত প্যাকেজ ইনস্টলার খোলা যায়নি।", metadata.packageName)
+                            onTaskResult(outcome)
+                            status.text = outcome.toDisplayText()
+                        }
+                    }.show()
+            }
+        }.start()
     }
+
+    private data class ApkMetadata(val packageName: String, val versionCode: Long)
+
+    private fun installedVersionCode(activity: Activity, packageName: String): Long? = try {
+        val info = activity.packageManager.getPackageInfo(packageName, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else info.versionCode.toLong()
+    } catch (_: Exception) { null }
+
+    private const val MAX_APK_BYTES = 200L * 1024L * 1024L
 
     fun requestUninstall(activity: Activity, packageName: String, status: TextView, requestId: String = newRequestId(), onTaskResult: (AppPackageTaskResult) -> Unit = {}) {
         val normalized = packageName.trim()
