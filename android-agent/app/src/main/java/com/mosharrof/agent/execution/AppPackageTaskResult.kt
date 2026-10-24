@@ -49,6 +49,8 @@ data class AppPackageTaskResult(
         get() = status in TERMINAL_STATUSES
 
     companion object {
+        fun isValidPackageName(value: String): Boolean = PACKAGE_NAME.matches(value)
+
         private val TERMINAL_STATUSES = setOf(
             AppPackageTaskStatus.SUCCEEDED,
             AppPackageTaskStatus.FAILED,
@@ -70,5 +72,19 @@ data class AppPackageTaskResult(
             detail = detail,
             packageName = packageName
         )
+    }
+}
+
+/** Operation awaiting return from Android's system-owned package confirmation UI. */
+data class PendingAppPackageOperation(
+    val requestId: String,
+    val action: AppPackageTaskAction,
+    val packageName: String,
+    val expectedVersionCode: Long? = null
+) {
+    init {
+        require(requestId.isNotBlank() && requestId.length <= 128)
+        require(AppPackageTaskResult.isValidPackageName(packageName))
+        require(action == AppPackageTaskAction.INSTALL_APK || expectedVersionCode == null)
     }
 }
