@@ -96,6 +96,8 @@ object DeviceCommandReplayStore {
         }
         val result = authenticator.verify(envelope, secret, nowMillis)
         if (result.accepted && !prefs.edit().putLong(nonceKey, envelope.expiresAtMillis).commit()) {
+            // Revoke the pairing secret so a process restart cannot accept this command as fresh.
+            DevicePairingSecretStore.revoke(context)
             return DeviceCommandVerification(false, DeviceCommandRejection.REPLAY_STATE_NOT_PERSISTED)
         }
         return result
