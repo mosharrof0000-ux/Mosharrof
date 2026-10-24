@@ -1,6 +1,7 @@
 package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -239,10 +240,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun installedPackageVersionCode(packageName: String): Long? = try {
+        @Suppress("DEPRECATION")
         val info = packageManager.getPackageInfo(packageName, 0)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else info.versionCode.toLong()
-    } catch (_: Exception) {
+    } catch (_: PackageManager.NameNotFoundException) {
         null
+    } catch (_: Exception) {
+        // Do not confuse an unreadable package state with a verified uninstall.
+        Long.MIN_VALUE
     }
     private fun prepareCommand(command: String) {
         if (AppPackageControl.handleCommand(
