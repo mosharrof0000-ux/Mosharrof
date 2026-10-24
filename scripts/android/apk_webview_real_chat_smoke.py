@@ -107,61 +107,14 @@ def main() -> int:
         if not ready:
             raise TimeoutError("APK chat composer did not become visible")
 
-        # Probe the same public Worker from the installed WebView before sending
-        # the prompt. This distinguishes DNS/CORS/network failures from provider
-        # quota/configuration failures without logging credentials.
-        stage = "worker_health_preflight"
+        stage = "health"
         health = cdp.evaluate(
-            """(async () => {
-              const controller = new AbortController();
-              const timeout = setTimeout(() => controller.abort(), 10000);
-              try {
-                const response = await fetch(
-                  "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health",
-                  {method:"GET", cache:"no-store", signal:controller.signal}
-                );
-                const data = await response.json().catch(() => ({}));
-                const keySlots = Array.isArray(data.gemini_chat_key_slots) &&
-                  data.gemini_chat_key_slots.some(Boolean);
-                const providerConfigured = Boolean(
-                  data.cloudflare_chat_configured || keySlots ||
-                  data.groq_chat_configured || data.openrouter_chat_configured
-                );
-                return {
-                  reachable:true, http_ok:response.ok, status:response.status,
-                  service:data.service || null, worker_build:data.worker_build || null,
-                  provider_configured:providerConfigured,
-                  provider_order:data.chat_provider_order || null,
-                  cloudflare_workers_ai_configured:data.cloudflare_workers_ai_configured ?? null,
-                  gemini_chat_key_slots:data.gemini_chat_key_slots || null,
-                  groq_chat_configured:data.groq_chat_configured ?? null,
-                  openrouter_chat_configured:data.openrouter_chat_configured ?? null
-                };
-              } catch (error) {
-                return {
-                  reachable:false, http_ok:false,
-                  error_name:error?.name || "Error",
-                  error:String(error?.message || error).slice(0, 250)
-                };
-              } finally {
-                clearTimeout(timeout);
-              }
-            })()""",
+            """(async()=>{const c=new AbortController(),t=setTimeout(()=>c.abort(),10000);try{const r=await fetch("https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health",{cache:"no-store",signal:c.signal}),d=await r.json().catch(()=>({})),k=Array.isArray(d.gemini_chat_key_slots)&&d.gemini_chat_key_slots.some(Boolean);return {ok:r.ok,status:r.status,build:d.worker_build||null,providers:{cf:!!d.cloudflare_chat_configured,gemini:!!k,groq:!!d.groq_chat_configured,or:!!d.openrouter_chat_configured}}}catch(e){return {ok:false,error:String(e).slice(0,100)}}finally{clearTimeout(t)}})()""",
             timeout=15,
         )
-        report["backend_health_preflight"] = health or {
-            "reachable": False, "http_ok": False, "error": "empty preflight result"
-        }
-        health_ok = bool(
-            health and health.get("reachable") and health.get("http_ok") and
-            health.get("service") == "mosharrof-screenshot-analysis" and
-            health.get("provider_configured")
-        )
-        record(
-            "chat_worker_health_preflight",
-            health_ok,
-            json.dumps(report["backend_health_preflight"], ensure_ascii=False),
-        )
+        report["backend_health"] = health or {}
+        health_ok = bool(health and health.get("ok") and health.get("build") and any((health.get("providers") or {}).values()))
+        record("chat_worker_health_preflight", health_ok, json.dumps(report["backend_health"], ensure_ascii=False))
 
         stage = "before_screenshot"
         cdp.screenshot(out / "apk-webview-before.png")
