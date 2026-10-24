@@ -64,13 +64,18 @@ class PageCDP:
         self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            message = json.loads(self.ws.recv())
+            try:
+                message = json.loads(self.ws.recv())
+            except websocket.WebSocketTimeoutException:
+                # WebView emits asynchronous CDP events. A quiet interval is not
+                # a failed command; keep waiting until this command's deadline.
+                continue
             if message.get("id") != command_id:
                 continue
             if "error" in message:
                 raise RuntimeError(f"CDP {method} failed: {message['error']}")
             return message.get("result", {})
-        raise TimeoutError(f"Timed out waiting for CDP command {method}")
+        raise TimeoutError(f"Timed out waiting for CDP command {method} after {timeout}s")
 
     def evaluate(self, expression: str, timeout: float = 30):
         result = self.command(
@@ -165,25 +170,40 @@ def main() -> int:
         cdp.screenshot(out / "apk-webview-before.png")
         stage = "submit_prompt"
         prompt_js = json.dumps(prompt, ensure_ascii=False)
-        submitted = cdp.evaluate(
-            f"""(() => {{
+        # Use the DOM-native value setter so framework-controlled inputs see the
+        # same value as a user edit, then send real keyboard text through CDP.
+        # Calling HTMLElement.click() can bypass mobile pointer handlers in WebView.
+        prep = cdp.evaluate(
+            """(() => {
               const input = document.querySelector('#input');
               const send = document.querySelector('#sendBtn');
-              if (!input || !send || send.disabled) return false;
+              if (!input || !send || send.disabled) return null;
               input.focus();
-              input.value = {prompt_js};
-              input.dispatchEvent(new Event('input', {{bubbles:true}}));
-              input.dispatchEvent(new Event('change', {{bubbles:true}}));
-              // Schedule the click after this CDP evaluation returns. Some Android
-              // WebView builds stall Runtime.evaluate while the send handler starts
-              // its network request synchronously.
-              setTimeout(() => send.click(), 0);
-              return true;
-            }})()"""
+              const proto = input instanceof HTMLTextAreaElement
+                ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+              const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+              if (setter) setter.call(input, '');
+              input.dispatchEvent(new Event('input', {bubbles:true}));
+              const r = send.getBoundingClientRect();
+              return {ok:true, x:r.x+r.width/2, y:r.y+r.height/2,
+                tag:input.tagName, type:input.getAttribute('type') || ''};
+            })()"""
         )
-        record("synthetic_prompt_submitted", bool(submitted), "One Bengali prompt submitted through the installed APK UI")
-        if not submitted:
-            raise RuntimeError("Could not submit synthetic prompt through the app composer")
+        if not prep or not prep.get("ok"):
+            raise RuntimeError("Could not prepare visible chat composer for input")
+        cdp.command("Input.insertText", {"text": prompt}, timeout=10)
+        # Dispatch a physical-style tap at the send control's center.
+        cdp.command("Input.dispatchMouseEvent", {
+            "type": "mousePressed", "x": prep["x"], "y": prep["y"],
+            "button": "left", "clickCount": 1
+        }, timeout=10)
+        cdp.command("Input.dispatchMouseEvent", {
+            "type": "mouseReleased", "x": prep["x"], "y": prep["y"],
+            "button": "left", "clickCount": 1
+        }, timeout=10)
+        submitted = True
+        record("synthetic_prompt_submitted", submitted,
+               f"One Bengali prompt entered with CDP keyboard and tapped send control; input={prep.get('tag')}")
 
         stage = "wait_for_assistant_response"
         deadline = time.monotonic() + args.timeout_ms / 1000
