@@ -222,6 +222,7 @@ export class DeviceBridge {
     if (!pairing || !pairing.approved) return json({ ok: false, error: "browser_not_authorized" }, 401);
     const requestId = String(url.searchParams.get("requestId") || "");
     if (!/^[0-9a-f]{32}$/.test(requestId)) return json({ ok: false, error: "invalid_request_id" }, 400);
+    await this.expireRequestIfNeeded(requestId);
     const result = await this.storage.get("result:" + requestId);
     if (result) return json({ ok: true, result });
     const inflight = await this.storage.get("inflight");
@@ -261,7 +262,38 @@ export class DeviceBridge {
     return pairing;
   }
 
+  async expireRequestIfNeeded(requestId) {
+    const inflight = await this.storage.get("inflight");
+    if (inflight?.envelope?.requestId === requestId && inflight.envelope.expiresAtMillis <= Date.now()) {
+      await this.storeResult({
+        requestId, action: inflight.envelope.action, status: "TIMED_OUT",
+        detail: "কমান্ডের মেয়াদ শেষ হয়েছে; ফোন থেকে যাচাইযোগ্য ফলাফল পাওয়া যায়নি।",
+        packageName: null, packageStateVerified: false, completedAt: Date.now()
+      });
+      await this.storage.delete("inflight");
+      return;
+    }
+    const queue = (await this.storage.get("queue")) || [];
+    const expired = queue.find(item => item.requestId === requestId && item.expiresAtMillis <= Date.now());
+    if (expired) {
+      await this.storage.put("queue", queue.filter(item => item.requestId !== requestId));
+      await this.storeResult({
+        requestId, action: expired.action, status: "TIMED_OUT",
+        detail: "কমান্ড ফোনে পৌঁছানোর আগেই মেয়াদ শেষ হয়েছে।",
+        packageName: null, packageStateVerified: false, completedAt: Date.now()
+      });
+    }
+  }
+
   async storeResult(record) {
     await this.storage.put("result:" + record.requestId, record);
+    const recent = (await this.storage.get("recentResults")) || [];
+    const next = recent.filter(id => id !== record.requestId);
+    next.push(record.requestId);
+    while (next.length > 100) {
+      const oldest = next.shift();
+      await this.storage.delete("result:" + oldest);
+    }
+    await this.storage.put("recentResults", next);
   }
 }
