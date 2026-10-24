@@ -212,9 +212,11 @@ export class DeviceBridge {
       detail, packageName, packageStateVerified, updatedAt: Date.now()
     };
     await this.storeResult(record);
-    if (terminal(status)) await this.storage.delete("inflight");
+    const isTerminal = terminal(status) ||
+      (status === "AWAITING_USER_CONFIRMATION" && body.action === "SEARCH_PLAY_STORE");
+    if (isTerminal) await this.storage.delete("inflight");
     else await this.storage.put("inflight", { ...inflight, lastStatus: status, updatedAt: Date.now() });
-    return json({ ok: true, accepted: true, terminal: terminal(status) });
+    return json({ ok: true, accepted: true, terminal: isTerminal });
   }
 
   async getResult(request, url) {
