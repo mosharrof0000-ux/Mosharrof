@@ -43,7 +43,7 @@ base="https://generativelanguage.googleapis.com/v1beta"
 preferred=os.environ.get("GEMINI_MODEL","gemini-3.6-flash").strip()
 TRANSIENT_HTTP_CODES={429,500,502,503,504}
 
-def generate(model, attempts=3):
+def generate(model, attempts=1):
     """Retry transient Gemini responses/network errors without exposing the API key."""
     last_error=None
     for attempt in range(attempts):
@@ -53,7 +53,7 @@ def generate(model, attempts=3):
                 params={"key":key},
                 json={"contents":[{"parts":[{"text":prompt}]}],
                       "generationConfig":{"temperature":0.1,"responseMimeType":"application/json"}},
-                timeout=120,
+                timeout=25,
             )
         except requests.RequestException as exc:
             last_error=type(exc).__name__
@@ -73,10 +73,11 @@ def generate(model, attempts=3):
     print(f"Gemini model {model} still unavailable after {attempts} attempts ({last_error}); checking supported alternatives.")
     return response
 
+external_plan=None
 response=generate(preferred)
 if response is None or response.status_code==404 or response.status_code in TRANSIENT_HTTP_CODES:
     try:
-        catalog=requests.get(f"{base}/models",params={"key":key},timeout=30)
+        catalog=requests.get(f"{base}/models",params={"key":key},timeout=10)
         catalog.raise_for_status()
         available=[]
         for item in catalog.json().get("models",[]):
@@ -100,7 +101,8 @@ if response is None or response.status_code==404 or response.status_code in TRAN
     if not alternatives:
         raise SystemExit("No alternative Gemini Flash model supporting generateContent is available.")
     errors=[]
-    for model in alternatives:
+    external_plan=None
+    for model in alternatives[:2]:
         candidate=generate(model)
         if candidate is not None and candidate.ok:
             response=candidate
@@ -110,13 +112,20 @@ if response is None or response.status_code==404 or response.status_code in TRAN
         errors.append(f"{model}: {status}")
         print(f"Gemini fallback {model} unavailable; trying the next supported model.")
     else:
-        raise SystemExit("No listed Gemini Flash model accepted the request. "+", ".join(errors))
-
-response.raise_for_status()
-try:
-    plan=json.loads(response.json()["candidates"][0]["content"]["parts"][0]["text"])
-except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-    raise SystemExit(f"Gemini returned an invalid structured plan: {exc}")
+        from scripts.automation.provider_fallback import request_alternate_provider
+        external_text=request_alternate_provider(prompt)
+        if not external_text:
+            raise SystemExit("All configured AI providers failed; no patch was generated. Gemini: "+", ".join(errors))
+        try:
+            plan=json.loads(external_text)
+        except json.JSONDecodeError as exc:
+            raise SystemExit(f"Alternate provider returned invalid JSON: {exc}")
+    if external_plan is None and 'plan' not in locals():
+        response.raise_for_status()
+        try:
+            plan=json.loads(response.json()["candidates"][0]["content"]["parts"][0]["text"])
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+            raise SystemExit(f"Gemini returned an invalid structured plan: {exc}")
 
 changed=[]
 for item in plan.get("files",[]):
@@ -138,8 +147,8 @@ for item in plan.get("files",[]):
     target.write_text(content,encoding="utf-8")
     changed.append(path)
 if not changed:
-    print("NO_SAFE_CHANGE")
-    sys.exit(0)
+    print("NO_SAFE_CHANGE: provider returned no meaningful safe patch; this run did not complete a backlog task.")
+    sys.exit(2)
 subprocess.run(["git","config","user.name","Mosharrof Autonomous Agent"],check=True)
 subprocess.run(["git","config","user.email","41898282+github-actions[bot]@users.noreply.github.com"],check=True)
 subprocess.run(["git","checkout","-b","agent/autonomous-"+str(os.getpid())],check=True)
