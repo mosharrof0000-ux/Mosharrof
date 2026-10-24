@@ -15,7 +15,7 @@ for attempt in $(seq 1 60); do
 done
 test "$(timeout 10s adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
 
-bash scripts/android/install_apk_with_retry.sh
+bash .github/scripts/install_apk_with_retry.sh
 adb shell am start -n com.mosharrof.ai/.MainActivity
 sleep 15
 
