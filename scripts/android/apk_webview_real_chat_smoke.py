@@ -8,12 +8,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / ".github" / "scripts"))
 
+from android_qa_diagnostics import (
+    classify_real_answer,
+    read_backend_health_probe,
+    read_response_metadata,
+    start_backend_health_probe,
+)
 from apk_webview_cdp import PageCDP
 from apk_webview_visibility import ensure_answer_visible
 
@@ -108,50 +117,8 @@ def main() -> int:
             raise TimeoutError("APK chat composer did not become visible")
 
         stage = "health_probe_start"
-        try:
-            health_started = cdp.evaluate(
-                """(() => {
-                  const controller = new AbortController();
-                  const timer = setTimeout(() => controller.abort(), 10000);
-                  window.__mosharrofHealthProbeResult = null;
-                  window.__mosharrofHealthProbe = fetch(
-                    "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health",
-                    {cache: "no-store", signal: controller.signal}
-                  ).then(async response => {
-                    const data = await response.json().catch(() => ({}));
-                    const gemini = Array.isArray(data.gemini_chat_key_slots) &&
-                      data.gemini_chat_key_slots.some(Boolean);
-                    return {
-                      ok: response.ok,
-                      status: response.status,
-                      build: data.worker_build || null,
-                      providers: {
-                        cf: !!data.cloudflare_chat_configured,
-                        gemini,
-                        groq: !!data.groq_chat_configured,
-                        or: !!data.openrouter_chat_configured
-                      }
-                    };
-                  }).catch(error => ({
-                    ok: false,
-                    error: String(error).slice(0, 120)
-                  })).then(result => {
-                    window.__mosharrofHealthProbeResult = result;
-                    return result;
-                  }).finally(() => clearTimeout(timer));
-                  return true;
-                })()""",
-                timeout=8,
-            )
-            report["backend_health"] = {
-                "probe_started": bool(health_started),
-                "result_pending": True
-            }
-        except Exception as exc:
-            report["backend_health"] = {
-                "ok": False,
-                "error": f"{type(exc).__name__}: {str(exc)[:120]}"
-            }
+        report["backend_health_probe"] = start_backend_health_probe(cdp)
+        report["backend_health"] = report["backend_health_probe"]
 
         stage = "before_screenshot"
         cdp.screenshot(out / "apk-webview-before.png")
@@ -221,71 +188,18 @@ def main() -> int:
             time.sleep(1)
 
         stage = "backend_health_result"
-        health = None
-        try:
-            for _ in range(3):
-                health = cdp.evaluate(
-                    "window.__mosharrofHealthProbeResult || null",
-                    timeout=5,
-                )
-                if health:
-                    break
-                time.sleep(0.5)
-        except Exception as exc:
-            health = {
-                "ok": False,
-                "error": f"{type(exc).__name__}: {str(exc)[:120]}"
-            }
-        if not health:
-            health = {
-                "ok": False,
-                "error": "health_probe_result_not_ready"
-            }
-        report["backend_health"] = health
+        report["backend_health"] = read_backend_health_probe(cdp)
 
         if answer:
             stage = "read_provider_metadata"
-            response_meta = None
-            try:
-                response_meta = cdp.evaluate(
-                    """(() => {
-                      const parse = (key, fallback) => {
-                        try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; }
-                        catch (e) { return fallback; }
-                      };
-                      const sessions = parse("mosharrof_chat_sessions_v1", []);
-                      const activeId = localStorage.getItem("mosharrof_active_session_v1");
-                      const legacy = parse("mosharrof_chat_v1", null);
-                      const current = (Array.isArray(sessions)
-                        ? sessions.find(item => item && item.id === activeId) : null) || legacy;
-                      const messages = current && Array.isArray(current.messages) ? current.messages : [];
-                      const last = [...messages].reverse().find(item =>
-                        item && item.role === "ai" && item.responseMeta
-                      );
-                      if (!last || !last.responseMeta) return null;
-                      const meta = last.responseMeta;
-                      return {
-                        provider: meta.provider || null,
-                        model: meta.model || null,
-                        failed: !!meta.failed,
-                        attempted: Array.isArray(meta.attempted) ? meta.attempted.map(item => ({
-                          provider: item && item.provider || null,
-                          model: item && item.model || null,
-                          status: item && item.status || null,
-                          reason: String(item && item.reason || "").slice(0, 160)
-                        })) : []
-                      };
-                    })()""",
-                    timeout=8,
-                )
-            except Exception as exc:
-                report["response_metadata_error"] = (
-                    f"{type(exc).__name__}: {str(exc)[:120]}"
-                )
+            response_meta, metadata_error = read_response_metadata(cdp)
+            if metadata_error:
+                report["response_metadata_error"] = metadata_error
             if isinstance(response_meta, dict):
                 provider = response_meta.get("provider") or provider
                 report["response_model"] = response_meta.get("model")
                 report["provider_attempts"] = response_meta.get("attempted") or []
+            lower = answer.lower()
             failed_phrases = [
                 "inspector mock response",
                 "playwright-safe-test",
@@ -305,14 +219,9 @@ def main() -> int:
                 "connection failed",
                 "unable to connect",
             ]
-            failure_marker = next((phrase for phrase in failed_phrases if phrase in lower), "")
-            known_provider = provider in {
-                "gemini", "cloudflare-workers-ai", "groq", "openrouter"
-            }
-            metadata_failed = bool(
-                isinstance(response_meta, dict) and response_meta.get("failed")
+            passed, failure_marker, metadata_failed = classify_real_answer(
+                answer, provider, response_meta, failed_phrases
             )
-            passed = bool(answer) and not failure_marker and known_provider and not metadata_failed
             record(
                 "real_backend_returned_non_mock_answer",
                 passed,
