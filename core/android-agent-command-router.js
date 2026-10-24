@@ -20,7 +20,7 @@
       return { kind: "pick-apk" };
     }
 
-    let match = lower.match(/^(?:uninstall|remove|uninstall app|remove app|অ্যাপ\s+আনইনস্টল\s+করুন|আনইনস্টল\s+করুন|আনইনস্টল|অ্যাপ\s+সরান)(?:\s+(.+))?$/u);
+    let match = text.match(/^(?:uninstall|remove|uninstall app|remove app|অ্যাপ\s+আনইনস্টল\s+করুন|আনইনস্টল\s+করুন|আনইনস্টল|অ্যাপ\s+সরান)(?:\s+(.+))?$/iu);
     if (match) {
       let target = String(match[1] || "").trim();
       target = target.replace(/^(?:app|the app|অ্যাপ)\s+/u, "").trim();
