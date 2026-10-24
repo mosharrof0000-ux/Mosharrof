@@ -86,7 +86,7 @@ class MainActivity : ComponentActivity() {
         speechStatus = TextView(this).apply { textSize = 14f }
         speechOutput = AgentSpeechOutput(this) { message -> runOnUiThread { speechStatus.text = message } }
         screenDetails = TextView(this).apply { textSize = 14f }
-        screenInspectionController = ScreenInspectionController(this, status, screenDetails, ::isServiceEnabled)
+        screenInspectionController = ScreenInspectionController(status, screenDetails, ::isServiceEnabled)
         commandInput = EditText(this).apply {
             hint = "যেমন: Open YouTube / ইউটিউব খুলুন"
             setSingleLine(true)
@@ -223,18 +223,7 @@ class MainActivity : ComponentActivity() {
             status.text = "এই ডিভাইসে speech recognition অ্যাপ পাওয়া যায়নি।"
         }
     }
-    private fun refreshServiceStatus() {
-        status.text = when {
-            !isServiceEnabled() ->
-                "Accessibility বন্ধ। অ্যাপ খোলার কমান্ড চলবে; স্ক্যান ও UI action-এর জন্য Settings-এ চালু করুন।"
-            MosharrofAccessibilityService.isInspectionArmed() &&
-                MosharrofAccessibilityService.hasInspectionSnapshot() ->
-                "স্ক্যানের ফল প্রস্তুত। ফল দেখতে আবার ‘বর্তমান স্ক্রিন পরীক্ষা করুন’ চাপুন।"
-            MosharrofAccessibilityService.isInspectionArmed() ->
-                "স্ক্যান চলছে। লক্ষ্য অ্যাপ খুলে এখানে ফিরে আসুন।"
-            else -> "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ/Settings খোলা যাবে।"
-        }
-    }
+    private fun refreshServiceStatus() = screenInspectionController.refreshServiceStatus()
     override fun onDestroy() {
         ScreenshotAnalysisControl.release()
         speechOutput?.close()
