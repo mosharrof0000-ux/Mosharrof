@@ -25,6 +25,7 @@ import com.mosharrof.agent.execution.AppPackageTaskResultStore
 import com.mosharrof.agent.execution.AppPackageTaskStatus
 import com.mosharrof.agent.execution.DeviceIntentControl
 import com.mosharrof.agent.execution.TaskControlButtons
+import com.mosharrof.agent.execution.ScreenInspectionController
 import com.mosharrof.agent.voice.AgentSpeechOutput
 import com.mosharrof.agent.voice.SpeechOutputControls
 import com.mosharrof.agent.permissions.CapabilityPermissionCenter
@@ -38,6 +39,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var status: TextView
     private lateinit var speechStatus: TextView
     private lateinit var screenDetails: TextView
+    private lateinit var screenInspectionController: ScreenInspectionController
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
     private var speechOutput: AgentSpeechOutput? = null
@@ -82,6 +84,7 @@ class MainActivity : ComponentActivity() {
         speechStatus = TextView(this).apply { textSize = 14f }
         speechOutput = AgentSpeechOutput(this) { message -> runOnUiThread { speechStatus.text = message } }
         screenDetails = TextView(this).apply { textSize = 14f }
+        screenInspectionController = ScreenInspectionController(this, status, screenDetails, ::isServiceEnabled)
         commandInput = EditText(this).apply {
             hint = "যেমন: Open YouTube / ইউটিউব খুলুন"
             setSingleLine(true)
@@ -105,7 +108,7 @@ class MainActivity : ComponentActivity() {
         }
         val inspectButton = Button(this).apply {
             text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
-            setOnClickListener { inspectCurrentScreen() }
+            setOnClickListener { screenInspectionController.inspect() }
         }
         val accessibilityButton = Button(this).apply {
             text = "Accessibility সেটিংস খুলুন"
@@ -207,24 +210,6 @@ class MainActivity : ComponentActivity() {
 
     private var lastAppPackageTaskResult: AppPackageTaskResult? = null
 
-    private fun inspectCurrentScreen() {
-        if (!isServiceEnabled()) {
-            status.text = "স্ক্রিন পরীক্ষা করতে আগে Accessibility service চালু করুন।"
-            screenDetails.text = ""
-            return
-        }
-        val snapshot = MosharrofAccessibilityService.takeInspectionSnapshot()
-        if (snapshot == null) {
-            MosharrofAccessibilityService.startInspection()
-            status.text = "স্ক্যান প্রস্তুত। যে অ্যাপ পরীক্ষা করতে চান সেটি খুলুন, তারপর এখানে ফিরে আবার স্ক্রিন পরীক্ষা চাপুন।"
-            screenDetails.text = ""
-            return
-        }
-        status.text = "স্ক্যান সম্পন্ন: ${snapshot.packageName} • ${snapshot.nodeCount}টি UI node"
-        screenDetails.text = snapshot.visibleLabels.joinToString("\n").ifBlank {
-            "এই স্ক্রিনে পড়ার মতো কোনো দৃশ্যমান লেবেল পাওয়া যায়নি।"
-        }
-    }
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
