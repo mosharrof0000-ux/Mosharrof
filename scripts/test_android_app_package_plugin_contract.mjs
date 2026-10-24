@@ -10,6 +10,7 @@ const router = readFileSync("core/android-agent-command-router.js", "utf8");
 const packageRouter = readFileSync("core/android-app-package-command-router.js", "utf8");
 const contracts = readFileSync("scripts/android/test-agent-contracts.sh", "utf8");
 const voiceBridge = readFileSync("scripts/android/inject-android-voice-bridge.py", "utf8");
+const qaWorkflow = readFileSync(".github/workflows/android-apk-webview-real-chat-qa.yml", "utf8");
 
 assert.ok(plugin.includes('@CapacitorPlugin(name = "AppPackage")'));
 assert.ok(plugin.includes('startActivityForResult(call, picker, "apkPickerResult")'));
@@ -42,6 +43,8 @@ assert.ok(packageRouter.includes("searchPlayStore"));
 assert.ok(packageRouter.includes("uninstallApp"));
 assert.ok(packageRouter.includes("root.mosharrofAppendNativeResult"));
 assert.ok(voiceBridge.includes("window.mosharrofAppendNativeResult"));
+assert.ok(qaWorkflow.includes("github.event.pull_request.number") && qaWorkflow.includes("github.event.workflow_run.head_branch"),
+  "PR WebView QA must not be displaced by an unrelated workflow_run event");
 assert.ok(packageRouter.includes("result.packageStateVerified === true"),
   "chat UI must not announce success without verified package state");
 assert.ok(contracts.includes("scripts/test_android_app_package_command_router.mjs"));
