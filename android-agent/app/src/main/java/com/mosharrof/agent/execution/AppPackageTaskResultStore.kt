@@ -14,6 +14,10 @@ object AppPackageTaskResultStore {
     private const val KEY_DETAIL = "detail"
     private const val KEY_PACKAGE_NAME = "package_name"
     private const val KEY_PACKAGE_VERIFIED = "package_state_verified"
+    private const val KEY_PENDING_REQUEST_ID = "pending_request_id"
+    private const val KEY_PENDING_ACTION = "pending_action"
+    private const val KEY_PENDING_PACKAGE_NAME = "pending_package_name"
+    private const val KEY_PENDING_EXPECTED_VERSION = "pending_expected_version"
 
     fun save(context: Context, result: AppPackageTaskResult) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -41,6 +45,33 @@ object AppPackageTaskResultStore {
         return runCatching {
             AppPackageTaskResult(requestId, action, status, detail, packageName, verified)
         }.getOrNull()
+    }
+
+    fun savePending(context: Context, pending: PendingAppPackageOperation) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_PENDING_REQUEST_ID, pending.requestId)
+            .putString(KEY_PENDING_ACTION, pending.action.name)
+            .putString(KEY_PENDING_PACKAGE_NAME, pending.packageName)
+            .putLong(KEY_PENDING_EXPECTED_VERSION, pending.expectedVersionCode ?: -1L)
+            .apply()
+    }
+
+    fun pending(context: Context): PendingAppPackageOperation? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val requestId = prefs.getString(KEY_PENDING_REQUEST_ID, null) ?: return null
+        val action = runCatching { AppPackageTaskAction.valueOf(prefs.getString(KEY_PENDING_ACTION, null) ?: return null) }.getOrNull() ?: return null
+        val packageName = prefs.getString(KEY_PENDING_PACKAGE_NAME, null) ?: return null
+        val expected = prefs.getLong(KEY_PENDING_EXPECTED_VERSION, -1L).takeIf { it >= 0L }
+        return runCatching { PendingAppPackageOperation(requestId, action, packageName, expected) }.getOrNull()
+    }
+
+    fun clearPending(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove(KEY_PENDING_REQUEST_ID)
+            .remove(KEY_PENDING_ACTION)
+            .remove(KEY_PENDING_PACKAGE_NAME)
+            .remove(KEY_PENDING_EXPECTED_VERSION)
+            .apply()
     }
 
     fun clear(context: Context) {
