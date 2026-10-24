@@ -168,7 +168,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
-            val packageResult = AppPackagePendingOperationStore.resolveAfterReturn(this)
+            val packageResult: AppPackageTaskResult? = AppPackagePendingOperationStore.resolveAfterReturn(this)
             if (packageResult != null) {
                 publishAppPackageResult(packageResult)
                 return
