@@ -77,6 +77,9 @@ object DevicePairingBridge {
 
     fun hasCredentials(context: Context): Boolean = DevicePairingSecretStore.load(context) != null
 
+    fun isRemoteCommandExpired(context: Context): Boolean =
+        pendingRemote(context)?.expiresAtMillis?.let { it <= System.currentTimeMillis() } == true
+
     fun savePendingRemote(context: Context, envelope: DeviceCommandEnvelope): Boolean {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val current = prefs.getString(KEY_REQUEST_ID, null)
