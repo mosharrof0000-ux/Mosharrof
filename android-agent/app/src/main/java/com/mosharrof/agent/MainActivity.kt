@@ -19,6 +19,7 @@ import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
 import com.mosharrof.agent.execution.AppPackageControl
+import com.mosharrof.agent.execution.AppPackageInstallControl
 import com.mosharrof.agent.execution.AppPackagePendingOperationStore
 import com.mosharrof.agent.execution.AppPackageTaskAction
 import com.mosharrof.agent.execution.AppPackageTaskResult
@@ -137,10 +138,9 @@ class MainActivity : ComponentActivity() {
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
-            addView(Button(this@MainActivity).apply {
-                text = "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
-                setOnClickListener { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) }
-            })
+            AppPackageInstallControl.addInstallButton(this@MainActivity, this) {
+                apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
+            }
             addView(Button(this@MainActivity).apply {
                 text = "সমস্ত runtime permission চাইুন"
                 setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
@@ -208,11 +208,9 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
-        lastAppPackageTaskResult = result
         AppPackageTaskResultStore.save(this, result)
         status.text = "কাজের ফল: ${result.status} • ID: ${result.requestId}\n${result.detail}"
     }
-    private var lastAppPackageTaskResult: AppPackageTaskResult? = null
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
