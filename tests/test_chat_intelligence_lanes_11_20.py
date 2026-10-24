@@ -9,7 +9,7 @@ import json
 import re
 from pathlib import Path
 
-MANIFEST_PATH = Path(__file__).parents[1] / "evals" / "chat-intelligence" / "lanes-11-20.json"
+MANIFEST_PATH = Path(__file__).parents[1] / "core" / "chat-intelligence-evals" / "lanes-11-20.json"
 EXPECTED_LANES = set(range(11, 21))
 SUCCESS_CLAIM = re.compile(
     r"(?:successfully|deployed|tests passed|সফলভাবে|সম্পন্ন হয়েছে|চালু হয়েছে)", re.I
