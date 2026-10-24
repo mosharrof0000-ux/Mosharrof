@@ -13,13 +13,13 @@ import java.util.UUID
 object AppPackageControl {
     private data class ApkMetadata(val packageName: String, val versionCode: Long)
 
-    fun handleCommand(activity: Activity, rawCommand: String, status: TextView, pickApk: () -> Unit, onTaskResult: (AppPackageTaskResult) -> Unit = {}): Boolean {
+    fun handleCommand(activity: Activity, rawCommand: String, status: TextView, pickApk: () -> Unit, onTaskResult: (AppPackageTaskResult) -> Unit = {}, requestIdOverride: String? = null): Boolean {
         return when (val command = AppPackageCommandParser.parse(rawCommand)) {
             AppPackageCommand.NotRecognized -> false
             AppPackageCommand.PickApk -> { status.text = "Android ফাইল পিকার থেকে APK নির্বাচন করুন।"; pickApk(); true }
             AppPackageCommand.AskUninstallTarget -> { status.text = "কোন ইনস্টল করা অ্যাপটি আনইনস্টল করতে হবে তার সঠিক নাম বলুন।"; true }
             is AppPackageCommand.SearchStore -> {
-                val requestId = newRequestId()
+                val requestId = requestIdOverride ?: newRequestId()
                 AlertDialog.Builder(activity)
                     .setTitle("অ্যাপ খুঁজুন")
                     .setMessage("\"${command.query}\" অ্যাপটি Play Store-এ খোঁজা হবে। ইনস্টল ও অনুমতির চূড়ান্ত সিদ্ধান্ত আপনার হাতে থাকবে।")
@@ -30,6 +30,7 @@ object AppPackageControl {
                     .setPositiveButton("Play Store খুলুন") { _, _ ->
                         val market = Uri.parse("market://search?q=" + Uri.encode(command.query))
                         try {
+                            if (requestIdOverride != null) AppPackagePendingOperationStore.beginSearch(activity, requestId, command.query)
                             activity.startActivity(Intent(Intent.ACTION_VIEW, market))
                             val outcome = result(requestId, AppPackageTaskAction.SEARCH_PLAY_STORE, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Play Store সার্চ খোলা হয়েছে; এটি ইনস্টল সফল হওয়ার প্রমাণ নয়।")
                             onTaskResult(outcome); status.text = outcome.toDisplayText()
@@ -41,6 +42,7 @@ object AppPackageControl {
                                     onTaskResult(outcome); status.text = outcome.toDisplayText()
                                 }
                                 .onFailure {
+                                    if (requestIdOverride != null) AppPackagePendingOperationStore.clear(activity)
                                     val outcome = result(requestId, AppPackageTaskAction.SEARCH_PLAY_STORE, AppPackageTaskStatus.FAILED, "অ্যাপ খোঁজার পেজ খোলা যায়নি।")
                                     onTaskResult(outcome); status.text = outcome.toDisplayText()
                                 }
@@ -49,7 +51,7 @@ object AppPackageControl {
                 true
             }
             is AppPackageCommand.Uninstall -> {
-                val requestId = newRequestId()
+                val requestId = requestIdOverride ?: newRequestId()
                 val packageName = resolveInstalledLauncherPackage(activity, command.target)
                 if (packageName == null) {
                     val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.FAILED, "মিল থাকা ইনস্টল করা অ্যাপ পাওয়া যায়নি; কোনো অ্যাপ সরানো হয়নি।")
@@ -100,8 +102,8 @@ object AppPackageControl {
         } catch (_: Exception) { null } finally { temp.delete() }
     }
 
-    fun requestInstallFromSelectedUri(activity: Activity, apkUri: Uri, status: TextView, onTaskResult: (AppPackageTaskResult) -> Unit = {}) {
-        val requestId = newRequestId()
+    fun requestInstallFromSelectedUri(activity: Activity, apkUri: Uri, status: TextView, onTaskResult: (AppPackageTaskResult) -> Unit = {}, requestIdOverride: String? = null) {
+        val requestId = requestIdOverride ?: newRequestId()
         val metadata = inspectApk(activity, apkUri)
         if (metadata == null) {
             val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "APK-এর প্যাকেজ/ভার্সন পড়া যায়নি বা ফাইলটি সমর্থিত নয়; ইনস্টলার খোলা হয়নি।")
