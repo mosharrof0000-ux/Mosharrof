@@ -179,6 +179,12 @@ export async function consumeAndroidBridgeResult() {
 }
 
 
+export function getHealth() { return { status: "ready", organId: "android-agent-bridge" }; }
+export function reportIssue(summary = "issue reported by authorized caller") {
+  console.warn("[MOSHARROF Android Agent Bridge]", summary);
+  return { status: "recorded", summary };
+}
+
 function renderBridgeMessage(role, text) {
   const messages = document.querySelector("#messages");
   if (!messages) return;
