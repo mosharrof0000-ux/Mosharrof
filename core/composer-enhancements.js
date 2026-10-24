@@ -130,10 +130,27 @@ export function initializeComposerEnhancements() {
   });
   expand.addEventListener("click", openEditor);
   editor.querySelector("[data-expand-cancel]").addEventListener("click", () => closeEditor(false));
-  editor.querySelector("[data-expand-apply]").addEventListener("click", event => {
+  const applyButton = editor.querySelector("[data-expand-apply]");
+  // Apply in capture phase so unrelated legacy handlers cannot swallow the action.
+  applyButton.addEventListener("click", event => {
     event.preventDefault();
-    closeEditor(true);
-  });
+    event.stopImmediatePropagation();
+    const value = String(largeInput.value || "");
+    const activeInput = currentInput();
+    activeInput.value = value;
+    activeInput.dispatchEvent(new Event("input", { bubbles: true }));
+    activeInput.dispatchEvent(new Event("change", { bubbles: true }));
+    editor.classList.remove("open");
+    editor.setAttribute("aria-hidden", "true");
+    expand.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+    requestAnimationFrame(() => {
+      const latestInput = currentInput();
+      latestInput.value = value;
+      syncVisibility();
+      latestInput.focus();
+    });
+  }, true);
   editor.addEventListener("click", event => {
     if (event.target === editor) closeEditor(false);
   });
