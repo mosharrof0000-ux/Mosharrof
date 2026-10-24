@@ -340,7 +340,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openBridgeCallback(result: AppPackageTaskResult) {
-        val callback = externalCallback ?: safeBridgeCallback(intent.data?.getQueryParameter("callback")) ?: return
+        val callback = externalCallback ?: return
         val secret = DevicePairingSecretStore.loadSecret(this) ?: return
         val callbackDetail = result.detail.take(300)
         val canonicalResult = listOf(
