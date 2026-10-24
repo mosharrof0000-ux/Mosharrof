@@ -52,6 +52,7 @@ jobs:
       - name: Validate emulator shell script syntax
         run: |
           bash -n scripts/android/run_apk_webview_smoke.sh
+          bash -n scripts/android/install_apk_with_retry.sh
           bash -n scripts/android/discover_webview_cdp.sh
           bash -n scripts/android/download_matching_apk.sh
 
