@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 MANIFEST_PATH = Path(__file__).with_name("chat-intelligence-lanes-21-30.json")
+FIXTURES_PATH = Path(__file__).parents[1] / "core" / "chat-intelligence-evals" / "lanes-21-30-fixtures.json"
 EXPECTED_NUMBERS = set(range(21, 31))
 SUCCESS_CLAIM = re.compile(r"(?:successfully|deployed|tests passed|সফলভাবে|সম্পন্ন হয়েছে|চালু হয়েছে)", re.I)
 
@@ -92,10 +93,23 @@ def test_every_lane_has_at_least_two_unique_cases_and_rubrics():
             assert any(k in case["rubric"] for k in ("required_any", "required_all", "output_format", "min_numbered_steps"))
 
 
+def test_every_case_has_deterministic_pass_and_fail_fixtures():
+    cases = {case["id"]: case for lane in load_manifest()["lanes"] for case in lane["cases"]}
+    fixtures = json.loads(FIXTURES_PATH.read_text(encoding="utf-8"))
+    assert fixtures["lane_range"] == [21, 30]
+    assert set(cases) == set(fixtures["cases"])
+    assert all(len(lane["cases"]) >= 2 for lane in load_manifest()["lanes"])
+    for case_id, fixture in fixtures["cases"].items():
+        assert score_response(cases[case_id], fixture["pass"])["status"] == "PASS", case_id
+        assert score_response(cases[case_id], fixture["fail"])["status"] == "FAIL", case_id
+
+
 def test_missing_model_output_is_never_a_pass():
-    case = load_manifest()["lanes"][0]["cases"][0]
-    result = score_response(case, None)
-    assert result == {"status": "NOT TESTED", "failed_rules": ["answer_missing"]}
+    for lane in load_manifest()["lanes"]:
+        for case in lane["cases"]:
+            assert score_response(case, None) == {
+                "status": "NOT TESTED", "failed_rules": ["answer_missing"]
+            }
 
 
 def test_fixture_scorer_distinguishes_pass_and_fail():
