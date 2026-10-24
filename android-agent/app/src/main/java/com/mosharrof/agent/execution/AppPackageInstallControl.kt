@@ -28,9 +28,10 @@ object AppPackageInstallControl {
         activity: Activity,
         apkUri: Uri,
         status: TextView,
-        onTaskResult: (AppPackageTaskResult) -> Unit = {}
+        onTaskResult: (AppPackageTaskResult) -> Unit = {},
+        requestIdOverride: String? = null
     ) {
-        val requestId = UUID.randomUUID().toString()
+        val requestId = requestIdOverride ?: UUID.randomUUID().toString()
         val metadata = inspectApk(activity, apkUri)
         if (metadata == null) {
             val outcome = result(requestId, AppPackageTaskStatus.FAILED,
