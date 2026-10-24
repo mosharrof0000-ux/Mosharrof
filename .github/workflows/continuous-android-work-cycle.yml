@@ -1,4 +1,4 @@
-name: Continuous Android Work Cycle
+name: Continuous Automation Work Cycle
 
 on:
   schedule:
@@ -8,104 +8,78 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  checks: read
+  statuses: read
+  actions: read
 
 concurrency:
-  group: continuous-android-work-cycle
+  group: continuous-automation-work-cycle
   cancel-in-progress: false
 
 jobs:
-  build-test-report:
-    name: One bounded Android work cycle
+  inspect-backlog:
+    name: Inspect open work and report blockers
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 10
     steps:
-      - name: Checkout repository
+      - name: Checkout default branch
         uses: actions/checkout@v4
 
-      - name: Select current Android target
-        id: target
+      - name: Inspect open PRs and CI states
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          pr_json="$(gh api "repos/$GITHUB_REPOSITORY/pulls/862" 2>/dev/null || true)"
-          if [ -n "$pr_json" ] && [ "$(jq -r '.state' <<<"$pr_json")" = "open" ]; then
-            target_sha="$(jq -r '.head.sha' <<<"$pr_json")"
-            target_ref="$(jq -r '.head.ref' <<<"$pr_json")"
-            target_kind="PR #862"
+          mkdir -p automation-cycle
+          report="automation-cycle/report.md"
+          echo "# Continuous Automation Work Cycle" > "$report"
+          echo >> "$report"
+          echo "- Checked at (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')" >> "$report"
+          echo "- Scope: repository-wide open pull requests and their CI state" >> "$report"
+          echo "- Safety: read-only inspection; no code edits, merges, deploys, or claims of physical-device success" >> "$report"
+          echo >> "$report"
+          echo "## Open work" >> "$report"
+
+          prs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --jq '.[] | [.number, .title, .head.sha, .draft, .html_url] | @tsv' || true)"
+          if [ -z "$prs" ]; then
+            echo "No open pull requests were returned, or the API request failed." >> "$report"
           else
-            target_sha="$GITHUB_SHA"
-            target_ref="$GITHUB_REF_NAME"
-            target_kind="default branch fallback"
+            while IFS=$'\t' read -r number title sha draft url; do
+              [ -n "${number:-}" ] || continue
+              safe_title="$(printf '%s' "$title" | tr '\n' ' ' | cut -c1-180)"
+              echo >> "$report"
+              echo "### PR #$number — $safe_title" >> "$report"
+              echo "- Draft: $draft" >> "$report"
+              echo "- Link: $url" >> "$report"
+              echo "- Head: $sha" >> "$report"
+
+              checks="$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/check-runs?per_page=100" --jq '[.check_runs[] | {name: .name, status: .status, conclusion: .conclusion, html_url: .html_url}]' 2>/dev/null || echo '[]')"
+              statuses="$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/status" --jq '[.statuses[] | {context: .context, state: .state, target_url: .target_url}]' 2>/dev/null || echo '[]')"
+              printf '%s\n' "$checks" > "automation-cycle/pr-$number-checks.json"
+              printf '%s\n' "$statuses" > "automation-cycle/pr-$number-statuses.json"
+
+              check_summary="$(jq -r 'if length == 0 then "No check-runs returned" else map(select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out" or .status == "in_progress" or .status == "queued" or .status == "waiting")) as $issues | if ($issues|length)==0 then "No failed or pending check-runs detected in returned page" else $issues[] | "- " + .name + ": " + (if .conclusion then .conclusion else .status end) + (if .html_url then " — " + .html_url else "" end) end end' <<< "$checks")"
+              status_summary="$(jq -r 'if length == 0 then "No commit statuses returned" else .[] | "- " + .context + ": " + .state + (if .target_url then " — " + .target_url else "" end) end' <<< "$statuses")"
+              echo "- Check-run summary:" >> "$report"
+              printf '%s\n' "$check_summary" | sed 's/^/  /' >> "$report"
+              echo "- Commit status summary:" >> "$report"
+              printf '%s\n' "$status_summary" | sed 's/^/  /' >> "$report"
+            done <<< "$prs"
           fi
-          {
-            echo "sha=$target_sha"
-            echo "ref=$target_ref"
-            echo "kind=$target_kind"
-          } >> "$GITHUB_OUTPUT"
-          mkdir -p cycle-report
-          {
-            echo "# Continuous Android Work Cycle"
-            echo
-            echo "- Scheduled time (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
-            echo "- Target: $target_kind"
-            echo "- Ref: $target_ref"
-            echo "- Commit: $target_sha"
-            echo "- Mode: read-only build and unit-test validation; no source edits, merge, or deployment."
-          } > cycle-report/report.md
-          git fetch --no-tags origin "$target_sha"
-          git checkout --detach "$target_sha"
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
+          echo >> "$report"
+          echo "## Cycle rules" >> "$report"
+          echo "- This cycle inventories blockers and preserves evidence; it does not automatically merge, deploy, delete, or modify project code." >> "$report"
+          echo "- A green CI state is not proof that a physical Android phone was tested." >> "$report"
+          echo "- Scheduled execution begins only after this workflow is merged into the repository's default branch; GitHub may delay cron runs." >> "$report"
+          cat "$report"
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.9"
-
-      - name: Build debug APK (retry once)
-        working-directory: android-agent
-        shell: bash
-        run: |
-          set -euo pipefail
-          if ! gradle --no-daemon assembleDebug > ../cycle-report/build.log 2>&1; then
-            echo "First build attempt failed; retrying once." | tee -a ../cycle-report/build.log
-            gradle --no-daemon assembleDebug >> ../cycle-report/build.log 2>&1
-          fi
-          echo "- Debug APK build: PASS (including retry policy)." >> ../cycle-report/report.md
-
-      - name: Run JVM unit tests (retry once)
-        working-directory: android-agent
-        shell: bash
-        run: |
-          set -euo pipefail
-          if ! gradle --no-daemon testDebugUnitTest > ../cycle-report/unit-tests.log 2>&1; then
-            echo "First unit-test attempt failed; retrying once." | tee -a ../cycle-report/unit-tests.log
-            gradle --no-daemon testDebugUnitTest >> ../cycle-report/unit-tests.log 2>&1
-          fi
-          echo "- JVM unit tests: PASS (including retry policy)." >> ../cycle-report/report.md
-
-      - name: Record cycle result
-        if: always()
-        shell: bash
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "- Cycle result: PASS" >> cycle-report/report.md
-          else
-            echo "- Cycle result: FAIL — inspect attached logs; no automatic source changes or merge were attempted." >> cycle-report/report.md
-          fi
-          cat cycle-report/report.md
-
-      - name: Upload cycle report and logs
+      - name: Upload work-cycle report and evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: continuous-android-cycle-${{ github.run_id }}
-          path: cycle-report/
+          name: continuous-automation-cycle-${{ github.run_id }}
+          path: automation-cycle/
           if-no-files-found: warn
           retention-days: 14
