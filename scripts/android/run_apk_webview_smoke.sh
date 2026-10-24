@@ -20,10 +20,6 @@ if ! timeout 60s adb install -r artifacts/apk/app-debug.apk; then
   exit 1
 fi
 
-adb shell pm grant com.mosharrof.ai android.permission.RECORD_AUDIO || true
-adb shell pm grant com.mosharrof.ai android.permission.READ_CONTACTS || true
-adb shell pm grant com.mosharrof.ai android.permission.CALL_PHONE || true
-adb shell appops set com.mosharrof.ai SYSTEM_ALERT_WINDOW allow || true
 adb shell am start -n com.mosharrof.ai/.MainActivity
 sleep 15
 
