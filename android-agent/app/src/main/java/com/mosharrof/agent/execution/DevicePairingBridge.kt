@@ -129,7 +129,7 @@ object DevicePairingBridge {
             val result = JSONObject(raw)
             val response = api("POST", "/result", credentials.secretHex, result)
             if (response.optBoolean("accepted", false) && response.optBoolean("terminal", false)) {
-                clearPendingRemote(context)
+                clearPendingRemote(context, pending.requestId)
             } else if (pending.expiresAtMillis <= System.currentTimeMillis()) {
                 val timedOut = JSONObject()
                     .put("requestId", pending.requestId)
@@ -141,7 +141,7 @@ object DevicePairingBridge {
                 prefs.edit().putString(KEY_RESULT, timedOut.toString()).apply()
                 runCatching {
                     val timeoutResponse = api("POST", "/result", credentials.secretHex, timedOut)
-                    if (timeoutResponse.optBoolean("terminal", false)) clearPendingRemote(context)
+                    if (timeoutResponse.optBoolean("terminal", false)) clearPendingRemote(context, pending.requestId)
                 }
             }
         } catch (_: Exception) {
@@ -149,8 +149,10 @@ object DevicePairingBridge {
         }
     }
 
-    fun clearPendingRemote(context: Context) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+    fun clearPendingRemote(context: Context, expectedRequestId: String? = null) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (expectedRequestId != null && prefs.getString(KEY_REQUEST_ID, null) != expectedRequestId) return
+        prefs.edit()
             .remove(KEY_REQUEST_ID).remove(KEY_ACTION).remove(KEY_TARGET)
             .remove(KEY_EXPIRY).remove(KEY_RESULT).apply()
     }
