@@ -5,6 +5,7 @@ package com.mosharrof.agent.execution
  * into a conservative task result. Dispatching an intent is never treated as success.
  */
 object AppPackagePostcondition {
+    private const val UNKNOWN_VERSION = Long.MIN_VALUE
     fun reconcile(
         pending: AppPackageTaskResult,
         baselineVersionCode: Long?,
@@ -16,7 +17,7 @@ object AppPackagePostcondition {
         val packageName = pending.packageName
         return when (pending.action) {
             AppPackageTaskAction.INSTALL_APK -> {
-                val installedOrUpdated = currentVersionCode != null &&
+                val installedOrUpdated = currentVersionCode != null && currentVersionCode != UNKNOWN_VERSION &&
                     (baselineVersionCode == -1L ||
                         (baselineVersionCode != null && currentVersionCode > baselineVersionCode))
                 if (packageName != null && installedOrUpdated) {
@@ -42,6 +43,8 @@ object AppPackagePostcondition {
                         packageName = packageName,
                         packageStateVerified = true
                     )
+                } else if (currentVersionCode == UNKNOWN_VERSION) {
+                    unknown(pending, "অ্যাপের ইনস্টল অবস্থা পড়া যায়নি; আনইনস্টল সফল বলা যাচ্ছে না।")
                 } else {
                     unknown(pending, "ফেরার পর অ্যাপটি এখনো ইনস্টল আছে; বাতিল ও ব্যর্থতার মধ্যে নির্ভরযোগ্য পার্থক্য করা যায়নি।")
                 }
