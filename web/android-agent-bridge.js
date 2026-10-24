@@ -163,7 +163,7 @@ export async function consumeAndroidBridgeResult() {
       result.packageName,
       String(result.verified),
       result.detail
-    ].join("\\n");
+    ].join("\n");
     const signatureBytes = Uint8Array.from(result.signature.match(/.{2}/g) || [], part => parseInt(part, 16));
     const valid = /^[0-9a-f]{64}$/i.test(result.signature) &&
       await crypto.subtle.verify("HMAC", key, signatureBytes, new TextEncoder().encode(canonical));
