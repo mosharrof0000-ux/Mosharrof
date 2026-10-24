@@ -238,7 +238,9 @@ object AppPackageControl {
         @Suppress("DEPRECATION")
         val info = activity.packageManager.getPackageInfo(packageName, 0)
         if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
-    } catch (_: Exception) { null }\n\n    private fun isInstalled(activity: Activity, packageName: String): Boolean = try {
+    } catch (_: Exception) { null }
+
+    private fun isInstalled(activity: Activity, packageName: String): Boolean = try {
         @Suppress("DEPRECATION")
         activity.packageManager.getApplicationInfo(packageName, 0)
         true
