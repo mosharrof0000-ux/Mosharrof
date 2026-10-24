@@ -18,6 +18,7 @@ object AppPackageTaskResultStore {
     private const val KEY_PENDING_ACTION = "pending_action"
     private const val KEY_PENDING_PACKAGE_NAME = "pending_package_name"
     private const val KEY_PENDING_EXPECTED_VERSION = "pending_expected_version"
+    private const val KEY_PENDING_INITIAL_VERSION = "pending_initial_version"
 
     fun save(context: Context, result: AppPackageTaskResult) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -53,6 +54,7 @@ object AppPackageTaskResultStore {
             .putString(KEY_PENDING_ACTION, pending.action.name)
             .putString(KEY_PENDING_PACKAGE_NAME, pending.packageName)
             .putLong(KEY_PENDING_EXPECTED_VERSION, pending.expectedVersionCode ?: -1L)
+            .putLong(KEY_PENDING_INITIAL_VERSION, pending.initialVersionCode ?: -1L)
             .apply()
     }
 
@@ -62,7 +64,8 @@ object AppPackageTaskResultStore {
         val action = runCatching { AppPackageTaskAction.valueOf(prefs.getString(KEY_PENDING_ACTION, null) ?: return null) }.getOrNull() ?: return null
         val packageName = prefs.getString(KEY_PENDING_PACKAGE_NAME, null) ?: return null
         val expected = prefs.getLong(KEY_PENDING_EXPECTED_VERSION, -1L).takeIf { it >= 0L }
-        return runCatching { PendingAppPackageOperation(requestId, action, packageName, expected) }.getOrNull()
+        val initial = prefs.getLong(KEY_PENDING_INITIAL_VERSION, -1L).takeIf { it >= 0L }
+        return runCatching { PendingAppPackageOperation(requestId, action, packageName, expected, initial) }.getOrNull()
     }
 
     fun clearPending(context: Context) {
@@ -71,6 +74,7 @@ object AppPackageTaskResultStore {
             .remove(KEY_PENDING_ACTION)
             .remove(KEY_PENDING_PACKAGE_NAME)
             .remove(KEY_PENDING_EXPECTED_VERSION)
+            .remove(KEY_PENDING_INITIAL_VERSION)
             .apply()
     }
 
