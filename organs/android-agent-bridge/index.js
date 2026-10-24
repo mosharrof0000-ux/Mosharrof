@@ -1,20 +1,16 @@
 const PAIRING_KEY = "mosharrof_android_agent_pairing_secret_v1";
 const CALLBACK_RESULT_KEY = "mosharrof_android_result";
-
 function cleanCommand(value) {
   return String(value || "").trim().replace(/[।.!?]+$/g, "").replace(/\s+/g, " ");
 }
-
 function bytesToHex(bytes) {
   return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, "0")).join("");
 }
-
 function randomToken(bytes = 24) {
   const data = new Uint8Array(bytes);
   crypto.getRandomValues(data);
   return Array.from(data, byte => byte.toString(16).padStart(2, "0")).join("");
 }
-
 function decodePairingSecret(value) {
   try {
     const normalized = String(value || "").trim();
@@ -25,7 +21,6 @@ function decodePairingSecret(value) {
     return null;
   }
 }
-
 function classifyCommand(raw) {
   const command = cleanCommand(raw);
   if (/^(?:android|phone|ফোন|অ্যান্ড্রয়েড)\s*(?:যুক্ত করুন|জুড়ুন|pair|connect)|^(?:pair|connect|link)\s*(?:android|phone)?$/i.test(command)) {
@@ -55,7 +50,6 @@ function classifyCommand(raw) {
   }
   return null;
 }
-
 async function signEnvelope(secretBytes, fields) {
   if (!globalThis.crypto?.subtle) throw new Error("এই ব্রাউজারে নিরাপদ command signing সমর্থিত নয়।");
   const key = await crypto.subtle.importKey("raw", secretBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
