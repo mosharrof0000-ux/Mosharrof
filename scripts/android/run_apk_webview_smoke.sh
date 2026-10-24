@@ -15,10 +15,13 @@ for attempt in $(seq 1 60); do
 done
 test "$(timeout 10s adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
 
-if ! timeout 60s adb install -r artifacts/apk/app-debug.apk; then
+if ! timeout 120s adb install -r artifacts/apk/app-debug.apk > artifacts/apk-webview-chat/install.log 2>&1; then
+  cat artifacts/apk-webview-chat/install.log
+  adb devices -l > artifacts/apk-webview-chat/adb-devices.txt 2>&1 || true
   adb logcat -d -t 3000 > artifacts/apk-webview-chat/logcat.txt 2>&1 || true
   exit 1
 fi
+cat artifacts/apk-webview-chat/install.log
 
 adb shell am start -n com.mosharrof.ai/.MainActivity
 sleep 15
