@@ -184,12 +184,20 @@ function renderBridgeMessage(role, text) {
   const messages = document.querySelector("#messages");
   if (!messages) return;
   const node = document.createElement("div");
-  node.className = "message " + role;
-  const label = document.createElement("span");
-  label.className = "label";
-  label.textContent = role === "user" ? "আপনি" : "MOSHARROF AI · Android Agent";
-  node.appendChild(label);
-  node.appendChild(document.createTextNode(String(text || "")));
+  node.className = role === "user" ? "message user" : "message ai";
+  if (role === "user") {
+    node.appendChild(document.createTextNode(String(text || "")));
+  } else {
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = "MOSHARROF AI · Android Agent";
+    node.appendChild(label);
+    const content = document.createElement("div");
+    content.className = "rich-content";
+    content.style.whiteSpace = "pre-line";
+    content.textContent = String(text || "");
+    node.appendChild(content);
+  }
   messages.appendChild(node);
   const scroll = document.querySelector("#chatScroll");
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
