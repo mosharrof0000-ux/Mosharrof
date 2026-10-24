@@ -42,6 +42,29 @@ class SupervisorTests(unittest.TestCase):
         self.assertIn("AI_NOT_CONFIGURED", advice)
         self.assertIn("transient_network_or_service", advice)
 
+    def test_configured_ai_callback_receives_redacted_compact_summary(self):
+        captured = []
+        def fake_model_call(summary):
+            captured.append(summary)
+            return "Check upstream service health."
+        advisor = AIIncidentAdvisor(model_call=fake_model_call)
+        advice = advisor.diagnose(Incident("worker", "api_key=super-secret-token HTTP 503", 2, 1.0))
+        self.assertIn("ai_advice_unverified", advice)
+        self.assertIn("Check upstream service health.", advice)
+        self.assertEqual(len(captured), 1)
+        self.assertNotIn("super-secret-token", captured[0])
+        self.assertIn("[REDACTED]", captured[0])
+        self.assertIn('"attempt": 2', captured[0])
+
+    def test_ai_callback_failure_falls_back_safely(self):
+        def broken_model_call(_summary):
+            raise RuntimeError("provider unavailable")
+        advice = AIIncidentAdvisor(model_call=broken_model_call).diagnose(
+            Incident("worker", "HTTP 503", 0, 1.0)
+        )
+        self.assertIn("AI_CALL_FAILED", advice)
+        self.assertIn("transient_network_or_service", advice)
+
     def test_rule_advisor_classifies_permission_and_quota(self):
         advisor = RuleBasedAdvisor()
         self.assertIn("permission_or_auth", advisor.diagnose(Incident("error", "403 forbidden", 0, 1)))
