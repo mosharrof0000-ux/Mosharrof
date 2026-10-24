@@ -6,6 +6,8 @@ package com.mosharrof.agent.execution
  */
 object AppPackageOutcomeVerifier {
     fun afterInstall(
+        requestId: String,
+        packageName: String,
         expectedVersionCode: Long,
         previousVersionCode: Long?,
         currentVersionCode: Long?
@@ -14,30 +16,36 @@ object AppPackageOutcomeVerifier {
         val stateChangedAsExpected = previousVersionCode == null || currentVersionCode != previousVersionCode
         return if (installedExpectedVersion && stateChangedAsExpected) {
             AppPackageTaskResult(
-                requestId = "verification",
+                requestId = requestId,
                 action = AppPackageTaskAction.INSTALL_APK,
                 status = AppPackageTaskStatus.SUCCEEDED,
                 detail = "APK package and version were verified after returning from Android installer.",
+                packageName = packageName,
                 packageStateVerified = true,
                 expectedVersionCode = expectedVersionCode,
                 previousVersionCode = previousVersionCode
             )
         } else {
             AppPackageTaskResult(
-                requestId = "verification",
+                requestId = requestId,
                 action = AppPackageTaskAction.INSTALL_APK,
                 status = AppPackageTaskStatus.UNKNOWN,
                 detail = "Install outcome is not conclusive: package state did not prove a new install/update.",
+                packageName = packageName,
                 expectedVersionCode = expectedVersionCode,
                 previousVersionCode = previousVersionCode
             )
         }
     }
 
-    fun afterUninstall(packageName: String, isStillInstalled: Boolean): AppPackageTaskResult =
+    fun afterUninstall(
+        requestId: String,
+        packageName: String,
+        isStillInstalled: Boolean
+    ): AppPackageTaskResult =
         if (!isStillInstalled) {
             AppPackageTaskResult(
-                requestId = "verification",
+                requestId = requestId,
                 action = AppPackageTaskAction.UNINSTALL_APP,
                 status = AppPackageTaskStatus.SUCCEEDED,
                 detail = "Package absence was verified after returning from Android uninstaller.",
@@ -46,7 +54,7 @@ object AppPackageOutcomeVerifier {
             )
         } else {
             AppPackageTaskResult(
-                requestId = "verification",
+                requestId = requestId,
                 action = AppPackageTaskAction.UNINSTALL_APP,
                 status = AppPackageTaskStatus.UNKNOWN,
                 detail = "Package is still installed; Android cancellation and uninstall failure cannot be distinguished.",
