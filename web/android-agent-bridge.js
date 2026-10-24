@@ -134,7 +134,7 @@ export async function tryAndroidAgentCommand(raw) {
 }
 
 /** Read a verified local-agent callback from the URL once and remove it to prevent repeats. */
-export function consumeAndroidBridgeResult() {
+export async function consumeAndroidBridgeResult() {
   const url = new URL(window.location.href);
   if (url.searchParams.get(CALLBACK_RESULT_KEY) !== "1") return null;
   const result = {
@@ -143,15 +143,37 @@ export function consumeAndroidBridgeResult() {
     status: url.searchParams.get("status") || "UNKNOWN",
     detail: url.searchParams.get("detail") || "Android Agent ফল ফেরত দিয়েছে।",
     verified: url.searchParams.get("verified") === "true",
-    packageName: url.searchParams.get("package") || ""
+    packageName: url.searchParams.get("package") || "",
+    signature: url.searchParams.get("callback_sig") || ""
   };
-  url.searchParams.delete(CALLBACK_RESULT_KEY);
-  url.searchParams.delete("request_id");
-  url.searchParams.delete("action");
-  url.searchParams.delete("status");
-  url.searchParams.delete("detail");
-  url.searchParams.delete("verified");
-  url.searchParams.delete("package");
+  for (const key of [CALLBACK_RESULT_KEY, "request_id", "action", "status", "detail", "verified", "package", "callback_sig"]) {
+    url.searchParams.delete(key);
+  }
   history.replaceState({}, "", url.pathname + (url.search ? url.search : "") + url.hash);
+
+  try {
+    const secret = decodePairingSecret(localStorage.getItem(PAIRING_KEY));
+    if (!secret || !result.signature || !crypto?.subtle) throw new Error("signature unavailable");
+    const key = await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
+    const canonical = [
+      "mosharrof-device-result-v1",
+      result.requestId,
+      result.action,
+      result.status,
+      result.packageName,
+      String(result.verified),
+      result.detail
+    ].join("\\n");
+    const signatureBytes = Uint8Array.from(result.signature.match(/.{2}/g) || [], part => parseInt(part, 16));
+    const valid = /^[0-9a-f]{64}$/i.test(result.signature) &&
+      await crypto.subtle.verify("HMAC", key, signatureBytes, new TextEncoder().encode(canonical));
+    if (!valid) throw new Error("signature invalid");
+    result.callbackSignatureValid = true;
+  } catch (_) {
+    result.callbackSignatureValid = false;
+    result.verified = false;
+    result.detail = "ফলাফলের স্বাক্ষর যাচাই হয়নি; এই callback-কে প্রমাণ হিসেবে গ্রহণ করবেন না।";
+  }
+  delete result.signature;
   return result;
 }
