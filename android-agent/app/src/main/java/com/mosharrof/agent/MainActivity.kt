@@ -201,15 +201,12 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
         lastAppPackageTaskResult = result
         AppPackageTaskResultStore.save(this, result)
         status.text = "কাজের ফল: ${result.status} • ID: ${result.requestId}\n${result.detail}"
     }
-
     private var lastAppPackageTaskResult: AppPackageTaskResult? = null
-
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -239,7 +236,6 @@ class MainActivity : ComponentActivity() {
         speechOutput?.close()
         super.onDestroy()
     }
-
     private fun isServiceEnabled(): Boolean {
         val manager = getSystemService<AccessibilityManager>() ?: return false
         return manager.getEnabledAccessibilityServiceList(
