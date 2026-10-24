@@ -65,13 +65,11 @@ async function signEnvelope(secretBytes, fields) {
   const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(canonical));
   return bytesToHex(signature);
 }
-
 /** Returns null for ordinary chat, or a handled response/launch request for package commands. */
 export async function tryAndroidAgentCommand(raw) {
   const parsed = classifyCommand(raw);
   if (!parsed) return null;
   if (window.location.origin !== "https://mosharrof0000-ux.github.io") return { handled: true, reply: "Android Agent pairing commands are allowed only from the official Mosharrof Pages origin." };
-
   if (parsed.type === "pair") {
     const value = window.prompt("Android Agent অ্যাপে ‘Mosharrof Web-এর সঙ্গে যুক্ত করুন’ চাপুন, pairing key কপি করুন, তারপর এখানে পেস্ট করুন:");
     if (value === null) return { handled: true, reply: "Android pairing বাতিল করা হয়েছে।" };
@@ -80,19 +78,15 @@ export async function tryAndroidAgentCommand(raw) {
     localStorage.setItem(PAIRING_KEY, value.trim());
     return { handled: true, reply: "Android Agent-এর pairing key এই ব্রাউজারে সংরক্ষিত হয়েছে। এখন ‘install apk’, ‘install অ্যাপের নাম’, অথবা ‘uninstall com.example.app’ লিখে পাঠাতে পারেন। সংবেদনশীল/শেয়ার করা ব্রাউজারে key সংরক্ষণ করবেন না।" };
   }
-
   if (parsed.type === "unpair") {
     localStorage.removeItem(PAIRING_KEY);
     return { handled: true, reply: "এই ব্রাউজারের Android pairing key মুছে ফেলা হয়েছে। Android Agent-এ নতুন key তৈরি করলে পুরোনো সংযোগও অকার্যকর হবে।" };
   }
-
   if (parsed.type === "invalid") return { handled: true, reply: parsed.reply };
-
   const secret = decodePairingSecret(localStorage.getItem(PAIRING_KEY));
   if (!secret) {
     return { handled: true, reply: "Android Agent এখনো এই ব্রাউজারের সঙ্গে যুক্ত নয়। আগে Android Agent অ্যাপে pairing key তৈরি/কপি করুন, তারপর ‘Android যুক্ত করুন’ লিখুন।" };
   }
-
   try {
     const now = Date.now();
     const fields = {
@@ -127,7 +121,6 @@ export async function tryAndroidAgentCommand(raw) {
     return { handled: true, reply: String(error?.message || "নিরাপদ Android command তৈরি করা যায়নি।") };
   }
 }
-
 /** Read a verified local-agent callback from the URL once and remove it to prevent repeats. */
 export async function consumeAndroidBridgeResult() {
   const url = new URL(window.location.href);
@@ -145,7 +138,6 @@ export async function consumeAndroidBridgeResult() {
     url.searchParams.delete(key);
   }
   history.replaceState({}, "", url.pathname + (url.search ? url.search : "") + url.hash);
-
   try {
     const secret = decodePairingSecret(localStorage.getItem(PAIRING_KEY));
     if (!secret || !result.signature || !crypto?.subtle) throw new Error("signature unavailable");
@@ -172,14 +164,11 @@ export async function consumeAndroidBridgeResult() {
   delete result.signature;
   return result;
 }
-
-
 export function getHealth() { return { status: "ready", organId: "android-agent-bridge" }; }
 export function reportIssue(summary = "issue reported by authorized caller") {
   console.warn("[MOSHARROF Android Agent Bridge]", summary);
   return { status: "recorded", summary };
 }
-
 function renderBridgeMessage(role, text) {
   const messages = document.querySelector("#messages");
   if (!messages) return;
@@ -202,7 +191,6 @@ function renderBridgeMessage(role, text) {
   const scroll = document.querySelector("#chatScroll");
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
 }
-
 async function interceptPackageCommand(event) {
   const input = document.querySelector("#input");
   if (!input) return;
@@ -236,7 +224,6 @@ async function interceptPackageCommand(event) {
     input.focus();
   }
 }
-
 /** Install only capture-phase interceptors; ordinary chat continues to its existing handler. */
 export function initialize() {
   if (window.__mosharrofAndroidAgentBridgeReady) return;
