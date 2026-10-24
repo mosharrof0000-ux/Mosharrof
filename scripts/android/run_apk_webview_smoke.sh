@@ -2,7 +2,26 @@
 set -euo pipefail
 
 mkdir -p artifacts/apk-webview-chat
-trap 'status=$?; echo "APK WebView smoke failed with exit $status; collecting emulator diagnostics."; adb logcat -d -t 3000 > artifacts/apk-webview-chat/logcat.txt 2>&1 || true; adb shell cat /proc/net/unix > artifacts/apk-webview-chat/unix-sockets.txt 2>&1 || true; exit "$status"' ERR
+
+collect_diagnostics() {
+  status=$?
+  trap - EXIT
+  if [ "$status" -ne 0 ]; then
+    echo "APK WebView smoke failed with exit $status; collecting emulator diagnostics."
+  fi
+  adb logcat -d -t 3000 > artifacts/apk-webview-chat/logcat.txt 2>&1 || true
+  adb shell cat /proc/net/unix > artifacts/apk-webview-chat/unix-sockets.txt 2>&1 || true
+  {
+    printf 'net.dns1='
+    adb shell getprop net.dns1 2>/dev/null | tr -d '\r' || true
+    printf 'net.dns2='
+    adb shell getprop net.dns2 2>/dev/null | tr -d '\r' || true
+    printf '\nConnectivity summary:\n'
+    adb shell dumpsys connectivity 2>/dev/null | grep -E 'NetworkAgentInfo|VALIDATED|INTERNET|TRANSPORT_WIFI|TRANSPORT_CELLULAR' | head -n 80 || true
+  } > artifacts/apk-webview-chat/network-diagnostics.txt 2>&1
+  exit "$status"
+}
+trap collect_diagnostics EXIT
 
 test -s artifacts/apk/app-debug.apk
 
