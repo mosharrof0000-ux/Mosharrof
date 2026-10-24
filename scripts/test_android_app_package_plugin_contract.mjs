@@ -7,6 +7,7 @@ const pending = readFileSync("native/android/AppPackagePendingStore.java", "utf8
 const installer = readFileSync("scripts/android/install-app-package-plugin.sh", "utf8");
 const activity = readFileSync("scripts/android/install-main-activity.sh", "utf8");
 const router = readFileSync("core/android-agent-command-router.js", "utf8");
+const packageRouter = readFileSync("core/android-app-package-command-router.js", "utf8");
 const contracts = readFileSync("scripts/android/test-agent-contracts.sh", "utf8");
 
 assert.ok(plugin.includes('@CapacitorPlugin(name = "AppPackage")'));
@@ -30,10 +31,11 @@ assert.ok(installer.includes("android.intent.category.LAUNCHER"));
 assert.ok(activity.includes("bash scripts/android/install-app-package-plugin.sh"));
 assert.ok(activity.includes("registerPlugin(AppPackagePlugin.class)"));
 
-assert.ok(router.includes("parsePackageCommand"));
-assert.ok(router.includes("installAppFromPicker"));
-assert.ok(router.includes("searchPlayStore"));
-assert.ok(router.includes("uninstallApp"));
+assert.ok(router.includes("MosharrofAndroidAppPackageCommandRouter"));
+assert.ok(packageRouter.includes("parsePackageCommand"));
+assert.ok(packageRouter.includes("installAppFromPicker"));
+assert.ok(packageRouter.includes("searchPlayStore"));
+assert.ok(packageRouter.includes("uninstallApp"));
 assert.ok(router.includes("result.packageStateVerified === true"),
   "chat UI must not announce success without verified package state");
 assert.ok(contracts.includes("scripts/test_android_app_package_command_router.mjs"));
