@@ -7,6 +7,7 @@ import java.io.File
 import android.content.Intent
 import android.net.Uri
 import android.widget.TextView
+import java.io.File
 import java.util.UUID
 
 /**
@@ -195,17 +196,49 @@ object AppPackageControl {
                 status.text = outcome.toDisplayText()
             }
             .setPositiveButton("আনইনস্টল স্ক্রিন খুলুন") { _, _ ->
+                val awaiting = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android আনইনস্টল স্ক্রিন খোলা হয়েছে; অ্যাপ সরানো হয়েছে কি না এখনো যাচাই করা হয়নি।", normalized)
+                onTaskResult(awaiting)
                 try {
                     activity.startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$normalized")))
-                    val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android আনইনস্টল স্ক্রিন খোলা হয়েছে; অ্যাপ সরানো হয়েছে কি না এখনো যাচাই করা হয়নি।", normalized)
-                    onTaskResult(outcome)
-                    status.text = outcome.toDisplayText()
+                    status.text = awaiting.toDisplayText()
                 } catch (_: Exception) {
                     val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.FAILED, "Android-এর আনইনস্টল স্ক্রিন খোলা যায়নি।", normalized)
                     onTaskResult(outcome)
                     status.text = outcome.toDisplayText()
                 }
             }.show()
+    }
+
+    private fun inspectApkPackageName(activity: Activity, apkUri: Uri): String? {
+        val temp = try {
+            File.createTempFile("mosharrof-apk-inspect-", ".apk", activity.cacheDir)
+        } catch (_: Exception) {
+            return null
+        }
+        return try {
+            var totalBytes = 0L
+            val input = activity.contentResolver.openInputStream(apkUri) ?: return null
+            input.use { source ->
+                temp.outputStream().use { sink ->
+                    val buffer = ByteArray(8192)
+                    while (true) {
+                        val count = source.read(buffer)
+                        if (count < 0) break
+                        totalBytes += count
+                        if (totalBytes > MAX_APK_BYTES) return null
+                        sink.write(buffer, 0, count)
+                    }
+                }
+            }
+            @Suppress("DEPRECATION")
+            activity.packageManager.getPackageArchiveInfo(temp.absolutePath, 0)
+                ?.packageName
+                ?.takeIf { PACKAGE_NAME.matches(it) }
+        } catch (_: Exception) {
+            null
+        } finally {
+            temp.delete()
+        }
     }
 
     private fun isInstalled(activity: Activity, packageName: String): Boolean = try {
@@ -221,5 +254,6 @@ object AppPackageControl {
 
     private fun AppPackageTaskResult.toDisplayText(): String = "কাজের ফল: $status • ID: $requestId\n$detail"
 
+    private val MAX_APK_BYTES = 256L * 1024L * 1024L
     private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
 }
