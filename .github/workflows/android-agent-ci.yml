@@ -33,6 +33,7 @@ jobs:
     steps:
       - name: Runner preflight diagnostics
         timeout-minutes: 2
+        working-directory: .
         run: |
           echo "Android Agent CI runner started"
           date -u
