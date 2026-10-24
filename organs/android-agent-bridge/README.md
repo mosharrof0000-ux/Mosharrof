@@ -7,7 +7,7 @@ Connects explicit Mosharrof Web chat package commands to the Android Agent throu
 1. In Android Agent, tap **Mosharrof Web-এর সঙ্গে যুক্ত করুন** and copy the pairing key.
 2. In Mosharrof Web, send **Android যুক্ত করুন** and paste the key.
 3. Use **install apk** to select an APK, **install App Name** to open Play Store search, or **uninstall com.example.package** for a package ID.
-4. Use **Android disconnect** to clear this browser's key. Rotate the key in Android to revoke other copies.
+4. Use **disconnect android** to clear this browser's key. Rotate the key in Android to revoke other copies.
 
 The shared key is encrypted at rest on Android using Android Keystore. On the web it is stored in this browser's localStorage, so do not pair on shared/untrusted browsers.
 
