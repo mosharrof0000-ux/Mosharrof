@@ -1,5 +1,3 @@
-import { tryAndroidAgentCommand, consumeAndroidBridgeResult } from "./android-agent-bridge.js";
-
 /**
  * MOSHARROF AI — Chat Entity Runtime (V5)
  * Architecture rules:
@@ -180,18 +178,10 @@ async function sendMessage() {
   }
 
   renderTyping();
-  let launchUrl = null;
   try {
-    const bridge = await tryAndroidAgentCommand(text);
-    if (bridge && bridge.handled) {
-      removeTyping();
-      renderMessage("ai", bridge.reply);
-      launchUrl = bridge.launchUrl || null;
-    } else {
-      const reply = await coreRespond(text);
-      removeTyping();
-      renderMessage("ai", reply);
-    }
+    const reply = await coreRespond(text);
+    removeTyping();
+    renderMessage("ai", reply);
   } catch (err) {
     removeTyping();
     renderMessage("ai", "Core-এ সাময়িক সমস্যা হয়েছে। আবার চেষ্টা করুন।");
@@ -201,7 +191,6 @@ async function sendMessage() {
   busy = false;
   sendBtn.disabled = false;
   inputEl.focus();
-  if (launchUrl) setTimeout(() => { window.location.href = launchUrl; }, 80);
 }
 
 /* ── Drawer control ── */
@@ -319,17 +308,6 @@ document.querySelectorAll("#nav-left button").forEach(btn => {
 initVoice();
 autoResize();
 inputEl.focus();
-
-consumeAndroidBridgeResult().then(androidBridgeResult => {
-  if (!androidBridgeResult) return;
-  const verificationLabel = androidBridgeResult.callbackSignatureValid && androidBridgeResult.verified
-    ? "স্বাক্ষর ও প্যাকেজ যাচাইকৃত"
-    : "যাচাইকৃত নয়";
-  renderMessage(
-    "ai",
-    `Android Agent ফল: ${androidBridgeResult.status} · ${verificationLabel}\n${androidBridgeResult.detail}\nRequest ID: ${androidBridgeResult.requestId}`
-  );
-}).catch(() => {});
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
