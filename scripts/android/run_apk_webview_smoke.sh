@@ -36,7 +36,17 @@ test "$(timeout 10s adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
 
 bash .github/scripts/install_apk_with_retry.sh
 adb shell am start -n com.mosharrof.ai/.MainActivity
-sleep 15
+# Capture a launch frame before WebView discovery or any chat interaction.
+sleep 2
+launch_png="artifacts/apk-webview-chat/apk-webview-launch.png"
+if timeout 10s adb exec-out screencap -p > "$launch_png" && \
+   python -c 'from pathlib import Path; import sys; p=Path(sys.argv[1]); sys.exit(0 if p.is_file() and p.read_bytes().startswith(bytes.fromhex("89504e470d0a1a0a")) else 1)' "$launch_png"; then
+  printf 'captured\n' > artifacts/apk-webview-chat/launch-screenshot-status.txt
+else
+  rm -f "$launch_png"
+  printf 'failed\n' > artifacts/apk-webview-chat/launch-screenshot-status.txt
+fi
+sleep 13
 
 bash scripts/android/discover_webview_cdp.sh
 python scripts/android/apk_webview_real_chat_smoke.py --cdp-endpoint http://127.0.0.1:9222 --output-dir artifacts/apk-webview-chat
