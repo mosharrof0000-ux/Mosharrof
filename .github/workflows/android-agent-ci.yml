@@ -30,6 +30,13 @@ jobs:
       run:
         working-directory: android-agent
     steps:
+      - name: Runner preflight diagnostics
+        timeout-minutes: 2
+        run: |
+          echo "Android Agent CI runner started"
+          date -u
+          uname -a
+          df -h .
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up JDK 17
