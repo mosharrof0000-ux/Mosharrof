@@ -6,7 +6,7 @@ on:
     workflows:
       - Build MOSHARROF Android APK
       - MOSHARROF Android APK WebView Real Chat QA
-    types: [in_progress]
+    types: [completed]
   # Also make progress on the existing backlog between long-running builds.
   schedule:
     - cron: "23 */3 * * *"
@@ -29,12 +29,16 @@ concurrency:
 
 jobs:
   build-independent-backlog:
-    # Commands are accepted only from the repository owner on the designated control-center issue.
+    # Only successful release-branch completions may start follow-up backlog work.
+    # Feature-branch builds must not fan out additional runners while CI is validating a PR.
     if: >-
-      github.event_name != 'issue_comment' ||
-      (github.event.issue.number == 756 &&
-       github.event.comment.user.login == 'mosharrof0000-ux' &&
-       contains(fromJSON('["/mosharrof start","/mosharrof resume"]'), github.event.comment.body))
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main')) &&
+      (github.event_name != 'issue_comment' ||
+       (github.event.issue.number == 756 &&
+        github.event.comment.user.login == 'mosharrof0000-ux' &&
+        contains(fromJSON('["/mosharrof start","/mosharrof resume"]'), github.event.comment.body)))
     name: Parallel backlog engineering (review-only)
     runs-on: ubuntu-latest
     timeout-minutes: 30
