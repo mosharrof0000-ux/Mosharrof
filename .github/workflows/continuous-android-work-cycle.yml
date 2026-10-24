@@ -29,11 +29,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pr_json="$(gh api "repos/$GITHUB_REPOSITORY/pulls/851" 2>/dev/null || true)"
+          pr_json="$(gh api "repos/$GITHUB_REPOSITORY/pulls/862" 2>/dev/null || true)"
           if [ -n "$pr_json" ] && [ "$(jq -r '.state' <<<"$pr_json")" = "open" ]; then
             target_sha="$(jq -r '.head.sha' <<<"$pr_json")"
             target_ref="$(jq -r '.head.ref' <<<"$pr_json")"
-            target_kind="PR #851"
+            target_kind="PR #862"
           else
             target_sha="$GITHUB_SHA"
             target_ref="$GITHUB_REF_NAME"
