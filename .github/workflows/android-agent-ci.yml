@@ -19,7 +19,7 @@ permissions:
 
 concurrency:
   # Share one concurrency group between push and pull_request events for the same branch.
-  group: android-agent-ci-${{ github.event.pull_request.head.ref || github.ref }}
+  group: android-agent-ci-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
