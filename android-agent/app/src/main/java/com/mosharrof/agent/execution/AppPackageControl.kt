@@ -160,32 +160,21 @@ object AppPackageControl {
             }.show()
     }
 
-    /** Verify persisted pending outcomes only when this activity returns to the foreground. */
-    fun verifyPendingResultAfterReturn(activity: Activity, pending: AppPackageTaskResult, onTaskResult: (AppPackageTaskResult) -> Unit): Boolean {
-        if (pending.status != AppPackageTaskStatus.AWAITING_USER_CONFIRMATION) return false
-        val outcome = when (pending.action) {
-            AppPackageTaskAction.INSTALL_APK -> {
-                val packageName = pending.packageName ?: return false
-                val expectedVersion = pending.expectedVersionCode ?: return false
-                AppPackageOutcomeVerifier.afterInstall(pending.requestId, packageName, expectedVersion, pending.previousVersionCode, installedVersionCode(activity, packageName))
-            }
-            AppPackageTaskAction.UNINSTALL_APP -> {
-                val packageName = pending.packageName ?: return false
-                AppPackageOutcomeVerifier.afterUninstall(pending.requestId, packageName, isInstalled(activity, packageName))
-            }
-            AppPackageTaskAction.SEARCH_PLAY_STORE -> return false
+    private fun installedVersionCode(activity: Activity, packageName: String): Long? {
+        return try {
+            @Suppress("DEPRECATION")
+            val info = activity.packageManager.getPackageInfo(packageName, 0)
+            packageVersionCode(info)
+        } catch (_: Exception) {
+            null
         }
-        onTaskResult(outcome)
-        return true
     }
 
-    private fun installedVersionCode(activity: Activity, packageName: String): Long? =
-        try { @Suppress("DEPRECATION") packageVersionCode(activity.packageManager.getPackageInfo(packageName, 0)) } catch (_: Exception) { null }
-
-    private fun packageVersionCode(info: PackageInfo): Long {
-        @Suppress("DEPRECATION")
-        return info.versionCode.toLong()
-    }
+    private fun packageVersionCode(info: PackageInfo): Long =
+        if (android.os.Build.VERSION.SDK_INT >= 28) info.longVersionCode else {
+            @Suppress("DEPRECATION")
+            info.versionCode.toLong()
+        }
 
     private fun isInstalled(activity: Activity, packageName: String): Boolean = installedVersionCode(activity, packageName) != null
     private fun newRequestId(): String = UUID.randomUUID().toString()
