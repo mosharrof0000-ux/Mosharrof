@@ -19,7 +19,28 @@ def start_backend_health_probe(cdp: Any) -> dict:
                 "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/health",
                 {cache: "no-store", signal: controller.signal}
               ).then(async response => {
-                const data = await response.json().catch(() => ({}));
+                const contentType = response.headers.get("content-type") || "";
+                const raw = await response.text();
+                let data = null;
+                try { data = JSON.parse(raw); } catch {}
+                const isObject = !!data && typeof data === "object" && !Array.isArray(data);
+                const schemaKeys = isObject ? Object.keys(data).sort().slice(0, 40) : [];
+                const recognized = isObject && (
+                  typeof data.service === "string" || typeof data.worker_build === "string" ||
+                  typeof data.build === "string" || typeof data.version === "string" ||
+                  !!data.providers || typeof data.cloudflare_chat_configured === "boolean" ||
+                  typeof data.cloudflare_workers_ai_configured === "boolean" ||
+                  Array.isArray(data.gemini_chat_key_slots)
+                );
+                if (!isObject || !recognized) {
+                  return {
+                    ok: false,
+                    status: response.status,
+                    content_type: contentType,
+                    error: isObject ? "health_schema_unrecognized" : "health_response_not_json",
+                    health_schema_keys: schemaKeys
+                  };
+                }
                 const firstBoolean = (...values) => {
                   const value = values.find(item => typeof item === "boolean");
                   return value === undefined ? null : value;
@@ -30,6 +51,7 @@ def start_backend_health_probe(cdp: Any) -> dict:
                 return {
                   ok: response.ok && data.ok !== false,
                   status: response.status,
+                  content_type: contentType,
                   service: typeof data.service === "string" ? data.service : null,
                   build: data.worker_build || data.build || data.version || null,
                   providers: {
@@ -39,7 +61,7 @@ def start_backend_health_probe(cdp: Any) -> dict:
                     groq: firstBoolean(data.groq_chat_configured, data.providers?.groq),
                     or: firstBoolean(data.openrouter_chat_configured, data.providers?.or, data.providers?.openrouter)
                   },
-                  health_schema_keys: Object.keys(data).sort().slice(0, 40)
+                  health_schema_keys: schemaKeys
                 };
               }).catch(error => ({
                 ok: false,
