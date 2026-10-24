@@ -5,7 +5,7 @@ import { icons } from "../../web/entities/shared/entity-icons.js";
 import { initializeComposerEnhancements } from "../../core/composer-enhancements.js";
 import { installPersonalMemoryBridge } from "../../core/personal-memory-bridge.js";
 
-export const organId = new URL(import.meta.url).pathname.split("/").at(-2);
+export const organId = new URL(import.meta.url).pathname.split("/").slice(-2, -1)[0];
 export function initialize(runtime) {
   EntityRegistry.register({
     id: organId, icon: icons[organId],

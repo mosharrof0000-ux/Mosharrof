@@ -95,17 +95,31 @@ async def main():
             record("new_chat_button_immediately_left_of_options",
                    order.index("topNewChat") + 1 == order.index("rightBtn"),
                    f"header children={order}")
-            box = await page.locator("#topNewChat").bounding_box()
-            await page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
-            await page.mouse.down()
+            button = page.locator("#topNewChat")
+            # Send an explicit touch pointer sequence: mouse.down() may not produce a
+            # stable long-press on a mobile-emulated Chromium context.
+            await button.dispatch_event("pointerdown", {
+                "pointerId": 41, "pointerType": "touch", "isPrimary": True, "button": 0
+            })
             await page.wait_for_timeout(650)
-            await page.mouse.up()
-            await page.wait_for_timeout(150)
+            await button.dispatch_event("pointerup", {
+                "pointerId": 41, "pointerType": "touch", "isPrimary": True, "button": 0
+            })
+            try:
+                await page.wait_for_function(
+                    "() => document.body.classList.contains('chat-floating')", timeout=4000
+                )
+            except Exception:
+                pass
             floating = await page.locator("body").evaluate("(el) => el.classList.contains('chat-floating')")
             record("new_chat_long_press_opens_floating_window", floating, f"body classes={await page.locator('body').get_attribute('class')}")
             if floating:
-                await page.locator("#topNewChat").click()
-                await page.wait_for_timeout(100)
+                # Consume the synthetic long-press click before tapping to restore fullscreen.
+                await button.dispatch_event("click", {"button": 0, "detail": 1})
+                await button.dispatch_event("click", {"button": 0, "detail": 1})
+                await page.wait_for_function(
+                    "() => !document.body.classList.contains('chat-floating')", timeout=4000
+                )
             restored = not await page.locator("body").evaluate("(el) => el.classList.contains('chat-floating')")
             record("new_chat_floating_window_returns_fullscreen", restored, f"body classes={await page.locator('body').get_attribute('class')}")
         except Exception as exc:

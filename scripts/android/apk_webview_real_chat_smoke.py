@@ -1,20 +1,13 @@
 #!/usr/bin/env python3
-"""Exercise one real chat round-trip inside the installed MOSHARROF Android APK.
 
-Uses the Android WebView page-level Chrome DevTools Protocol directly. Browser-level
-Playwright CDP setup is not supported by Android WebView's browser-context API.
-"""
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen
-
-import websocket
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
@@ -41,52 +34,12 @@ report = {
     "errors": [],
 }
 
-
 def record(name: str, passed: bool, detail: str = "") -> None:
     report["checks"].append({"name": name, "passed": bool(passed), "detail": detail})
     if not passed:
         report["errors"].append({"check": name, "detail": detail})
 
-
-class PageCDP:
-    """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
-
-    def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
-        self.next_id = 0
-
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
-        self.next_id += 1
-        command_id = self.next_id
-        self.ws.settimeout(timeout)
-        self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            message = json.loads(self.ws.recv())
-            if message.get("id") != command_id:
-                continue
-            if "error" in message:
-                raise RuntimeError(f"CDP {method} failed: {message['error']}")
-            return message.get("result", {})
-        raise TimeoutError(f"Timed out waiting for CDP command {method}")
-
-    def evaluate(self, expression: str, timeout: float = 15):
-        result = self.command(
-            "Runtime.evaluate",
-            {"expression": expression, "returnByValue": True, "awaitPromise": True},
-            timeout=timeout,
-        )
-        if "exceptionDetails" in result:
-            raise RuntimeError(f"Page JavaScript exception: {result['exceptionDetails']}")
-        return result.get("result", {}).get("value")
-
-    def screenshot(self, path: Path) -> None:
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
-        path.write_bytes(base64.b64decode(result["data"]))
-
-    def close(self) -> None:
-        self.ws.close()
-
+from apk_webview_cdp import PageCDP
 
 def get_targets() -> list[dict]:
     target_file = out / "webview-targets.json"
@@ -95,7 +48,6 @@ def get_targets() -> list[dict]:
     endpoint = args.cdp_endpoint.rstrip("/") + "/json/list"
     with urlopen(endpoint, timeout=15) as response:
         return json.load(response)
-
 
 def main() -> int:
     cdp = None
@@ -199,6 +151,13 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+
+            from apk_webview_visibility import inspect_visible_answer
+            visible_state = inspect_visible_answer(cdp)
+            record("assistant_answer_visibly_rendered_in_apk",
+                   bool(visible_state and visible_state.get("visible")),
+                   json.dumps(visible_state, ensure_ascii=False)[:500])
+            time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
         else:
             record("real_backend_returned_non_mock_answer", False,
@@ -220,7 +179,6 @@ def main() -> int:
                 pass
 
     return 0 if report["checks"] and all(check["passed"] for check in report["checks"]) else 1
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

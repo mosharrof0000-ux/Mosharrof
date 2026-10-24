@@ -1,86 +1,51 @@
 name: MOSHARROF Android APK WebView Real Chat QA
-
 on:
   pull_request:
     branches: [main]
   push:
-    branches: ["feat/current-main-apk-real-chat-qa-20261019"]
-  workflow_run:
-    workflows: ["Build MOSHARROF Android APK"]
-    types: [completed]
+    branches: [main]
   schedule:
     - cron: "30 15 * * *"
   workflow_dispatch:
-
 permissions:
   contents: read
   actions: read
-
 concurrency:
-  group: mosharrof-apk-webview-real-chat
-  cancel-in-progress: false
-
+  group: mosharrof-apk-webview-real-chat-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   apk-webview-real-chat:
-    if: >-
-      github.event_name == 'push' ||
-      github.event_name == 'pull_request' ||
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main')
+    name: apk-webview-real-chat-attempt-${{ matrix.attempt }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        attempt: [1, 2, 3]
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
       - name: Checkout APK source revision
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event_name == 'pull_request' && github.event.pull_request.head.sha) || (github.event_name == 'push' && github.sha) || 'main' }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Validate smoke-test script syntax
         run: python -m py_compile scripts/android/apk_webview_real_chat_smoke.py
-
       - name: Validate emulator shell script syntax
-        run: bash -n scripts/android/run_apk_webview_smoke.sh
-
+        run: bash -n scripts/android/run_apk_webview_smoke.sh scripts/android/run_apk_webview_smoke_impl.sh scripts/android/download_matching_apk.sh .github/scripts/verify_real_chat_attempts.sh
       - name: Install WebView CDP WebSocket client
         run: python -m pip install --disable-pip-version-check websocket-client
-
-      - name: Download APK from triggering successful build
-        if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v4
-        with:
-          name: MOSHARROF-AI-Android-APK
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
-          path: artifacts/apk
-
-      - name: Download APK from the matching branch build
+      - name: Download APK from the matching source build
         if: github.event_name == 'push' || github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-          run_id=""
-          for attempt in $(seq 1 150); do
-            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
-            if [ -n "$run_id" ]; then break; fi
-            sleep 10
-          done
-          test -n "$run_id"
-          mkdir -p artifacts/apk
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
-          test -s artifacts/apk/app-debug.apk
-
+        run: bash scripts/android/download_matching_apk.sh
       - name: Download latest successful main APK for scheduled/manual runs
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         env:
@@ -92,26 +57,47 @@ jobs:
           mkdir -p artifacts/apk
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
           test -s artifacts/apk/app-debug.apk
-
+      - name: Initialize durable QA evidence before emulator boot
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/apk-webview-chat
+          {
+            echo "run_id=$GITHUB_RUN_ID"
+            echo "source_sha=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
+            echo "event=$GITHUB_EVENT_NAME"
+            echo "runner_os=$RUNNER_OS"
+            echo "emulator_stage=pre_boot"
+            echo "note=Pre-boot evidence; smoke script may not have started."
+          } > artifacts/apk-webview-chat/preflight.txt
       - name: Install APK and test real chat inside its WebView
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
-          target: default
+          target: google_apis
           arch: x86_64
-          cores: 3
-          ram-size: 3072M
-          heap-size: 768M
-          emulator-port: 5554
+          cores: 4
+          ram-size: 6144M
+          heap-size: 2048M
           emulator-boot-timeout: 900
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
-          script: bash scripts/android/run_apk_webview_smoke.sh
-
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -wipe-data -gpu swiftshader_indirect
+          script: QA_ATTEMPT=${{ matrix.attempt }} bash scripts/android/run_apk_webview_smoke.sh
       - name: Upload APK WebView chat evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mosharrof-apk-webview-real-chat-${{ github.run_id }}
+          name: mosharrof-apk-webview-real-chat-${{ github.run_id }}-attempt-${{ matrix.attempt }}
           path: artifacts/apk-webview-chat/**
           if-no-files-found: warn
           retention-days: 30
+
+  require-visible-real-chat-proof:
+    name: require-visible-real-chat-proof
+    if: always()
+    needs: apk-webview-real-chat
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Find a successful install-launch-chat-screenshot attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/verify_real_chat_attempts.sh
