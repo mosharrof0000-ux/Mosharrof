@@ -24,6 +24,7 @@
     if (match) {
       let target = String(match[1] || "").trim();
       target = target.replace(/^(?:app|the app|অ্যাপ)\s+/u, "").trim();
+      if (/^(?:app|the app|অ্যাপ)$/iu.test(target)) target = "";
       return { kind: "uninstall", target };
     }
 
@@ -133,7 +134,7 @@
         const method = packageCommand.kind === "pick-apk" ? "installAppFromPicker" :
           packageCommand.kind === "uninstall" ? "uninstallApp" : "searchPlayStore";
         if (plugin && typeof plugin[method] === "function") {
-          return { handled: true, promise: executePackageCommand(packageCommand, options, plugin) };
+          return { handled: true, promise: executePackageCommand(packageCommand, { ...options, report }, plugin) };
         }
       }
       if (planner && typeof planner.planCommand === "function" &&
