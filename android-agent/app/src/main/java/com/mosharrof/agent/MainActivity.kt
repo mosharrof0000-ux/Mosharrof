@@ -2,6 +2,7 @@ package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.os.Bundle
+import android.os.Build
 import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.view.accessibility.AccessibilityManager
@@ -22,6 +23,8 @@ import com.mosharrof.agent.execution.AppPackageControl
 import com.mosharrof.agent.execution.AppPackageTaskAction
 import com.mosharrof.agent.execution.AppPackageTaskResult
 import com.mosharrof.agent.execution.AppPackageTaskResultStore
+import com.mosharrof.agent.execution.PendingAppPackageOperation
+import com.mosharrof.agent.execution.AppPackagePostconditionVerifier
 import com.mosharrof.agent.execution.AppPackageTaskStatus
 import com.mosharrof.agent.execution.DeviceIntentControl
 import com.mosharrof.agent.execution.TaskControlButtons
@@ -53,8 +56,15 @@ class MainActivity : ComponentActivity() {
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
+    private val packageOperationResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        completePackageOperation(result.resultCode)
+    }
     private val apkPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status, ::publishAppPackageResult)
+        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(
+            this, uri, status, ::launchPackageOperation, ::publishAppPackageResult
+        )
         else publishAppPackageResult(
             AppPackageTaskResult(
                 requestId = java.util.UUID.randomUUID().toString(),
@@ -175,6 +185,7 @@ class MainActivity : ComponentActivity() {
         if (AppPackageControl.handleCommand(
                 this, command, status,
                 pickApk = { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) },
+                launchPackageOperation = ::launchPackageOperation,
                 onTaskResult = ::publishAppPackageResult
             )) return
         if (DeviceIntentControl.handle(this, command, status)) return
@@ -201,6 +212,53 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    private fun launchPackageOperation(intent: Intent, pending: PendingAppPackageOperation) {
+        AppPackageTaskResultStore.savePending(this, pending)
+        try {
+            packageOperationResult.launch(intent)
+        } catch (error: Exception) {
+            AppPackageTaskResultStore.clearPending(this)
+            throw error
+        }
+    }
+
+    private fun completePackageOperation(resultCode: Int) {
+        val pending = AppPackageTaskResultStore.pending(this) ?: run {
+            if (::status.isInitialized) status.text = "Android থেকে ফিরে এসেছে, কিন্তু মেলানো pending request পাওয়া যায়নি।"
+            return
+        }
+        AppPackageTaskResultStore.clearPending(this)
+        val resultCodeOk = resultCode == RESULT_OK
+        val outcome = when (pending.action) {
+            AppPackageTaskAction.INSTALL_APK -> AppPackagePostconditionVerifier.install(
+                pending,
+                installedVersionCode(pending.packageName),
+                resultCodeOk
+            )
+            AppPackageTaskAction.UNINSTALL_APP -> AppPackagePostconditionVerifier.uninstall(
+                pending,
+                packageStillInstalled = installedVersionCode(pending.packageName) != null,
+                resultCodeOk = resultCodeOk
+            )
+            AppPackageTaskAction.SEARCH_PLAY_STORE -> AppPackageTaskResult(
+                requestId = pending.requestId,
+                action = pending.action,
+                status = AppPackageTaskStatus.FAILED,
+                detail = "Play Store search package confirmation workflow unsupported.",
+                packageName = pending.packageName
+            )
+        }
+        publishAppPackageResult(outcome)
+    }
+
+    private fun installedVersionCode(packageName: String): Long? = try {
+        @Suppress("DEPRECATION")
+        val info = packageManager.getPackageInfo(packageName, 0)
+        if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
+    } catch (_: Exception) {
+        null
+    }
+
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
         lastAppPackageTaskResult = result
         AppPackageTaskResultStore.save(this, result)
