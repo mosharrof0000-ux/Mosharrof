@@ -171,11 +171,16 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         if (!::status.isInitialized) return
         val packageTask = AppPackageTaskResultStore.latest(this)
-        if (packageTask != null &&
-            packageTask.status == AppPackageTaskStatus.AWAITING_USER_CONFIRMATION &&
-            packageTask.action != AppPackageTaskAction.SEARCH_PLAY_STORE
-        ) {
-            verifyPackageTaskAfterExternalConfirmation(packageTask)
+        if (packageTask != null && packageTask.status == AppPackageTaskStatus.AWAITING_USER_CONFIRMATION) {
+            if (packageTask.action == AppPackageTaskAction.SEARCH_PLAY_STORE) {
+                publishAppPackageResult(packageTask.copy(
+                    status = AppPackageTaskStatus.UNKNOWN,
+                    detail = "Play Store-এ সার্চ খোলা হয়েছে; এই অনুরোধ থেকে অ্যাপ ইনস্টল হওয়া যাচাই করা যায়নি।",
+                    packageStateVerified = false
+                ))
+            } else {
+                verifyPackageTaskAfterExternalConfirmation(packageTask)
+            }
             return
         }
         val actionResult = MosharrofAccessibilityService.takeActionResult()
