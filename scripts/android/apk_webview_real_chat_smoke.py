@@ -174,7 +174,10 @@ def main() -> int:
               input.value = {prompt_js};
               input.dispatchEvent(new Event('input', {{bubbles:true}}));
               input.dispatchEvent(new Event('change', {{bubbles:true}}));
-              send.click();
+              // Schedule the click after this CDP evaluation returns. Some Android
+              // WebView builds stall Runtime.evaluate while the send handler starts
+              // its network request synchronously.
+              setTimeout(() => send.click(), 0);
               return true;
             }})()"""
         )
