@@ -83,8 +83,21 @@ class PageCDP:
         return result.get("result", {}).get("value")
 
     def screenshot(self, path: Path) -> None:
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
-        path.write_bytes(base64.b64decode(result["data"]))
+        # A freshly started Android WebView can time out on its first capture while
+        # the renderer is still settling. Capture only the viewport and retry once.
+        last_error = None
+        for attempt in range(2):
+            try:
+                result = self.command("Page.captureScreenshot", {"format": "png"}, timeout=45)
+                path.write_bytes(base64.b64decode(result["data"]))
+                return
+            except Exception as exc:
+                last_error = exc
+                if attempt == 0:
+                    time.sleep(1)
+        raise RuntimeError(
+            f"CDP screenshot failed after 2 attempts: {type(last_error).__name__}: {last_error}"
+        ) from last_error
 
     def close(self) -> None:
         self.ws.close()
