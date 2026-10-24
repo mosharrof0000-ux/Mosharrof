@@ -36,9 +36,17 @@ test "$(timeout 10s adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
 
 bash .github/scripts/install_apk_with_retry.sh
 adb shell am start -n com.mosharrof.ai/.MainActivity
-# Capture the initial app frame using the size-budgeted helper.
-bash .github/scripts/capture_launch_screenshot.sh
+
+# A missing launch screenshot is a failed acceptance check, but must not suppress
+# the independent real-chat attempt or its report.
+if ! bash .github/scripts/capture_launch_screenshot.sh; then
+  echo "WARNING: launch screenshot capture failed; continuing so real-chat and launch diagnostics are both reported."
+fi
 sleep 13
 
-bash scripts/android/discover_webview_cdp.sh
+# Preserve a report.json even when discovery fails, so launch state and the
+# independent WebView failure are visible in the uploaded artifact.
+if ! bash scripts/android/discover_webview_cdp.sh; then
+  echo "WARNING: WebView CDP discovery failed; continuing to write the smoke-test report."
+fi
 python scripts/android/apk_webview_real_chat_smoke.py --cdp-endpoint http://127.0.0.1:9222 --output-dir artifacts/apk-webview-chat
