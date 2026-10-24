@@ -24,6 +24,9 @@
     });
     const confirm = options.confirm || ((message) => root.confirm(message));
     const report = options.report || ((message) => {
+      if (typeof root.mosharrofAppendNativeResult === "function") {
+        try { root.mosharrofAppendNativeResult(String(message || "")); } catch (_) {}
+      }
       const toast = root.document && root.document.getElementById("toast");
       if (toast) {
         toast.textContent = message;
