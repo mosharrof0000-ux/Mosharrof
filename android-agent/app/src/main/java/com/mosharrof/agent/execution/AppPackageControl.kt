@@ -3,12 +3,23 @@ package com.mosharrof.agent.execution
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.TextView
+import java.io.File
 import java.util.UUID
 
 /** User-directed app installation/removal; Android retains final confirmation. */
 object AppPackageControl {
+    private const val MAX_APK_BYTES = 300L * 1024L * 1024L
+
+    private data class ApkMetadata(
+        val packageName: String,
+        val versionCode: Long,
+        val previousVersionCode: Long?
+    )
+
     fun handleCommand(
         activity: Activity, rawCommand: String, status: TextView, pickApk: () -> Unit,
         onTaskResult: (AppPackageTaskResult) -> Unit = {}
@@ -71,7 +82,7 @@ object AppPackageControl {
 
     private fun resolveInstalledLauncherPackage(activity: Activity, query: String): String? {
         val normalized = query.trim()
-        if (PACKAGE_NAME.matches(normalized)) return if (isInstalled(activity, normalized)) normalized else null
+        if (PACKAGE_NAME.matches(normalized)) return if (isPackageInstalled(activity, normalized)) normalized else null
         val wanted = normalized.lowercase()
         return try {
             val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
@@ -92,11 +103,18 @@ object AppPackageControl {
             status.text = outcome.toDisplayText()
             return
         }
+        val metadata = inspectApk(activity, apkUri)
+        if (metadata == null) {
+            val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "APK-এর package/version metadata পড়া যায়নি বা ফাইলটি ৩০০ MB-এর বেশি; ইনস্টলার খোলা হয়নি।")
+            onTaskResult(outcome)
+            status.text = outcome.toDisplayText()
+            return
+        }
         AlertDialog.Builder(activity)
             .setTitle("অ্যাপ ইনস্টল করার আগে যাচাই")
-            .setMessage("Android-এর প্যাকেজ ইনস্টলার খুলবে। অচেনা উৎসের APK ইনস্টল করবেন না। Android-এর নিজস্ব অনুমতি ও নিশ্চিতকরণ লাগবে।")
+            .setMessage("APK: ${metadata.packageName}\nVersion: ${metadata.versionCode}\nAndroid-এর প্যাকেজ ইনস্টলার খুলবে। অচেনা উৎসের APK ইনস্টল করবেন না।")
             .setNegativeButton("বাতিল") { _, _ ->
-                val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.CANCELLED, "ব্যবহারকারী ইনস্টলার খোলা বাতিল করেছেন।")
+                val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.CANCELLED, "ব্যবহারকারী ইনস্টলার খোলা বাতিল করেছেন।", metadata.packageName, metadata.versionCode, metadata.previousVersionCode)
                 onTaskResult(outcome)
                 status.text = outcome.toDisplayText()
             }
@@ -106,24 +124,62 @@ object AppPackageControl {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 try {
-                    AppPackagePendingOperationStore.beginInstall(activity, requestId)
+                    AppPackagePendingOperationStore.beginInstall(activity, requestId, metadata.packageName, metadata.versionCode, metadata.previousVersionCode)
                     activity.startActivity(intent)
-                    val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android ইনস্টলার খোলা হয়েছে; ফিরে এলে প্যাকেজের অবস্থা যাচাই করা হবে।")
+                    val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android ইনস্টলার খোলা হয়েছে; ফিরে এলে package/version যাচাই হবে।", metadata.packageName, metadata.versionCode, metadata.previousVersionCode)
                     onTaskResult(outcome)
                     status.text = outcome.toDisplayText()
                 } catch (_: Exception) {
                     AppPackagePendingOperationStore.clear(activity)
-                    val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "এই ডিভাইসে উপযুক্ত প্যাকেজ ইনস্টলার খোলা যায়নি।")
+                    val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "এই ডিভাইসে উপযুক্ত প্যাকেজ ইনস্টলার খোলা যায়নি।", metadata.packageName, metadata.versionCode, metadata.previousVersionCode)
                     onTaskResult(outcome)
                     status.text = outcome.toDisplayText()
                 }
             }.show()
     }
 
+    private fun inspectApk(activity: Activity, uri: Uri): ApkMetadata? {
+        val file = runCatching { File.createTempFile("mosharrof-apk-", ".apk", activity.cacheDir) }.getOrNull() ?: return null
+        return try {
+            val input = activity.contentResolver.openInputStream(uri) ?: return null
+            input.use { source ->
+                file.outputStream().use { sink ->
+                    val buffer = ByteArray(8192)
+                    var total = 0L
+                    while (true) {
+                        val count = source.read(buffer)
+                        if (count < 0) break
+                        total += count
+                        if (total > MAX_APK_BYTES) throw IllegalArgumentException("APK exceeds size limit")
+                        sink.write(buffer, 0, count)
+                    }
+                }
+            }
+            @Suppress("DEPRECATION")
+            val archive: PackageInfo = activity.packageManager.getPackageArchiveInfo(file.absolutePath, 0) ?: return null
+            val packageName = archive.packageName?.takeIf { PACKAGE_NAME.matches(it) } ?: return null
+            val versionCode = if (android.os.Build.VERSION.SDK_INT >= 28) archive.longVersionCode else archive.versionCode.toLong()
+            val previousVersionCode = try {
+                @Suppress("DEPRECATION")
+                val existing = activity.packageManager.getPackageInfo(packageName, 0)
+                if (android.os.Build.VERSION.SDK_INT >= 28) existing.longVersionCode else existing.versionCode.toLong()
+            } catch (_: PackageManager.NameNotFoundException) {
+                null
+            } catch (_: Exception) {
+                null
+            }
+            ApkMetadata(packageName, versionCode, previousVersionCode)
+        } catch (_: Exception) {
+            null
+        } finally {
+            file.delete()
+        }
+    }
+
     fun requestUninstall(activity: Activity, packageName: String, status: TextView, requestId: String = newRequestId(), onTaskResult: (AppPackageTaskResult) -> Unit = {}) {
         val normalized = packageName.trim()
-        if (!PACKAGE_NAME.matches(normalized) || normalized == activity.packageName || !isInstalled(activity, normalized)) {
-            val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.FAILED, "অ্যাপের package name ভুল, নিজের অ্যাপ, বা ইনস্টল করা অ্যাপের সঙ্গে মেলেনি; কিছু সরানো হয়নি।")
+        if (!PACKAGE_NAME.matches(normalized) || normalized == activity.packageName || !isPackageInstalled(activity, normalized)) {
+            val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.FAILED, "অ্যাপের package name ভুল, নিজের অ্যাপ, বা ইনস্টল করা অ্যাপের সঙ্গে মেলেনি; কিছু সরানো হয়নি。", normalized)
             onTaskResult(outcome)
             status.text = outcome.toDisplayText()
             return
@@ -140,7 +196,7 @@ object AppPackageControl {
                 try {
                     AppPackagePendingOperationStore.beginUninstall(activity, requestId, normalized)
                     activity.startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$normalized")))
-                    val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android আনইনস্টল স্ক্রিন খোলা হয়েছে; ফিরে এলে প্যাকেজের অবস্থা যাচাই করা হবে।", normalized)
+                    val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android আনইনস্টল স্ক্রিন খোলা হয়েছে; ফিরে এলে প্যাকেজের অবস্থা যাচাই হবে।", normalized)
                     onTaskResult(outcome)
                     status.text = outcome.toDisplayText()
                 } catch (_: Exception) {
@@ -152,15 +208,29 @@ object AppPackageControl {
             }.show()
     }
 
-    private fun isInstalled(activity: Activity, packageName: String): Boolean = try {
+    fun isPackageInstalled(activity: Activity, packageName: String): Boolean = try {
         @Suppress("DEPRECATION")
         activity.packageManager.getApplicationInfo(packageName, 0)
         true
     } catch (_: Exception) { false }
 
     private fun newRequestId(): String = UUID.randomUUID().toString()
-    private fun result(requestId: String, action: AppPackageTaskAction, taskStatus: AppPackageTaskStatus, detail: String, packageName: String? = null) =
-        AppPackageTaskResult(requestId, action, taskStatus, detail, packageName)
+
+    private fun result(
+        requestId: String,
+        action: AppPackageTaskAction,
+        taskStatus: AppPackageTaskStatus,
+        detail: String,
+        packageName: String? = null,
+        expectedVersionCode: Long? = null,
+        previousVersionCode: Long? = null
+    ) = AppPackageTaskResult(
+        requestId, action, taskStatus, detail, packageName,
+        packageStateVerified = false,
+        expectedVersionCode = expectedVersionCode,
+        previousVersionCode = previousVersionCode
+    )
+
     private fun AppPackageTaskResult.toDisplayText(): String = "কাজের ফল: $status • ID: $requestId\n$detail"
     private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
 }
