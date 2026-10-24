@@ -1,4 +1,6 @@
 import { buildChatContext } from "../core/chat-context.js";
+import { DeviceBridge } from "./device-bridge.js";
+export { DeviceBridge };
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
 import { parseImageSpec } from "../core/image-spec.js";
@@ -542,6 +544,12 @@ if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
 }
 const origin=request.headers.get("Origin")||"";
 if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);
+const requestPath=new URL(request.url).pathname;
+if(requestPath.startsWith("/device/")){
+  if(!env.DEVICE_BRIDGE)return reply({ok:false,error:"device_bridge_not_configured"},503);
+  const id=env.DEVICE_BRIDGE.idFromName("mosharrof-device-bridge-v1");
+  return await env.DEVICE_BRIDGE.get(id).fetch(request);
+}
 if(request.method!=="POST")return reply({error:"POST only"},405);
 try{
   const pathname=new URL(request.url).pathname;
