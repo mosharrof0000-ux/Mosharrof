@@ -55,6 +55,12 @@ object AppPackageTaskResultStore {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getBoolean(KEY_WAS_INSTALLED_BEFORE, false)
 
+    fun clearPreOperationState(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove(KEY_WAS_INSTALLED_BEFORE)
+            .apply()
+    }
+
     fun clear(context: Context) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply()
     }
