@@ -213,43 +213,7 @@ object AppPackageControl {
         val pending = PendingAppPackageOperationStore.latest(activity) ?: return
         PendingAppPackageOperationStore.clear(activity)
         val installedVersion = installedVersionCode(activity, pending.packageName)
-        val outcome = when (pending.action) {
-            AppPackageTaskAction.INSTALL_APK -> {
-                val expected = pending.expectedVersionCode
-                val matches = expected != null && installedVersion == expected
-                val stateChanged = !pending.wasInstalled || pending.previousVersionCode != installedVersion
-                when {
-                    matches && (resultCode == Activity.RESULT_OK || stateChanged) ->
-                        result(pending.requestId, pending.action, AppPackageTaskStatus.SUCCEEDED,
-                            "ইনস্টল যাচাই সফল: ইনস্টল করা প্যাকেজের সংস্করণ নির্বাচিত APK-এর সঙ্গে মিলে গেছে。",
-                            pending.packageName, packageStateVerified = true)
-                    resultCode == Activity.RESULT_CANCELED ->
-                        result(pending.requestId, pending.action, AppPackageTaskStatus.CANCELLED,
-                            "Android ইনস্টল নিশ্চিত করেনি; কাজ বাতিল হয়েছে বা সম্পন্ন হয়নি।", pending.packageName)
-                    installedVersion == null ->
-                        result(pending.requestId, pending.action, AppPackageTaskStatus.FAILED,
-                            "ফিরে আসার পর লক্ষ্য প্যাকেজ ইনস্টল পাওয়া যায়নি।", pending.packageName)
-                    else ->
-                        result(pending.requestId, pending.action, AppPackageTaskStatus.UNKNOWN,
-                            "প্যাকেজের সংস্করণ নির্বাচিত APK-এর সঙ্গে মেলেনি; সফল বলে চিহ্নিত করা হয়নি।", pending.packageName)
-                }
-            }
-            AppPackageTaskAction.UNINSTALL_APP -> when {
-                installedVersion == null ->
-                    result(pending.requestId, pending.action, AppPackageTaskStatus.SUCCEEDED,
-                        "আনইনস্টল যাচাই সফল: লক্ষ্য প্যাকেজ আর ইনস্টল করা নেই।",
-                        pending.packageName, packageStateVerified = true)
-                resultCode == Activity.RESULT_CANCELED ->
-                    result(pending.requestId, pending.action, AppPackageTaskStatus.CANCELLED,
-                        "Android আনইনস্টল নিশ্চিত করেনি; অ্যাপটি এখনও ইনস্টল আছে।", pending.packageName)
-                else ->
-                    result(pending.requestId, pending.action, AppPackageTaskStatus.FAILED,
-                        "আনইনস্টলের পরও লক্ষ্য প্যাকেজ ইনস্টল আছে।", pending.packageName)
-            }
-            AppPackageTaskAction.SEARCH_PLAY_STORE ->
-                result(pending.requestId, pending.action, AppPackageTaskStatus.UNKNOWN,
-                    "Play Store সার্চ থেকে ইনস্টল-অবস্থা যাচাই করা যায় না।", pending.packageName)
-        }
+        val outcome = AppPackageStateOutcomeResolver.resolve(pending, resultCode, installedVersion)
         onTaskResult(outcome)
         status.text = outcome.toDisplayText()
     }
