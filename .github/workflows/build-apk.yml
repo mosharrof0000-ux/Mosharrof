@@ -3,12 +3,30 @@ name: Build MOSHARROF Android APK
 on:
   push:
     branches: [main, "feat/**"]
+    paths:
+      - "android/**"
+      - "web/**"
+      - "core/android-edge-to-edge.css"
+      - "scripts/android/prepare-and-install-voice.sh"
+      - "scripts/mosharrof_size_gate.py"
+      - ".github/workflows/build-apk.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "android/**"
+      - "web/**"
+      - "core/android-edge-to-edge.css"
+      - "scripts/android/prepare-and-install-voice.sh"
+      - "scripts/mosharrof_size_gate.py"
+      - ".github/workflows/build-apk.yml"
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: build-mosharrof-apk-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-apk:
