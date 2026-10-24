@@ -103,10 +103,13 @@
     if (!session) { clearSession(); showPanelStatus("কোনো ফোন যুক্ত নেই।"); return; }
     try {
       await request("/revoke", { method: "POST", token: session.browserToken, body: {} });
+      clearSession();
       showPanelStatus("ফোনের pairing বাতিল হয়েছে।");
+      return true;
     } catch (_) {
-      showPanelStatus("সার্ভার pairing বাতিল নিশ্চিত করেনি; এই ব্রাউজারের টোকেন মুছে দেওয়া হয়েছে।");
-    } finally { clearSession(); }
+      showPanelStatus("সার্ভার pairing বাতিল নিশ্চিত করেনি; নিরাপত্তার জন্য টোকেন রাখা হয়েছে যাতে আবার চেষ্টা করা যায়।");
+      return false;
+    }
   }
   function waitForResult(requestId, token, action, startedAt) {
     return new Promise((resolve) => {
@@ -145,8 +148,10 @@
   async function handleClassified(command) {
     if (command.invalid) return { text: command.reason, responseMeta: { provider: "Android device", model: "validation", attempted: [] } };
     if (command.disconnect) {
-      await disconnect();
-      return { text: "Android pairing সংযোগ বিচ্ছিন্ন করার অনুরোধ সম্পন্ন হয়েছে।", responseMeta: { provider: "Android device", model: "pairing", attempted: [] } };
+      const revoked = await disconnect();
+      return { text: revoked ? "Android pairing সংযোগ বিচ্ছিন্ন হয়েছে।" :
+        "সার্ভার pairing বাতিল নিশ্চিত করেনি; সংযোগ বিচ্ছিন্ন হয়েছে বলে ধরা হচ্ছে না।",
+        responseMeta: { provider: "Android device", model: "pairing", attempted: [] } };
     }
     const session = readSession();
     if (!session) {
