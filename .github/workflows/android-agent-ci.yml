@@ -18,7 +18,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-agent-ci-${{ github.ref }}
+  # Share one concurrency group between push and pull_request events for the same branch.
+  group: android-agent-ci-${{ github.event.pull_request.head.ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
