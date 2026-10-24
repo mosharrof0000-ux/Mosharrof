@@ -40,6 +40,8 @@ report = {
     "launch_evidence": {
         "screenshot_status": (out / "launch-screenshot-status.txt").read_text(encoding="utf-8").strip()
             if (out / "launch-screenshot-status.txt").is_file() else "NOT_CAPTURED",
+        "activity_status": (out / "launch-activity-status.txt").read_text(encoding="utf-8").strip()
+            if (out / "launch-activity-status.txt").is_file() else "NOT_CONFIRMED",
         "ui_state": (out / "launch-ui-diagnostic.txt").read_text(encoding="utf-8").strip()
             if (out / "launch-ui-diagnostic.txt").is_file() else "NOT_CHECKED",
     },
