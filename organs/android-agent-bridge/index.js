@@ -70,6 +70,10 @@ async function signEnvelope(secretBytes, fields) {
 export async function tryAndroidAgentCommand(raw) {
   const parsed = classifyCommand(raw);
   if (!parsed) return null;
+  // Do not let a copied/hosted clone launch privileged commands through the paired agent.
+  if (window.location.origin !== "https://mosharrof0000-ux.github.io") {
+    return { handled: true, reply: "Android Agent pairing commands are allowed only from the official Mosharrof Pages origin." };
+  }
 
   if (parsed.type === "pair") {
     const value = window.prompt("Android Agent অ্যাপে ‘Mosharrof Web-এর সঙ্গে যুক্ত করুন’ চাপুন, pairing key কপি করুন, তারপর এখানে পেস্ট করুন:");
