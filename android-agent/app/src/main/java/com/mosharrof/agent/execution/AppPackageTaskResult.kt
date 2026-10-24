@@ -80,11 +80,13 @@ data class PendingAppPackageOperation(
     val requestId: String,
     val action: AppPackageTaskAction,
     val packageName: String,
-    val expectedVersionCode: Long? = null
+    val expectedVersionCode: Long? = null,
+    val initialVersionCode: Long? = null
 ) {
     init {
         require(requestId.isNotBlank() && requestId.length <= 128)
         require(AppPackageTaskResult.isValidPackageName(packageName))
-        require(action == AppPackageTaskAction.INSTALL_APK || expectedVersionCode == null)
+        require(action == AppPackageTaskAction.INSTALL_APK || (expectedVersionCode == null && initialVersionCode == null))
+        require(action != AppPackageTaskAction.INSTALL_APK || expectedVersionCode != null)
     }
 }
