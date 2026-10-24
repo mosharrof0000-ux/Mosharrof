@@ -51,10 +51,15 @@ class DeviceCommandAuthenticatorTest {
 
     @Test fun actionTargetsMustMatchTheAllowlistedAction() {
         val verifier = DeviceCommandAuthenticator()
-        val invalidUninstall = signed().copy(target = "YouTube")
+        val exactAppLabel = signed().copy(target = "YouTube")
+        assertEquals(DeviceCommandRejection.NONE, verifier.verify(exactAppLabel, secret, now).rejection)
+        val unsafeLabel = signed(nonce = "nonce-unsafe-label").copy(target = "YouTube; rm")
+        val reSignedUnsafeLabel = unsafeLabel.copy(
+            signatureHex = DeviceCommandAuthenticator.sign(secret, unsafeLabel.canonicalPayload())
+        )
         assertEquals(
             DeviceCommandRejection.MALFORMED_ENVELOPE,
-            verifier.verify(invalidUninstall, secret, now).rejection
+            verifier.verify(reSignedUnsafeLabel, secret, now).rejection
         )
         val installWithPath = signed().copy(action = DeviceCommandAction.INSTALL_APK, target = "/sdcard/app.apk")
         assertEquals(
