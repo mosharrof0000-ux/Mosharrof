@@ -39,7 +39,8 @@ enum class DeviceCommandRejection {
     MALFORMED_ENVELOPE,
     EXPIRED_OR_FUTURE,
     INVALID_SIGNATURE,
-    REPLAYED_NONCE
+    REPLAYED_NONCE,
+    NONCE_CAPACITY_REACHED
 }
 
 data class DeviceCommandVerification(
@@ -73,7 +74,8 @@ class DeviceCommandAuthenticator(
     ): DeviceCommandVerification {
         if (deviceSecret.size < 32) return reject(DeviceCommandRejection.INVALID_SECRET)
         if (!isWellFormed(envelope)) return reject(DeviceCommandRejection.MALFORMED_ENVELOPE)
-        if (envelope.issuedAtMillis > nowMillis + maxClockSkewMillis ||
+        if (nowMillis < 0 || envelope.issuedAtMillis < 0 || envelope.expiresAtMillis < 0 ||
+            envelope.issuedAtMillis > nowMillis + maxClockSkewMillis ||
             envelope.expiresAtMillis < nowMillis ||
             envelope.expiresAtMillis <= envelope.issuedAtMillis ||
             envelope.expiresAtMillis - envelope.issuedAtMillis > maxLifetimeMillis
@@ -86,13 +88,9 @@ class DeviceCommandAuthenticator(
         val supplied = decodeHex(envelope.signatureHex) ?: return reject(DeviceCommandRejection.INVALID_SIGNATURE)
         if (!MessageDigest.isEqual(expected, supplied)) return reject(DeviceCommandRejection.INVALID_SIGNATURE)
 
-        // Only signed, valid requests consume a nonce; invalid traffic cannot poison the cache.
+        // Fail closed at capacity: evicting a live nonce would permit a replay.
         if (seenNonces.size >= maxRememberedNonces) {
-            val oldest = seenNonces.entries.iterator()
-            if (oldest.hasNext()) {
-                oldest.next()
-                oldest.remove()
-            }
+            return reject(DeviceCommandRejection.NONCE_CAPACITY_REACHED)
         }
         seenNonces[envelope.nonce] = envelope.expiresAtMillis
         return DeviceCommandVerification(true, DeviceCommandRejection.NONE)
