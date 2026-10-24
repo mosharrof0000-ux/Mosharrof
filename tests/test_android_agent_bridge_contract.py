@@ -20,7 +20,7 @@ def test_android_agent_bridge_manifest_and_file_limits() -> None:
     assert "crypto.subtle.sign" in source
     assert "crypto.subtle.verify" in source
     assert "mosharrof-agent://command" in source
-    assert "mosharrof0000-ux.github.io" in source
+    assert "new URL(window.location.pathname, window.location.origin)" in source
     assert "localStorage" in source
 
 
