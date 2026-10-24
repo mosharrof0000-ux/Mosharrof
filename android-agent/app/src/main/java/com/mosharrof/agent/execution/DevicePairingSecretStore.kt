@@ -94,8 +94,8 @@ object DeviceCommandReplayStore {
             return DeviceCommandVerification(false, DeviceCommandRejection.REPLAYED_NONCE)
         }
         val result = authenticator.verify(envelope, secret, nowMillis)
-        if (result.accepted) {
-            prefs.edit().putLong(nonceKey, envelope.expiresAtMillis).commit()
+        if (result.accepted && !prefs.edit().putLong(nonceKey, envelope.expiresAtMillis).commit()) {
+            return DeviceCommandVerification(false, DeviceCommandRejection.REPLAY_STATE_NOT_PERSISTED)
         }
         return result
     }
