@@ -22,7 +22,6 @@ import java.util.UUID;
  */
 @CapacitorPlugin(name = "AppPackage")
 public class AppPackagePlugin extends Plugin {
-    private static final Pattern PACKAGE_NAME = Pattern.compile("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+");
 
     @PluginMethod
     public void installAppFromPicker(PluginCall call) {
