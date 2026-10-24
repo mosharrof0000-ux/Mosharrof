@@ -3,9 +3,11 @@
   "name": "Android Agent Bridge",
   "description": "Authenticated, user-confirmed handoff between Mosharrof Web chat and Android app package controls.",
   "public_api": [
+    "consumeAndroidBridgeResult",
+    "getHealth",
     "initialize",
-    "tryAndroidAgentCommand",
-    "consumeAndroidBridgeResult"
+    "reportIssue",
+    "tryAndroidAgentCommand"
   ],
   "dependencies": []
 }
