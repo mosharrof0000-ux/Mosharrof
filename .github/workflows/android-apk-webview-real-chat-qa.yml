@@ -47,7 +47,7 @@ jobs:
           python-version: "3.12"
 
       - name: Validate smoke-test script syntax
-        run: python -m py_compile scripts/android/apk_webview_real_chat_smoke.py scripts/android/apk_webview_visibility.py
+        run: python -m py_compile scripts/android/apk_webview_cdp.py scripts/android/apk_webview_real_chat_smoke.py scripts/android/apk_webview_visibility.py
 
       - name: Validate emulator shell script syntax
         run: |
