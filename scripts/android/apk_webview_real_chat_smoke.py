@@ -199,6 +199,45 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+            visibility = cdp.evaluate(
+                """
+                (() => {
+                  const expected = __EXPECTED__;
+                  const scroll = document.querySelector('#chatScroll');
+                  const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
+                  const last = nodes[nodes.length - 1];
+                  const body = last && last.querySelector('.rich-content');
+                  if (!last || !body || body.innerText.trim() !== expected.trim()) {
+                    return {visible: false, reason: 'answer_not_last_dom_message'};
+                  }
+                  if (scroll) scroll.scrollTop = scroll.scrollHeight;
+                  const rect = body.getBoundingClientRect();
+                  const composer = document.querySelector('#composer');
+                  const visibleBottom = Math.min(
+                    window.innerHeight,
+                    composer ? composer.getBoundingClientRect().top : window.innerHeight
+                  );
+                  const style = getComputedStyle(body);
+                  const visible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 &&
+                    rect.top < visibleBottom && style.display !== 'none' &&
+                    style.visibility !== 'hidden' && Number(style.opacity) > 0;
+                  return {
+                    visible,
+                    top: Math.round(rect.top),
+                    bottom: Math.round(rect.bottom),
+                    visibleBottom: Math.round(visibleBottom),
+                    viewportHeight: window.innerHeight,
+                    answerText: body.innerText.trim().slice(0, 120)
+                  };
+                })()
+                """.replace("__EXPECTED__", json.dumps(answer, ensure_ascii=False))
+            )
+            time.sleep(0.5)
+            record(
+                "assistant_answer_visible_in_viewport",
+                bool(visibility and visibility.get("visible")),
+                json.dumps(visibility, ensure_ascii=False)
+            )
             cdp.screenshot(out / "apk-webview-after.png")
         else:
             record("real_backend_returned_non_mock_answer", False,
