@@ -159,7 +159,7 @@ class Supervisor:
         diagnosis = self.advisor.diagnose(incident)
         if self.attempts >= self.max_restarts:
             return {"status": "manual_intervention_required", "attempts": self.attempts, "diagnosis": diagnosis}
-        delay = self.backoff_seconds * (2 ** self.attempts)
+        delay = self.backoff_seconds * (2 ** max(0, self.attempts - 1))
         if self.attempts and now - self.last_attempt_at < delay:
             return {"status": "backoff", "attempts": self.attempts, "retry_after_seconds": delay - (now - self.last_attempt_at), "diagnosis": diagnosis}
         self.attempts += 1
