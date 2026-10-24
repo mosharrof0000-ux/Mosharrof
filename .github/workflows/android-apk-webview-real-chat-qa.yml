@@ -94,9 +94,9 @@ jobs:
           api-level: 30
           target: default
           arch: x86_64
-          cores: 3
-          ram-size: 4096M
-          heap-size: 1024M
+          cores: 2
+          ram-size: 2048M
+          heap-size: 512M
           emulator-port: 5554
           emulator-boot-timeout: 900
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -dns-server 8.8.8.8,1.1.1.1
