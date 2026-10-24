@@ -18,7 +18,7 @@ class ScreenInspectionController(
             MosharrofAccessibilityService.isInspectionArmed() && MosharrofAccessibilityService.hasInspectionSnapshot() ->
                 "স্ক্যানের ফল প্রস্তুত। ফল দেখতে আবার ‘বর্তমান স্ক্রিন পরীক্ষা করুন’ চাপুন।"
             MosharrofAccessibilityService.isInspectionArmed() -> "স্ক্যান চলছে। লক্ষ্য অ্যাপ খুলে এখানে ফিরে আসুন।"
-            else -> "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ/Settings খোলা যাবে。"
+            else -> "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ/Settings খোলা যাবে।"
         }
     }
 
