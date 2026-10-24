@@ -5,6 +5,7 @@ node scripts/test_android_settings_hub.mjs
 node scripts/test_android_agent_planner.mjs
 node scripts/test_android_agent_command_router.mjs
 node scripts/test_android_app_package_command_router.mjs
+node scripts/test_android_app_package_plugin_contract.mjs
 node scripts/test_android_agent_capabilities.mjs
 node scripts/test_voice_tile_main_chat_contract.mjs
 node scripts/test_new_chat_floating_contract.mjs
