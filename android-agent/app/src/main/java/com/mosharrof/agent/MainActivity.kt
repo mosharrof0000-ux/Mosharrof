@@ -339,21 +339,35 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun safeBridgeCallback(raw: String?): Uri? {
-        val uri = runCatching { Uri.parse(raw ?: return null) }.getOrNull() ?: return null
+        if (raw.isNullOrBlank()) return null
+        val uri = runCatching { Uri.parse(raw) }.getOrNull() ?: return null
         if (uri.scheme != "https" || uri.host != "mosharrof0000-ux.github.io" || uri.path != "/Mosharrof/") return null
         return uri.buildUpon().clearQuery().fragment(null).build()
     }
 
     private fun openBridgeCallback(result: AppPackageTaskResult) {
         val callback = externalCallback ?: safeBridgeCallback(intent.data?.getQueryParameter("callback")) ?: return
+        val secret = DevicePairingSecretStore.loadSecret(this) ?: return
+        val callbackDetail = result.detail.take(300)
+        val canonicalResult = listOf(
+            "mosharrof-device-result-v1",
+            result.requestId,
+            result.action.name,
+            result.status.name,
+            result.packageName ?: "",
+            result.packageStateVerified.toString(),
+            callbackDetail
+        ).joinToString("\\n")
+        val signature = DeviceCommandAuthenticator.sign(secret, canonicalResult)
         val uri = callback.buildUpon()
             .appendQueryParameter("mosharrof_android_result", "1")
             .appendQueryParameter("request_id", result.requestId)
             .appendQueryParameter("action", result.action.name)
             .appendQueryParameter("status", result.status.name)
-            .appendQueryParameter("detail", result.detail.take(300))
+            .appendQueryParameter("detail", callbackDetail)
             .appendQueryParameter("verified", result.packageStateVerified.toString())
             .appendQueryParameter("package", result.packageName ?: "")
+            .appendQueryParameter("callback_sig", signature)
             .build()
         externalCallback = null
         runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
