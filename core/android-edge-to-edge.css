@@ -102,6 +102,16 @@ header.top .right-btn, .top .right-btn {
     max(14px, var(--mos-safe-right)) !important;
   box-sizing: border-box !important;
 }
+/* Older Android WebView can collapse short AI flex items; preserve a measurable text box. */
+.message.ai {
+  width: max-content !important;
+  max-width: 92% !important;
+  min-width: 1px !important;
+}
+.message.ai .rich-content {
+  width: 100% !important;
+  min-width: 1px !important;
+}
 /* Keep the current composer and all of its buttons; only let it float over the full canvas. */
 .composer {
   position: fixed !important;
