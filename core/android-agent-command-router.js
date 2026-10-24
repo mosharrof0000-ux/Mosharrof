@@ -18,6 +18,10 @@
       const plugins = root.Capacitor && root.Capacitor.Plugins;
       return plugins && plugins.DeviceControl;
     });
+    const getPackagePlugin = options.getPackagePlugin || (options.getPlugin ? options.getPlugin : () => {
+      const plugins = root.Capacitor && root.Capacitor.Plugins;
+      return plugins && plugins.AppPackage;
+    });
     const confirm = options.confirm || ((message) => root.confirm(message));
     const report = options.report || ((message) => {
       const toast = root.document && root.document.getElementById("toast");
@@ -36,7 +40,7 @@
 
     const packageRouterApi = options.packageRouter || root.MosharrofAndroidAppPackageCommandRouter;
     const packageRouter = packageRouterApi && typeof packageRouterApi.createPackageCommandRouter === "function"
-      ? packageRouterApi.createPackageCommandRouter({ getPlugin, confirm, prompt: options.prompt, report })
+      ? packageRouterApi.createPackageCommandRouter({ getPlugin: getPackagePlugin, confirm, prompt: options.prompt, report })
       : null;
 
     function handle(command) {
