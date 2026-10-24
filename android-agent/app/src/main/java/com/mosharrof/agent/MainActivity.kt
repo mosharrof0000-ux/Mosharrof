@@ -22,7 +22,6 @@ import com.mosharrof.agent.execution.AppPackageControl
 import com.mosharrof.agent.execution.AppPackageTaskAction
 import com.mosharrof.agent.execution.AppPackageTaskResult
 import com.mosharrof.agent.execution.AppPackageTaskResultStore
-import com.mosharrof.agent.execution.AppPackageTaskResultVerifier
 import com.mosharrof.agent.execution.AppPackageTaskStatus
 import com.mosharrof.agent.execution.DeviceIntentControl
 import com.mosharrof.agent.execution.TaskControlButtons
@@ -168,17 +167,10 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
-            if (packageConfirmationPending) {
-                packageConfirmationPending = false
-                val pending = AppPackageTaskResultStore.latest(this)
-                if (pending != null && pending.status == AppPackageTaskStatus.AWAITING_USER_CONFIRMATION) {
-                    val observedState = pending.packageName?.let { AppPackageControl.isPackageInstalled(this, it) }
-                    val verified = AppPackageTaskResultVerifier.afterConfirmation(pending, observedState)
-                    if (verified != pending) {
-                        publishAppPackageResult(verified)
-                        return
-                    }
-                }
+            val packageResult = AppPackagePendingOperationStore.resolveAfterReturn(this)
+            if (packageResult != null) {
+                publishAppPackageResult(packageResult)
+                return
             }
             val actionResult = MosharrofAccessibilityService.takeActionResult()
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
@@ -216,17 +208,10 @@ class MainActivity : ComponentActivity() {
     }
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
         lastAppPackageTaskResult = result
-        if (result.status == AppPackageTaskStatus.AWAITING_USER_CONFIRMATION &&
-            result.action != AppPackageTaskAction.SEARCH_PLAY_STORE &&
-            result.packageName != null
-        ) {
-            packageConfirmationPending = true
-        }
         AppPackageTaskResultStore.save(this, result)
         status.text = "কাজের ফল: ${result.status} • ID: ${result.requestId}\n${result.detail}"
     }
     private var lastAppPackageTaskResult: AppPackageTaskResult? = null
-    private var packageConfirmationPending = false
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
