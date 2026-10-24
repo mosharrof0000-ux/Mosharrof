@@ -3,8 +3,8 @@ package com.mosharrof.agent.execution
 /**
  * Correlated, explicit outcome for an app-package request.
  *
- * A command being dispatched or an Android confirmation screen opening is not success.
- * Callers may report SUCCEEDED only after the package state has been independently verified.
+ * Dispatching a command or opening Android's confirmation screen is not success.
+ * SUCCEEDED is permitted only after the package state has been independently verified.
  */
 enum class AppPackageTaskStatus {
     REQUESTED,
@@ -56,7 +56,7 @@ data class AppPackageTaskResult(
             AppPackageTaskStatus.TIMED_OUT,
             AppPackageTaskStatus.UNKNOWN
         )
-        private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\\\.[A-Za-z][A-Za-z0-9_]*)+")
+        private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
 
         fun awaitingConfirmation(
             requestId: String,
