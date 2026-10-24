@@ -3,6 +3,8 @@ set -euo pipefail
 
 test -f android/app/src/main/AndroidManifest.xml
 cp native/android/AppPackagePlugin.java android/app/src/main/java/com/mosharrof/ai/AppPackagePlugin.java
+cp native/android/AppPackagePlatform.java android/app/src/main/java/com/mosharrof/ai/AppPackagePlatform.java
+cp native/android/AppPackagePendingStore.java android/app/src/main/java/com/mosharrof/ai/AppPackagePendingStore.java
 
 python3 - <<'PY'
 from pathlib import Path
