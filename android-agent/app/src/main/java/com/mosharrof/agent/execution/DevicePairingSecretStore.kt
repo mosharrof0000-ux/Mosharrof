@@ -27,10 +27,11 @@ object DevicePairingSecretStore {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, getOrCreateEncryptionKey())
         val encrypted = cipher.doFinal(secret)
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        val saved = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_IV, Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
             .putString(KEY_CIPHERTEXT, Base64.encodeToString(encrypted, Base64.NO_WRAP))
             .commit()
+        check(saved) { "Unable to persist the encrypted pairing secret" }
         return Base64.encodeToString(secret, Base64.NO_WRAP)
     }
 
