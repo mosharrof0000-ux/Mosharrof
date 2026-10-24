@@ -19,9 +19,9 @@ permissions:
   contents: read
 
 concurrency:
-  # Share one concurrency group between push and pull_request events for the same branch.
+  # Serialize same-branch runs without killing an active build; latest pending run can wait.
   group: android-agent-ci-${{ github.event.pull_request.head.ref || github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-test:
