@@ -63,7 +63,7 @@ object AppPackageInstallControl {
                     )
                     activity.startActivity(intent)
                     val outcome = result(requestId, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION,
-                        "Android ইনস্টলার খোলা হয়েছে; ফিরে এলে প্যাকেজ ও ভার্সন যাচাই করা হবে。",
+                        "Android ইনস্টলার খোলা হয়েছে; ফিরে এলে প্যাকেজ ও ভার্সন যাচাই করা হবে।",
                         packageName, expectedVersion, previousVersion)
                     onTaskResult(outcome)
                     status.text = outcome.toDisplayText()
