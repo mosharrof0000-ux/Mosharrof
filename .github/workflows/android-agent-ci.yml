@@ -5,8 +5,10 @@ on:
     paths:
       - "android-agent/**"
       - ".github/workflows/android-agent-ci.yml"
+  # Feature branches are validated by pull_request events; keep push CI for main only
+  # to avoid duplicate builds for every commit on an open feature PR.
   push:
-    branches: ["main", "feat/**"]
+    branches: ["main"]
     paths:
       - "android-agent/**"
       - ".github/workflows/android-agent-ci.yml"
