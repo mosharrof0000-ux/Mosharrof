@@ -49,6 +49,20 @@ class DeviceCommandAuthenticatorTest {
         assertTrue(verifier.verify(request, secret, now).accepted)
     }
 
+    @Test fun actionTargetsMustMatchTheAllowlistedAction() {
+        val verifier = DeviceCommandAuthenticator()
+        val invalidUninstall = signed().copy(target = "YouTube")
+        assertEquals(
+            DeviceCommandRejection.MALFORMED_ENVELOPE,
+            verifier.verify(invalidUninstall, secret, now).rejection
+        )
+        val installWithPath = signed().copy(action = DeviceCommandAction.INSTALL_APK, target = "/sdcard/app.apk")
+        assertEquals(
+            DeviceCommandRejection.MALFORMED_ENVELOPE,
+            verifier.verify(installWithPath, secret, now).rejection
+        )
+    }
+
     @Test fun nonceCacheCapacityFailsClosedInsteadOfEvictingLiveNonces() {
         val verifier = DeviceCommandAuthenticator(maxRememberedNonces = 1)
         val first = signed(nonce = "nonce-first-12345")
