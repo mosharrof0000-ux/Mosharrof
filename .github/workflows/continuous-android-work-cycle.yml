@@ -1,0 +1,111 @@
+name: Continuous Android Work Cycle
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: continuous-android-work-cycle
+  cancel-in-progress: false
+
+jobs:
+  build-test-report:
+    name: One bounded Android work cycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select current Android target
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr_json="$(gh api "repos/$GITHUB_REPOSITORY/pulls/851" 2>/dev/null || true)"
+          if [ -n "$pr_json" ] && [ "$(jq -r '.state' <<<"$pr_json")" = "open" ]; then
+            target_sha="$(jq -r '.head.sha' <<<"$pr_json")"
+            target_ref="$(jq -r '.head.ref' <<<"$pr_json")"
+            target_kind="PR #851"
+          else
+            target_sha="$GITHUB_SHA"
+            target_ref="$GITHUB_REF_NAME"
+            target_kind="default branch fallback"
+          fi
+          {
+            echo "sha=$target_sha"
+            echo "ref=$target_ref"
+            echo "kind=$target_kind"
+          } >> "$GITHUB_OUTPUT"
+          mkdir -p cycle-report
+          {
+            echo "# Continuous Android Work Cycle"
+            echo
+            echo "- Scheduled time (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
+            echo "- Target: $target_kind"
+            echo "- Ref: $target_ref"
+            echo "- Commit: $target_sha"
+            echo "- Mode: read-only build and unit-test validation; no source edits, merge, or deployment."
+          } > cycle-report/report.md
+          git fetch --no-tags origin "$target_sha"
+          git checkout --detach "$target_sha"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Build debug APK (retry once)
+        working-directory: android-agent
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! gradle --no-daemon assembleDebug > ../cycle-report/build.log 2>&1; then
+            echo "First build attempt failed; retrying once." | tee -a ../cycle-report/build.log
+            gradle --no-daemon assembleDebug >> ../cycle-report/build.log 2>&1
+          fi
+          echo "- Debug APK build: PASS (including retry policy)." >> ../cycle-report/report.md
+
+      - name: Run JVM unit tests (retry once)
+        working-directory: android-agent
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! gradle --no-daemon testDebugUnitTest > ../cycle-report/unit-tests.log 2>&1; then
+            echo "First unit-test attempt failed; retrying once." | tee -a ../cycle-report/unit-tests.log
+            gradle --no-daemon testDebugUnitTest >> ../cycle-report/unit-tests.log 2>&1
+          fi
+          echo "- JVM unit tests: PASS (including retry policy)." >> ../cycle-report/report.md
+
+      - name: Record cycle result
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "- Cycle result: PASS" >> cycle-report/report.md
+          else
+            echo "- Cycle result: FAIL — inspect attached logs; no automatic source changes or merge were attempted." >> cycle-report/report.md
+          fi
+          cat cycle-report/report.md
+
+      - name: Upload cycle report and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: continuous-android-cycle-${{ github.run_id }}
+          path: cycle-report/
+          if-no-files-found: warn
+          retention-days: 14
