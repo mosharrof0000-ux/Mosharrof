@@ -20,18 +20,26 @@ def start_backend_health_probe(cdp: Any) -> dict:
                 {cache: "no-store", signal: controller.signal}
               ).then(async response => {
                 const data = await response.json().catch(() => ({}));
-                const gemini = Array.isArray(data.gemini_chat_key_slots) &&
-                  data.gemini_chat_key_slots.some(Boolean);
+                const firstBoolean = (...values) => {
+                  const value = values.find(item => typeof item === "boolean");
+                  return value === undefined ? null : value;
+                };
+                const gemini = Array.isArray(data.gemini_chat_key_slots)
+                  ? data.gemini_chat_key_slots.some(Boolean)
+                  : firstBoolean(data.gemini_chat_configured, data.gemini_configured, data.providers?.gemini);
                 return {
-                  ok: response.ok,
+                  ok: response.ok && data.ok !== false,
                   status: response.status,
-                  build: data.worker_build || null,
+                  service: typeof data.service === "string" ? data.service : null,
+                  build: data.worker_build || data.build || data.version || null,
                   providers: {
-                    cf: !!data.cloudflare_chat_configured,
+                    cf: firstBoolean(data.cloudflare_chat_configured, data.cloudflare_workers_ai_configured,
+                      data.providers?.cf, data.providers?.cloudflare_workers_ai),
                     gemini,
-                    groq: !!data.groq_chat_configured,
-                    or: !!data.openrouter_chat_configured
-                  }
+                    groq: firstBoolean(data.groq_chat_configured, data.providers?.groq),
+                    or: firstBoolean(data.openrouter_chat_configured, data.providers?.or, data.providers?.openrouter)
+                  },
+                  health_schema_keys: Object.keys(data).sort().slice(0, 40)
                 };
               }).catch(error => ({
                 ok: false,
