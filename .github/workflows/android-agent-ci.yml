@@ -27,9 +27,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    defaults:
-      run:
-        working-directory: android-agent
     steps:
       - name: Runner preflight diagnostics
         timeout-minutes: 2
@@ -51,8 +48,10 @@ jobs:
         with:
           gradle-version: "8.9"
       - name: Build debug APK
+        working-directory: android-agent
         run: gradle --no-daemon assembleDebug
       - name: Run unit tests
+        working-directory: android-agent
         run: gradle --no-daemon testDebugUnitTest
       - name: Run emulator smoke tests
         uses: reactivecircus/android-emulator-runner@v2
