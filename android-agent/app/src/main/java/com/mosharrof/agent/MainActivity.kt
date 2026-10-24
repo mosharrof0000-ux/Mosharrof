@@ -1,6 +1,7 @@
 package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Build
 import android.provider.Settings
@@ -255,8 +256,11 @@ class MainActivity : ComponentActivity() {
         @Suppress("DEPRECATION")
         val info = packageManager.getPackageInfo(packageName, 0)
         if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
-    } catch (_: Exception) {
+    } catch (_: PackageManager.NameNotFoundException) {
         null
+    } catch (_: Exception) {
+        // Null means PackageManager verified absence; other errors must fail closed.
+        Long.MIN_VALUE
     }
 
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
