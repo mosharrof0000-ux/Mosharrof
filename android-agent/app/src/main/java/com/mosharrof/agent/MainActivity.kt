@@ -167,8 +167,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
-            val actionResult = MosharrofAccessibilityService.takeActionResult()
-            if (actionResult != null) status.text = actionResult else refreshServiceStatus()
+            val pendingPackageResult = AppPackageTaskResultStore.latest(this)
+                ?.let { AppPackageOutcomeVerifier.verifyAfterReturn(this, it) }
+            if (pendingPackageResult != null) {
+                publishAppPackageResult(pendingPackageResult)
+            } else {
+                val actionResult = MosharrofAccessibilityService.takeActionResult()
+                if (actionResult != null) status.text = actionResult else refreshServiceStatus()
+            }
         }
     }
     private fun prepareCommand(command: String) {
