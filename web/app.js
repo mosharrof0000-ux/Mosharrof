@@ -320,14 +320,16 @@ initVoice();
 autoResize();
 inputEl.focus();
 
-const androidBridgeResult = consumeAndroidBridgeResult();
-if (androidBridgeResult) {
-  const verificationLabel = androidBridgeResult.verified ? "যাচাইকৃত" : "যাচাই হয়নি";
+consumeAndroidBridgeResult().then(androidBridgeResult => {
+  if (!androidBridgeResult) return;
+  const verificationLabel = androidBridgeResult.callbackSignatureValid && androidBridgeResult.verified
+    ? "স্বাক্ষর ও প্যাকেজ যাচাইকৃত"
+    : "যাচাইকৃত নয়";
   renderMessage(
     "ai",
     `Android Agent ফল: ${androidBridgeResult.status} · ${verificationLabel}\n${androidBridgeResult.detail}\nRequest ID: ${androidBridgeResult.requestId}`
   );
-}
+}).catch(() => {});
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
