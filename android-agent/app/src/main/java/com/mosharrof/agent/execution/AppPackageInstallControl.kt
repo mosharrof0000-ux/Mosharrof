@@ -5,6 +5,8 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -15,6 +17,9 @@ import java.util.UUID
 object AppPackageInstallControl {
     private data class ApkMetadata(val packageName: String, val versionCode: Long)
     private const val MAX_APK_BYTES = 512L * 1024L * 1024L
+    private const val PENDING_PREFS = "mosharrof_pending_install_permission"
+    private const val KEY_PENDING_URI = "apk_uri"
+    private const val KEY_PENDING_REQUEST_ID = "request_id"
     private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
 
     fun addInstallButton(activity: Activity, parent: LinearLayout, launchPicker: () -> Unit) {
@@ -31,6 +36,88 @@ object AppPackageInstallControl {
         onTaskResult: (AppPackageTaskResult) -> Unit = {}
     ) {
         val requestId = UUID.randomUUID().toString()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !activity.packageManager.canRequestPackageInstalls()
+        ) {
+            try {
+                activity.contentResolver.takePersistableUriPermission(apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {
+                // The picker URI may still be readable for this session; the return path reports failure honestly.
+            }
+            activity.getSharedPreferences(PENDING_PREFS, Activity.MODE_PRIVATE).edit()
+                .putString(KEY_PENDING_URI, apkUri.toString())
+                .putString(KEY_PENDING_REQUEST_ID, requestId)
+                .apply()
+            AlertDialog.Builder(activity)
+                .setTitle("অ্যাপ ইনস্টলের অনুমতি দরকার")
+                .setMessage("Android-এর ‘এই উৎস থেকে অ্যাপ ইনস্টল’ অনুমতি এখন বন্ধ। Mosharrof শুধু আপনার অনুমতি চাওয়ার Settings পৃষ্ঠা খুলতে পারে; অনুমতি আপনাকেই চালু করতে হবে।")
+                .setNegativeButton("বাতিল") { _, _ ->
+                    clearPendingInstallPermission(activity)
+                    val outcome = result(requestId, AppPackageTaskStatus.CANCELLED,
+                        "ব্যবহারকারী ইনস্টল-উৎসের অনুমতি দিতে চাননি; ইনস্টলার খোলা হয়নি।")
+                    onTaskResult(outcome)
+                    status.text = outcome.toDisplayText()
+                }
+                .setPositiveButton("Android Settings খুলুন") { _, _ ->
+                    try {
+                        activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:${activity.packageName}")))
+                        status.text = "Android Settings-এ অনুমতি চালু করুন। ফিরে এলে অনুমতি যাচাই করে ইনস্টল প্রক্রিয়া চালু হবে।"
+                    } catch (_: Exception) {
+                        clearPendingInstallPermission(activity)
+                        val outcome = result(requestId, AppPackageTaskStatus.FAILED,
+                            "Android-এর install-source Settings খোলা যায়নি।")
+                        onTaskResult(outcome)
+                        status.text = outcome.toDisplayText()
+                    }
+                }.show()
+            return
+        }
+        beginInstallWithRequestId(activity, apkUri, status, requestId, onTaskResult)
+    }
+
+    /** Called from onResume only when a selected APK is waiting for install-source permission. */
+    fun resumePendingInstallIfGranted(
+        activity: Activity,
+        status: TextView,
+        onTaskResult: (AppPackageTaskResult) -> Unit
+    ): Boolean {
+        val prefs = activity.getSharedPreferences(PENDING_PREFS, Activity.MODE_PRIVATE)
+        val uriText = prefs.getString(KEY_PENDING_URI, null) ?: return false
+        val requestId = prefs.getString(KEY_PENDING_REQUEST_ID, null) ?: UUID.randomUUID().toString()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !activity.packageManager.canRequestPackageInstalls()
+        ) {
+            clearPendingInstallPermission(activity)
+            val outcome = result(requestId, AppPackageTaskStatus.CANCELLED,
+                "Android Settings থেকে install-source অনুমতি চালু করা হয়নি; কোনো অ্যাপ ইনস্টল হয়নি।")
+            onTaskResult(outcome)
+            status.text = outcome.toDisplayText()
+            return true
+        }
+        clearPendingInstallPermission(activity)
+        val uri = runCatching { Uri.parse(uriText) }.getOrNull()
+        if (uri == null) {
+            val outcome = result(requestId, AppPackageTaskStatus.FAILED, "সংরক্ষিত APK URI আর পড়া যাচ্ছে না।")
+            onTaskResult(outcome)
+            status.text = outcome.toDisplayText()
+            return true
+        }
+        beginInstallWithRequestId(activity, uri, status, requestId, onTaskResult)
+        return true
+    }
+
+    private fun clearPendingInstallPermission(activity: Activity) {
+        activity.getSharedPreferences(PENDING_PREFS, Activity.MODE_PRIVATE).edit().clear().apply()
+    }
+
+    private fun beginInstallWithRequestId(
+        activity: Activity,
+        apkUri: Uri,
+        status: TextView,
+        requestId: String,
+        onTaskResult: (AppPackageTaskResult) -> Unit
+    ) {
         val metadata = inspectApk(activity, apkUri)
         if (metadata == null) {
             val outcome = result(requestId, AppPackageTaskStatus.FAILED,
