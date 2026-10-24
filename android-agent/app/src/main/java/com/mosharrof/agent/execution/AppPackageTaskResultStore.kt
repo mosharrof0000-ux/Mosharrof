@@ -3,9 +3,22 @@ package com.mosharrof.agent.execution
 import android.content.Context
 
 /**
- * Small durable handoff point for the next chat/pairing bridge.
- * Stores only the latest task outcome; never stores APK bytes or device secrets.
+ * Durable handoff for the latest app-package outcome and one outstanding Android confirmation.
+ * Stores metadata only; never stores APK bytes or device secrets.
  */
+data class PendingAppPackageOperation(
+    val requestId: String,
+    val action: AppPackageTaskAction,
+    val packageName: String,
+    val expectedVersionCode: Long? = null
+) {
+    init {
+        require(requestId.isNotBlank() && requestId.length <= 128)
+        require(packageName.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\\\.[A-Za-z][A-Za-z0-9_]*)+")))
+        require(action != AppPackageTaskAction.SEARCH_PLAY_STORE)
+    }
+}
+
 object AppPackageTaskResultStore {
     private const val PREFS = "mosharrof_app_package_task_result"
     private const val KEY_REQUEST_ID = "request_id"
@@ -14,6 +27,12 @@ object AppPackageTaskResultStore {
     private const val KEY_DETAIL = "detail"
     private const val KEY_PACKAGE_NAME = "package_name"
     private const val KEY_PACKAGE_VERIFIED = "package_state_verified"
+
+    private const val KEY_PENDING_REQUEST_ID = "pending_request_id"
+    private const val KEY_PENDING_ACTION = "pending_action"
+    private const val KEY_PENDING_PACKAGE_NAME = "pending_package_name"
+    private const val KEY_PENDING_VERSION_CODE = "pending_version_code"
+    private const val KEY_PENDING_HAS_VERSION = "pending_has_version"
 
     fun save(context: Context, result: AppPackageTaskResult) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -41,6 +60,41 @@ object AppPackageTaskResultStore {
         return runCatching {
             AppPackageTaskResult(requestId, action, status, detail, packageName, verified)
         }.getOrNull()
+    }
+
+    fun savePending(context: Context, pending: PendingAppPackageOperation) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_PENDING_REQUEST_ID, pending.requestId)
+            .putString(KEY_PENDING_ACTION, pending.action.name)
+            .putString(KEY_PENDING_PACKAGE_NAME, pending.packageName)
+            .putBoolean(KEY_PENDING_HAS_VERSION, pending.expectedVersionCode != null)
+            .putLong(KEY_PENDING_VERSION_CODE, pending.expectedVersionCode ?: 0L)
+            .apply()
+    }
+
+    fun pending(context: Context): PendingAppPackageOperation? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val requestId = prefs.getString(KEY_PENDING_REQUEST_ID, null) ?: return null
+        val action = runCatching {
+            AppPackageTaskAction.valueOf(prefs.getString(KEY_PENDING_ACTION, null) ?: return null)
+        }.getOrNull() ?: return null
+        val packageName = prefs.getString(KEY_PENDING_PACKAGE_NAME, null) ?: return null
+        val version = if (prefs.getBoolean(KEY_PENDING_HAS_VERSION, false)) {
+            prefs.getLong(KEY_PENDING_VERSION_CODE, 0L)
+        } else null
+        return runCatching {
+            PendingAppPackageOperation(requestId, action, packageName, version)
+        }.getOrNull()
+    }
+
+    fun clearPending(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove(KEY_PENDING_REQUEST_ID)
+            .remove(KEY_PENDING_ACTION)
+            .remove(KEY_PENDING_PACKAGE_NAME)
+            .remove(KEY_PENDING_VERSION_CODE)
+            .remove(KEY_PENDING_HAS_VERSION)
+            .apply()
     }
 
     fun clear(context: Context) {
