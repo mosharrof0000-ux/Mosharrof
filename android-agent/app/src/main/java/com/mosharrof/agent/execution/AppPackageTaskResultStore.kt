@@ -14,6 +14,8 @@ object AppPackageTaskResultStore {
     private const val KEY_DETAIL = "detail"
     private const val KEY_PACKAGE_NAME = "package_name"
     private const val KEY_PACKAGE_VERIFIED = "package_state_verified"
+    private const val KEY_TARGET_VERSION = "target_version_code"
+    private const val KEY_BASELINE_VERSION = "baseline_version_code"
 
     fun save(context: Context, result: AppPackageTaskResult) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -41,6 +43,30 @@ object AppPackageTaskResultStore {
         return runCatching {
             AppPackageTaskResult(requestId, action, status, detail, packageName, verified)
         }.getOrNull()
+    }
+
+    fun saveVerificationTarget(context: Context, targetVersionCode: Long, baselineVersionCode: Long) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putLong(KEY_TARGET_VERSION, targetVersionCode)
+            .putLong(KEY_BASELINE_VERSION, baselineVersionCode)
+            .apply()
+    }
+
+    fun verificationTargetVersionCode(context: Context): Long? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_TARGET_VERSION)) prefs.getLong(KEY_TARGET_VERSION, -1L) else null
+    }
+
+    fun baselineVersionCode(context: Context): Long? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_BASELINE_VERSION)) prefs.getLong(KEY_BASELINE_VERSION, -1L) else null
+    }
+
+    fun clearVerificationTarget(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove(KEY_TARGET_VERSION)
+            .remove(KEY_BASELINE_VERSION)
+            .apply()
     }
 
     fun clear(context: Context) {
