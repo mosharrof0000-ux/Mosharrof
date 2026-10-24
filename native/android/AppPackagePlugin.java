@@ -83,9 +83,9 @@ public class AppPackagePlugin extends Plugin {
 
     @ActivityCallback
     private void installResult(PluginCall call, ActivityResult result) {
-        if (call == null) { clearPending(); return; }
+        if (call == null) { AppPackagePendingStore.clear(getContext()); return; }
         AppPackagePendingStore.Pending pending = AppPackagePendingStore.read(getContext());
-        clearPending();
+        AppPackagePendingStore.clear(getContext());
         if (pending == null || !"INSTALL_APK".equals(pending.action)) {
             resolve(call, requestId(call), "INSTALL_APK", "UNKNOWN", "ইনস্টল ফলের pending request পাওয়া যায়নি।", null, false);
             return;
@@ -123,7 +123,7 @@ public class AppPackagePlugin extends Plugin {
             resolve(call, requestId, "UNINSTALL_APP", "FAILED", "MOSHARROF নিজেকে এই কমান্ড দিয়ে আনইনস্টল করতে পারবে না।", packageName, false);
             return;
         }
-        Long previousVersion = installedVersion(packageName);
+        Long previousVersion = AppPackagePlatform.installedVersion(getContext(), packageName);
         new AlertDialog.Builder(getActivity())
             .setTitle("আনইনস্টল নিশ্চিত করুন")
             .setMessage("Package: " + packageName + "\nAndroid-এর নিজস্ব আনইনস্টল স্ক্রিন খুলবে। চূড়ান্ত সিদ্ধান্ত আপনাকেই দিতে হবে।")
@@ -134,7 +134,7 @@ public class AppPackagePlugin extends Plugin {
                 try {
                     startActivityForResult(call, new Intent(Intent.ACTION_DELETE, Uri.parse("package:" + packageName)), "uninstallResult");
                 } catch (Exception error) {
-                    clearPending();
+                    AppPackagePendingStore.clear(getContext());
                     resolve(call, requestId, "UNINSTALL_APP", "FAILED", "Android আনইনস্টল স্ক্রিন খোলা যায়নি।", packageName, false);
                 }
             })
@@ -143,14 +143,14 @@ public class AppPackagePlugin extends Plugin {
 
     @ActivityCallback
     private void uninstallResult(PluginCall call, ActivityResult result) {
-        if (call == null) { clearPending(); return; }
-        Pending pending = readPending();
-        clearPending();
+        if (call == null) { AppPackagePendingStore.clear(getContext()); return; }
+        AppPackagePendingStore.Pending pending = AppPackagePendingStore.read(getContext());
+        AppPackagePendingStore.clear(getContext());
         if (pending == null || !"UNINSTALL_APP".equals(pending.action)) {
             resolve(call, requestId(call), "UNINSTALL_APP", "UNKNOWN", "আনইনস্টল ফলের pending request পাওয়া যায়নি।", null, false);
             return;
         }
-        Long currentVersion = installedVersion(pending.packageName);
+        Long currentVersion = AppPackagePlatform.installedVersion(getContext(), pending.packageName);
         if (currentVersion == null) {
             resolve(call, pending.requestId, "UNINSTALL_APP", "SUCCEEDED",
                 "আনইনস্টল যাচাই সফল: লক্ষ্য প্যাকেজ আর ইনস্টল করা নেই।", pending.packageName, true);
