@@ -1,5 +1,6 @@
 package com.mosharrof.agent.execution
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -50,6 +51,47 @@ class AppPackageTaskResultTest {
             detail = "Uninstall request",
             packageName = "not a package name"
         )
+    }
+
+    @Test fun installIsSuccessfulOnlyWhenPreviouslyAbsentPackageAppears() {
+        val pending = AppPackageTaskResult.awaitingConfirmation(
+            requestId = "install-1",
+            action = AppPackageTaskAction.INSTALL_APK,
+            detail = "Waiting for Android confirmation",
+            packageName = "com.example.target"
+        )
+        val success = AppPackageOutcomeVerifier.resolveOutcome(pending, installedBefore = false, installedAfter = true)
+        assertEquals(AppPackageTaskStatus.SUCCEEDED, success?.status)
+        assertTrue(success?.packageStateVerified == true)
+
+        val preexisting = AppPackageOutcomeVerifier.resolveOutcome(pending, installedBefore = true, installedAfter = true)
+        assertEquals(AppPackageTaskStatus.UNKNOWN, preexisting?.status)
+        assertFalse(preexisting?.status == AppPackageTaskStatus.SUCCEEDED)
+    }
+
+    @Test fun uninstallIsSuccessfulOnlyWhenPackageIsAbsentAfterReturn() {
+        val pending = AppPackageTaskResult.awaitingConfirmation(
+            requestId = "uninstall-1",
+            action = AppPackageTaskAction.UNINSTALL_APP,
+            detail = "Waiting for Android confirmation",
+            packageName = "com.example.target"
+        )
+        val success = AppPackageOutcomeVerifier.resolveOutcome(pending, installedBefore = true, installedAfter = false)
+        assertEquals(AppPackageTaskStatus.SUCCEEDED, success?.status)
+        assertTrue(success?.packageStateVerified == true)
+
+        val cancelled = AppPackageOutcomeVerifier.resolveOutcome(pending, installedBefore = true, installedAfter = true)
+        assertEquals(AppPackageTaskStatus.CANCELLED, cancelled?.status)
+        assertFalse(cancelled?.status == AppPackageTaskStatus.SUCCEEDED)
+    }
+
+    @Test fun playStoreSearchDoesNotProducePackageVerificationOutcome() {
+        val pending = AppPackageTaskResult.awaitingConfirmation(
+            requestId = "search-1",
+            action = AppPackageTaskAction.SEARCH_PLAY_STORE,
+            detail = "Search opened"
+        )
+        assertEquals(null, AppPackageOutcomeVerifier.resolveOutcome(pending, installedBefore = false, installedAfter = true))
     }
 
     private fun result(
