@@ -40,7 +40,8 @@ enum class DeviceCommandRejection {
     EXPIRED_OR_FUTURE,
     INVALID_SIGNATURE,
     REPLAYED_NONCE,
-    NONCE_CAPACITY_REACHED
+    NONCE_CAPACITY_REACHED,
+    REPLAY_STATE_NOT_PERSISTED
 }
 
 data class DeviceCommandVerification(
