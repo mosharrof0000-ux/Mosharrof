@@ -18,6 +18,7 @@ object AppPackageTaskResultStore {
     private const val KEY_PACKAGE_VERIFIED = "package_state_verified"
     private const val KEY_BASELINE_VERSION = "baseline_version_code"
     private const val KEY_BASELINE_CAPTURED = "baseline_captured"
+    private const val KEY_TARGET_VERSION = "verification_target_version_code"
     private const val UNKNOWN_VERSION = Long.MIN_VALUE
 
     fun save(context: Context, result: AppPackageTaskResult) {
@@ -30,9 +31,11 @@ object AppPackageTaskResultStore {
             .putString(KEY_PACKAGE_NAME, result.packageName)
             .putBoolean(KEY_PACKAGE_VERIFIED, result.packageStateVerified)
 
+        // Uninstall has no APK metadata, so capture the installed baseline here.
+        // Install captures both target and baseline before launching Android's installer.
         if (result.status == AppPackageTaskStatus.AWAITING_USER_CONFIRMATION &&
-            result.packageName != null &&
-            result.action != AppPackageTaskAction.SEARCH_PLAY_STORE
+            result.action == AppPackageTaskAction.UNINSTALL_APP &&
+            result.packageName != null
         ) {
             val baseline = packageVersionCode(context, result.packageName)
             edit.putBoolean(KEY_BASELINE_CAPTURED, true)
@@ -74,6 +77,34 @@ object AppPackageTaskResultStore {
         return runCatching {
             AppPackageTaskResult(requestId, action, status, detail, packageName, verified)
         }.getOrNull()
+    }
+
+
+    fun saveVerificationTarget(context: Context, targetVersionCode: Long, baselineVersionCode: Long) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putLong(KEY_TARGET_VERSION, targetVersionCode)
+            .putLong(KEY_BASELINE_VERSION, baselineVersionCode)
+            .putBoolean(KEY_BASELINE_CAPTURED, true)
+            .apply()
+    }
+
+    fun verificationTargetVersionCode(context: Context): Long? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_TARGET_VERSION)) prefs.getLong(KEY_TARGET_VERSION, UNKNOWN_VERSION) else null
+    }
+
+    fun baselineVersionCode(context: Context): Long? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (!prefs.getBoolean(KEY_BASELINE_CAPTURED, false)) return null
+        return prefs.getLong(KEY_BASELINE_VERSION, UNKNOWN_VERSION).takeUnless { it == UNKNOWN_VERSION }
+    }
+
+    fun clearVerificationTarget(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove(KEY_TARGET_VERSION)
+            .remove(KEY_BASELINE_VERSION)
+            .remove(KEY_BASELINE_CAPTURED)
+            .apply()
     }
 
     fun clear(context: Context) {
