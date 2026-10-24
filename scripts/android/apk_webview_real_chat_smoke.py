@@ -186,6 +186,14 @@ def main() -> int:
                 "অনুরোধটি ব্যর্থ",
                 "সংযোগে সমস্যা",
                 "এই মুহূর্তে gemini সংযোগে সমস্যা",
+                "ai সংযোগ ব্যর্থ",
+                "আবার চেষ্টা করুন",
+                "নেটওয়ার্ক সংযোগ",
+                "সার্ভারে সমস্যা",
+                "server error",
+                "service unavailable",
+                "connection failed",
+                "unable to connect",
             ]
             failure_marker = next((phrase for phrase in failed_phrases if phrase in lower), "")
             passed = bool(answer) and not failure_marker
