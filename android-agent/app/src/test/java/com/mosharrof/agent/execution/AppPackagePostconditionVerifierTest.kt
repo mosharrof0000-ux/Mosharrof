@@ -48,4 +48,11 @@ class AppPackagePostconditionVerifierTest {
         assertEquals(AppPackageTaskStatus.CANCELLED, result.status)
         assertTrue(!result.packageStateVerified)
     }
+    @Test fun uninstallResultCodeAloneCannotOverrideObservedInstalledPackage() {
+        val pending = PendingAppPackageOperation("uninstall-3", AppPackageTaskAction.UNINSTALL_APP, "com.example.app")
+        val result = AppPackagePostconditionVerifier.uninstall(pending, packageStillInstalled = true, resultCodeOk = true)
+        assertEquals(AppPackageTaskStatus.FAILED, result.status)
+        assertTrue(!result.packageStateVerified)
+    }
+
 }
