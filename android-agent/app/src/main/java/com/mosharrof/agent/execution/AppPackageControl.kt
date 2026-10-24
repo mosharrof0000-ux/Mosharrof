@@ -132,7 +132,8 @@ object AppPackageControl {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 val pending = PendingAppPackageOperation(
-                    requestId, AppPackageTaskAction.INSTALL_APK, archive.packageName, archive.versionCode
+                    requestId, AppPackageTaskAction.INSTALL_APK, archive.packageName, archive.versionCode,
+                    installedVersionCode(activity, archive.packageName)
                 )
                 try {
                     launchPackageOperation(intent, pending)
@@ -233,7 +234,7 @@ object AppPackageControl {
         }
     }
 
-    private fun isInstalled(activity: Activity, packageName: String): Boolean = try {
+    private fun installedVersionCode(activity: Activity, packageName: String): Long? = try {\n        @Suppress("DEPRECATION")\n        val info = activity.packageManager.getPackageInfo(packageName, 0)\n        if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()\n    } catch (_: Exception) { null }\n\n    private fun isInstalled(activity: Activity, packageName: String): Boolean = try {
         @Suppress("DEPRECATION")
         activity.packageManager.getApplicationInfo(packageName, 0)
         true
