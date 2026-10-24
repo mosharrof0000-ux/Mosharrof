@@ -49,6 +49,21 @@ class DeviceCommandAuthenticatorTest {
         assertTrue(verifier.verify(request, secret, now).accepted)
     }
 
+    @Test fun nonceCacheCapacityFailsClosedInsteadOfEvictingLiveNonces() {
+        val verifier = DeviceCommandAuthenticator(maxRememberedNonces = 1)
+        val first = signed(nonce = "nonce-first-12345")
+        val second = signed(nonce = "nonce-second-1234")
+        assertTrue(verifier.verify(first, secret, now).accepted)
+        assertEquals(
+            DeviceCommandRejection.NONCE_CAPACITY_REACHED,
+            verifier.verify(second, secret, now).rejection
+        )
+        assertEquals(
+            DeviceCommandRejection.REPLAYED_NONCE,
+            verifier.verify(first, secret, now).rejection
+        )
+    }
+
     private fun signed(
         issued: Long = now,
         expiry: Long = now + 60_000,
