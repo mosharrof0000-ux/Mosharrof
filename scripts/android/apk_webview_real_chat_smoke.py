@@ -7,14 +7,16 @@ Playwright CDP setup is not supported by Android WebView's browser-context API.
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import time
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen
 
-import websocket
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / ".github" / "scripts"))
+from android_qa_cdp import PageCDP
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
@@ -58,59 +60,6 @@ def record(name: str, passed: bool, detail: str = "") -> None:
         report["errors"].append({"check": name, "detail": detail})
 
 
-class PageCDP:
-    """Minimal page-target CDP client with bounded retries for idempotent commands."""
-
-    def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
-        self.next_id = 0
-
-    def command(self, method: str, params: dict | None = None, timeout: float = 15, retries: int = 0) -> dict:
-        for attempt in range(retries + 1):
-            self.next_id += 1
-            command_id = self.next_id
-            self.ws.settimeout(timeout)
-            self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
-            deadline = time.monotonic() + timeout
-            try:
-                while time.monotonic() < deadline:
-                    message = json.loads(self.ws.recv())
-                    if message.get("id") != command_id:
-                        continue
-                    if "error" in message:
-                        raise RuntimeError(f"CDP {method} failed: {message['error']}")
-                    return message.get("result", {})
-            except websocket.WebSocketTimeoutException:
-                if attempt >= retries:
-                    raise
-                report["cdp_retry_events"].append({
-                    "method": method, "attempt": attempt + 1, "reason": "response_timeout"
-                })
-                time.sleep(0.25)
-        raise TimeoutError(f"Timed out waiting for CDP command {method}")
-
-    def evaluate(self, expression: str, timeout: float = 15, retry_safe: bool = False):
-        result = self.command(
-            "Runtime.evaluate",
-            {"expression": expression, "returnByValue": True, "awaitPromise": True},
-            timeout=timeout,
-            retries=2 if retry_safe else 0,
-        )
-        if "exceptionDetails" in result:
-            raise RuntimeError(f"Page JavaScript exception: {result['exceptionDetails']}")
-        return result.get("result", {}).get("value")
-
-    def screenshot(self, path: Path) -> None:
-        result = self.command(
-            "Page.captureScreenshot",
-            {"format": "png", "captureBeyondViewport": True},
-            retries=2,
-        )
-        path.write_bytes(base64.b64decode(result["data"]))
-
-    def close(self) -> None:
-        self.ws.close()
-
 def get_targets() -> list[dict]:
     target_file = out / "webview-targets.json"
     if target_file.is_file():
@@ -124,10 +73,15 @@ def main() -> int:
     cdp = None
     try:
         report["stage"] = "discovering_webview_target"
-        if report["launch_evidence"]["screenshot_status"] != "CAPTURED":
-            record("launch_screenshot_captured", False, "Launch screenshot was not captured; see launch-screenshot-status.txt")
-        else:
-            record("launch_screenshot_captured", True, "Launch screenshot captured before chat interaction")
+        activity_status = report["launch_evidence"]["activity_status"]
+        record("launch_activity_displayed", activity_status == "DISPLAYED",
+               f"MainActivity first-display status={activity_status}")
+        launch_png = out / "apk-webview-launch.png"
+        launch_captured = (report["launch_evidence"]["screenshot_status"] == "CAPTURED"
+                           and launch_png.is_file() and launch_png.stat().st_size > 100)
+        record("launch_screenshot_captured", launch_captured,
+               "Launch screenshot captured before chat interaction" if launch_captured
+               else "Launch screenshot missing/invalid; see launch-screenshot-status.txt")
         ui_state = report["launch_evidence"]["ui_state"]
         if ui_state == "SYSTEM_ANR_DIALOG":
             report["launch_evidence"]["warning"] = "Android system/UI ANR dialog detected; chat result is evaluated separately"
@@ -148,7 +102,7 @@ def main() -> int:
             return 1
 
         report["stage"] = "connecting_cdp"
-        cdp = PageCDP(target["webSocketDebuggerUrl"])
+        cdp = PageCDP(target["webSocketDebuggerUrl"], report["cdp_retry_events"])
         cdp.command("Page.enable", retries=2)
         cdp.command("Runtime.enable", retries=2)
         try:
@@ -262,6 +216,7 @@ def main() -> int:
             except Exception:
                 pass
     finally:
+        report["status"] = "PASS" if report["checks"] and all(check["passed"] for check in report["checks"]) else "FAIL"
         (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         if cdp is not None:
             try:
