@@ -357,7 +357,7 @@ class MainActivity : ComponentActivity() {
             result.packageName ?: "",
             result.packageStateVerified.toString(),
             callbackDetail
-        ).joinToString("\\n")
+        ).joinToString("\n")
         val signature = DeviceCommandAuthenticator.sign(secret, canonicalResult)
         val uri = callback.buildUpon()
             .appendQueryParameter("mosharrof_android_result", "1")
