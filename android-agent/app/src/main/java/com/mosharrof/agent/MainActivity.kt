@@ -70,8 +70,8 @@ class MainActivity : ComponentActivity() {
                         false -> speechStatus.text = "ফোন সংযোগ: pairing code তৈরি; ব্রাউজারে অনুমোদনের অপেক্ষায়"
                         null -> Unit
                     }
-                    outcome?.rejected?.let(::handleRejectedRemoteCommand)
-                    outcome?.command?.let(::handleRemoteCommand)
+                    outcome?.rejected?.let { rejected: DeviceCommandEnvelope -> handleRejectedRemoteCommand(rejected) }
+                    outcome?.command?.let { command: DeviceCommandEnvelope -> handleRemoteCommand(command) }
                     devicePollHandler.postDelayed(devicePollTask, 5_000L)
                 }
             }.start()
