@@ -21,6 +21,7 @@ import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
 import com.mosharrof.agent.execution.AppPackageControl
+import com.mosharrof.agent.execution.AppPackagePostcondition
 import com.mosharrof.agent.execution.AppPackageTaskAction
 import com.mosharrof.agent.execution.AppPackageTaskResult
 import com.mosharrof.agent.execution.AppPackageTaskResultStore
