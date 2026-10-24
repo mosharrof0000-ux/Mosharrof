@@ -52,8 +52,8 @@ object AppPackageControl {
         activity: Activity,
         apkUri: Uri,
         status: TextView,
-        onTaskResult: (AppPackageTaskResult) -> Unit = {}
-        , requestIdOverride: String? = null
+        onTaskResult: (AppPackageTaskResult) -> Unit = {},
+        requestIdOverride: String? = null
     ) = AppPackageInstallControl.requestInstallFromSelectedUri(activity, apkUri, status, onTaskResult, requestIdOverride)
 
     fun requestUninstall(
