@@ -60,6 +60,11 @@ public class AppPackagePlugin extends Plugin {
             return;
         }
         Long previousVersion = AppPackagePlatform.installedVersion(getContext(), metadata.packageName);
+        if (previousVersion != null && previousVersion < 0L) {
+            resolve(call, requestId, "INSTALL_APK", "UNKNOWN",
+                "আগের package state যাচাই করা যায়নি; নিরাপদে ইনস্টল শুরু করা হয়নি।", metadata.packageName, false);
+            return;
+        }
         new AlertDialog.Builder(getActivity())
             .setTitle("ইনস্টল নিশ্চিত করুন")
             .setMessage("Package: " + metadata.packageName + "\nVersion: " + metadata.versionCode
@@ -124,6 +129,12 @@ public class AppPackagePlugin extends Plugin {
             return;
         }
         Long previousVersion = AppPackagePlatform.installedVersion(getContext(), packageName);
+        if (previousVersion == null || previousVersion < 0L) {
+            resolve(call, requestId, "UNINSTALL_APP", "UNKNOWN",
+                "আনইনস্টল শুরুর আগে package state নির্ভরযোগ্যভাবে যাচাই করা যায়নি; কোনো অ্যাপ সরানো হয়নি।",
+                packageName, false);
+            return;
+        }
         new AlertDialog.Builder(getActivity())
             .setTitle("আনইনস্টল নিশ্চিত করুন")
             .setMessage("Package: " + packageName + "\nAndroid-এর নিজস্ব আনইনস্টল স্ক্রিন খুলবে। চূড়ান্ত সিদ্ধান্ত আপনাকেই দিতে হবে।")
