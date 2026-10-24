@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const { createCommandRouter, parsePackageCommand } = require("../core/android-agent-command-router.js");
+const { createCommandRouter } = require("../core/android-agent-command-router.js");
+const packageApi = require("../core/android-app-package-command-router.js");
+const { parsePackageCommand } = packageApi;
 
 assert.deepEqual(parsePackageCommand("install app"), { kind: "pick-apk" });
 assert.deepEqual(parsePackageCommand("অ্যাপ ইনস্টল করুন"), { kind: "pick-apk" });
@@ -33,6 +35,7 @@ const router = createCommandRouter({
   planner: null,
   executor: null,
   fileTaskRouter: null,
+  packageRouter: packageApi,
   getPlugin: () => plugin,
   confirm: () => true,
   prompt: () => "Chrome",
@@ -63,7 +66,7 @@ assert.equal(calls[2].payload.target, "Chrome");
 
 let nativeCalls = 0;
 const cancelledRouter = createCommandRouter({
-  planner: null, executor: null, fileTaskRouter: null,
+  planner: null, executor: null, fileTaskRouter: null, packageRouter: packageApi,
   getPlugin: () => ({ installAppFromPicker: async () => { nativeCalls += 1; } }),
   confirm: () => false, report: () => {}
 });
@@ -72,7 +75,7 @@ assert.equal(cancelled.status, "CANCELLED");
 assert.equal(nativeCalls, 0, "web cancellation must prevent native operation");
 
 const browserRouter = createCommandRouter({
-  planner: null, executor: null, fileTaskRouter: null,
+  planner: null, executor: null, fileTaskRouter: null, packageRouter: packageApi,
   getPlugin: () => null
 });
 assert.equal(browserRouter.handle("install app").handled, false,
