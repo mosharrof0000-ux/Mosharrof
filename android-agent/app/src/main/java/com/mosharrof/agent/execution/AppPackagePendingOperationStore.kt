@@ -30,11 +30,20 @@ object AppPackagePendingOperationStore {
         context, requestId, AppPackageTaskAction.UNINSTALL_APP, packageName, null, readInstalledVersion(context, packageName)?.versionCode
     )
 
+    fun beginSearch(context: Context, requestId: String, query: String) = save(
+        context, requestId, AppPackageTaskAction.SEARCH_PLAY_STORE, null, null, null
+    )
+
+    fun hasPendingRequest(context: Context, requestId: String): Boolean {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_REQUEST_ID, null) == requestId && prefs.getLong(KEY_STARTED_AT, 0L) > 0L
+    }
+
     private fun save(
         context: Context,
         requestId: String,
         action: AppPackageTaskAction,
-        packageName: String,
+        packageName: String?,
         expectedVersionCode: Long?,
         previousVersionCode: Long?
     ) {
@@ -68,6 +77,9 @@ object AppPackagePendingOperationStore {
                 "Android confirmation flow-এর ফল ৩০ মিনিটের মধ্যে যাচাই করা যায়নি।",
                 packageName, expectedVersionCode = expectedVersion, previousVersionCode = previousVersion
             )
+        }
+        if (action == AppPackageTaskAction.SEARCH_PLAY_STORE) {
+            return unknown(requestId, action, null, "Play Store সার্চ খোলা হয়েছিল; অ্যাপ ইনস্টল হয়েছে কি না এই ফল থেকে নিশ্চিত করা যায় না।")
         }
         if (packageName == null) return unknown(requestId, action, null, "যাচাইয়ের জন্য package name সংরক্ষিত ছিল না।")
         val installed = readInstalledVersion(context, packageName)

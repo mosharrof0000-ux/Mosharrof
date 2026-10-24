@@ -16,6 +16,7 @@ import * as AiOrgan from "../organs/ai/index.js";
 import * as BranchOrgan from "../organs/branch/index.js";
 import { extraUiOrgans } from "./ui-organ-modules.js";
 import { installDrawerStateGuard } from "../core/drawer-state-guard.js";
+import * as AndroidAgentBridgeOrgan from "../organs/android-agent-bridge/index.js";
 
 const shapeRules = {
   home: "14px 10px 16px 11px", chat: "10px 16px 12px 16px", history: "50%",
@@ -79,6 +80,11 @@ async function startOrganRuntime() {
     registry: EntityRegistry, bus: EntityBus, organRegistry: registry, links, organRuntime: runtime,
     version: "2.0-organ-runtime", ready: true
   };
+  try {
+    AndroidAgentBridgeOrgan.initialize();
+  } catch (error) {
+    console.error("[MOSHARROF Android Agent Bridge] startup blocked", error);
+  }
   window.dispatchEvent(new CustomEvent("mosharrof:organs-ready", { detail: { count: registry.list().length } }));
 }
 startOrganRuntime().catch((error) => {

@@ -14,7 +14,8 @@ object AppPackageControl {
         rawCommand: String,
         status: TextView,
         pickApk: () -> Unit,
-        onTaskResult: (AppPackageTaskResult) -> Unit = {}
+        onTaskResult: (AppPackageTaskResult) -> Unit = {},
+        requestIdOverride: String? = null
     ): Boolean = when (val command = AppPackageCommandParser.parse(rawCommand)) {
         AppPackageCommand.NotRecognized -> false
         AppPackageCommand.PickApk -> {
@@ -27,11 +28,11 @@ object AppPackageControl {
             true
         }
         is AppPackageCommand.SearchStore -> {
-            showStoreSearch(activity, command.query, status, onTaskResult)
+            showStoreSearch(activity, command.query, status, onTaskResult, requestIdOverride)
             true
         }
         is AppPackageCommand.Uninstall -> {
-            val requestId = UUID.randomUUID().toString()
+            val requestId = requestIdOverride ?: UUID.randomUUID().toString()
             val packageName = AppPackageUninstallControl.resolveInstalledLauncherPackage(activity, command.target)
             if (packageName == null) {
                 val outcome = result(
@@ -51,8 +52,9 @@ object AppPackageControl {
         activity: Activity,
         apkUri: Uri,
         status: TextView,
-        onTaskResult: (AppPackageTaskResult) -> Unit = {}
-    ) = AppPackageInstallControl.requestInstallFromSelectedUri(activity, apkUri, status, onTaskResult)
+        onTaskResult: (AppPackageTaskResult) -> Unit = {},
+        requestIdOverride: String? = null
+    ) = AppPackageInstallControl.requestInstallFromSelectedUri(activity, apkUri, status, onTaskResult, requestIdOverride)
 
     fun requestUninstall(
         activity: Activity,
@@ -66,9 +68,10 @@ object AppPackageControl {
         activity: Activity,
         query: String,
         status: TextView,
-        onTaskResult: (AppPackageTaskResult) -> Unit
+        onTaskResult: (AppPackageTaskResult) -> Unit,
+        requestIdOverride: String? = null
     ) {
-        val requestId = UUID.randomUUID().toString()
+        val requestId = requestIdOverride ?: UUID.randomUUID().toString()
         AlertDialog.Builder(activity)
             .setTitle("অ্যাপ খুঁজুন")
             .setMessage("\"${query}\" অ্যাপটি Play Store-এ খোঁজা হবে। ইনস্টল ও অনুমতির চূড়ান্ত সিদ্ধান্ত আপনার হাতে থাকবে।")
@@ -80,6 +83,7 @@ object AppPackageControl {
             .setPositiveButton("Play Store খুলুন") { _, _ ->
                 val market = Uri.parse("market://search?q=" + Uri.encode(query))
                 try {
+                    if (requestIdOverride != null) AppPackagePendingOperationStore.beginSearch(activity, requestId, query)
                     activity.startActivity(Intent(Intent.ACTION_VIEW, market))
                     val outcome = result(requestId, AppPackageTaskAction.SEARCH_PLAY_STORE, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Play Store সার্চ খোলা হয়েছে; এটি ইনস্টল সফল হওয়ার প্রমাণ নয়।")
                     onTaskResult(outcome)
@@ -93,6 +97,7 @@ object AppPackageControl {
                             status.text = outcome.toDisplayText()
                         }
                         .onFailure {
+                            if (requestIdOverride != null) AppPackagePendingOperationStore.clear(activity)
                             val outcome = result(requestId, AppPackageTaskAction.SEARCH_PLAY_STORE, AppPackageTaskStatus.FAILED, "অ্যাপ খোঁজার পেজ খোলা যায়নি।")
                             onTaskResult(outcome)
                             status.text = outcome.toDisplayText()

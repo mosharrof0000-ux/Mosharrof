@@ -1,6 +1,9 @@
 package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
@@ -10,6 +13,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.getSystemService
@@ -26,6 +30,11 @@ import com.mosharrof.agent.execution.AppPackageTaskResult
 import com.mosharrof.agent.execution.AppPackageTaskResultStore
 import com.mosharrof.agent.execution.AppPackageTaskStatus
 import com.mosharrof.agent.execution.DeviceIntentControl
+import com.mosharrof.agent.execution.DeviceCommandAction
+import com.mosharrof.agent.execution.DeviceCommandAuthenticator
+import com.mosharrof.agent.execution.DeviceCommandEnvelope
+import com.mosharrof.agent.execution.DeviceCommandReplayStore
+import com.mosharrof.agent.execution.DevicePairingSecretStore
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.execution.ScreenInspectionController
 import com.mosharrof.agent.voice.AgentSpeechOutput
@@ -45,6 +54,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
     private var speechOutput: AgentSpeechOutput? = null
+    private var pendingExternalRequestId: String? = null
+    private var externalCallback: Uri? = null
+    private val deviceCommandAuthenticator by lazy { DeviceCommandAuthenticator() }
     private val permissionResult = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { grants ->
@@ -56,10 +68,14 @@ class MainActivity : ComponentActivity() {
         if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
     private val apkPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status, ::publishAppPackageResult)
+        val requestId = pendingExternalRequestId ?: java.util.UUID.randomUUID().toString()
+        pendingExternalRequestId = null
+        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(
+            this, uri, status, ::publishAppPackageResult, requestIdOverride = requestId
+        )
         else publishAppPackageResult(
             AppPackageTaskResult(
-                requestId = java.util.UUID.randomUUID().toString(),
+                requestId = requestId,
                 action = AppPackageTaskAction.INSTALL_APK,
                 status = AppPackageTaskStatus.CANCELLED,
                 detail = "APK নির্বাচন বাতিল করা হয়েছে; কোনো অ্যাপ ইনস্টল হয়নি।"
@@ -138,6 +154,10 @@ class MainActivity : ComponentActivity() {
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
+            addView(Button(this@MainActivity).apply {
+                text = "Mosharrof Web-এর সঙ্গে যুক্ত করুন"
+                setOnClickListener { showPairingKey() }
+            })
             AppPackageInstallControl.addInstallButton(this@MainActivity, this) {
                 apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
             }
@@ -152,7 +172,8 @@ class MainActivity : ComponentActivity() {
         })
         })
         refreshServiceStatus()
-        if (intent.getBooleanExtra(EXTRA_START_VOICE, false)) {
+        val externalCommandHandled = handleExternalCommand(intent)
+        if (!externalCommandHandled && intent.getBooleanExtra(EXTRA_START_VOICE, false)) {
             intent.removeExtra(EXTRA_START_VOICE)
             window.decorView.post { startSpeechInput() }
         }
@@ -160,7 +181,8 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (intent.getBooleanExtra(EXTRA_START_VOICE, false)) {
+        val externalCommandHandled = handleExternalCommand(intent)
+        if (!externalCommandHandled && intent.getBooleanExtra(EXTRA_START_VOICE, false)) {
             intent.removeExtra(EXTRA_START_VOICE)
             window.decorView.post { startSpeechInput() }
         }
@@ -210,6 +232,140 @@ class MainActivity : ComponentActivity() {
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
         AppPackageTaskResultStore.save(this, result)
         status.text = "কাজের ফল: ${result.status} • ID: ${result.requestId}\n${result.detail}"
+        if (result.isTerminal) openBridgeCallback(result)
+    }
+
+    private fun showPairingKey(rotate: Boolean = false) {
+        val secret = runCatching { DevicePairingSecretStore.getOrCreateSecretBase64(this, rotate) }.getOrNull()
+        if (secret == null) {
+            status.text = "নিরাপদ pairing key তৈরি করা যায়নি; Android Keystore পরীক্ষা করুন।"
+            return
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Mosharrof Web pairing key")
+            .setMessage("ওয়েব চ্যাটে ‘Android যুক্ত করুন’ লিখে এই কী পেস্ট করুন। কীটি শুধু আপনার ব্রাউজারের লোকাল স্টোরেজে রাখুন; অন্য কাউকে দেবেন না।\n\n$secret")
+            .setPositiveButton("কপি করুন") { _, _ ->
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
+                clipboard?.setPrimaryClip(ClipData.newPlainText("Mosharrof Android pairing key", secret))
+                Toast.makeText(this, "Pairing key কপি হয়েছে।", Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton("নতুন কী") { _, _ -> showPairingKey(rotate = true) }
+            .setNegativeButton("বন্ধ", null)
+            .show()
+    }
+
+    private fun handleExternalCommand(source: Intent): Boolean {
+        val uri = source.data ?: return false
+        if (uri.scheme != "mosharrof-agent" || uri.host != "command") return false
+        externalCallback = safeBridgeCallback(uri.getQueryParameter("callback"))
+        val requestId = uri.getQueryParameter("rid")
+            ?.takeIf { it.length in 1..128 && it.all { ch -> ch.isLetterOrDigit() || ch in "-_." } }
+            ?: java.util.UUID.randomUUID().toString()
+        if (AppPackagePendingOperationStore.hasPendingRequest(this, requestId)) return true
+
+        val action = runCatching { DeviceCommandAction.valueOf(uri.getQueryParameter("action") ?: "") }.getOrNull()
+        val target = uri.getQueryParameter("target") ?: ""
+        val taskAction = when (action) {
+            DeviceCommandAction.SEARCH_PLAY_STORE -> AppPackageTaskAction.SEARCH_PLAY_STORE
+            DeviceCommandAction.UNINSTALL_APP -> AppPackageTaskAction.UNINSTALL_APP
+            else -> AppPackageTaskAction.INSTALL_APK
+        }
+        val safePackageName = target.takeIf {
+            taskAction == AppPackageTaskAction.UNINSTALL_APP &&
+                Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+").matches(it)
+        }
+        val secret = DevicePairingSecretStore.loadSecret(this)
+        if (action == null || secret == null) {
+            publishAppPackageResult(
+                AppPackageTaskResult(
+                    requestId, taskAction, AppPackageTaskStatus.FAILED,
+                    if (secret == null) "Android Agent-এ আগে pairing key তৈরি করে ওয়েব চ্যাটে সংরক্ষণ করুন।"
+                    else "Android command envelope-এর action ভুল; কোনো কাজ চালানো হয়নি।",
+                    safePackageName
+                )
+            )
+            return true
+        }
+        val envelope = DeviceCommandEnvelope(
+            requestId = requestId,
+            action = action,
+            issuedAtMillis = uri.getQueryParameter("issued")?.toLongOrNull() ?: -1L,
+            expiresAtMillis = uri.getQueryParameter("expires")?.toLongOrNull() ?: -1L,
+            nonce = uri.getQueryParameter("nonce") ?: "",
+            target = target,
+            signatureHex = uri.getQueryParameter("sig") ?: ""
+        )
+        val verification = DeviceCommandReplayStore.verifyAndRemember(
+            this, deviceCommandAuthenticator, envelope, secret, System.currentTimeMillis()
+        )
+        if (!verification.accepted) {
+            publishAppPackageResult(
+                AppPackageTaskResult(
+                    requestId, taskAction, AppPackageTaskStatus.FAILED,
+                    "নিরাপত্তা যাচাই ব্যর্থ: ${verification.rejection}; কোনো অ্যাপ কমান্ড চালানো হয়নি।",
+                    safePackageName
+                )
+            )
+            return true
+        }
+        when (action) {
+            DeviceCommandAction.INSTALL_APK -> {
+                pendingExternalRequestId = requestId
+                apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
+            }
+            DeviceCommandAction.SEARCH_PLAY_STORE -> {
+                if (target.isBlank()) {
+                    publishAppPackageResult(AppPackageTaskResult(requestId, taskAction, AppPackageTaskStatus.FAILED, "অ্যাপের সার্চ নাম খালি; কোনো কাজ চালানো হয়নি।"))
+                } else {
+                    AppPackageControl.handleCommand(
+                        this, "install $target", status,
+                        pickApk = { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) },
+                        onTaskResult = ::publishAppPackageResult,
+                        requestIdOverride = requestId
+                    )
+                }
+            }
+            DeviceCommandAction.UNINSTALL_APP -> {
+                AppPackageControl.requestUninstall(this, target, status, requestId, ::publishAppPackageResult)
+            }
+        }
+        return true
+    }
+
+    private fun safeBridgeCallback(raw: String?): Uri? {
+        if (raw.isNullOrBlank()) return null
+        val uri = runCatching { Uri.parse(raw) }.getOrNull() ?: return null
+        if (uri.scheme != "https" || uri.host != "mosharrof0000-ux.github.io" || uri.path != "/Mosharrof/") return null
+        return uri.buildUpon().clearQuery().fragment(null).build()
+    }
+
+    private fun openBridgeCallback(result: AppPackageTaskResult) {
+        val callback = externalCallback ?: return
+        val secret = DevicePairingSecretStore.loadSecret(this) ?: return
+        val callbackDetail = result.detail.take(300)
+        val canonicalResult = listOf(
+            "mosharrof-device-result-v1",
+            result.requestId,
+            result.action.name,
+            result.status.name,
+            result.packageName ?: "",
+            result.packageStateVerified.toString(),
+            callbackDetail
+        ).joinToString("\\n")
+        val signature = DeviceCommandAuthenticator.sign(secret, canonicalResult)
+        val uri = callback.buildUpon()
+            .appendQueryParameter("mosharrof_android_result", "1")
+            .appendQueryParameter("request_id", result.requestId)
+            .appendQueryParameter("action", result.action.name)
+            .appendQueryParameter("status", result.status.name)
+            .appendQueryParameter("detail", callbackDetail)
+            .appendQueryParameter("verified", result.packageStateVerified.toString())
+            .appendQueryParameter("package", result.packageName ?: "")
+            .appendQueryParameter("callback_sig", signature)
+            .build()
+        externalCallback = null
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+            .onFailure { status.text = "কাজের ফল সংরক্ষিত হয়েছে, কিন্তু ওয়েব চ্যাটে ফল ফেরত খোলা যায়নি।" }
     }
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
