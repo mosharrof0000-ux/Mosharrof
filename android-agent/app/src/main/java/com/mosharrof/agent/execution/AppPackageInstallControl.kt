@@ -5,6 +5,8 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.net.Uri
+import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import java.io.File
 import java.util.UUID
@@ -14,6 +16,13 @@ object AppPackageInstallControl {
     private data class ApkMetadata(val packageName: String, val versionCode: Long)
     private const val MAX_APK_BYTES = 512L * 1024L * 1024L
     private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
+
+    fun addInstallButton(activity: Activity, parent: LinearLayout, launchPicker: () -> Unit) {
+        parent.addView(Button(activity).apply {
+            text = "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
+            setOnClickListener { launchPicker() }
+        })
+    }
 
     fun requestInstallFromSelectedUri(
         activity: Activity,
