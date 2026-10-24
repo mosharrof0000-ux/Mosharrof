@@ -102,15 +102,29 @@ header.top .right-btn, .top .right-btn {
     max(14px, var(--mos-safe-right)) !important;
   box-sizing: border-box !important;
 }
-/* Older Android WebView can collapse short AI flex items; preserve a measurable text box. */
+/* Keep the scroll viewport full-height on older WebView; percentage height can collapse inside the flex shell. */
+.chat-scroll {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+/* Avoid an intrinsic-size cycle: max-content parent + 100%-width child collapsed to 1px in WebView 83. */
 .message.ai {
-  width: max-content !important;
-  max-width: 92% !important;
-  min-width: 1px !important;
+  width: fit-content !important;
+  max-width: 92vw !important;
+  min-width: 0 !important;
 }
 .message.ai .rich-content {
-  width: 100% !important;
-  min-width: 1px !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
 }
 /* Keep the current composer and all of its buttons; only let it float over the full canvas. */
 .composer {
