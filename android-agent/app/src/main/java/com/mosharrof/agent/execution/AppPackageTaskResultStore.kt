@@ -3,8 +3,8 @@ package com.mosharrof.agent.execution
 import android.content.Context
 
 /**
- * Small durable handoff point for the next chat/pairing bridge.
- * Stores only the latest task outcome; never stores APK bytes or device secrets.
+ * Small durable handoff point for package-operation outcomes.
+ * Stores only task metadata; never stores APK bytes or device secrets.
  */
 object AppPackageTaskResultStore {
     private const val PREFS = "mosharrof_app_package_task_result"
@@ -14,6 +14,7 @@ object AppPackageTaskResultStore {
     private const val KEY_DETAIL = "detail"
     private const val KEY_PACKAGE_NAME = "package_name"
     private const val KEY_PACKAGE_VERIFIED = "package_state_verified"
+    private const val KEY_WAS_INSTALLED_BEFORE = "package_was_installed_before"
 
     fun save(context: Context, result: AppPackageTaskResult) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -42,6 +43,17 @@ object AppPackageTaskResultStore {
             AppPackageTaskResult(requestId, action, status, detail, packageName, verified)
         }.getOrNull()
     }
+
+    fun savePreOperationInstalledState(context: Context, packageName: String, installed: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_PACKAGE_NAME, packageName)
+            .putBoolean(KEY_WAS_INSTALLED_BEFORE, installed)
+            .apply()
+    }
+
+    fun wasInstalledBefore(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_WAS_INSTALLED_BEFORE, false)
 
     fun clear(context: Context) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply()
