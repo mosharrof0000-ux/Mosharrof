@@ -204,14 +204,14 @@ public class AppPackagePlugin extends Plugin {
             .setPositiveButton("Play Store খুলুন", (dialog, which) -> {
                 try {
                     Intent market = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=" + Uri.encode(query)));
-                    startActivity(market);
+                    getActivity().startActivity(market);
                     resolve(call, requestId, "SEARCH_PLAY_STORE", "AWAITING_USER_CONFIRMATION",
                         "Play Store সার্চ খোলা হয়েছে; ইনস্টল হয়েছে কি না যাচাই করা হয়নি।", null, false);
                 } catch (Exception error) {
                     try {
                         Intent web = new Intent(Intent.ACTION_VIEW,
                             Uri.parse("https://play.google.com/store/search?q=" + Uri.encode(query) + "&c=apps"));
-                        startActivity(web);
+                        getActivity().startActivity(web);
                         resolve(call, requestId, "SEARCH_PLAY_STORE", "AWAITING_USER_CONFIRMATION",
                             "ওয়েব Play Store সার্চ খোলা হয়েছে; ইনস্টল সফল হওয়ার প্রমাণ নয়।", null, false);
                     } catch (Exception second) {
