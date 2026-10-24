@@ -1,6 +1,7 @@
 package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
@@ -166,10 +167,82 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
-        if (::status.isInitialized) {
-            val actionResult = MosharrofAccessibilityService.takeActionResult()
-            if (actionResult != null) status.text = actionResult else refreshServiceStatus()
+        if (!::status.isInitialized) return
+        val packageTask = AppPackageTaskResultStore.latest(this)
+        if (packageTask != null &&
+            packageTask.status == AppPackageTaskStatus.AWAITING_USER_CONFIRMATION &&
+            packageTask.action != AppPackageTaskAction.SEARCH_PLAY_STORE
+        ) {
+            verifyPackageTaskAfterExternalConfirmation(packageTask)
+            return
         }
+        val actionResult = MosharrofAccessibilityService.takeActionResult()
+        if (actionResult != null) status.text = actionResult else refreshServiceStatus()
+    }
+
+    /**
+     * Returning from Android's installer/uninstaller is not itself success.
+     * Report success only when PackageManager confirms the expected package-state change.
+     */
+    private fun verifyPackageTaskAfterExternalConfirmation(task: AppPackageTaskResult) {
+        val packageName = task.packageName
+        if (packageName.isNullOrBlank()) {
+            AppPackageTaskResultStore.clearVerificationTarget(this)
+            publishAppPackageResult(task.copy(
+                status = AppPackageTaskStatus.UNKNOWN,
+                detail = "Android নিশ্চিতকরণ স্ক্রিন থেকে ফিরেছে, কিন্তু যাচাই করার package name নেই; সফল বলা যাচ্ছে না।",
+                packageStateVerified = false
+            ))
+            return
+        }
+
+        val currentVersion = installedPackageVersionCode(packageName)
+        val verifiedResult = when (task.action) {
+            AppPackageTaskAction.INSTALL_APK -> {
+                val targetVersion = AppPackageTaskResultStore.verificationTargetVersionCode(this)
+                val baselineVersion = AppPackageTaskResultStore.baselineVersionCode(this)
+                if (targetVersion != null && baselineVersion != null &&
+                    currentVersion == targetVersion && currentVersion != baselineVersion
+                ) {
+                    task.copy(
+                        status = AppPackageTaskStatus.SUCCEEDED,
+                        detail = "ইনস্টল যাচাই হয়েছে: package name ও version Android PackageManager-এ মিলে গেছে।",
+                        packageStateVerified = true
+                    )
+                } else {
+                    task.copy(
+                        status = AppPackageTaskStatus.UNKNOWN,
+                        detail = "Android ইনস্টলার থেকে ফেরা হয়েছে, কিন্তু প্রত্যাশিত নতুন package/version state নিশ্চিত হয়নি। ইনস্টল সফল বলে ধরা হয়নি।",
+                        packageStateVerified = false
+                    )
+                }
+            }
+            AppPackageTaskAction.UNINSTALL_APP -> {
+                if (currentVersion == null) {
+                    task.copy(
+                        status = AppPackageTaskStatus.SUCCEEDED,
+                        detail = "আনইনস্টল যাচাই হয়েছে: Android PackageManager-এ লক্ষ্য package আর ইনস্টল নেই।",
+                        packageStateVerified = true
+                    )
+                } else {
+                    task.copy(
+                        status = AppPackageTaskStatus.UNKNOWN,
+                        detail = "Android আনইনস্টলার থেকে ফেরা হয়েছে, কিন্তু লক্ষ্য package এখনো আছে। বাতিল/ব্যর্থতার কারণ নিশ্চিত নয়; সফল বলা হয়নি।",
+                        packageStateVerified = false
+                    )
+                }
+            }
+            AppPackageTaskAction.SEARCH_PLAY_STORE -> task
+        }
+        AppPackageTaskResultStore.clearVerificationTarget(this)
+        publishAppPackageResult(verifiedResult)
+    }
+
+    private fun installedPackageVersionCode(packageName: String): Long? = try {
+        val info = packageManager.getPackageInfo(packageName, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else info.versionCode.toLong()
+    } catch (_: Exception) {
+        null
     }
     private fun prepareCommand(command: String) {
         if (AppPackageControl.handleCommand(
