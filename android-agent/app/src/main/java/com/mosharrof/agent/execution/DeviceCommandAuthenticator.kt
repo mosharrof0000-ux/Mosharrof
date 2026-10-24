@@ -96,15 +96,23 @@ class DeviceCommandAuthenticator(
         return DeviceCommandVerification(true, DeviceCommandRejection.NONE)
     }
 
-    private fun isWellFormed(e: DeviceCommandEnvelope): Boolean =
-        e.requestId.length in 1..128 &&
-            e.requestId.all { it.isLetterOrDigit() || it in "-_." } &&
-            e.nonce.length in 16..128 &&
-            e.nonce.all { it.isLetterOrDigit() || it in "-_." } &&
-            e.target.length <= 200 &&
-            e.target.none { it.isISOControl() } &&
-            e.signatureHex.length == 64 &&
-            e.signatureHex.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+    private fun isWellFormed(e: DeviceCommandEnvelope): Boolean {
+        val commonFieldsValid =
+            e.requestId.length in 1..128 &&
+                e.requestId.all { it.isLetterOrDigit() || it in "-_." } &&
+                e.nonce.length in 16..128 &&
+                e.nonce.all { it.isLetterOrDigit() || it in "-_." } &&
+                e.target.length <= 200 &&
+                e.target.none { it.isISOControl() } &&
+                e.signatureHex.length == 64 &&
+                e.signatureHex.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+        if (!commonFieldsValid) return false
+        return when (e.action) {
+            DeviceCommandAction.INSTALL_APK -> e.target.isBlank()
+            DeviceCommandAction.SEARCH_PLAY_STORE -> e.target.isNotBlank() && e.target.trim().length <= 120
+            DeviceCommandAction.UNINSTALL_APP -> PACKAGE_NAME.matches(e.target)
+        }
+    }
 
     private fun prune(nowMillis: Long) {
         val iterator = seenNonces.entries.iterator()
@@ -116,6 +124,8 @@ class DeviceCommandAuthenticator(
     private fun reject(reason: DeviceCommandRejection) = DeviceCommandVerification(false, reason)
 
     companion object {
+        private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
+
         /** Signing helper for the trusted paired client; callers must protect the key. */
         fun sign(secret: ByteArray, canonicalPayload: String): String =
             hmacSha256(secret, canonicalPayload).joinToString("") { "%02x".format(it) }
