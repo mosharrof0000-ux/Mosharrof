@@ -36,15 +36,28 @@ test "$(timeout 10s adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
 
 bash .github/scripts/install_apk_with_retry.sh
 adb shell am start -n com.mosharrof.ai/.MainActivity
-# Capture a launch frame before WebView discovery or any chat interaction.
-sleep 2
+# Wake the emulator display and retry the launch frame: a single early
+# screencap can be empty while Android is still bringing the activity forward.
+adb shell input keyevent 224 >/dev/null 2>&1 || true
 launch_png="artifacts/apk-webview-chat/apk-webview-launch.png"
-if timeout 10s adb exec-out screencap -p > "$launch_png" && \
-   python -c 'from pathlib import Path; import sys; p=Path(sys.argv[1]); sys.exit(0 if p.is_file() and p.read_bytes().startswith(bytes.fromhex("89504e470d0a1a0a")) else 1)' "$launch_png"; then
-  printf 'captured\n' > artifacts/apk-webview-chat/launch-screenshot-status.txt
-else
+launch_captured=0
+for attempt in $(seq 1 5); do
+  sleep 2
+  rm -f "$launch_png"
+  if timeout 10s adb exec-out screencap -p > "$launch_png" && \
+     python -c 'from pathlib import Path; import sys; p=Path(sys.argv[1]); sys.exit(0 if p.is_file() and p.stat().st_size > 100 and p.read_bytes().startswith(bytes.fromhex("89504e470d0a1a0a")) else 1)' "$launch_png"; then
+    launch_captured=1
+    printf 'captured\n' > artifacts/apk-webview-chat/launch-screenshot-status.txt
+    echo "Launch screenshot captured (attempt $attempt/5)."
+    break
+  fi
+  echo "Launch screenshot not ready (attempt $attempt/5); retrying."
+done
+if [ "$launch_captured" != "1" ]; then
   rm -f "$launch_png"
   printf 'failed\n' > artifacts/apk-webview-chat/launch-screenshot-status.txt
+  echo "Could not capture a valid APK launch screenshot after 5 attempts."
+  exit 1
 fi
 sleep 13
 
