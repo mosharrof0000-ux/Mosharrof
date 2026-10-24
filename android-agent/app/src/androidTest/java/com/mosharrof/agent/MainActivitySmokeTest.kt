@@ -41,25 +41,33 @@ class MainActivitySmokeTest {
     }
 
     private fun assertActivityTextVisible(expected: String) {
-        var visible = false
+        lateinit var target: TextView
         activityRule.scenario.onActivity { activity ->
             val decor = activity.window.decorView
-            val target = findTextView(decor, expected)
-            assertNotNull("Expected TextView in the activity hierarchy: $expected", target)
-            if (target != null) {
-                val scroll = findScrollView(decor)
-                if (scroll != null) {
-                    val scrollLocation = IntArray(2)
-                    val targetLocation = IntArray(2)
-                    scroll.getLocationOnScreen(scrollLocation)
-                    target.getLocationOnScreen(targetLocation)
-                    scroll.scrollTo(0, (targetLocation[1] - scrollLocation[1]).coerceAtLeast(0))
-                }
-                val visibleRect = Rect()
-                visible = target.isShown && target.getGlobalVisibleRect(visibleRect)
+            target = findTextView(decor, expected)
+                ?: throw AssertionError("Expected TextView in the activity hierarchy: $expected")
+            val scroll = findScrollView(decor)
+            if (scroll != null) {
+                val scrollLocation = IntArray(2)
+                val targetLocation = IntArray(2)
+                scroll.getLocationOnScreen(scrollLocation)
+                target.getLocationOnScreen(targetLocation)
+                // targetLocation is viewport-relative after earlier assertions have scrolled.
+                // Add the current scroll offset to recover the child's content coordinate.
+                val targetContentY = scroll.scrollY + targetLocation[1] - scrollLocation[1]
+                scroll.scrollTo(0, targetContentY.coerceAtLeast(0))
+                target.requestRectangleOnScreen(Rect(0, 0, target.width, target.height), true)
             }
         }
-        device.waitForIdle()
+        // Wait outside the Activity's UI-thread callback so Android can complete layout.
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        var visible = false
+        activityRule.scenario.onActivity {
+            val visibleRect = Rect()
+            visible = target.isShown && target.getGlobalVisibleRect(visibleRect) &&
+                visibleRect.width() > 0 && visibleRect.height() > 0
+        }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
         assertTrue("Expected visible activity text: $expected", visible)
     }
 
@@ -84,7 +92,8 @@ class MainActivitySmokeTest {
             "কণ্ঠ থামান",
             "কাজ বাতিল করুন",
             "ডিভাইসের অবস্থা পরীক্ষা করুন",
-            "Accessibility সেটিংস খুলুন"
+            "Accessibility সেটিংস খুলুন",
+            "APK ফাইল থেকে অ্যাপ ইনস্টল করুন"
         ).forEach(::assertActivityTextVisible)
     }
 

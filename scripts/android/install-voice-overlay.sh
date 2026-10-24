@@ -149,6 +149,9 @@ public class VoiceOverlayService extends Service {
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
+        // startForegroundService() may be called again when MainActivity resumes. Every
+        // start command must refresh foreground state immediately or Android can kill the app.
+        startForeground(NOTIFICATION_ID, notification());
         String action = intent == null ? null : intent.getAction();
         if ("com.mosharrof.ai.HIDE_VOICE_OVERLAY".equals(action)) {
             hidden = true;
