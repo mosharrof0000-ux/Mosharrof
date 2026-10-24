@@ -246,5 +246,6 @@ object AppPackageControl {
 
     private fun AppPackageTaskResult.toDisplayText(): String = "কাজের ফল: $status • ID: $requestId\n$detail"
 
-    private const val MAX_APK_BYTES = 250L * 1024L * 1024L\n    private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\\\.[A-Za-z][A-Za-z0-9_]*)+")
+    private const val MAX_APK_BYTES = 250L * 1024L * 1024L
+    private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\\\.[A-Za-z][A-Za-z0-9_]*)+")
 }
