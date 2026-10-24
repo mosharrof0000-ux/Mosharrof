@@ -19,6 +19,10 @@ import com.mosharrof.agent.diagnostics.DeviceDiagnosticsControl
 import com.mosharrof.agent.execution.AccessibilityConsentDialog
 import com.mosharrof.agent.execution.AgentTaskController
 import com.mosharrof.agent.execution.AppPackageControl
+import com.mosharrof.agent.execution.AppPackageTaskAction
+import com.mosharrof.agent.execution.AppPackageTaskResult
+import com.mosharrof.agent.execution.AppPackageTaskResultStore
+import com.mosharrof.agent.execution.AppPackageTaskStatus
 import com.mosharrof.agent.execution.DeviceIntentControl
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.voice.AgentSpeechOutput
@@ -48,8 +52,15 @@ class MainActivity : ComponentActivity() {
         if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
     private val apkPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status)
-        else status.text = "APK নির্বাচন বাতিল করা হয়েছে; কোনো অ্যাপ ইনস্টল হয়নি।"
+        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status, ::publishAppPackageResult)
+        else publishAppPackageResult(
+            AppPackageTaskResult(
+                requestId = java.util.UUID.randomUUID().toString(),
+                action = AppPackageTaskAction.INSTALL_APK,
+                status = AppPackageTaskStatus.CANCELLED,
+                detail = "APK নির্বাচন বাতিল করা হয়েছে; কোনো অ্যাপ ইনস্টল হয়নি।"
+            )
+        )
     }
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -158,9 +169,11 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun prepareCommand(command: String) {
-        if (AppPackageControl.handleCommand(this, command, status) {
-                apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
-            }) return
+        if (AppPackageControl.handleCommand(
+                this, command, status,
+                pickApk = { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) },
+                onTaskResult = ::publishAppPackageResult
+            )) return
         if (DeviceIntentControl.handle(this, command, status)) return
         if (taskController.prepareTask(command)) return
         status.text = "স্থানীয় কমান্ডে কাজটি বোঝা যায়নি; AI-কে সমর্থিত Android কমান্ডে রূপান্তর করতে বলা হচ্ছে…"
@@ -185,6 +198,14 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun publishAppPackageResult(result: AppPackageTaskResult) {
+        lastAppPackageTaskResult = result
+        AppPackageTaskResultStore.save(this, result)
+        status.text = "কাজের ফল: ${result.status} • ID: ${result.requestId}\n${result.detail}"
+    }
+
+    private var lastAppPackageTaskResult: AppPackageTaskResult? = null
 
     private fun inspectCurrentScreen() {
         if (!isServiceEnabled()) {
