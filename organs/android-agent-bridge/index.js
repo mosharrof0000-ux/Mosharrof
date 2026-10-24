@@ -237,9 +237,11 @@ export function initialize() {
   document.addEventListener("keydown", interceptPackageCommand, true);
   consumeAndroidBridgeResult().then(result => {
     if (!result) return;
-    const label = result.callbackSignatureValid && result.verified
-      ? "স্বাক্ষর ও প্যাকেজ যাচাইকৃত"
-      : "যাচাইকৃত নয়";
+    const label = !result.callbackSignatureValid
+      ? "স্বাক্ষর যাচাই হয়নি"
+      : result.verified
+        ? "স্বাক্ষর ও প্যাকেজ অবস্থা যাচাইকৃত"
+        : "স্বাক্ষরিত ফল; প্যাকেজ অবস্থা যাচাই হয়নি";
     renderBridgeMessage(
       "ai",
       `Android Agent ফল: ${result.status} · ${label}\n${result.detail}\nRequest ID: ${result.requestId}`
