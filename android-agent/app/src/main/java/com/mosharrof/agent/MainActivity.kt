@@ -35,7 +35,6 @@ import com.mosharrof.agent.notifications.NotificationAccessControl
 import com.mosharrof.agent.files.UserFileAccessControl
 import com.mosharrof.agent.admin.ManagedDeviceControl
 import com.mosharrof.agent.planner.AiCommandNormalizer
-import com.mosharrof.agent.permissions.PermissionCenterControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
     private lateinit var status: TextView
@@ -141,10 +140,6 @@ class MainActivity : ComponentActivity() {
             AppPackageInstallControl.addInstallButton(this@MainActivity, this) {
                 apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
             }
-            addView(Button(this@MainActivity).apply {
-                text = "সমস্ত runtime permission চাইুন"
-                setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
-            })
             CapabilityPermissionCenter.addButton(this@MainActivity, this)
             ManagedDeviceControl.addTo(this@MainActivity, this, status)
             NotificationAccessControl.addTo(this@MainActivity, this)
@@ -168,6 +163,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
+            if (AppPackageInstallControl.resumePendingInstallIfGranted(this, status, ::publishAppPackageResult)) return
             val packageResult: AppPackageTaskResult? = AppPackagePendingOperationStore.resolveAfterReturn(this)
             if (packageResult != null) {
                 publishAppPackageResult(packageResult)
