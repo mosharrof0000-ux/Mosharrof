@@ -200,14 +200,22 @@ export class DeviceBridge {
     const pairing = await this.authorizeDevice(request);
     if (!pairing || !pairing.approved) return json({ ok: false, error: "device_not_authorized" }, 401);
     const body = await request.json();
+    const status = String(body.status || "");
+    const prior = typeof body.requestId === "string" ? await this.storage.get("result:" + body.requestId) : null;
+    const packageName = body.packageName == null ? null : String(body.packageName);
+    const packageStateVerified = body.packageStateVerified === true;
+    const priorTerminal = prior && (terminal(prior.status) ||
+      (prior.status === "AWAITING_USER_CONFIRMATION" && prior.action === "SEARCH_PLAY_STORE"));
+    if (prior && prior.requestId === body.requestId && prior.action === body.action &&
+        prior.status === status && prior.detail === String(body.detail || "") &&
+        prior.packageName === packageName && prior.packageStateVerified === packageStateVerified) {
+      return json({ ok: true, accepted: true, terminal: !!priorTerminal });
+    }
     const inflight = await this.storage.get("inflight");
     if (!inflight || body.requestId !== inflight.envelope.requestId || body.action !== inflight.envelope.action) {
       return json({ ok: false, error: "request_id_mismatch" }, 409);
     }
-    const status = String(body.status || "");
     const detail = String(body.detail || "");
-    const packageName = body.packageName == null ? null : String(body.packageName);
-    const packageStateVerified = body.packageStateVerified === true;
     if (!STATUSES.has(status) || detail.length > 500 ||
         (packageName !== null && !PACKAGE_NAME.test(packageName)) ||
         (status === "SUCCEEDED" && (!packageStateVerified || body.action === "SEARCH_PLAY_STORE" || !packageName))) {
