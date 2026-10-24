@@ -1,13 +1,12 @@
 name: Mosharrof Tests
 on:
-  # Feature branches are validated by pull_request; push checks run on main only.
   push:
     branches: ["main"]
   pull_request:
 permissions:
   contents: read
 concurrency:
-  group: mosharrof-tests-${{ github.event.pull_request.head.ref || github.ref_name }}
+  group: tests-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 jobs:
   test:
