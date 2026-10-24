@@ -169,6 +169,8 @@ class MainActivity : ComponentActivity() {
         if (::status.isInitialized) {
             val actionResult = MosharrofAccessibilityService.takeActionResult()
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
+            // Reconcile package operations after returning from Android's system confirmation UI.
+            AppPackageControl.verifyPendingResult(this, ::publishAppPackageResult)
         }
     }
     private fun prepareCommand(command: String) {
