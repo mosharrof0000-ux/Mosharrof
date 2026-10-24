@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen
 
+from webview_cdp import connect_page_cdp
+
 import websocket
 
 parser = argparse.ArgumentParser()
@@ -88,29 +90,6 @@ class PageCDP:
         self.ws.close()
 
 
-def connect_page_cdp(ws_url: str, attempts: int = 3) -> PageCDP:
-    """Connect and enable the page/runtime domains with bounded transient retries."""
-    failures: list[str] = []
-    for attempt in range(1, attempts + 1):
-        client = None
-        try:
-            client = PageCDP(ws_url)
-            # Emulator startup can leave a newly exposed WebView target briefly unresponsive.
-            client.command("Page.enable", timeout=25)
-            client.command("Runtime.enable", timeout=25)
-            return client
-        except Exception as exc:
-            failures.append(f"attempt {attempt}/{attempts}: {type(exc).__name__}: {str(exc)[:240]}")
-            if client is not None:
-                try:
-                    client.close()
-                except Exception:
-                    pass
-            if attempt < attempts:
-                time.sleep(2 * attempt)
-    raise TimeoutError("Could not initialize WebView CDP after bounded retries: " + " | ".join(failures))
-
-
 def get_targets() -> list[dict]:
     target_file = out / "webview-targets.json"
     if target_file.is_file():
@@ -134,7 +113,7 @@ def main() -> int:
         if target is None:
             return 1
 
-        cdp = connect_page_cdp(target["webSocketDebuggerUrl"])
+        cdp = connect_page_cdp(target["webSocketDebuggerUrl"], PageCDP)
         try:
             cdp.command("Page.bringToFront", timeout=5)
         except Exception:
