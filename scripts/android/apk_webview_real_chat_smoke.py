@@ -37,6 +37,14 @@ report = {
         "credentials_logged": False,
         "physical_phone_test": False,
     },
+    "launch_evidence": {
+        "screenshot_status": (out / "launch-screenshot-status.txt").read_text(encoding="utf-8").strip()
+            if (out / "launch-screenshot-status.txt").is_file() else "NOT_CAPTURED",
+        "ui_state": (out / "launch-ui-diagnostic.txt").read_text(encoding="utf-8").strip()
+            if (out / "launch-ui-diagnostic.txt").is_file() else "NOT_CHECKED",
+    },
+    "stage": "initializing",
+    "cdp_retry_events": [],
     "checks": [],
     "errors": [],
 }
@@ -49,44 +57,57 @@ def record(name: str, passed: bool, detail: str = "") -> None:
 
 
 class PageCDP:
-    """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
+    """Minimal page-target CDP client with bounded retries for idempotent commands."""
 
     def __init__(self, ws_url: str):
         self.ws = websocket.create_connection(ws_url, timeout=15)
         self.next_id = 0
 
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
-        self.next_id += 1
-        command_id = self.next_id
-        self.ws.settimeout(timeout)
-        self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            message = json.loads(self.ws.recv())
-            if message.get("id") != command_id:
-                continue
-            if "error" in message:
-                raise RuntimeError(f"CDP {method} failed: {message['error']}")
-            return message.get("result", {})
+    def command(self, method: str, params: dict | None = None, timeout: float = 15, retries: int = 0) -> dict:
+        for attempt in range(retries + 1):
+            self.next_id += 1
+            command_id = self.next_id
+            self.ws.settimeout(timeout)
+            self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
+            deadline = time.monotonic() + timeout
+            try:
+                while time.monotonic() < deadline:
+                    message = json.loads(self.ws.recv())
+                    if message.get("id") != command_id:
+                        continue
+                    if "error" in message:
+                        raise RuntimeError(f"CDP {method} failed: {message['error']}")
+                    return message.get("result", {})
+            except websocket.WebSocketTimeoutException:
+                if attempt >= retries:
+                    raise
+                report["cdp_retry_events"].append({
+                    "method": method, "attempt": attempt + 1, "reason": "response_timeout"
+                })
+                time.sleep(0.25)
         raise TimeoutError(f"Timed out waiting for CDP command {method}")
 
-    def evaluate(self, expression: str, timeout: float = 15):
+    def evaluate(self, expression: str, timeout: float = 15, retry_safe: bool = False):
         result = self.command(
             "Runtime.evaluate",
             {"expression": expression, "returnByValue": True, "awaitPromise": True},
             timeout=timeout,
+            retries=2 if retry_safe else 0,
         )
         if "exceptionDetails" in result:
             raise RuntimeError(f"Page JavaScript exception: {result['exceptionDetails']}")
         return result.get("result", {}).get("value")
 
     def screenshot(self, path: Path) -> None:
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
+        result = self.command(
+            "Page.captureScreenshot",
+            {"format": "png", "captureBeyondViewport": True},
+            retries=2,
+        )
         path.write_bytes(base64.b64decode(result["data"]))
 
     def close(self) -> None:
         self.ws.close()
-
 
 def get_targets() -> list[dict]:
     target_file = out / "webview-targets.json"
@@ -100,6 +121,19 @@ def get_targets() -> list[dict]:
 def main() -> int:
     cdp = None
     try:
+        report["stage"] = "discovering_webview_target"
+        if report["launch_evidence"]["screenshot_status"] != "CAPTURED":
+            record("launch_screenshot_captured", False, "Launch screenshot was not captured; see launch-screenshot-status.txt")
+        else:
+            record("launch_screenshot_captured", True, "Launch screenshot captured before chat interaction")
+        ui_state = report["launch_evidence"]["ui_state"]
+        if ui_state == "SYSTEM_ANR_DIALOG":
+            report["launch_evidence"]["warning"] = "Android system/UI ANR dialog detected; chat result is evaluated separately"
+            record("launch_ui_state_clean", False, "Android system/UI ANR dialog detected in launch UI")
+        elif ui_state == "NO_SYSTEM_ANR_DIALOG":
+            record("launch_ui_state_clean", True, "No Android system/UI ANR dialog detected in launch UI")
+        else:
+            record("launch_ui_state_clean", False, "Launch UI classification unavailable; see launch-ui-diagnostic.txt")
         targets = get_targets()
         target = next(
             (item for item in targets if item.get("type") == "page" and
@@ -111,20 +145,23 @@ def main() -> int:
         if target is None:
             return 1
 
+        report["stage"] = "connecting_cdp"
         cdp = PageCDP(target["webSocketDebuggerUrl"])
-        cdp.command("Page.enable")
-        cdp.command("Runtime.enable")
+        cdp.command("Page.enable", retries=2)
+        cdp.command("Runtime.enable", retries=2)
         try:
-            cdp.command("Page.bringToFront", timeout=5)
+            cdp.command("Page.bringToFront", timeout=5, retries=1)
         except Exception:
             pass
 
+        report["stage"] = "checking_chat_composer"
         deadline = time.monotonic() + 30
         ready = False
         while time.monotonic() < deadline:
             ready = bool(cdp.evaluate(
                 "Boolean(document.querySelector('#input') && document.querySelector('#sendBtn') && "
-                "document.querySelector('#input').getClientRects().length)"
+                "document.querySelector('#input').getClientRects().length)",
+                retry_safe=True,
             ))
             if ready:
                 break
@@ -133,9 +170,14 @@ def main() -> int:
         if not ready:
             raise TimeoutError("APK chat composer did not become visible")
 
+        report["stage"] = "capturing_before_chat"
         cdp.screenshot(out / "apk-webview-before.png")
-        baseline = int(cdp.evaluate("document.querySelectorAll('#messages .message.ai:not(.typing)').length") or 0)
+        baseline = int(cdp.evaluate(
+            "document.querySelectorAll('#messages .message.ai:not(.typing)').length",
+            retry_safe=True,
+        ) or 0)
         prompt_js = json.dumps(prompt, ensure_ascii=False)
+        report["stage"] = "submitting_synthetic_bengali_prompt"
         submitted = cdp.evaluate(
             f"""(() => {{
               const input = document.querySelector('#input');
@@ -153,6 +195,7 @@ def main() -> int:
         if not submitted:
             raise RuntimeError("Could not submit synthetic prompt through the app composer")
 
+        report["stage"] = "waiting_for_backend_answer"
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
@@ -172,7 +215,8 @@ def main() -> int:
                     answer: body ? body.innerText.trim() : '',
                     provider: last ? last.getAttribute('data-provider') : null
                   }};
-                }})()"""
+                }})()""",
+                retry_safe=True,
             )
             if state and state.get("ready"):
                 answer = state.get("answer", "").strip()
@@ -183,29 +227,33 @@ def main() -> int:
         if answer:
             lower = answer.lower()
             failed_phrases = [
-                "inspector mock response",
-                "playwright-safe-test",
-                "you exceeded your current quota",
-                "quota exceeded",
-                "failed to fetch",
-                "network error",
-                "অনুরোধটি ব্যর্থ",
-                "সংযোগে সমস্যা",
+                "inspector mock response", "playwright-safe-test", "mock response",
+                "you exceeded your current quota", "quota exceeded", "http 429", "quota",
+                "failed to fetch", "network error", "server error", "service unavailable",
+                "connection failed", "unable to connect", "unable to resolve host",
+                "ai সংযোগ ব্যর্থ", "আবার চেষ্টা করুন", "নেটওয়ার্ক সংযোগ",
+                "সার্ভারে সমস্যা", "সংযোগে সমস্যা", "সার্ভার সংযোগ",
                 "এই মুহূর্তে gemini সংযোগে সমস্যা",
             ]
             failure_marker = next((phrase for phrase in failed_phrases if phrase in lower), "")
-            passed = bool(answer) and not failure_marker
+            provider_name = str(provider or "").strip().lower()
+            mock_provider = not provider_name or any(token in provider_name for token in ("mock", "test", "fixture", "playwright"))
+            passed = bool(answer) and not failure_marker and not mock_provider
             record("real_backend_returned_non_mock_answer", passed,
-                   f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
+                   f"response_chars={len(answer)}; provider_present={bool(provider_name)}; "
+                   f"mock_provider={mock_provider}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+            report["stage"] = "capturing_after_response"
             cdp.screenshot(out / "apk-webview-after.png")
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
+            report["stage"] = "capturing_after_timeout"
             cdp.screenshot(out / "apk-webview-failed.png")
     except Exception as exc:
-        record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
+        record("cdp_connection_and_chat", False,
+               f"stage={report.get('stage', 'unknown')}; {type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:
                 cdp.screenshot(out / "apk-webview-failed.png")
