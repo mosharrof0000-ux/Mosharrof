@@ -8,6 +8,8 @@ on:
       - "web/**"
       - "core/android-edge-to-edge.css"
       - "scripts/android/prepare-and-install-voice.sh"
+      - "scripts/android/apk_webview_real_chat_smoke.py"
+      - "scripts/android/run_apk_webview_smoke.sh"
       - "scripts/mosharrof_size_gate.py"
       - ".github/workflows/build-apk.yml"
   pull_request:
@@ -17,6 +19,8 @@ on:
       - "web/**"
       - "core/android-edge-to-edge.css"
       - "scripts/android/prepare-and-install-voice.sh"
+      - "scripts/android/apk_webview_real_chat_smoke.py"
+      - "scripts/android/run_apk_webview_smoke.sh"
       - "scripts/mosharrof_size_gate.py"
       - ".github/workflows/build-apk.yml"
   workflow_dispatch:
