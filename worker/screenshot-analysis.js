@@ -1,9 +1,11 @@
 import { buildChatContext } from "../core/chat-context.js";
+import { DeviceBridge } from "./device-bridge.js";
+export { DeviceBridge };
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
 import { parseImageSpec } from "../core/image-spec.js";
 import { CHAT_MODELS, runSelectedChat } from "../core/manual-chat-routing.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
-const WORKER_BUILD_ID="2026-10-16-cf-v5";
+const WORKER_BUILD_ID="2026-10-24-device-bridge-v1";
 const MAX_BYTES=12*1024*1024;
 const headers={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Methods":"POST, OPTIONS, GET","Access-Control-Allow-Headers":"content-type","Vary":"Origin"};
 const TRUSTED_APP_ORIGINS=new Set([ORIGIN,"http://localhost","https://localhost","http://127.0.0.1","https://127.0.0.1","capacitor://localhost","ionic://localhost","https://appassets.androidplatform.net"]);
@@ -542,6 +544,12 @@ if(request.method==="GET"&&new URL(request.url).pathname==="/health"){
 }
 const origin=request.headers.get("Origin")||"";
 if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403);
+const requestPath=new URL(request.url).pathname;
+if(requestPath.startsWith("/device/")){
+  if(!env.DEVICE_BRIDGE)return reply({ok:false,error:"device_bridge_not_configured"},503);
+  const id=env.DEVICE_BRIDGE.idFromName("mosharrof-device-bridge-v1");
+  return await env.DEVICE_BRIDGE.get(id).fetch(request);
+}
 if(request.method!=="POST")return reply({error:"POST only"},405);
 try{
   const pathname=new URL(request.url).pathname;
