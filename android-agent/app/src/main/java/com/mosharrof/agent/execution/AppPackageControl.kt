@@ -234,7 +234,11 @@ object AppPackageControl {
         }
     }
 
-    private fun installedVersionCode(activity: Activity, packageName: String): Long? = try {\n        @Suppress("DEPRECATION")\n        val info = activity.packageManager.getPackageInfo(packageName, 0)\n        if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()\n    } catch (_: Exception) { null }\n\n    private fun isInstalled(activity: Activity, packageName: String): Boolean = try {
+    private fun installedVersionCode(activity: Activity, packageName: String): Long? = try {
+        @Suppress("DEPRECATION")
+        val info = activity.packageManager.getPackageInfo(packageName, 0)
+        if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
+    } catch (_: Exception) { null }\n\n    private fun isInstalled(activity: Activity, packageName: String): Boolean = try {
         @Suppress("DEPRECATION")
         activity.packageManager.getApplicationInfo(packageName, 0)
         true
@@ -248,5 +252,5 @@ object AppPackageControl {
     private fun AppPackageTaskResult.toDisplayText(): String = "কাজের ফল: $status • ID: $requestId\n$detail"
 
     private const val MAX_APK_BYTES = 250L * 1024L * 1024L
-    private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\\\.[A-Za-z][A-Za-z0-9_]*)+")
+    private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
 }
