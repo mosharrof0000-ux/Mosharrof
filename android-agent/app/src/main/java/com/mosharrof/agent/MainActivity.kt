@@ -299,7 +299,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleRemoteCommand(envelope: DeviceCommandEnvelope) {
         if (DevicePairingBridge.pendingRemote(this) != null) {
-            DevicePairingBridge.flushPendingResult(this)
+            Thread { DevicePairingBridge.flushPendingResult(applicationContext) }.start()
             return
         }
         if (!DevicePairingBridge.savePendingRemote(this, envelope)) {
