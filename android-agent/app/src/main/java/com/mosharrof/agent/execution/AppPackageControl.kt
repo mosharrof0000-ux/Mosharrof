@@ -3,7 +3,6 @@ package com.mosharrof.agent.execution
 import android.app.Activity
 import android.app.AlertDialog
 import android.os.Build
-import java.io.File
 import android.content.Intent
 import android.net.Uri
 import android.widget.TextView
@@ -155,12 +154,13 @@ object AppPackageControl {
                                 setDataAndType(apkUri, "application/vnd.android.package-archive")
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
-                            activity.startActivity(intent)
                             AppPackageTaskResultStore.saveVerificationTarget(activity, metadata.versionCode, baselineVersion ?: -1L)
-                            val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android ইনস্টলার খোলা হয়েছে; ফিরে এলে package/version state যাচাই করা হবে।", metadata.packageName)
-                            onTaskResult(outcome)
-                            status.text = outcome.toDisplayText()
+                            val awaiting = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android ইনস্টলার খোলা হচ্ছে; ফিরে এলে package/version state যাচাই করা হবে।", metadata.packageName)
+                            onTaskResult(awaiting)
+                            activity.startActivity(intent)
+                            status.text = awaiting.toDisplayText()
                         } catch (_: Exception) {
+                            AppPackageTaskResultStore.clearVerificationTarget(activity)
                             val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "এই ডিভাইসে উপযুক্ত প্যাকেজ ইনস্টলার খোলা যায়নি।", metadata.packageName)
                             onTaskResult(outcome)
                             status.text = outcome.toDisplayText()
