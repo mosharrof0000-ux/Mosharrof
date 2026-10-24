@@ -99,7 +99,7 @@ jobs:
           heap-size: 768M
           emulator-port: 5554
           emulator-boot-timeout: 900
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -dns-server 8.8.8.8,1.1.1.1
           script: bash scripts/android/run_apk_webview_smoke.sh
 
       - name: Upload APK WebView chat evidence
