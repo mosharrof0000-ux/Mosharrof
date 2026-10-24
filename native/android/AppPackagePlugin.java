@@ -3,11 +3,7 @@ package com.mosharrof.ai;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 
@@ -18,13 +14,7 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 /**
  * User-mediated package install/uninstall bridge for the MOSHARROF Android wrapper.
@@ -32,18 +22,7 @@ import java.util.regex.Pattern;
  */
 @CapacitorPlugin(name = "AppPackage")
 public class AppPackagePlugin extends Plugin {
-    private static final String PREFS = "mosharrof_app_package_pending";
-    private static final long MAX_APK_BYTES = 512L * 1024L * 1024L;
     private static final Pattern PACKAGE_NAME = Pattern.compile("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+");
-
-    private static final class ApkMetadata {
-        final String packageName;
-        final long versionCode;
-        ApkMetadata(String packageName, long versionCode) {
-            this.packageName = packageName;
-            this.versionCode = versionCode;
-        }
-    }
 
     @PluginMethod
     public void installAppFromPicker(PluginCall call) {
@@ -72,7 +51,7 @@ public class AppPackagePlugin extends Plugin {
             return;
         }
         Uri apkUri = result.getData().getData();
-        ApkMetadata metadata = inspectApk(apkUri);
+        AppPackagePlatform.ApkMetadata metadata = AppPackagePlatform.inspectApk(getContext(), apkUri);
         if (metadata == null) {
             resolve(call, requestId, "INSTALL_APK", "FAILED", "APK ফাইল পড়া যায়নি বা বৈধ package/version metadata পাওয়া যায়নি।", null, false);
             return;
@@ -81,7 +60,7 @@ public class AppPackagePlugin extends Plugin {
             resolve(call, requestId, "INSTALL_APK", "FAILED", "MOSHARROF নিজস্ব প্যাকেজকে এই সাধারণ ইনস্টল-পথ দিয়ে প্রতিস্থাপন করবে না।", metadata.packageName, false);
             return;
         }
-        Long previousVersion = installedVersion(metadata.packageName);
+        Long previousVersion = AppPackagePlatform.installedVersion(getContext(), metadata.packageName);
         new AlertDialog.Builder(getActivity())
             .setTitle("ইনস্টল নিশ্চিত করুন")
             .setMessage("Package: " + metadata.packageName + "\nVersion: " + metadata.versionCode
@@ -89,14 +68,14 @@ public class AppPackagePlugin extends Plugin {
             .setNegativeButton("বাতিল", (dialog, which) ->
                 resolve(call, requestId, "INSTALL_APK", "CANCELLED", "ব্যবহারকারী ইনস্টল বাতিল করেছেন।", metadata.packageName, false))
             .setPositiveButton("Android installer খুলুন", (dialog, which) -> {
-                savePending(requestId, "INSTALL_APK", metadata.packageName, metadata.versionCode, previousVersion);
+                AppPackagePendingStore.save(getContext(), requestId, "INSTALL_APK", metadata.packageName, metadata.versionCode, previousVersion);
                 Intent install = new Intent(Intent.ACTION_INSTALL_PACKAGE);
                 install.setDataAndType(apkUri, "application/vnd.android.package-archive");
                 install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 try {
                     startActivityForResult(call, install, "installResult");
                 } catch (Exception error) {
-                    clearPending();
+                    AppPackagePendingStore.clear(getContext());
                     resolve(call, requestId, "INSTALL_APK", "FAILED", "Android installer খোলা যায়নি।", metadata.packageName, false);
                 }
             })
@@ -106,13 +85,13 @@ public class AppPackagePlugin extends Plugin {
     @ActivityCallback
     private void installResult(PluginCall call, ActivityResult result) {
         if (call == null) { clearPending(); return; }
-        Pending pending = readPending();
+        AppPackagePendingStore.Pending pending = AppPackagePendingStore.read(getContext());
         clearPending();
         if (pending == null || !"INSTALL_APK".equals(pending.action)) {
             resolve(call, requestId(call), "INSTALL_APK", "UNKNOWN", "ইনস্টল ফলের pending request পাওয়া যায়নি।", null, false);
             return;
         }
-        Long currentVersion = installedVersion(pending.packageName);
+        Long currentVersion = AppPackagePlatform.installedVersion(getContext(), pending.packageName);
         boolean versionMatches = currentVersion != null && currentVersion >= 0L && currentVersion == pending.expectedVersion;
         boolean stateChanged = pending.previousVersion == null || !pending.previousVersion.equals(currentVersion);
         if (versionMatches && (result.getResultCode() == Activity.RESULT_OK || stateChanged)) {
@@ -135,7 +114,7 @@ public class AppPackagePlugin extends Plugin {
     public void uninstallApp(PluginCall call) {
         String requestId = requestId(call);
         String target = call.getString("target", "").trim();
-        String packageName = resolveInstalledPackage(target);
+        String packageName = AppPackagePlatform.resolveInstalledPackage(getContext(), target);
         if (packageName == null) {
             resolve(call, requestId, "UNINSTALL_APP", "FAILED",
                 "একটি মাত্র ইনস্টল করা অ্যাপের সঙ্গে target মেলেনি; কিছু সরানো হয়নি।", null, false);
@@ -152,7 +131,7 @@ public class AppPackagePlugin extends Plugin {
             .setNegativeButton("বাতিল", (dialog, which) ->
                 resolve(call, requestId, "UNINSTALL_APP", "CANCELLED", "ব্যবহারকারী আনইনস্টল বাতিল করেছেন।", packageName, false))
             .setPositiveButton("Android uninstall screen খুলুন", (dialog, which) -> {
-                savePending(requestId, "UNINSTALL_APP", packageName, -1L, previousVersion);
+                AppPackagePendingStore.save(getContext(), requestId, "UNINSTALL_APP", packageName, -1L, previousVersion);
                 try {
                     startActivityForResult(call, new Intent(Intent.ACTION_DELETE, Uri.parse("package:" + packageName)), "uninstallResult");
                 } catch (Exception error) {
@@ -220,108 +199,6 @@ public class AppPackagePlugin extends Plugin {
                 }
             })
             .show();
-    }
-
-    private ApkMetadata inspectApk(Uri uri) {
-        if (uri == null || !"content".equals(uri.getScheme())) return null;
-        File temp = null;
-        try {
-            temp = File.createTempFile("mosharrof-apk-", ".apk", getContext().getCacheDir());
-            try (InputStream input = getContext().getContentResolver().openInputStream(uri);
-                 FileOutputStream output = new FileOutputStream(temp)) {
-                if (input == null) return null;
-                byte[] buffer = new byte[16 * 1024];
-                long total = 0L;
-                int count;
-                while ((count = input.read(buffer)) >= 0) {
-                    total += count;
-                    if (total > MAX_APK_BYTES) return null;
-                    output.write(buffer, 0, count);
-                }
-            }
-            @SuppressWarnings("deprecation")
-            PackageInfo info = getContext().getPackageManager().getPackageArchiveInfo(temp.getAbsolutePath(), 0);
-            if (info == null || info.packageName == null || !PACKAGE_NAME.matcher(info.packageName).matches()) return null;
-            long version = Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode;
-            return new ApkMetadata(info.packageName, version);
-        } catch (Exception ignored) {
-            return null;
-        } finally {
-            if (temp != null) temp.delete();
-        }
-    }
-
-    private String resolveInstalledPackage(String target) {
-        if (target == null || target.trim().isEmpty() || target.length() > 200) return null;
-        String normalized = target.trim();
-        if (PACKAGE_NAME.matcher(normalized).matches()) return installedVersion(normalized) != null && installedVersion(normalized) >= 0L ? normalized : null;
-        try {
-            Intent launcher = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
-            List<android.content.pm.ResolveInfo> matches = getContext().getPackageManager().queryIntentActivities(launcher, 0);
-            List<String> packages = new ArrayList<>();
-            for (android.content.pm.ResolveInfo item : matches) {
-                CharSequence label = item.loadLabel(getContext().getPackageManager());
-                if (label != null && normalized.equalsIgnoreCase(label.toString().trim())
-                        && item.activityInfo != null && item.activityInfo.packageName != null
-                        && !packages.contains(item.activityInfo.packageName)) {
-                    packages.add(item.activityInfo.packageName);
-                }
-            }
-            return packages.size() == 1 ? packages.get(0) : null;
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    private Long installedVersion(String packageName) {
-        try {
-            @SuppressWarnings("deprecation")
-            PackageInfo info = getContext().getPackageManager().getPackageInfo(packageName, 0);
-            return Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : (long) info.versionCode;
-        } catch (PackageManager.NameNotFoundException notInstalled) {
-            return null;
-        } catch (Exception unknown) {
-            return -1L;
-        }
-    }
-
-    private static final class Pending {
-        String requestId;
-        String action;
-        String packageName;
-        long expectedVersion;
-        Long previousVersion;
-    }
-
-    private void savePending(String requestId, String action, String packageName, long expectedVersion, Long previousVersion) {
-        getContext().getSharedPreferences(PREFS, 0).edit()
-            .putString("request_id", requestId)
-            .putString("action", action)
-            .putString("package_name", packageName)
-            .putLong("expected_version", expectedVersion)
-            .putBoolean("has_previous", previousVersion != null)
-            .putLong("previous_version", previousVersion == null ? -1L : previousVersion)
-            .apply();
-    }
-
-    private Pending readPending() {
-        android.content.SharedPreferences prefs = getContext().getSharedPreferences(PREFS, 0);
-        String requestId = prefs.getString("request_id", null);
-        String action = prefs.getString("action", null);
-        String packageName = prefs.getString("package_name", null);
-        if (requestId == null || action == null || packageName == null) return null;
-        Pending pending = new Pending();
-        pending.requestId = requestId;
-        pending.action = action;
-        pending.packageName = packageName;
-        pending.expectedVersion = prefs.getLong("expected_version", -1L);
-        pending.previousVersion = prefs.getBoolean("has_previous", false)
-            ? prefs.getLong("previous_version", -1L) : null;
-        return pending;
-    }
-
-    private void clearPending() {
-        getContext().getSharedPreferences(PREFS, 0).edit().clear().apply();
     }
 
     private String requestId(PluginCall call) {
