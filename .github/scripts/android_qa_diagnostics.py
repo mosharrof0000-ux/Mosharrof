@@ -138,12 +138,23 @@ def read_response_metadata(cdp: Any) -> tuple[dict | None, str | None]:
     }, None
 
 
+FAILURE_PHRASES = [
+    "inspector mock response", "playwright-safe-test",
+    "you exceeded your current quota", "quota exceeded",
+    "failed to fetch", "network error", "অনুরোধটি ব্যর্থ",
+    "সংযোগে সমস্যা", "এই মুহূর্তে gemini সংযোগে সমস্যা",
+    "ai সংযোগ ব্যর্থ", "আবার চেষ্টা করুন", "নেটওয়ার্ক সংযোগ",
+    "সার্ভারে সমস্যা", "server error", "service unavailable",
+    "connection failed", "unable to connect",
+]
+
+
 def classify_real_answer(
-    answer: str, provider: str | None, metadata: dict | None, failure_phrases: list[str]
+    answer: str, provider: str | None, metadata: dict | None
 ) -> tuple[bool, str, bool]:
     """Fail closed: require provider metadata and non-error answer text."""
     lower = answer.lower()
-    failure_marker = next((phrase for phrase in failure_phrases if phrase in lower), "")
+    failure_marker = next((phrase for phrase in FAILURE_PHRASES if phrase in lower), "")
     metadata_failed = bool(isinstance(metadata, dict) and metadata.get("failed"))
     passed = bool(answer) and not failure_marker and provider in KNOWN_PROVIDERS and not metadata_failed
     return passed, failure_marker, metadata_failed

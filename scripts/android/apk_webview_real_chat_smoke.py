@@ -200,27 +200,8 @@ def main() -> int:
                 report["response_model"] = response_meta.get("model")
                 report["provider_attempts"] = response_meta.get("attempted") or []
             lower = answer.lower()
-            failed_phrases = [
-                "inspector mock response",
-                "playwright-safe-test",
-                "you exceeded your current quota",
-                "quota exceeded",
-                "failed to fetch",
-                "network error",
-                "অনুরোধটি ব্যর্থ",
-                "সংযোগে সমস্যা",
-                "এই মুহূর্তে gemini সংযোগে সমস্যা",
-                "ai সংযোগ ব্যর্থ",
-                "আবার চেষ্টা করুন",
-                "নেটওয়ার্ক সংযোগ",
-                "সার্ভারে সমস্যা",
-                "server error",
-                "service unavailable",
-                "connection failed",
-                "unable to connect",
-            ]
             passed, failure_marker, metadata_failed = classify_real_answer(
-                answer, provider, response_meta, failed_phrases
+                answer, provider, response_meta
             )
             record(
                 "real_backend_returned_non_mock_answer",
