@@ -49,6 +49,8 @@ report = {
     },
     "checks": [],
     "errors": [],
+    "warnings": [],
+    "launch_screenshot": {"status": "not_checked", "captured": False},
 }
 
 
@@ -233,6 +235,28 @@ def main() -> int:
             except Exception:
                 pass
     finally:
+        launch_png = out / "apk-webview-launch.png"
+        status_path = out / "launch-screenshot-status.txt"
+        status = status_path.read_text(encoding="utf-8").strip() if status_path.is_file() else "missing_status"
+        captured = launch_png.is_file() and launch_png.stat().st_size > 100 and launch_png.read_bytes().startswith(bytes.fromhex("89504e470d0a1a0a"))
+        report["launch_screenshot"] = {"status": status, "captured": captured}
+        ui_status_path = out / "launch-ui-diagnostic.txt"
+        if ui_status_path.is_file():
+            ui_status = ui_status_path.read_text(encoding="utf-8").strip()
+            report["launch_screenshot"]["ui_diagnostic"] = ui_status
+            if ui_status == "android_system_anr_dialog_detected":
+                report["warnings"].append(
+                    "Android system UI ANR dialog was visible in the post-launch screenshot; "
+                    "classify as emulator/system UI instability, separately from chat round-trip."
+                )
+            elif ui_status == "ui_hierarchy_check_unavailable":
+                report["warnings"].append(
+                    "Could not classify Android UI state at launch; inspect apk-webview-launch.png."
+                )
+        if not captured:
+            record("launch_screenshot_captured", False, f"status={status}; valid_png={captured}")
+        else:
+            record("launch_screenshot_captured", True, f"status={status}; ui={report['launch_screenshot'].get('ui_diagnostic', 'not_recorded')}")
         (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         if cdp is not None:
             try:
