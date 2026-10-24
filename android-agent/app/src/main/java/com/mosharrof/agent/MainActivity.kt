@@ -197,44 +197,15 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        val targetVersion = AppPackageTaskResultStore.verificationTargetVersionCode(this)
+        val baselineVersion = AppPackageTaskResultStore.baselineVersionCode(this)
         val currentVersion = installedPackageVersionCode(packageName)
-        val verifiedResult = when (task.action) {
-            AppPackageTaskAction.INSTALL_APK -> {
-                val targetVersion = AppPackageTaskResultStore.verificationTargetVersionCode(this)
-                val baselineVersion = AppPackageTaskResultStore.baselineVersionCode(this)
-                if (targetVersion != null && baselineVersion != null &&
-                    currentVersion == targetVersion && currentVersion != baselineVersion
-                ) {
-                    task.copy(
-                        status = AppPackageTaskStatus.SUCCEEDED,
-                        detail = "ইনস্টল যাচাই হয়েছে: package name ও version Android PackageManager-এ মিলে গেছে।",
-                        packageStateVerified = true
-                    )
-                } else {
-                    task.copy(
-                        status = AppPackageTaskStatus.UNKNOWN,
-                        detail = "Android ইনস্টলার থেকে ফেরা হয়েছে, কিন্তু প্রত্যাশিত নতুন package/version state নিশ্চিত হয়নি। ইনস্টল সফল বলে ধরা হয়নি।",
-                        packageStateVerified = false
-                    )
-                }
-            }
-            AppPackageTaskAction.UNINSTALL_APP -> {
-                if (currentVersion == null) {
-                    task.copy(
-                        status = AppPackageTaskStatus.SUCCEEDED,
-                        detail = "আনইনস্টল যাচাই হয়েছে: Android PackageManager-এ লক্ষ্য package আর ইনস্টল নেই।",
-                        packageStateVerified = true
-                    )
-                } else {
-                    task.copy(
-                        status = AppPackageTaskStatus.UNKNOWN,
-                        detail = "Android আনইনস্টলার থেকে ফেরা হয়েছে, কিন্তু লক্ষ্য package এখনো আছে। বাতিল/ব্যর্থতার কারণ নিশ্চিত নয়; সফল বলা হয়নি।",
-                        packageStateVerified = false
-                    )
-                }
-            }
-            AppPackageTaskAction.SEARCH_PLAY_STORE -> task
-        }
+        val verifiedResult = AppPackagePostcondition.reconcile(
+            pending = task,
+            baselineVersionCode = baselineVersion,
+            currentVersionCode = currentVersion,
+            targetVersionCode = targetVersion
+        )
         AppPackageTaskResultStore.clearVerificationTarget(this)
         publishAppPackageResult(verifiedResult)
     }
