@@ -84,8 +84,16 @@ export class DeviceBridge {
     if (!DEVICE_ID.test(deviceId) || !/^\d{6}$/.test(pairingCode) || !/^[0-9a-f]{64}$/.test(deviceSecret)) {
       return json({ ok: false, error: "malformed_pair_request" }, 400);
     }
+    const ip = String(request.headers.get("CF-Connecting-IP") || "unknown");
+    const rateKey = "pairStartRate:" + await sha256(ip);
+    const rate = await this.storage.get(rateKey);
+    const now = Date.now();
+    const activeRate = rate && rate.resetAt > now ? rate : { count: 0, resetAt: now + 10 * 60 * 1000 };
+    if (activeRate.count >= 5) return json({ ok: false, error: "pair_start_rate_limited" }, 429);
+    activeRate.count += 1;
+    await this.storage.put(rateKey, activeRate);
     const existing = await this.storage.get("pairing");
-    if (existing && existing.approved && existing.deviceId !== deviceId) {
+    if (existing && existing.approved) {
       return json({ ok: false, error: "device_already_paired_revoke_first" }, 409);
     }
     if (existing && !existing.approved && existing.expiresAt > Date.now() && existing.deviceId !== deviceId) {
@@ -171,9 +179,7 @@ export class DeviceBridge {
       return json({ ok: false, error: "unsupported_or_malformed_action" }, 400);
     }
     const queue = (await this.storage.get("queue")) || [];
-    if (queue.length >= MAX_QUEUE || await this.storage.get("inflight")) {
-      if (queue.length >= MAX_QUEUE) return json({ ok: false, error: "device_queue_full" }, 429);
-    }
+    if (queue.length >= MAX_QUEUE) return json({ ok: false, error: "device_queue_full" }, 429);
     const now = Date.now();
     const envelope = {
       requestId: randomHex(16), action, issuedAtMillis: now,
@@ -204,7 +210,7 @@ export class DeviceBridge {
     const packageStateVerified = body.packageStateVerified === true;
     if (!STATUSES.has(status) || detail.length > 500 ||
         (packageName !== null && !PACKAGE_NAME.test(packageName)) ||
-        (status === "SUCCEEDED" && (!packageStateVerified || body.action === "SEARCH_PLAY_STORE"))) {
+        (status === "SUCCEEDED" && (!packageStateVerified || body.action === "SEARCH_PLAY_STORE" || !packageName))) {
       return json({ ok: false, error: "invalid_result" }, 400);
     }
     const record = {
