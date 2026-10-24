@@ -84,6 +84,13 @@ export class DeviceBridge {
     if (!DEVICE_ID.test(deviceId) || !/^\d{6}$/.test(pairingCode) || !/^[0-9a-f]{64}$/.test(deviceSecret)) {
       return json({ ok: false, error: "malformed_pair_request" }, 400);
     }
+    const existing = await this.storage.get("pairing");
+    if (existing && existing.approved) {
+      return json({ ok: false, error: "device_already_paired_revoke_first" }, 409);
+    }
+    if (existing && !existing.approved && existing.expiresAt > Date.now() && existing.deviceId !== deviceId) {
+      return json({ ok: false, error: "pairing_already_pending" }, 409);
+    }
     const ip = String(request.headers.get("CF-Connecting-IP") || "unknown");
     const rateKey = "pairStartRate:" + await sha256(ip);
     const rate = await this.storage.get(rateKey);
@@ -92,13 +99,6 @@ export class DeviceBridge {
     if (activeRate.count >= 5) return json({ ok: false, error: "pair_start_rate_limited" }, 429);
     activeRate.count += 1;
     await this.storage.put(rateKey, activeRate);
-    const existing = await this.storage.get("pairing");
-    if (existing && existing.approved) {
-      return json({ ok: false, error: "device_already_paired_revoke_first" }, 409);
-    }
-    if (existing && !existing.approved && existing.expiresAt > Date.now() && existing.deviceId !== deviceId) {
-      return json({ ok: false, error: "pairing_already_pending" }, 409);
-    }
     await this.storage.put("pairing", {
       deviceId, pairingCode, secretHash: await sha256(deviceSecret), deviceSecret,
       createdAt: Date.now(), expiresAt: Date.now() + CODE_TTL_MS,
@@ -173,9 +173,9 @@ export class DeviceBridge {
     const pairing = await this.authorizeBrowser(request);
     if (!pairing || !pairing.approved) return json({ ok: false, error: "browser_not_authorized" }, 401);
     const body = await request.json();
-    const action = String(body.action || "");
-    const target = String(body.target || "");
-    if (!ACTIONS.has(action) || !validTarget(action, target)) {
+    const action = typeof body.action === "string" ? body.action : "";
+    const target = body.target == null ? "" : (typeof body.target === "string" ? body.target : null);
+    if (!ACTIONS.has(action) || target === null || !validTarget(action, target)) {
       return json({ ok: false, error: "unsupported_or_malformed_action" }, 400);
     }
     const queue = (await this.storage.get("queue")) || [];
