@@ -9,7 +9,8 @@ object AppPackagePostcondition {
     fun reconcile(
         pending: AppPackageTaskResult,
         baselineVersionCode: Long?,
-        currentVersionCode: Long?
+        currentVersionCode: Long?,
+        targetVersionCode: Long? = null
     ): AppPackageTaskResult {
         require(pending.status == AppPackageTaskStatus.AWAITING_USER_CONFIRMATION) {
             "Only pending confirmation results can be reconciled"
@@ -18,8 +19,14 @@ object AppPackagePostcondition {
         return when (pending.action) {
             AppPackageTaskAction.INSTALL_APK -> {
                 val installedOrUpdated = currentVersionCode != null && currentVersionCode != UNKNOWN_VERSION &&
-                    (baselineVersionCode == -1L ||
-                        (baselineVersionCode != null && currentVersionCode > baselineVersionCode))
+                    if (targetVersionCode != null) {
+                        currentVersionCode == targetVersionCode &&
+                            baselineVersionCode != null &&
+                            currentVersionCode != baselineVersionCode
+                    } else {
+                        baselineVersionCode == -1L ||
+                            (baselineVersionCode != null && currentVersionCode > baselineVersionCode)
+                    }
                 if (packageName != null && installedOrUpdated) {
                     AppPackageTaskResult(
                         requestId = pending.requestId,
