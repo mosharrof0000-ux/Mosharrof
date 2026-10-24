@@ -32,7 +32,7 @@ object AppPackageControl {
         }
         is AppPackageCommand.Uninstall -> {
             val requestId = UUID.randomUUID().toString()
-            val packageName = AppPackageUninstallerControl.resolveInstalledLauncherPackage(activity, command.target)
+            val packageName = AppPackageUninstallControl.resolveInstalledLauncherPackage(activity, command.target)
             if (packageName == null) {
                 val outcome = result(
                     requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.FAILED,
@@ -41,7 +41,7 @@ object AppPackageControl {
                 onTaskResult(outcome)
                 status.text = outcome.toDisplayText()
             } else {
-                AppPackageUninstallerControl.requestUninstall(activity, packageName, status, requestId, onTaskResult)
+                AppPackageUninstallControl.requestUninstall(activity, packageName, status, requestId, onTaskResult)
             }
             true
         }
@@ -52,7 +52,7 @@ object AppPackageControl {
         apkUri: Uri,
         status: TextView,
         onTaskResult: (AppPackageTaskResult) -> Unit = {}
-    ) = AppPackageInstallerControl.requestInstallFromSelectedUri(activity, apkUri, status, onTaskResult)
+    ) = AppPackageInstallControl.requestInstallFromSelectedUri(activity, apkUri, status, onTaskResult)
 
     fun requestUninstall(
         activity: Activity,
@@ -60,7 +60,7 @@ object AppPackageControl {
         status: TextView,
         requestId: String = UUID.randomUUID().toString(),
         onTaskResult: (AppPackageTaskResult) -> Unit = {}
-    ) = AppPackageUninstallerControl.requestUninstall(activity, packageName, status, requestId, onTaskResult)
+    ) = AppPackageUninstallControl.requestUninstall(activity, packageName, status, requestId, onTaskResult)
 
     private fun showStoreSearch(
         activity: Activity,
