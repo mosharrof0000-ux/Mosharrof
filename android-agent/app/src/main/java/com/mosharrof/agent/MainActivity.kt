@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
         if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
     private val apkPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status, ::publishAppPackageResult)
+        if (uri != null) AppPackageControl.requestInstallFromSelectedUri(this, uri, status, ::publishAppPackageResult, ::launchPackageConfirmation)
         else publishAppPackageResult(
             AppPackageTaskResult(
                 requestId = java.util.UUID.randomUUID().toString(),
@@ -63,6 +63,13 @@ class MainActivity : ComponentActivity() {
                 detail = "APK নির্বাচন বাতিল করা হয়েছে; কোনো অ্যাপ ইনস্টল হয়নি।"
             )
         )
+    }
+    private val packageConfirmationResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (::status.isInitialized) {
+            AppPackageControl.completePendingOperation(this, result.resultCode, status, ::publishAppPackageResult)
+        }
     }
     private val speechResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -175,7 +182,8 @@ class MainActivity : ComponentActivity() {
         if (AppPackageControl.handleCommand(
                 this, command, status,
                 pickApk = { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) },
-                onTaskResult = ::publishAppPackageResult
+                onTaskResult = ::publishAppPackageResult,
+                launchConfirmation = ::launchPackageConfirmation
             )) return
         if (DeviceIntentControl.handle(this, command, status)) return
         if (taskController.prepareTask(command)) return
@@ -200,6 +208,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    private fun launchPackageConfirmation(intent: Intent) {
+        packageConfirmationResult.launch(intent)
     }
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
         lastAppPackageTaskResult = result
