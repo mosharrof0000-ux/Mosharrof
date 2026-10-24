@@ -121,10 +121,12 @@ object AppPackageControl {
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 try {
+                    AppPackagePendingOperationStore.beginInstall(activity, requestId, metadata.packageName, metadata.versionCode, previousVersion)
                     activity.startActivity(intent)
                     val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android ইনস্টলার খোলা হয়েছে; ফিরে এলে প্যাকেজ ও ভার্সন যাচাই করা হবে।", metadata.packageName, metadata.versionCode, previousVersion)
                     onTaskResult(outcome); status.text = outcome.toDisplayText()
                 } catch (_: Exception) {
+                    AppPackagePendingOperationStore.clear(activity)
                     val outcome = result(requestId, AppPackageTaskAction.INSTALL_APK, AppPackageTaskStatus.FAILED, "এই ডিভাইসে উপযুক্ত প্যাকেজ ইনস্টলার খোলা যায়নি।", metadata.packageName, metadata.versionCode, previousVersion)
                     onTaskResult(outcome); status.text = outcome.toDisplayText()
                 }
@@ -146,10 +148,12 @@ object AppPackageControl {
             }
             .setPositiveButton("আনইনস্টল স্ক্রিন খুলুন") { _, _ ->
                 try {
+                    AppPackagePendingOperationStore.beginUninstall(activity, requestId, normalized)
                     activity.startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$normalized")))
                     val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.AWAITING_USER_CONFIRMATION, "Android আনইনস্টল স্ক্রিন খোলা হয়েছে; ফিরে এলে প্যাকেজ আছে কি না যাচাই করা হবে।", normalized)
                     onTaskResult(outcome); status.text = outcome.toDisplayText()
                 } catch (_: Exception) {
+                    AppPackagePendingOperationStore.clear(activity)
                     val outcome = result(requestId, AppPackageTaskAction.UNINSTALL_APP, AppPackageTaskStatus.FAILED, "Android-এর আনইনস্টল স্ক্রিন খোলা যায়নি।", normalized)
                     onTaskResult(outcome); status.text = outcome.toDisplayText()
                 }
