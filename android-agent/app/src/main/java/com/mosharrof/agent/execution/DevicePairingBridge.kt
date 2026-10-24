@@ -114,7 +114,7 @@ object DevicePairingBridge {
             .put("packageStateVerified", localResult.packageStateVerified)
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_RESULT, body.toString()).apply()
-        flushPendingResult(context)
+        Thread { flushPendingResult(context.applicationContext) }.start()
     }
 
     fun flushPendingResult(context: Context) {
