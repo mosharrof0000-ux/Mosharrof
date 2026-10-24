@@ -206,10 +206,14 @@ export class DeviceBridge {
     const packageStateVerified = body.packageStateVerified === true;
     const priorTerminal = prior && (terminal(prior.status) ||
       (prior.status === "AWAITING_USER_CONFIRMATION" && prior.action === "SEARCH_PLAY_STORE"));
+    if (prior && prior.requestId === body.requestId && prior.action === body.action && priorTerminal) {
+      // The first server terminal result is authoritative; late callbacks cannot rewrite it.
+      return json({ ok: true, accepted: true, terminal: true, ignored: prior.status !== status });
+    }
     if (prior && prior.requestId === body.requestId && prior.action === body.action &&
         prior.status === status && prior.detail === String(body.detail || "") &&
         prior.packageName === packageName && prior.packageStateVerified === packageStateVerified) {
-      return json({ ok: true, accepted: true, terminal: !!priorTerminal });
+      return json({ ok: true, accepted: true, terminal: false });
     }
     const inflight = await this.storage.get("inflight");
     if (!inflight || body.requestId !== inflight.envelope.requestId || body.action !== inflight.envelope.action) {
