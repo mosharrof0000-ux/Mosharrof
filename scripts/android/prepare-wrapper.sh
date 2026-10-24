@@ -3,6 +3,7 @@ set -euo pipefail
 
 npm init -y
 npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
+python3 scripts/android/patch-capacitor-safe-area-race.py
 python3 scripts/prepare_web_organ_runtime.py
 rm -rf android-web
 cp -a web android-web

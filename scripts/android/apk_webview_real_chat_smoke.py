@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen
 
-import websocket
+from scripts.android.lib.webview_cdp_client import PageCDP
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
@@ -48,45 +48,6 @@ def record(name: str, passed: bool, detail: str = "") -> None:
         report["errors"].append({"check": name, "detail": detail})
 
 
-class PageCDP:
-    """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
-
-    def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
-        self.next_id = 0
-
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
-        self.next_id += 1
-        command_id = self.next_id
-        self.ws.settimeout(timeout)
-        self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            message = json.loads(self.ws.recv())
-            if message.get("id") != command_id:
-                continue
-            if "error" in message:
-                raise RuntimeError(f"CDP {method} failed: {message['error']}")
-            return message.get("result", {})
-        raise TimeoutError(f"Timed out waiting for CDP command {method}")
-
-    def evaluate(self, expression: str, timeout: float = 15):
-        result = self.command(
-            "Runtime.evaluate",
-            {"expression": expression, "returnByValue": True, "awaitPromise": True},
-            timeout=timeout,
-        )
-        if "exceptionDetails" in result:
-            raise RuntimeError(f"Page JavaScript exception: {result['exceptionDetails']}")
-        return result.get("result", {}).get("value")
-
-    def screenshot(self, path: Path) -> None:
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
-        path.write_bytes(base64.b64decode(result["data"]))
-
-    def close(self) -> None:
-        self.ws.close()
-
 
 def get_targets() -> list[dict]:
     target_file = out / "webview-targets.json"
@@ -111,7 +72,7 @@ def main() -> int:
         if target is None:
             return 1
 
-        cdp = PageCDP(target["webSocketDebuggerUrl"])
+        cdp = PageCDP(target["webSocketDebuggerUrl"], args.cdp_endpoint)
         cdp.command("Page.enable")
         cdp.command("Runtime.enable")
         try:
