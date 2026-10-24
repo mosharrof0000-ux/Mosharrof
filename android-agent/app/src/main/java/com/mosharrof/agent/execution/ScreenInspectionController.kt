@@ -1,6 +1,5 @@
 package com.mosharrof.agent.execution
 
-import android.content.Context
 import android.widget.TextView
 import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
 
@@ -9,11 +8,20 @@ import com.mosharrof.agent.accessibility.MosharrofAccessibilityService
  * stays small and independently testable.
  */
 class ScreenInspectionController(
-    private val context: Context,
     private val status: TextView,
     private val screenDetails: TextView,
     private val isServiceEnabled: () -> Boolean
 ) {
+    fun refreshServiceStatus() {
+        status.text = when {
+            !isServiceEnabled() -> "Accessibility বন্ধ। অ্যাপ খোলার কমান্ড চলবে; স্ক্যান ও UI action-এর জন্য Settings-এ চালু করুন।"
+            MosharrofAccessibilityService.isInspectionArmed() && MosharrofAccessibilityService.hasInspectionSnapshot() ->
+                "স্ক্যানের ফল প্রস্তুত। ফল দেখতে আবার ‘বর্তমান স্ক্রিন পরীক্ষা করুন’ চাপুন।"
+            MosharrofAccessibilityService.isInspectionArmed() -> "স্ক্যান চলছে। লক্ষ্য অ্যাপ খুলে এখানে ফিরে আসুন।"
+            else -> "Accessibility সক্রিয়। কমান্ড যাচাই করে নিশ্চিত করার পর অ্যাপ/Settings খোলা যাবে。"
+        }
+    }
+
     fun inspect() {
         if (!isServiceEnabled()) {
             status.text = "স্ক্রিন পরীক্ষা করতে আগে Accessibility service চালু করুন।"
