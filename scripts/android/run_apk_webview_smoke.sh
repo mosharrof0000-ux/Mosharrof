@@ -37,7 +37,7 @@ test "$(timeout 10s adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
 bash .github/scripts/install_apk_with_retry.sh
 adb shell am start -n com.mosharrof.ai/.MainActivity
 # Capture the initial app frame using the size-budgeted helper.
-bash scripts/android/capture_launch_screenshot.sh
+bash .github/scripts/capture_launch_screenshot.sh
 sleep 13
 
 bash scripts/android/discover_webview_cdp.sh
