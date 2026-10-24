@@ -70,4 +70,21 @@ class AppPackagePostconditionTest {
         assertEquals(AppPackageTaskStatus.UNKNOWN, result.status)
         assertFalse(result.packageStateVerified)
     }
+
+    @Test fun installRequiresExactTargetVersionWhenKnown() {
+        val result = AppPackagePostcondition.reconcile(
+            pending(AppPackageTaskAction.INSTALL_APK), 12L, 14L, targetVersionCode = 13L
+        )
+        assertEquals(AppPackageTaskStatus.UNKNOWN, result.status)
+        assertFalse(result.packageStateVerified)
+    }
+
+    @Test fun installConfirmsExactTargetVersionWhenItChanges() {
+        val result = AppPackagePostcondition.reconcile(
+            pending(AppPackageTaskAction.INSTALL_APK), 12L, 13L, targetVersionCode = 13L
+        )
+        assertEquals(AppPackageTaskStatus.SUCCEEDED, result.status)
+        assertTrue(result.packageStateVerified)
+    }
+
 }
