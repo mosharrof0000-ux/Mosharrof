@@ -8,10 +8,6 @@ on:
         description: "Optional task for the autonomous engine"
         required: false
         type: string
-    inputs:
-      request:
-        required: false
-        type: string
 permissions:
   contents: write
   pull-requests: write
