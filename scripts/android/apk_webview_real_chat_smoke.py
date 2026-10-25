@@ -184,7 +184,7 @@ def main() -> int:
                 response_route = str(state.get("route") or "").strip()
                 if not provider:
                     route_match = re.search(
-                        r"উত্তর:\\s*(Gemini|Workers AI|Groq|OpenRouter)\\b",
+                        r"উত্তর:\s*(Gemini|Workers AI|Groq|OpenRouter)\b",
                         response_route,
                         re.IGNORECASE,
                     )
