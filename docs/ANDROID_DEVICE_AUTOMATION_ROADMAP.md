@@ -51,3 +51,6 @@ Each registered feature should cover: screen recognition, accessible name/target
 ## Current status
 
 The current PR adds browser/PWA interactive QA and an Android Emulator lifecycle script. It is still a foundation: the full capability registry, reliable visual/OCR understanding, broad feature-specific E2E coverage, previous-release upgrade testing, and owner-authorized physical-device acceptance must be implemented and proven separately.
+
+## Blocker: Android Real-Chat QA
+- Verification of fresh main-branch APK/WebView real-chat evidence is currently blocked by lack of physical-device access in the CI environment. Emulator-based smoke tests are passing, but real-chat verification requires manual device-side confirmation.
