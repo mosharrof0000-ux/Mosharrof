@@ -5,3 +5,11 @@ workers_dev = true
 
 [ai]
 binding = "AI"
+
+[[durable_objects.bindings]]
+name = "DEVICE_BRIDGE"
+class_name = "DeviceBridge"
+
+[[migrations]]
+tag = "device-bridge-v1"
+new_sqlite_classes = ["DeviceBridge"]
