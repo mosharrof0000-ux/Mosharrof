@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from src.core.entity_registry import EntityRegistry
 from src.core.permission_engine import PermissionEngine
@@ -6,13 +7,14 @@ from src.core.policy_engine import PolicyEngine
 
 
 def test_manifest_and_registry_are_machine_readable():
-    with open("PROJECT_MANIFEST.json", encoding="utf-8") as handle:
+    root = Path(__file__).resolve().parents[1]
+    with open(root / "config" / "project_manifest.json", encoding="utf-8") as handle:
         manifest = json.load(handle)
-    with open("docs/ENTITY_REGISTRY.json", encoding="utf-8") as handle:
+    with open(root / "config" / "entity_registry.json", encoding="utf-8") as handle:
         registry = json.load(handle)
 
-    assert manifest["project"]["name"] == "Mosharrof"
-    assert manifest["architecture"]["delete_policy"] == "permanently-blocked"
+    assert manifest["name"] == "Mosharrof"
+    assert manifest["immutable_safety_rules"]["delete"] is False
     assert registry["entities"]
 
 
