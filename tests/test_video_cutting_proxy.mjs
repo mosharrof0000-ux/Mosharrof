@@ -114,7 +114,7 @@ try {
     calls.push({ url: String(url), init });
     return new Response(new Uint8Array([0, 1, 2, 3]), {
       status: 200,
-      headers: { "content-type": "video/mp4" }
+      headers: { "content-type": "video/mp4", "content-length": "4" }
     });
   };
   const output = await handleVideoCuttingProxy(new Request("https://worker.test/video-cut/jobs/" + jobId + "/output", {
@@ -122,6 +122,7 @@ try {
   }), env);
   assert.equal(output.status, 200);
   assert.equal(output.headers.get("content-type"), "video/mp4");
+  assert.equal(output.headers.get("content-length"), "4");
   assert.match(output.headers.get("content-disposition"), /mosharrof-edited\.mp4/);
   assert.deepEqual([...new Uint8Array(await output.arrayBuffer())], [0, 1, 2, 3]);
   assert.equal(calls[0].url, "https://video-api.example.test/api/v1/jobs/" + jobId + "/output");
