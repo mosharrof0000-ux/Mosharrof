@@ -25,3 +25,22 @@ def test_autonomous_workflow_has_bounded_runtime_and_visual_qa_dependencies():
     assert "npm install --no-save playwright" in workflow
     assert "npx playwright install --with-deps chromium" in workflow
     assert workflow.count("    inputs:") == 1
+
+
+
+def test_only_the_central_engine_has_a_recurring_ai_writer_schedule():
+    central = Path(".github/workflows/mosharrof-autonomous-engine.yml").read_text(encoding="utf-8")
+    assert 'cron: "0 0-2,14-23 * * *"' in central
+    assert "timeout-minutes: 30" in central
+    assert "group: mosharrof-autonomous-engine" in central
+
+    secondary = (
+        ".github/workflows/autonomous-cycle.yml",
+        ".github/workflows/mosharrof-autonomous.yml",
+        ".github/workflows/mosharrof-autonomous-6h.yml",
+        ".github/workflows/parallel-engine-builder.yml",
+    )
+    for filename in secondary:
+        workflow = Path(filename).read_text(encoding="utf-8")
+        assert "\\n  schedule:" not in workflow, filename
+        assert "group: mosharrof-autonomous-engine" in workflow, filename
