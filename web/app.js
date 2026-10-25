@@ -45,6 +45,7 @@ const QUESTION_ENDINGS = ["কি","কী","কেন","কোথায়","�
 const CORRECTION_MAP = {
   "গবেষনা":"গবেষণা", "প্রজেকট":"প্রজেক্ট", "খুজে":"খুঁজে", "খুজুন":"খুঁজুন",
   "কোরান":"কুরআন", "কুরান":"কুরআন", "মোশারফ":"মোশাররফ", "মোশররফ":"মোশাররফ",
+  "মশাররফ":"মোশাররফ", "মোশারফ এর":"মোশাররফের", "মোশাররফ এর":"মোশাররফের",
   "করতেছ":"করছ", "করতেছেন":"করছেন"
 };
 
@@ -54,7 +55,9 @@ function applySmartPunctuation(text) {
     const value = chunk.trim();
     if (!value) return "";
     if (/[।?!,;:]$/.test(value)) return value;
-    return QUESTION_ENDINGS.some(w => value.endsWith(w)) ? value + "?" : value + "।";
+    // Check if any question word exists in the sentence to match core engine behavior
+    const isQuestion = QUESTION_ENDINGS.some(w => value.split(/\s+/).includes(w));
+    return isQuestion ? value + "?" : value + "।";
   }).filter(Boolean).join(" ");
 }
 
@@ -73,8 +76,12 @@ function correctContext(text) {
 
 function processVoiceText(raw) {
   const corrected = correctContext(raw);
+  const final = applySmartPunctuation(corrected.text);
   return {
-    text: applySmartPunctuation(corrected.text),
+    status: "SUCCESS",
+    text: final,
+    final_text: final,
+    corrected_text: corrected.text,
     corrections: corrected.corrections
   };
 }
