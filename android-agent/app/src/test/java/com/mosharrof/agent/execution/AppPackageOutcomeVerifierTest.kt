@@ -54,4 +54,18 @@ class AppPackageOutcomeVerifierTest {
         assertEquals(AppPackageTaskStatus.UNKNOWN, result.status)
         assertFalse(result.packageStateVerified)
     }
+    @Test fun playStoreSearchCannotBeReportedAsSuccessfulInstallation() {
+        val rejected = runCatching {
+            AppPackageTaskResult(
+                requestId = "search-1",
+                action = AppPackageTaskAction.SEARCH_PLAY_STORE,
+                status = AppPackageTaskStatus.SUCCEEDED,
+                detail = "Search page opened",
+                packageName = "com.example.app",
+                packageStateVerified = true
+            )
+        }.isFailure
+        assertTrue(rejected)
+    }
+
 }
