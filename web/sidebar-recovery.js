@@ -13,26 +13,14 @@
     document.head.appendChild(organLoader);
   }
 
-  if (bootstrapScriptUrl && !window.__mosharrofVideoCuttingRequested) {
-    window.__mosharrofVideoCuttingRequested = true;
-    var videoCss = document.createElement("link");
-    videoCss.rel = "stylesheet";
-    videoCss.href = new URL("./video-cutting.css", bootstrapScriptUrl).href;
-    document.head.appendChild(videoCss);
-    var videoDownload = document.createElement("script");
-    videoDownload.src = new URL("./video-cutting-download.js", bootstrapScriptUrl).href;
-    videoDownload.addEventListener("load", function () {
-      var videoUi = document.createElement("script");
-      videoUi.src = new URL("./video-cutting.js", bootstrapScriptUrl).href;
-      videoUi.addEventListener("error", function () {
-        console.error("[MOSHARROF Video Cutting] UI module failed to load");
-      }, { once: true });
-      document.body.appendChild(videoUi);
+  if (bootstrapScriptUrl && !window.__mosharrofVideoCuttingLoaderRequested) {
+    window.__mosharrofVideoCuttingLoaderRequested = true;
+    var videoLoader = document.createElement("script");
+    videoLoader.src = new URL("./video-cutting-loader.js", bootstrapScriptUrl).href;
+    videoLoader.addEventListener("error", function () {
+      console.error("[MOSHARROF Video Cutting] loader failed to load");
     }, { once: true });
-    videoDownload.addEventListener("error", function () {
-      console.error("[MOSHARROF Video Cutting] download module failed to load");
-    }, { once: true });
-    document.body.appendChild(videoDownload);
+    document.body.appendChild(videoLoader);
   }
 
   var modules = [
