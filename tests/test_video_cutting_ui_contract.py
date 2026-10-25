@@ -3,16 +3,16 @@ from pathlib import Path
 
 def test_video_cutting_chat_ui_is_modular_and_secret_free():
     html = Path("web/index.html").read_text(encoding="utf-8")
-    loader = Path("web/video-cutting-loader.js").read_text(encoding="utf-8")
+    loader = Path("core/video-cutting/loader.js").read_text(encoding="utf-8")
     recovery = Path("web/sidebar-recovery.js").read_text(encoding="utf-8")
-    script = Path("web/video-cutting.js").read_text(encoding="utf-8")
-    download = Path("web/video-cutting-download.js").read_text(encoding="utf-8")
-    styles = Path("web/video-cutting.css").read_text(encoding="utf-8")
+    script = Path("core/video-cutting/ui.js").read_text(encoding="utf-8")
+    download = Path("core/video-cutting/download.js").read_text(encoding="utf-8")
+    styles = Path("core/video-cutting/styles.css").read_text(encoding="utf-8")
 
     assert './sidebar-recovery.js' in html
-    assert 'video-cutting-loader.js' in recovery
-    assert 'video-cutting-download.js' in loader
-    assert 'video-cutting.js' in loader
+    assert 'video-cutting/loader.js' in recovery
+    assert 'download.js' in loader
+    assert 'ui.js' in loader
     assert 'videoCuttingBtn' in script
     assert 'videoCutPanel' in script
     assert '/video-cut/health' in script
@@ -29,8 +29,8 @@ def test_video_cutting_chat_ui_is_modular_and_secret_free():
 
 
 def test_video_cutting_worker_proxy_is_disabled_by_default_and_server_authenticated():
-    proxy = Path("worker/video-cutting-proxy.js").read_text(encoding="utf-8")
-    worker = Path("worker/index.js").read_text(encoding="utf-8")
+    proxy = Path("core/video-cutting/worker-proxy.js").read_text(encoding="utf-8")
+    worker = Path("core/video-cutting/worker-entry.js").read_text(encoding="utf-8")
     wrangler = Path("worker/wrangler.toml").read_text(encoding="utf-8")
 
     assert 'VIDEO_CUTTING_ENABLED' in proxy
@@ -41,4 +41,4 @@ def test_video_cutting_worker_proxy_is_disabled_by_default_and_server_authentica
     assert 'MAX_REQUEST_BYTES' in proxy
     assert 'handleVideoCuttingProxy(request, env)' in worker
     assert 'content-type,authorization' in worker
-    assert 'main = "index.js"' in wrangler
+    assert 'main = "../core/video-cutting/worker-entry.js"' in wrangler
