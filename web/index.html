@@ -1,6 +1,24 @@
 <!doctype html>
 <html lang="bn">
 <head>
+<script id="mosharrof-array-at-polyfill">
+/* Android System WebView 83 (API 30 emulator) predates Array.prototype.at.
+ * Keep the generated organ modules compatible without changing their semantics. */
+if (!Array.prototype.at) {
+  Object.defineProperty(Array.prototype, "at", {
+    configurable: true,
+    writable: true,
+    value: function (index) {
+      var length = this.length >>> 0;
+      var relative = Number(index);
+      if (relative !== relative) relative = 0;
+      if (relative < 0) relative += length;
+      if (relative < 0 || relative >= length) return undefined;
+      return this[relative];
+    }
+  });
+}
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
