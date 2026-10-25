@@ -73,35 +73,36 @@ def resolve_provider(provider: str | None, route: str) -> str | None:
 
 
 def inspect_answer_visibility(cdp: PageCDP) -> dict:
-    """Bring the newest assistant message into the actual scroll viewport and measure it."""
+    """Capture answer visibility plus the sizing chain when an Android WebView collapses layout."""
     result = cdp.evaluate("""(() => {
+      const measure = (el) => {
+        if (!el) return null;
+        const s = getComputedStyle(el), r = el.getBoundingClientRect();
+        return {rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height},
+          display:s.display,width:s.width,maxWidth:s.maxWidth,minWidth:s.minWidth,
+          alignSelf:s.alignSelf,flex:s.flex,boxSizing:s.boxSizing,overflowX:s.overflowX,overflowY:s.overflowY};
+      };
       const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
       const last = nodes[nodes.length - 1];
       const body = last && last.querySelector('.rich-content');
-      if (!last || !body || !body.innerText.trim()) return {visible:false, text:'', rect:null};
-
-      // The app scrolls inside its message pane, not necessarily the document.
-      // Scroll every overflow container from the answer outward, then align the
-      // message itself. Measuring only .rich-content can report a zero-width
-      // rect when its children provide the rendered layout.
+      const scroll = document.querySelector('#chatScroll');
+      if (!last || !body || !body.innerText.trim())
+        return {visible:false,text:'',rect:null,layout:{messages:measure(document.querySelector('#messages')),scroll:measure(scroll)}};
       let parent = last.parentElement;
       while (parent && parent !== document.body && parent !== document.documentElement) {
-        const style = getComputedStyle(parent);
-        const canScroll = /(auto|scroll|overlay)/.test(style.overflowY) &&
-          parent.scrollHeight > parent.clientHeight;
-        if (canScroll) parent.scrollTop = parent.scrollHeight;
+        const s = getComputedStyle(parent);
+        if (/(auto|scroll|overlay)/.test(s.overflowY) && parent.scrollHeight > parent.clientHeight)
+          parent.scrollTop = parent.scrollHeight;
         parent = parent.parentElement;
       }
-      last.scrollIntoView({block:'end', inline:'nearest', behavior:'instant'});
-      const r = last.getBoundingClientRect();
-      const b = body.getBoundingClientRect();
-      const x = b.width > 0 ? b : r;
-      const visible = x.width > 0 && x.height > 0 &&
-        x.bottom > 0 && x.top < window.innerHeight &&
-        x.right > 0 && x.left < window.innerWidth;
-      return {visible, text:body.innerText.trim(),
+      last.scrollIntoView({block:'end',inline:'nearest',behavior:'instant'});
+      const r = last.getBoundingClientRect(), b = body.getBoundingClientRect(), x = b.width > 0 ? b : r;
+      const visible = x.width > 0 && x.height > 0 && x.bottom > 0 &&
+        x.top < window.innerHeight && x.right > 0 && x.left < window.innerWidth;
+      return {visible,text:body.innerText.trim(),
         rect:{top:x.top,bottom:x.bottom,left:x.left,right:x.right,width:x.width,height:x.height},
         messageRect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height},
-        viewport:{width:window.innerWidth,height:window.innerHeight}};
+        viewport:{width:window.innerWidth,height:window.innerHeight},
+        layout:{messages:measure(last.parentElement),message:measure(last),body:measure(body),scroll:measure(scroll)}};
     })()""", retry_safe=True)
     return result if isinstance(result, dict) else {"visible": False, "text": "", "rect": None}

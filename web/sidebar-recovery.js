@@ -130,3 +130,9 @@ import("./core/personal-memory-bridge.js")
 
 // Load the isolated New Chat / floating-window organ without growing the legacy entrypoint.
 import("./core/new-chat-floating/index.js").catch(function (error) { console.error("[MOSHARROF Floating Chat] Initialization failed:", error); });
+
+
+// Apply explicit message sizing before the Android WebView real-chat acceptance flow.
+import("./core/chat-layout-compat.js")
+  .then(function (module) { module.applyChatLayoutCompatibility(); })
+  .catch(function (error) { console.error("[MOSHARROF Chat Layout] Compatibility setup failed:", error); });

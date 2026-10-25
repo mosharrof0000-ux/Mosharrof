@@ -112,18 +112,30 @@ def main() -> int:
 
         report["stage"] = "checking_chat_composer"
         deadline = time.monotonic() + 30
-        ready = False
+        layout_ready = False
+        composer_ready = False
         while time.monotonic() < deadline:
-            ready = bool(cdp.evaluate(
+            layout_ready = bool(cdp.evaluate(
+                "window.__mosharrofChatLayoutCompatReady === true",
+                retry_safe=True,
+            ))
+            composer_ready = bool(cdp.evaluate(
                 "Boolean(document.querySelector('#input') && document.querySelector('#sendBtn') && "
                 "document.querySelector('#input').getClientRects().length)",
                 retry_safe=True,
             ))
-            if ready:
+            if layout_ready and composer_ready:
                 break
             time.sleep(0.5)
-        record("chat_composer_visible_in_apk", ready, "Visible #input and #sendBtn found in installed app WebView")
-        if not ready:
+        record("chat_layout_compat_ready", layout_ready,
+               "Explicit chat sizing fallback initialized" if layout_ready
+               else "Chat sizing compatibility module did not initialize")
+        record("chat_composer_visible_in_apk", composer_ready,
+               "Visible #input and #sendBtn found in installed app WebView" if composer_ready
+               else "Chat composer not visible in installed app WebView")
+        if not layout_ready:
+            raise TimeoutError("Chat layout compatibility module did not initialize")
+        if not composer_ready:
             raise TimeoutError("APK chat composer did not become visible")
 
         report["stage"] = "capturing_before_chat"
