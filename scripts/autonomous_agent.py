@@ -58,6 +58,6 @@ env=os.environ.copy(); env["GH_TOKEN"]=TOKEN
 subprocess.run(["git","remote","set-url","origin",f"https://x-access-token:{TOKEN}@github.com/{REPO}.git"],check=True)
 subprocess.run(["git","push","--set-upstream","origin",branch],check=True,env=env)
 subprocess.run(["gh","pr","create","--repo",REPO,"--base","main","--head",branch,"--title","Auto: verified Mosharrof improvement","--body",f"{summary}\n\nTests passed. Main was never edited directly."],check=True,env=env)
-pr=run("gh","pr","list","--repo",REPO,"--head",branch,"--json","number","--jq",".[0].number",env=env)
-subprocess.run(["gh","pr","merge",pr,"--repo",REPO,"--auto","--squash"],check=True,env=env)
-print("PR",pr)
+# The agent may create a proposal, but it must never promote its own changes.
+# Required checks and human review remain the release boundary.
+print("PR opened for review; automatic merge intentionally disabled:", branch)
