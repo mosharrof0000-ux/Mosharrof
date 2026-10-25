@@ -12,10 +12,10 @@ import time
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.request import urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / ".github" / "scripts"))
 from android_qa_cdp import PageCDP, inspect_answer_visibility, resolve_provider
+from android_qa_targets import fetch_webview_targets
 
 
 parser = argparse.ArgumentParser()
@@ -61,12 +61,7 @@ def record(name: str, passed: bool, detail: str = "") -> None:
 
 
 def get_targets() -> list[dict]:
-    target_file = out / "webview-targets.json"
-    if target_file.is_file():
-        return json.loads(target_file.read_text(encoding="utf-8"))
-    endpoint = args.cdp_endpoint.rstrip("/") + "/json/list"
-    with urlopen(endpoint, timeout=15) as response:
-        return json.load(response)
+    return fetch_webview_targets(args.cdp_endpoint, out / "webview-targets.json")
 
 
 def main() -> int:

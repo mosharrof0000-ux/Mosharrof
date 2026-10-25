@@ -13,9 +13,24 @@ class PageCDP:
     """Minimal page-target CDP client with bounded retries for idempotent commands."""
 
     def __init__(self, ws_url: str, retry_events: list[dict] | None = None):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
         self.next_id = 0
         self.retry_events = retry_events if retry_events is not None else []
+        self.ws = None
+        for attempt in range(3):
+            try:
+                self.ws = websocket.create_connection(ws_url, timeout=15)
+                break
+            except (websocket.WebSocketTimeoutException, OSError) as exc:
+                if attempt >= 2:
+                    raise
+                self.retry_events.append({
+                    "method": "websocket_connect",
+                    "attempt": attempt + 1,
+                    "reason": type(exc).__name__,
+                })
+                time.sleep(0.5 * (attempt + 1))
+        if self.ws is None:
+            raise TimeoutError("Could not connect to Android WebView CDP endpoint after 3 attempts")
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15, retries: int = 0) -> dict:
         for attempt in range(retries + 1):
