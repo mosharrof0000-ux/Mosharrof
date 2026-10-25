@@ -21,14 +21,8 @@ jobs:
         run: node tests/test_personal_memory_engine.mjs
       - name: Test memory retrieval and timeline regressions
         run: node --test tests/personal-memory-engine.test.mjs
-      - name: Check memory bridge syntax
-        run: node --check core/personal-memory-bridge.js
-      - name: Validate Android device bridge JavaScript
-        run: |
-          node --check worker/device-bridge.js
-          node --check web/device-bridge-chat.js
-      - name: Test authenticated Android device bridge
-        run: node tests/test_device_bridge_worker.mjs
+      - name: Check memory and Android bridge syntax/tests
+        run: node --check core/personal-memory-bridge.js && node --check worker/device-bridge.js && node --check web/device-bridge-chat.js && node tests/test_device_bridge_worker.mjs
       - name: Validate supplemental chat intelligence evaluation matrix
         run: node tests/chat-intelligence-eval-matrix.mjs
       - uses: actions/setup-python@v5
