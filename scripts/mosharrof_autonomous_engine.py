@@ -219,5 +219,6 @@ subprocess.run([
     "gh", "pr", "create", "--base", "main", "--head", branch,
     "--title", "Auto: Mosharrof guarded task", "--body", body
 ], check=True)
-subprocess.run(["gh", "pr", "merge", branch, "--auto", "--squash"], check=True)
-print(f"PR created and auto-merge requested: {branch}")
+# Autonomous AI may propose and test code, but it must never promote its own changes.
+# Human review and the repository's required checks remain the release boundary.
+print(f"PR created for review; automatic merge intentionally disabled: {branch}")
