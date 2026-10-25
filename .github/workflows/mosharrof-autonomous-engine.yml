@@ -17,25 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with: {ref: main}
-      - name: Preflight configured AI provider without exposing secrets
+      - name: Prepare engine environment
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-        run: |
-          if [ -n "${GEMINI_API_KEY:-}" ]; then echo "AI provider configured: Gemini";
-          elif [ -n "${GROQ_API_KEY:-}" ]; then echo "AI provider configured: Groq";
-          elif [ -n "${OPENROUTER_API_KEY:-}" ]; then echo "AI provider configured: OpenRouter";
-          else
-            echo "::error::No AI provider credentials are configured. Add GEMINI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY in repository Actions secrets; values are never printed."
-            exit 1
-          fi
-      - name: Install test and browser dependencies
-        run: |
-          pip install -r requirements.txt
-          npm init -y
-          npm install --no-save playwright
-          npx playwright install --with-deps chromium
+        run: bash .github/scripts/prepare_autonomous_engine.sh
       - name: Run guarded autonomous engine
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
