@@ -1,5 +1,5 @@
 import { buildChatContext } from "../core/chat-context.js";
-import { DeviceBridge } from "./device-bridge.js";
+import { DeviceBridge } from "../core/android-device-bridge/worker-entry.js";
 export { DeviceBridge };
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
