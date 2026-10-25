@@ -3,7 +3,8 @@ import { EntityBus } from "../../web/entities/core/entity-bus.js";
 import { EntityState } from "../../web/entities/core/entity-state.js";
 import { icons } from "../../web/entities/shared/entity-icons.js";
 
-export const organId = new URL(import.meta.url).pathname.split("/").at(-2);
+const organPathSegments = new URL(import.meta.url).pathname.split("/");
+export const organId = organPathSegments[organPathSegments.length - 2];
 export function initialize(runtime) {
   EntityRegistry.register({
     id: organId, icon: icons[organId],
