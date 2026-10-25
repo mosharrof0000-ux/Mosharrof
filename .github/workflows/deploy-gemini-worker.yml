@@ -105,7 +105,9 @@ jobs:
       - name: Validate Worker JavaScript syntax
         run: node --check worker/screenshot-analysis.js
       - name: Validate device bridge Worker JavaScript syntax
-        run: node --check worker/device-bridge.js
+        run: node --check core/android-device-bridge/worker-base.js
+      - name: Validate device bridge command handler syntax
+        run: node --check core/android-device-bridge/worker-entry.js
       - name: Test authenticated device bridge
         run: node tests/test_device_bridge_worker.mjs
       - name: Validate video Worker JavaScript syntax
