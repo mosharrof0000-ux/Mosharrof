@@ -16,5 +16,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Validate isolated UI and Worker syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check core/video-cutting/ui.js
+          node --check core/video-cutting/download.js
+          node --check core/video-cutting/loader.js
+          node --input-type=module --check < core/video-cutting/worker-entry.js
+          node --input-type=module --check < core/video-cutting/worker-proxy.js
       - name: Run isolated proxy and Worker contract tests
         run: node tests/test_video_cutting_proxy.mjs
