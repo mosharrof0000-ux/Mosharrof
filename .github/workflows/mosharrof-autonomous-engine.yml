@@ -5,6 +5,11 @@ on:
   workflow_dispatch:
     inputs:
       request:
+        description: "Optional task for the autonomous engine"
+        required: false
+        type: string
+    inputs:
+      request:
         required: false
         type: string
 permissions:
@@ -16,6 +21,7 @@ concurrency:
 jobs:
   autonomous-work:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout main
         uses: actions/checkout@v6
@@ -23,6 +29,15 @@ jobs:
           ref: main
       - name: Install autonomous engine test dependencies
         run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Install Node.js and Playwright for required visual QA
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install browser QA dependencies
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
       - name: Run autonomous agent
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
