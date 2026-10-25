@@ -1,0 +1,12 @@
+{
+  "id": "android-device-bridge",
+  "name": "Android Device Bridge",
+  "description": "Authenticated pairing and verified Android app-package commands from MOSHARROF chat.",
+  "public_api": [
+    "getHealth",
+    "pairDevice",
+    "sendPackageCommand",
+    "disconnectDevice"
+  ],
+  "dependencies": []
+}
