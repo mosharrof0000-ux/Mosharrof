@@ -25,8 +25,9 @@ jobs:
         run: node --check core/personal-memory-bridge.js
       - name: Validate Android device bridge JavaScript
         run: |
-          node --check worker/device-bridge.js
-          node --check web/device-bridge-chat.js
+          node --check core/android-device-bridge/worker-base.js
+          node --check core/android-device-bridge/worker-entry.js
+          node --check organs/android-device-bridge/index.js
       - name: Test authenticated Android device bridge
         run: node tests/test_device_bridge_worker.mjs
       - name: Validate supplemental chat intelligence evaluation matrix
