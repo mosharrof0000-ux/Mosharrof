@@ -87,6 +87,31 @@ def resolve_provider(provider: str | None, route: str) -> str | None:
     return match.group(1) if match else None
 
 
+def answer_is_visibly_rendered(result: dict | None) -> bool:
+    """Reject text that exists in the DOM but is collapsed to an unreadable sliver."""
+    if not isinstance(result, dict) or result.get("visible") is not True:
+        return False
+    if not str(result.get("text") or "").strip():
+        return False
+    rect = result.get("rect") or {}
+    viewport = result.get("viewport") or {}
+    try:
+        left, right = float(rect["left"]), float(rect["right"])
+        top, bottom = float(rect["top"]), float(rect["bottom"])
+        width, height = float(rect["width"]), float(rect["height"])
+        viewport_width, viewport_height = float(viewport["width"]), float(viewport["height"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    min_readable_width = min(120.0, max(48.0, viewport_width * 0.4))
+    visible_width = max(0.0, min(right, viewport_width) - max(left, 0.0))
+    visible_height = max(0.0, min(bottom, viewport_height) - max(top, 0.0))
+    return (
+        width >= min_readable_width
+        and visible_width >= min_readable_width
+        and height >= 12.0
+        and visible_height >= 12.0
+    )
+
 def inspect_answer_visibility(cdp: PageCDP) -> dict:
     """Capture answer visibility plus the sizing chain when an Android WebView collapses layout."""
     result = cdp.evaluate("""(() => {
@@ -112,12 +137,17 @@ def inspect_answer_visibility(cdp: PageCDP) -> dict:
       }
       last.scrollIntoView({block:'end',inline:'nearest',behavior:'instant'});
       const r = last.getBoundingClientRect(), b = body.getBoundingClientRect(), x = b.width > 0 ? b : r;
-      const visible = x.width > 0 && x.height > 0 && x.bottom > 0 &&
-        x.top < window.innerHeight && x.right > 0 && x.left < window.innerWidth;
-      return {visible,text:body.innerText.trim(),
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const minReadableWidth = Math.min(120, Math.max(48, viewportWidth * 0.4));
+      const visibleWidth = Math.max(0, Math.min(x.right, viewportWidth) - Math.max(x.left, 0));
+      const visibleHeight = Math.max(0, Math.min(x.bottom, viewportHeight) - Math.max(x.top, 0));
+      const visible = x.width >= minReadableWidth && visibleWidth >= minReadableWidth &&
+        x.height >= 12 && visibleHeight >= 12;
+      return {visible,minReadableWidth,visibleWidth,visibleHeight,text:body.innerText.trim(),
         rect:{top:x.top,bottom:x.bottom,left:x.left,right:x.right,width:x.width,height:x.height},
         messageRect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height},
-        viewport:{width:window.innerWidth,height:window.innerHeight},
-        layout:{messages:measure(last.parentElement),message:measure(last),body:measure(body),scroll:measure(scroll)}};
+        viewport:{width:viewportWidth,height:viewportHeight},
+        layout:{messages:measure(document.querySelector('#messages')),message:measure(last),body:measure(body),scroll:measure(scroll)}};
     })()""", retry_safe=True)
     return result if isinstance(result, dict) else {"visible": False, "text": "", "rect": None}

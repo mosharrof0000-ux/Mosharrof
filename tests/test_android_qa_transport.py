@@ -129,3 +129,36 @@ def test_chat_layout_compatibility_runtime_asset_is_copied():
 def test_chat_layout_compatibility_injection_fails_closed_without_anchor():
     with pytest.raises(SystemExit, match="sidebar script anchor missing for chat layout compatibility"):
         inject_chat_layout_compatibility("<html><body></body></html>")
+
+
+
+def test_chat_layout_compatibility_forces_viewport_sizing():
+    source = (ROOT / "core" / "chat-layout-compat.js").read_text(encoding="utf-8")
+    assert 'scroll.style.setProperty("width", "100vw", "important")' in source
+    assert 'messages.style.setProperty("width", "calc(100vw - 28px)", "important")' in source
+
+
+def test_answer_visibility_rejects_one_pixel_collapsed_layout(monkeypatch):
+    module, _ = _load_cdp_with_fake_websocket(
+        monkeypatch, lambda _url, _timeout: types.SimpleNamespace(close=lambda: None)
+    )
+    collapsed = {
+        "visible": True,
+        "text": "APK চ্যাট পরীক্ষা সফল।",
+        "rect": {"left": 27, "right": 28, "top": -171, "bottom": 176, "width": 1, "height": 347},
+        "viewport": {"width": 320, "height": 616},
+    }
+    assert not module.answer_is_visibly_rendered(collapsed)
+
+
+def test_answer_visibility_accepts_readable_in_viewport_layout(monkeypatch):
+    module, _ = _load_cdp_with_fake_websocket(
+        monkeypatch, lambda _url, _timeout: types.SimpleNamespace(close=lambda: None)
+    )
+    readable = {
+        "visible": True,
+        "text": "APK চ্যাট পরীক্ষা সফল।",
+        "rect": {"left": 20, "right": 280, "top": 500, "bottom": 540, "width": 260, "height": 40},
+        "viewport": {"width": 320, "height": 616},
+    }
+    assert module.answer_is_visibly_rendered(readable)
