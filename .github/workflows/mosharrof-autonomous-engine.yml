@@ -33,4 +33,7 @@ jobs:
         run: python3 scripts/mosharrof_autonomous_engine.py
       - if: always()
         uses: actions/upload-artifact@v4
-        with: {name: engine-${{ github.run_id }}, path: artifacts/, retention-days: 30}
+        with:
+          name: engine-${{ github.run_id }}
+          path: artifacts/
+          retention-days: 30
