@@ -15,22 +15,17 @@ permissions:
   actions: read
 
 concurrency:
-  # Separate from the primary autonomous cycle so independent safe tasks can overlap.
+  # All AI-writing workflows share one group to prevent overlapping repository mutations.
   group: mosharrof-autonomous-engine
   cancel-in-progress: false
 
 jobs:
   build-independent-backlog:
-    # Only successful release-branch completions may start follow-up backlog work.
-    # Feature-branch builds must not fan out additional runners while CI is validating a PR.
-    if: >-
-      (github.event_name != 'workflow_run' ||
-       (github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.head_branch == 'main')) &&
-      (github.event_name != 'issue_comment' ||
-       (github.event.issue.number == 756 &&
-        github.event.comment.user.login == 'mosharrof0000-ux' &&
-        contains(fromJSON('["/mosharrof start","/mosharrof resume"]'), github.event.comment.body)))
+    # Manual dispatch or an explicit owner command on the control-center issue only.
+    if: github.event_name != 'issue_comment' ||
+        (github.event.issue.number == 756 &&
+         github.event.comment.user.login == 'mosharrof0000-ux' &&
+         contains(fromJSON('["/mosharrof start","/mosharrof resume"]'), github.event.comment.body))
     name: Parallel backlog engineering (review-only)
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -51,8 +46,10 @@ jobs:
 
       - name: Build bounded backlog task
         env:
-          # Keep the bounded backlog task for scheduled, workflow-run, and owner-command triggers.
-          EVENT_NAME: schedule
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
           GH_TOKEN: ${{ secrets.MOSHARROF_RECOVERY_TOKEN || github.token }}
           GH_REPO: ${{ github.repository }}
         run: python3 .github/scripts/build_backlog_task.py
