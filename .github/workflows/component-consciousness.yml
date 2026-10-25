@@ -21,6 +21,4 @@ jobs:
       - name: Run full component consciousness audit
         run: python3 scripts/mosharrof_component_consciousness.py
       - name: Verify autonomous engine is protected
-        run: |
-          grep -q 'gh", "pr", "merge", branch, "--auto", "--squash"' scripts/mosharrof_autonomous_engine.py
-          ! grep -q 'git", "push", "origin", "main' scripts/mosharrof_autonomous_engine.py
+        run: python3 scripts/automation/autonomous_engine_safety_gate.py

@@ -1,9 +1,6 @@
 name: Mosharrof Autonomous Work Cycle
 
 on:
-  schedule:
-    # Bangladesh time 20:00–08:00: UTC hours 14–23 and 0–2. GitHub schedule is best-effort; this is recurring work, not a guaranteed continuous 12-hour runner.
-    - cron: "0 0-2,14-23 * * *"
   workflow_dispatch:
   issues:
     types: [opened, edited]
@@ -17,12 +14,12 @@ permissions:
   checks: read
 
 concurrency:
-  group: mosharrof-autonomous
-  cancel-in-progress: false
+  group: mosharrof-autonomous-engine
+  queue: max
 
 jobs:
   autonomous:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.action == 'opened') || (github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/mosharrof run'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && github.event.action == 'opened') || (github.event_name == 'issue_comment' && github.event.action == 'created' && startsWith(github.event.comment.body, '/mosharrof run'))
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

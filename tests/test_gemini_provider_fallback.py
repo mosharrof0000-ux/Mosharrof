@@ -30,10 +30,11 @@ def test_provider_retries_503_then_uses_fallback_model():
     assert result["candidates"][0]["content"]["parts"][0]["text"].startswith("{")
 
 
-def test_six_hour_workflow_uses_existing_token_fallback_and_no_cancel():
+def test_legacy_workflow_uses_token_fallback_and_queued_concurrency():
     from pathlib import Path
     workflow = Path(".github/workflows/mosharrof-autonomous-6h.yml").read_text(encoding="utf-8")
     assert "secrets.MOSHARROF_RECOVERY_TOKEN || github.token" in workflow
     assert "contents: write" in workflow
     assert "pull-requests: write" in workflow
-    assert "cancel-in-progress: false" in workflow
+    assert "queue: max" in workflow
+    assert "cancel-in-progress: true" not in workflow

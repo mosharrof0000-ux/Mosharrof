@@ -1,29 +1,29 @@
-name: Mosharrof Autonomous Engine
+name: MOSHARROF AI Engine
 on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/mosharrof-autonomous-engine.yml"]
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 0-2,14-23 * * *"
   workflow_dispatch:
     inputs:
-      request:
-        required: false
-        type: string
-permissions:
-  contents: write
-  pull-requests: write
-  checks: read
-concurrency:
-  group: mosharrof-autonomous-engine
+      request: {required: false, type: string}
+permissions: {contents: write, pull-requests: write}
+concurrency: {group: mosharrof-autonomous-engine, queue: max}
 jobs:
   autonomous-work:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v6
-        with:
-          ref: main
-      - name: Install autonomous engine test dependencies
-        run: python -m pip install --disable-pip-version-check -r requirements.txt
-      - name: Run autonomous agent
+      - uses: actions/checkout@v6
+        with: {ref: main}
+      - name: Prepare engine environment
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: bash .github/scripts/prepare_autonomous_engine.sh
+      - name: Run guarded autonomous engine
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -34,3 +34,6 @@ jobs:
           REQUEST: ${{ inputs.request }}
           REPOSITORY: ${{ github.repository }}
         run: python3 scripts/mosharrof_autonomous_engine.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: "engine-${{ github.run_id }}", path: artifacts/, retention-days: 30}
