@@ -8,8 +8,8 @@ def test_autonomous_workflows_do_not_cancel_in_progress_runs():
     ]
     for path in paths:
         content = path.read_text(encoding="utf-8")
-        assert "group: mosharrof-autonomous" in content
-        assert "cancel-in-progress: false" in content
+        assert "group: mosharrof-autonomous-engine" in content
+        assert "queue: max" in content
         assert "cancel-in-progress: true" not in content
 
 
