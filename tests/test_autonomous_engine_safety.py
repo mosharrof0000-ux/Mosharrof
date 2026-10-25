@@ -33,6 +33,7 @@ def test_only_the_central_engine_has_a_recurring_ai_writer_schedule():
     assert 'cron: "0 0-2,14-23 * * *"' in central
     assert "timeout-minutes: 30" in central
     assert "group: mosharrof-autonomous-engine" in central
+    assert "queue: max" in central
 
     secondary = (
         ".github/workflows/autonomous-cycle.yml",
@@ -44,3 +45,4 @@ def test_only_the_central_engine_has_a_recurring_ai_writer_schedule():
         workflow = Path(filename).read_text(encoding="utf-8")
         assert "  schedule:" not in workflow, filename
         assert "group: mosharrof-autonomous-engine" in workflow, filename
+        assert "queue: max" in workflow, filename
