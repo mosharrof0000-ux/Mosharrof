@@ -1,11 +1,11 @@
-import { loadWorker } from "./worker-loader.mjs";
+import { loadVideoCuttingWorker } from "./video-cutting-worker-loader.mjs";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const source = await readFile(new URL("../worker/video-cutting-proxy.js", import.meta.url), "utf8");
 const proxy = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
 const { handleVideoCuttingProxy } = proxy;
-const worker = await loadWorker();
+const worker = await loadVideoCuttingWorker();
 const workerHealth = await worker.fetch(new Request("https://worker.test/video-cut/health", {
   headers: { Origin: "https://mosharrof0000-ux.github.io" }
 }), {});
