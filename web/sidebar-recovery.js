@@ -133,6 +133,6 @@ import("./core/new-chat-floating/index.js").catch(function (error) { console.err
 
 
 // Apply explicit message sizing before the Android WebView real-chat acceptance flow.
-import("./core/chat-layout-compat.js")
+import("../organs/chat/layout-compat.js")
   .then(function (module) { module.applyChatLayoutCompatibility(); })
   .catch(function (error) { console.error("[MOSHARROF Chat Layout] Compatibility setup failed:", error); });
