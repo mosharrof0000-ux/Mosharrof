@@ -199,7 +199,29 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+
+            # The previous smoke test could pass on DOM text while the saved screenshot
+            # showed only the composer. Scroll the actual answer into view and make
+            # screenshot visibility a separate required acceptance check.
+            visibility = cdp.evaluate("""(() => {
+              const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
+              const last = nodes[nodes.length - 1];
+              const body = last && last.querySelector('.rich-content');
+              if (!body || !body.innerText.trim()) return {visible:false, text:'', rect:null};
+              body.scrollIntoView({block:'center', inline:'nearest', behavior:'instant'});
+              const r = body.getBoundingClientRect();
+              const visible = r.width > 0 && r.height > 0 &&
+                r.bottom > 0 && r.top < window.innerHeight &&
+                r.right > 0 && r.left < window.innerWidth;
+              return {visible, text:body.innerText.trim(), rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right},
+                viewport:{width:window.innerWidth,height:window.innerHeight}};
+            })()""")
+            time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
+            screenshot_visible = bool(visibility and visibility.get("visible") and visibility.get("text"))
+            record("assistant_answer_visible_in_saved_screenshot", screenshot_visible,
+                   json.dumps(visibility, ensure_ascii=False)[:500])
+            report["screenshot_answer_visible"] = screenshot_visible
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")

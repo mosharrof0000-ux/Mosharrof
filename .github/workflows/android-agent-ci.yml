@@ -1,12 +1,15 @@
 name: Android Agent CI
+run-name: Android Agent CI — ${{ github.ref_name }} @ ${{ github.sha }}
 
 on:
   pull_request:
     paths:
       - "android-agent/**"
       - ".github/workflows/android-agent-ci.yml"
+  # Feature branches are validated by pull_request events; keep push CI for main only
+  # to avoid duplicate builds for every commit on an open feature PR.
   push:
-    branches: ["main", "feat/**"]
+    branches: ["main"]
     paths:
       - "android-agent/**"
       - ".github/workflows/android-agent-ci.yml"
@@ -16,17 +19,22 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-agent-ci-${{ github.ref }}
+  group: android-agent-ci-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    defaults:
-      run:
-        working-directory: android-agent
     steps:
+      - name: Runner preflight diagnostics
+        timeout-minutes: 2
+        working-directory: .
+        run: |
+          echo "Android Agent CI runner started"
+          date -u
+          uname -a
+          df -h .
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -39,8 +47,10 @@ jobs:
         with:
           gradle-version: "8.9"
       - name: Build debug APK
+        working-directory: android-agent
         run: gradle --no-daemon assembleDebug
       - name: Run unit tests
+        working-directory: android-agent
         run: gradle --no-daemon testDebugUnitTest
       - name: Run emulator smoke tests
         uses: reactivecircus/android-emulator-runner@v2

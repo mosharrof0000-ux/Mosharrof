@@ -28,7 +28,9 @@ data class AppPackageTaskResult(
     val status: AppPackageTaskStatus,
     val detail: String,
     val packageName: String? = null,
-    val packageStateVerified: Boolean = false
+    val packageStateVerified: Boolean = false,
+    val expectedVersionCode: Long? = null,
+    val previousVersionCode: Long? = null
 ) {
     init {
         require(requestId.isNotBlank()) { "requestId must not be blank" }
@@ -36,6 +38,12 @@ data class AppPackageTaskResult(
         require(detail.length <= 500) { "detail is too long" }
         require(packageName == null || PACKAGE_NAME.matches(packageName)) {
             "packageName must be a valid Android package name"
+        }
+        require(expectedVersionCode == null || expectedVersionCode >= 0) {
+            "expectedVersionCode must not be negative"
+        }
+        require(previousVersionCode == null || previousVersionCode >= 0) {
+            "previousVersionCode must not be negative"
         }
         require(status != AppPackageTaskStatus.SUCCEEDED || packageStateVerified) {
             "SUCCEEDED requires verified package state"
