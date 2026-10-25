@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import time
 from pathlib import Path
 
@@ -67,7 +68,7 @@ def resolve_provider(provider: str | None, route: str) -> str | None:
     """Use explicit provider metadata first; infer only from the visible route label."""
     if provider:
         return provider
-    match = re.search(r"উত্তর:\\s*(Gemini|Workers AI|Groq|OpenRouter)\\b", route or "", re.IGNORECASE)
+    match = re.search(r"উত্তর:\s*(Gemini|Workers AI|Groq|OpenRouter)\b", route or "", re.IGNORECASE)
     return match.group(1) if match else None
 
 
