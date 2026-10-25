@@ -228,7 +228,6 @@ header.top{
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
 </style>
-<link rel="stylesheet" href="./video-cutting.css">
 </head>
 <body>
 <div class="app">
@@ -254,7 +253,6 @@ header.top{
         <button class="composer-tool-toggle" id="plusBtn" type="button" aria-label="আরও টুল দেখান" aria-expanded="false" aria-controls="composerToolsMenu">+</button>
         <div class="composer-tools-menu" id="composerToolsMenu" role="group" aria-label="কম্পোজার টুল">
           <label class="composer-action attach" aria-label="ক্যামেরা বা ছবি যোগ করুন" title="ক্যামেরা / ছবি"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.5h4.6L15.5 5h2A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12" r="3.2"/></svg><input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"></label>
-          <button class="composer-action video-cutting-tool" id="videoCuttingBtn" type="button" aria-label="ভিডিও কাটিং ও এক্সপোর্ট" title="ভিডিও কাটিং ও এক্সপোর্ট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3z"/><path d="M6 8h2M11 8h2M6 16h2M11 16h2"/></svg></button>
         </div>
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
@@ -1262,6 +1260,5 @@ header.top{
 })();
 </script>
 <script src="./sidebar-recovery.js"></script>
-<script src="./video-cutting.js"></script>
 </body>
 </html>
