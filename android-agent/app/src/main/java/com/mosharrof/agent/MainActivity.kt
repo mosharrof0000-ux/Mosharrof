@@ -1,7 +1,10 @@
 package com.mosharrof.agent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.app.AlertDialog
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.view.accessibility.AccessibilityManager
@@ -26,6 +29,9 @@ import com.mosharrof.agent.execution.AppPackageTaskResult
 import com.mosharrof.agent.execution.AppPackageTaskResultStore
 import com.mosharrof.agent.execution.AppPackageTaskStatus
 import com.mosharrof.agent.execution.DeviceIntentControl
+import com.mosharrof.agent.execution.DeviceCommandAction
+import com.mosharrof.agent.execution.DeviceCommandEnvelope
+import com.mosharrof.agent.execution.DevicePairingBridge
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.execution.ScreenInspectionController
 import com.mosharrof.agent.voice.AgentSpeechOutput
@@ -35,6 +41,7 @@ import com.mosharrof.agent.notifications.NotificationAccessControl
 import com.mosharrof.agent.files.UserFileAccessControl
 import com.mosharrof.agent.admin.ManagedDeviceControl
 import com.mosharrof.agent.planner.AiCommandNormalizer
+import com.mosharrof.agent.permissions.PermissionCenterControl
 class MainActivity : ComponentActivity() {
     private lateinit var taskController: AgentTaskController
     private lateinit var status: TextView
@@ -44,6 +51,39 @@ class MainActivity : ComponentActivity() {
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
     private var speechOutput: AgentSpeechOutput? = null
+    private val devicePollHandler = Handler(Looper.getMainLooper())
+    private var devicePolling = false
+    private var devicePollInFlight = false
+    private var dispatchingRemoteCommand = false
+    private val devicePollTask: Runnable = object : Runnable {
+        override fun run() {
+            if (!devicePolling || devicePollInFlight) return
+            devicePollInFlight = true
+            Thread {
+                val outcome = DevicePairingBridge.poll(this@MainActivity)
+                DevicePairingBridge.flushPendingResult(this@MainActivity)
+                runOnUiThread {
+                    devicePollInFlight = false
+                    if (!devicePolling || isFinishing) return@runOnUiThread
+                    when (outcome?.paired) {
+                        true -> speechStatus.text = "ফোন সংযোগ: paired · foreground নিরাপদ কমান্ড পরীক্ষা চলছে"
+                        false -> speechStatus.text = "ফোন সংযোগ: pairing code তৈরি; ব্রাউজারে অনুমোদনের অপেক্ষায়"
+                        null -> Unit
+                    }
+                    outcome?.rejected?.let { rejected: DeviceCommandEnvelope -> handleRejectedRemoteCommand(rejected) }
+                    outcome?.command?.let { command: DeviceCommandEnvelope -> handleRemoteCommand(command) }
+                    devicePollHandler.postDelayed(devicePollTask, 5_000L)
+                }
+            }.start()
+        }
+    }
+    private val permissionResult = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        val granted = grants.count { it.value }
+        val denied = grants.size - granted
+        status.text = "অনুমতি ফলাফল: ${granted}টি অনুমোদিত, ${denied}টি অননুমোদিত। বিশেষ অনুমতিগুলো নিচের Settings বোতাম থেকে চালু করুন।"
+    }
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
@@ -133,6 +173,14 @@ class MainActivity : ComponentActivity() {
             AppPackageInstallControl.addInstallButton(this@MainActivity, this) {
                 apkPicker.launch(arrayOf("application/vnd.android.package-archive"))
             }
+            addView(Button(this@MainActivity).apply {
+                text = "MOSHARROF AI-এর সঙ্গে ফোন যুক্ত করুন"
+                setOnClickListener { startDevicePairing() }
+            })
+            addView(Button(this@MainActivity).apply {
+                text = "সমস্ত runtime permission চাইুন"
+                setOnClickListener { permissionResult.launch(PermissionCenterControl.runtimePermissions) }
+            })
             CapabilityPermissionCenter.addButton(this@MainActivity, this)
             ManagedDeviceControl.addTo(this@MainActivity, this, status)
             NotificationAccessControl.addTo(this@MainActivity, this)
@@ -156,17 +204,24 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
-            if (AppPackageInstallControl.resumePendingInstallIfGranted(this, status, ::publishAppPackageResult)) return
-            val packageResult: AppPackageTaskResult? = AppPackagePendingOperationStore.resolveAfterReturn(this)
-            if (packageResult != null) {
-                publishAppPackageResult(packageResult)
-                return
+            val packageResult = AppPackagePendingOperationStore.resolveAfterReturn(this)
+            if (packageResult != null) publishAppPackageResult(packageResult)
+            else {
+                val actionResult = MosharrofAccessibilityService.takeActionResult()
+                if (actionResult != null) status.text = actionResult else refreshServiceStatus()
             }
-            val actionResult = MosharrofAccessibilityService.takeActionResult()
-            if (actionResult != null) status.text = actionResult else refreshServiceStatus()
+            startDevicePolling()
         }
     }
+    override fun onPause() {
+        stopDevicePolling()
+        super.onPause()
+    }
     private fun prepareCommand(command: String) {
+        if (DevicePairingBridge.pendingRemote(this) != null && !dispatchingRemoteCommand) {
+            status.text = "একটি দূরবর্তী Android কাজ এখনো নিশ্চিত/যাচাই হচ্ছে। সেটি শেষ বা বাতিল না হওয়া পর্যন্ত নতুন কমান্ড বন্ধ রাখা হয়েছে।"
+            return
+        }
         if (AppPackageControl.handleCommand(
                 this, command, status,
                 pickApk = { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) },
@@ -199,6 +254,100 @@ class MainActivity : ComponentActivity() {
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
         AppPackageTaskResultStore.save(this, result)
         status.text = "কাজের ফল: ${result.status} • ID: ${result.requestId}\n${result.detail}"
+        DevicePairingBridge.recordRemoteResult(this, result)
+    }
+
+    private fun startDevicePairing() {
+        status.text = "নিরাপদ pairing শুরু হচ্ছে…"
+        Thread {
+            val result = runCatching { DevicePairingBridge.startPairing(this@MainActivity) }
+            runOnUiThread {
+                result.onSuccess { pairing ->
+                    if (pairing.alreadyPaired) {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle("MOSHARROF AI যুক্ত আছে")
+                            .setMessage("এই ডিভাইস ইতিমধ্যে যুক্ত। ব্রাউজারের Android সংযোগ প্যানেল থেকে pairing বাতিল না করে নতুন কোড তৈরি হবে না।")
+                            .setPositiveButton("ঠিক আছে", null).show()
+                        startDevicePolling()
+                    } else {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle("ফোন যুক্ত করার কোড")
+                            .setMessage("কোড: ${pairing.pairingCode}\n\nএই কোড ৫ মিনিটের মধ্যে MOSHARROF ওয়েবসাইটের ডান মেনু → Android ফোন যুক্ত করুন-এ লিখুন। কোডটি চ্যাটে পাঠাবেন না। সংযোগ হলে শুধু অনুমোদিত কমান্ড এই অ্যাপের সামনে থাকাকালে পরীক্ষা হবে।")
+                            .setPositiveButton("ঠিক আছে") { _, _ -> startDevicePolling() }
+                            .show()
+                        status.text = "Pairing code তৈরি হয়েছে; ওয়েবসাইটে অনুমোদনের অপেক্ষায়।"
+                        startDevicePolling()
+                    }
+                }.onFailure { error ->
+                    status.text = "ফোন যুক্ত করা যায়নি: ${error.message ?: "নেটওয়ার্ক/সার্ভার সমস্যা"}। ওয়েব pairing আগে থেকেই থাকলে ব্রাউজার থেকে Disconnect করে আবার চেষ্টা করুন।"
+                }
+            }
+        }.start()
+    }
+
+    private fun startDevicePolling() {
+        if (devicePolling || !DevicePairingBridge.hasCredentials(this)) return
+        devicePolling = true
+        devicePollHandler.removeCallbacks(devicePollTask)
+        devicePollHandler.post(devicePollTask)
+    }
+
+    private fun stopDevicePolling() {
+        devicePolling = false
+        devicePollHandler.removeCallbacks(devicePollTask)
+    }
+
+    private fun handleRemoteCommand(envelope: DeviceCommandEnvelope) {
+        if (DevicePairingBridge.pendingRemote(this) != null) {
+            Thread { DevicePairingBridge.flushPendingResult(applicationContext) }.start()
+            return
+        }
+        if (!DevicePairingBridge.savePendingRemote(this, envelope)) {
+            status.text = "দূরবর্তী কমান্ডের আগের ফল এখনো সিঙ্ক হয়নি; নতুন কমান্ড চালানো হয়নি।"
+            return
+        }
+        val action = appPackageAction(envelope.action)
+        val received = AppPackageTaskResult(
+            requestId = envelope.requestId,
+            action = action,
+            status = AppPackageTaskStatus.REQUESTED,
+            detail = "Authenticated remote command received; Android confirmation is still required."
+        )
+        AppPackageTaskResultStore.save(this, received)
+        DevicePairingBridge.recordRemoteResult(this, received)
+        val command = when (envelope.action) {
+            DeviceCommandAction.INSTALL_APK -> "install apk"
+            DeviceCommandAction.SEARCH_PLAY_STORE -> "install ${envelope.target}"
+            DeviceCommandAction.UNINSTALL_APP -> "uninstall ${envelope.target}"
+        }
+        dispatchingRemoteCommand = true
+        try {
+            commandInput.setText(command)
+            prepareCommand(command)
+        } finally {
+            dispatchingRemoteCommand = false
+        }
+    }
+
+    private fun handleRejectedRemoteCommand(envelope: DeviceCommandEnvelope) {
+        if (!DevicePairingBridge.savePendingRemote(this, envelope)) {
+            status.text = "স্বাক্ষর যাচাই ব্যর্থ; পুরোনো কাজের ফল সিঙ্ক না হওয়ায় নতুন কমান্ড উপেক্ষা করা হয়েছে।"
+            return
+        }
+        publishAppPackageResult(
+            AppPackageTaskResult(
+                requestId = envelope.requestId,
+                action = appPackageAction(envelope.action),
+                status = AppPackageTaskStatus.FAILED,
+                detail = "Signed command failed local authentication/replay validation; no phone action was executed."
+            )
+        )
+    }
+
+    private fun appPackageAction(action: DeviceCommandAction): AppPackageTaskAction = when (action) {
+        DeviceCommandAction.INSTALL_APK -> AppPackageTaskAction.INSTALL_APK
+        DeviceCommandAction.SEARCH_PLAY_STORE -> AppPackageTaskAction.SEARCH_PLAY_STORE
+        DeviceCommandAction.UNINSTALL_APP -> AppPackageTaskAction.UNINSTALL_APP
     }
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
