@@ -1,5 +1,5 @@
 import { buildChatContext } from "../core/chat-context.js";
-import { DeviceBridge } from "./device-bridge.js";
+import { DeviceBridge } from "../organs/android-agent-bridge/worker/device-bridge.js";
 export { DeviceBridge };
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
@@ -7,7 +7,7 @@ import { parseImageSpec } from "../core/image-spec.js";
 import { CHAT_MODELS, runSelectedChat } from "../core/manual-chat-routing.js"; const ORIGIN="https://mosharrof0000-ux.github.io";
 const WORKER_BUILD_ID="2026-10-24-device-bridge-v1";
 const MAX_BYTES=12*1024*1024;
-import { headers, isAllowedOrigin, reply, withRequestCors } from "./http-helpers.js";
+import { headers, isAllowedOrigin, reply, withRequestCors } from "../organs/android-agent-bridge/worker/http-helpers.js";
 const VISION_MODELS=["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-2.5-flash"];
 const IMAGE_MODELS=["gemini-nano-banana-2.1","gemini-3.1-flash-image","gemini-3-pro-image"];
 const FREE_IMAGE_PROVIDERS=["gemini","cloudflare-workers-ai"];
