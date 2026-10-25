@@ -25,5 +25,7 @@ jobs:
           node --check core/video-cutting/loader.js
           node --input-type=module --check < core/video-cutting/worker-entry.js
           node --input-type=module --check < core/video-cutting/worker-proxy.js
+      - name: Validate Wrangler bundle without deploying
+        run: npx --yes wrangler@3 deploy --config worker/wrangler.toml --dry-run
       - name: Run isolated proxy and Worker contract tests
         run: node tests/test_video_cutting_proxy.mjs
