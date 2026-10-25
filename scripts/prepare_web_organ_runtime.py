@@ -20,7 +20,7 @@ def inject_chat_layout_compatibility(index_html: str) -> str:
     anchor_tag = '<script src="./sidebar-recovery.js"></script>'
     if anchor_tag not in index_html:
         raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for chat layout compatibility")
-    return index_html.replace(anchor_tag, anchor_tag + "\\n" + LAYOUT_COMPAT_TAG, 1)
+    return index_html.replace(anchor_tag, anchor_tag + "\n" + LAYOUT_COMPAT_TAG, 1)
 
 
 def main() -> int:
