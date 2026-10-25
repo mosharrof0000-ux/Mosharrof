@@ -1,0 +1,15 @@
+name = "mosharrof-screenshot-analysis"
+main = "screenshot-analysis.js"
+compatibility_date = "2026-09-27"
+workers_dev = true
+
+[ai]
+binding = "AI"
+
+[[durable_objects.bindings]]
+name = "DEVICE_BRIDGE"
+class_name = "DeviceBridge"
+
+[[migrations]]
+tag = "device-bridge-v1"
+new_sqlite_classes = ["DeviceBridge"]
