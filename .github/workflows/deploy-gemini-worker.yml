@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "worker/**"
+      - "organs/android-agent-bridge/**"
       - ".github/workflows/deploy-gemini-worker.yml"
       - "core/video-generation/**"
       - "core/video-generation-ui.js"
