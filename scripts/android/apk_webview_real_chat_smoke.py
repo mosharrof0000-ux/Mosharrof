@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import time
 import sys
 from datetime import datetime, timezone
@@ -16,7 +15,7 @@ from pathlib import Path
 from urllib.request import urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / ".github" / "scripts"))
-from android_qa_cdp import PageCDP
+from android_qa_cdp import PageCDP, inspect_answer_visibility, resolve_provider
 
 
 parser = argparse.ArgumentParser()
@@ -182,14 +181,7 @@ def main() -> int:
                 answer = state.get("answer", "").strip()
                 provider = state.get("provider")
                 response_route = str(state.get("route") or "").strip()
-                if not provider:
-                    route_match = re.search(
-                        r"উত্তর:\s*(Gemini|Workers AI|Groq|OpenRouter)\b",
-                        response_route,
-                        re.IGNORECASE,
-                    )
-                    if route_match:
-                        provider = route_match.group(1)
+                provider = resolve_provider(provider, response_route)
                 break
             time.sleep(1)
 
@@ -216,19 +208,7 @@ def main() -> int:
             report["response_provider"] = provider
             report["response_route"] = response_route
             report["stage"] = "checking_answer_screenshot_visibility"
-            visibility = cdp.evaluate("""(() => {
-              const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
-              const last = nodes[nodes.length - 1];
-              const body = last && last.querySelector('.rich-content');
-              if (!body || !body.innerText.trim()) return {visible:false, text:'', rect:null};
-              body.scrollIntoView({block:'center', inline:'nearest', behavior:'instant'});
-              const r = body.getBoundingClientRect();
-              const visible = r.width > 0 && r.height > 0 &&
-                r.bottom > 0 && r.top < window.innerHeight &&
-                r.right > 0 && r.left < window.innerWidth;
-              return {visible, text:body.innerText.trim(), rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right},
-                viewport:{width:window.innerWidth,height:window.innerHeight}};
-            })()""")
+            visibility = inspect_answer_visibility(cdp)
             time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
             screenshot_visible = bool(visibility and visibility.get("visible") and visibility.get("text"))
