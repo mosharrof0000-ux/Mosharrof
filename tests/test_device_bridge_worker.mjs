@@ -6,7 +6,7 @@ const protocolSource = (await readFile(new URL("../worker/device-bridge-protocol
   .replace(/^export async function /gm, "async function ")
   .replace(/^export function /gm, "function ");
 const source = (await readFile(new URL("../worker/device-bridge.js", import.meta.url), "utf8"))
-  .replace(/^import \{[^}]+\} from "\.\/device-bridge-protocol\.js";\s*/m, protocolSource + "\\n");
+  .replace(/^import \{[^}]+\} from "\.\/device-bridge-protocol\.js";\s*/m, protocolSource + "\n");
 const { DeviceBridge } = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
 
 class MemoryStorage {
