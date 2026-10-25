@@ -179,10 +179,7 @@ class MainActivity : ComponentActivity() {
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
         }
     }
-    override fun onPause() {
-        devicePairingController.stopPolling()
-        super.onPause()
-    }
+    override fun onPause() { devicePairingController.stopPolling(); super.onPause() }
     private fun prepareCommand(command: String, fromRemote: Boolean = false) {
         if (DevicePairingBridge.pendingRemote(this) != null && !fromRemote) {
             status.text = "একটি দূরবর্তী Android কাজ এখনো নিশ্চিত/যাচাই হচ্ছে। সেটি শেষ বা বাতিল না হওয়া পর্যন্ত নতুন কমান্ড বন্ধ রাখা হয়েছে।"
