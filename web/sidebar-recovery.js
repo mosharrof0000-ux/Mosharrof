@@ -13,6 +13,28 @@
     document.head.appendChild(organLoader);
   }
 
+  if (bootstrapScriptUrl && !window.__mosharrofVideoCuttingRequested) {
+    window.__mosharrofVideoCuttingRequested = true;
+    var videoCss = document.createElement("link");
+    videoCss.rel = "stylesheet";
+    videoCss.href = new URL("./video-cutting.css", bootstrapScriptUrl).href;
+    document.head.appendChild(videoCss);
+    var videoDownload = document.createElement("script");
+    videoDownload.src = new URL("./video-cutting-download.js", bootstrapScriptUrl).href;
+    videoDownload.addEventListener("load", function () {
+      var videoUi = document.createElement("script");
+      videoUi.src = new URL("./video-cutting.js", bootstrapScriptUrl).href;
+      videoUi.addEventListener("error", function () {
+        console.error("[MOSHARROF Video Cutting] UI module failed to load");
+      }, { once: true });
+      document.body.appendChild(videoUi);
+    }, { once: true });
+    videoDownload.addEventListener("error", function () {
+      console.error("[MOSHARROF Video Cutting] download module failed to load");
+    }, { once: true });
+    document.body.appendChild(videoDownload);
+  }
+
   var modules = [
     { title: "System & interface", items: [
       ["core", "মূল সমন্বয়", "⚙"], ["chat", "চ্যাট", "▤"], ["sidebar", "নেভিগেশন", "☷"]
