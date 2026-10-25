@@ -81,6 +81,8 @@ function safeUpstreamResponse(upstream, { output = false } = {}) {
   if (output && upstream.ok) {
     headers.set("content-type", "video/mp4");
     headers.set("content-disposition", 'attachment; filename="mosharrof-edited.mp4"');
+    const contentLength = upstream.headers.get("content-length");
+    if (contentLength && /^\\d+$/.test(contentLength)) headers.set("content-length", contentLength);
   }
   return new Response(upstream.body, { status: upstream.status, headers });
 }
