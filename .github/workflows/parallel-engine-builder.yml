@@ -17,7 +17,7 @@ permissions:
 concurrency:
   # All AI-writing workflows share one group to prevent overlapping repository mutations.
   group: mosharrof-autonomous-engine
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   build-independent-backlog:
