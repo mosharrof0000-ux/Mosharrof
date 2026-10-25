@@ -25,12 +25,13 @@ jobs:
       - name: Checkout default branch
         uses: actions/checkout@v4
 
-      - name: Inspect open PRs and CI states
+      - name: Check GitHub API reachability with bounded retries
+        id: reachability
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          set -euo pipefail
+          set -u
           mkdir -p automation-cycle
           report="automation-cycle/report.md"
           echo "# Continuous Automation Work Cycle" > "$report"
@@ -39,11 +40,54 @@ jobs:
           echo "- Scope: repository-wide open pull requests and their CI state" >> "$report"
           echo "- Safety: read-only inspection; no code edits, merges, deploys, or claims of physical-device success" >> "$report"
           echo >> "$report"
+          echo "## Connectivity" >> "$report"
+          ok=false
+          for attempt in 1 2 3; do
+            if gh api "repos/$GITHUB_REPOSITORY" --jq '.full_name' > automation-cycle/repository-check.txt 2>automation-cycle/api-error.txt; then
+              ok=true
+              echo "- GitHub API: reachable on attempt $attempt of 3." >> "$report"
+              break
+            fi
+            echo "- GitHub API attempt $attempt failed; waiting before retry." >> "$report"
+            sleep "$((attempt * 5))"
+          done
+          if [ "$ok" != true ]; then
+            echo "- GitHub API: UNAVAILABLE after 3 attempts. This cycle cannot inspect or change remote work while the service/network is unavailable." >> "$report"
+            echo "- Error excerpt: $(tr '\n' ' ' < automation-cycle/api-error.txt | cut -c1-500)" >> "$report"
+            echo "## Recovery behavior" >> "$report"
+            echo "- No destructive action was attempted. The next scheduled cycle may retry after connectivity returns; this is not an offline code-repair guarantee." >> "$report"
+            echo "connectivity=unavailable" >> "$GITHUB_OUTPUT"
+            cat "$report"
+            exit 0
+          fi
+          echo "connectivity=available" >> "$GITHUB_OUTPUT"
+
+      - name: Inspect open PRs and CI states
+        if: steps.reachability.outputs.connectivity == 'available'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          report="automation-cycle/report.md"
+          echo >> "$report"
           echo "## Open work" >> "$report"
 
-          prs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --jq '.[] | [.number, .title, .head.sha, .draft, .html_url] | @tsv' || true)"
+          prs=""
+          for attempt in 1 2 3; do
+            if prs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --jq '.[] | [.number, .title, .head.sha, .draft, .html_url] | @tsv' 2>automation-cycle/pr-list-error.txt)"; then
+              break
+            fi
+            echo "- PR inventory request failed on attempt $attempt; retrying." >> "$report"
+            sleep "$((attempt * 5))"
+          done
           if [ -z "$prs" ]; then
-            echo "No open pull requests were returned, or the API request failed." >> "$report"
+            if [ -s automation-cycle/pr-list-error.txt ]; then
+              echo "- PR inventory: UNVERIFIED; request returned no rows or failed after bounded retries." >> "$report"
+              echo "- Error excerpt: $(tr '\n' ' ' < automation-cycle/pr-list-error.txt | cut -c1-500)" >> "$report"
+            else
+              echo "No open pull requests were returned." >> "$report"
+            fi
           else
             while IFS=$'\t' read -r number title sha draft url; do
               [ -n "${number:-}" ] || continue
@@ -54,13 +98,21 @@ jobs:
               echo "- Link: $url" >> "$report"
               echo "- Head: $sha" >> "$report"
 
-              checks="$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/check-runs?per_page=100" --jq '[.check_runs[] | {name: .name, status: .status, conclusion: .conclusion, html_url: .html_url}]' 2>/dev/null || echo '[]')"
-              statuses="$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/status" --jq '[.statuses[] | {context: .context, state: .state, target_url: .target_url}]' 2>/dev/null || echo '[]')"
+              checks="[]"
+              if ! checks="$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/check-runs?per_page=100" --jq '[.check_runs[] | {name: .name, status: .status, conclusion: .conclusion, html_url: .html_url}]' 2> "automation-cycle/pr-$number-checks-error.txt")"; then
+                echo "- Check-runs: UNVERIFIED (API request failed)." >> "$report"
+                checks='[]'
+              fi
+              statuses="[]"
+              if ! statuses="$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/status" --jq '[.statuses[] | {context: .context, state: .state, target_url: .target_url}]' 2> "automation-cycle/pr-$number-statuses-error.txt")"; then
+                echo "- Commit statuses: UNVERIFIED (API request failed)." >> "$report"
+                statuses='[]'
+              fi
               printf '%s\n' "$checks" > "automation-cycle/pr-$number-checks.json"
               printf '%s\n' "$statuses" > "automation-cycle/pr-$number-statuses.json"
 
-              check_summary="$(jq -r 'if length == 0 then "No check-runs returned" else map(select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out" or .status == "in_progress" or .status == "queued" or .status == "waiting")) as $issues | if ($issues|length)==0 then "No failed or pending check-runs detected in returned page" else $issues[] | "- " + .name + ": " + (if .conclusion then .conclusion else .status end) + (if .html_url then " — " + .html_url else "" end) end end' <<< "$checks")"
-              status_summary="$(jq -r 'if length == 0 then "No commit statuses returned" else .[] | "- " + .context + ": " + .state + (if .target_url then " — " + .target_url else "" end) end' <<< "$statuses")"
+              check_summary="$(jq -r 'if length == 0 then "No check-runs returned; this is not proof of green CI" else map(select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out" or .status == "in_progress" or .status == "queued" or .status == "waiting")) as $issues | if ($issues|length)==0 then "No failed or pending check-runs detected in returned page" else $issues[] | "- " + .name + ": " + (if .conclusion then .conclusion else .status end) + (if .html_url then " — " + .html_url else "" end) end end' <<< "$checks")"
+              status_summary="$(jq -r 'if length == 0 then "No commit statuses returned; this is not proof of green CI" else .[] | "- " + .context + ": " + .state + (if .target_url then " — " + .target_url else "" end) end' <<< "$statuses")"
               echo "- Check-run summary:" >> "$report"
               printf '%s\n' "$check_summary" | sed 's/^/  /' >> "$report"
               echo "- Commit status summary:" >> "$report"
@@ -72,6 +124,7 @@ jobs:
           echo "## Cycle rules" >> "$report"
           echo "- This cycle inventories blockers and preserves evidence; it does not automatically merge, deploy, delete, or modify project code." >> "$report"
           echo "- A green CI state is not proof that a physical Android phone was tested." >> "$report"
+          echo "- Network loss is recorded as UNAVAILABLE/UNVERIFIED; no empty result is misreported as success." >> "$report"
           echo "- Scheduled execution begins only after this workflow is merged into the repository's default branch; GitHub may delay cron runs." >> "$report"
           cat "$report"
 
