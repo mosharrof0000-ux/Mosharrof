@@ -1,7 +1,8 @@
 name: Mosharrof Autonomous Engine
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    # Bangladesh time 20:00–08:00; GitHub schedules are best-effort, not continuous execution.
+    - cron: "0 0-2,14-23 * * *"
   workflow_dispatch:
     inputs:
       request:
@@ -14,6 +15,7 @@ permissions:
   checks: read
 concurrency:
   group: mosharrof-autonomous-engine
+  cancel-in-progress: false
 jobs:
   autonomous-work:
     runs-on: ubuntu-latest
