@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0.0",
+  "registry_id": "mosharrof.ui.action_contributions",
+  "purpose": "Bind existing menu/action-bar controls to isolated modules without replacing their existing handlers.",
+  "default_policy": {
+    "unknown_contribution": "DENY",
+    "automatic_without_handler": "DENY",
+    "automatic_without_policy_check": "DENY",
+    "create_duplicate_controls": false
+  },
+  "groups": [
+    {
+      "id": "message-actions",
+      "placement": "message_action_bar",
+      "description": "The existing per-message action bar; reuse it rather than creating a second toolbar."
+    }
+  ],
+  "contributions": [
+    {
+      "id": "message.actions.toggle",
+      "module_id": "chat",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".message-actions-toggle",
+      "match": {"attribute": "aria-label", "value": "মেসেজের কাজ দেখান"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "The toggle is a UI affordance, not an unattended task handler."
+    },
+    {
+      "id": "message.feedback.quick-like",
+      "module_id": "feedback",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".message-feedback-shortcut",
+      "match": {"attribute": "title", "value": "লাইক / আনলাইক"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "Feedback requires an explicit user action and no approved automatic handler is registered."
+    },
+    {
+      "id": "message.feedback.online",
+      "module_id": "feedback",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".online-feedback-shortcut",
+      "match": {"attribute": "title", "value": "অনলাইন ব্যবহারের কারণ"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "Feedback requires an explicit user action and no approved automatic handler is registered."
+    },
+    {
+      "id": "message.voice.read-aloud-shortcut",
+      "module_id": "voice",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".message-speak-shortcut",
+      "match": {"attribute": "aria-label", "value": "পড়ে শোনান"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "Read-aloud remains user-triggered until an approved task scheduler and provider-capability policy are connected."
+    },
+    {
+      "id": "message.chat.edit",
+      "module_id": "chat",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".message-action",
+      "match": {"attribute": "text", "value": "এডিট"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "Editing a user message requires explicit user intent."
+    },
+    {
+      "id": "message.chat.copy",
+      "module_id": "chat",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".message-action",
+      "match": {"attribute": "text", "value": "কপি"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "Clipboard writes require an explicit user action."
+    },
+    {
+      "id": "message.chat.retry",
+      "module_id": "chat",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".message-action",
+      "match": {"attribute": "text", "value": "আবার চেষ্টা"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "Retries must be scheduled by the approved orchestrator, not by UI registration."
+    },
+    {
+      "id": "message.chat.share",
+      "module_id": "chat",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".message-action",
+      "match": {"attribute": "text", "value": "শেয়ার"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "Sharing externally requires explicit user action."
+    },
+    {
+      "id": "message.voice.read-aloud",
+      "module_id": "voice",
+      "group_id": "message-actions",
+      "placement": "message_action_bar",
+      "selector": ".message-action",
+      "match": {"attribute": "text", "value": "পড়ে শোনান"},
+      "operation_modes": ["manual", "automatic"],
+      "automatic_ready": false,
+      "automatic_block_reason": "Read-aloud remains user-triggered until an approved task scheduler and provider-capability policy are connected."
+    }
+  ]
+}
