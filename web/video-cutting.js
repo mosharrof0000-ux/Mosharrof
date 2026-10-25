@@ -2,16 +2,25 @@
   "use strict";
   const WORKER = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev";
   const MAX_UPLOAD_BYTES = 39 * 1024 * 1024;
-  const MAX_DOWNLOAD_BYTES = 150 * 1024 * 1024;
   const ALLOWED_EXTENSIONS = /\.(mp4|mov|webm|mkv)$/i;
   let selectedFile = null;
   let accessToken = "";
   let activeJobId = "";
   let polling = false;
-  let objectUrl = "";
 
-  const button = document.getElementById("videoCuttingBtn");
+  const composerToolsMenu = document.getElementById("composerToolsMenu");
   const composer = document.getElementById("composer");
+  let button = document.getElementById("videoCuttingBtn");
+  if (!button && composerToolsMenu) {
+    button = document.createElement("button");
+    button.id = "videoCuttingBtn";
+    button.type = "button";
+    button.className = "composer-action video-cutting-tool";
+    button.setAttribute("aria-label", "ভিডিও কাটিং ও এক্সপোর্ট");
+    button.title = "ভিডিও কাটিং ও এক্সপোর্ট";
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3z"/><path d="M6 8h2M11 8h2M6 16h2M11 16h2"/></svg>';
+    composerToolsMenu.appendChild(button);
+  }
   if (!button || !composer) return;
 
   const panel = document.createElement("section");
@@ -148,6 +157,8 @@
       tokenInput.value = "";
       uploadButton.disabled = true;
       downloadLink.hidden = true;
+      downloadLink.dataset.ready = "false";
+      downloadLink.href = "#";
       setProgress(0);
       setStatus("ভিডিও কাটিং সার্ভারের কনফিগারেশন যাচাই হচ্ছে…", "info");
       const healthResponse = await fetch(WORKER + "/video-cut/health", { cache: "no-store" });
@@ -176,52 +187,17 @@
   }
 
   async function downloadOutput() {
-    const jobId = downloadLink.dataset.jobId;
-    if (!jobId || !accessToken) {
-      setStatus("ডাউনলোডের জন্য সক্রিয় অ্যাক্সেস টোকেন প্রয়োজন।", "error");
+    if (!window.MosharrofVideoCuttingDownload) {
+      setStatus("ডাউনলোড মডিউল লোড হয়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।", "error");
       return;
     }
-    downloadLink.setAttribute("aria-busy", "true");
-    setStatus("ভিডিও ডাউনলোড প্রস্তুত হচ্ছে…", "info");
-    try {
-      const response = await fetch(WORKER + "/video-cut/jobs/" + encodeURIComponent(jobId) + "/output", {
-        headers: { Authorization: "Bearer " + accessToken },
-        cache: "no-store"
-      });
-      if (!response.ok) {
-        const data = await response.json().catch(function () { return {}; });
-        throw new Error(errorMessage(data.error, data.detail || ("HTTP " + response.status)));
-      }
-      const length = Number(response.headers.get("content-length") || 0);
-      if (length > MAX_DOWNLOAD_BYTES) {
-        throw new Error("আউটপুট ১৫০ MiB-এর বেশি। এই প্রাথমিক সংস্করণে বড় ফাইলের streaming download এখনো সমর্থিত নয়।");
-      }
-      const reader = response.body && response.body.getReader ? response.body.getReader() : null;
-      if (!reader) throw new Error("এই ব্রাউজারে নিরাপদ streaming reader পাওয়া যায়নি।");
-      const chunks = [];
-      let total = 0;
-      while (true) {
-        const part = await reader.read();
-        if (part.done) break;
-        total += part.value.byteLength;
-        if (total > MAX_DOWNLOAD_BYTES) {
-          await reader.cancel();
-          throw new Error("আউটপুট ১৫০ MiB-এর বেশি। বড় ফাইলের streaming download ব্যবস্থা পরে যোগ করতে হবে।");
-        }
-        chunks.push(part.value);
-      }
-      const blob = new Blob(chunks, { type: "video/mp4" });
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-      objectUrl = URL.createObjectURL(blob);
-      downloadLink.href = objectUrl;
-      downloadLink.download = "mosharrof-edited.mp4";
-      downloadLink.textContent = "ভিডিও ডাউনলোড করুন";
-      setStatus("ডাউনলোড প্রস্তুত।", "success");
-    } catch (error) {
-      setStatus(error.message || "ভিডিও ডাউনলোড ব্যর্থ হয়েছে।", "error");
-    } finally {
-      downloadLink.removeAttribute("aria-busy");
-    }
+    await window.MosharrofVideoCuttingDownload({
+      worker: WORKER,
+      jobId: downloadLink.dataset.jobId,
+      accessToken: accessToken,
+      link: downloadLink,
+      onStatus: setStatus
+    });
   }
 
   button.addEventListener("click", openPanel);
@@ -239,7 +215,7 @@
   });
   uploadButton.addEventListener("click", startUpload);
   downloadLink.addEventListener("click", function (event) {
-    if (!downloadLink.href || downloadLink.href === "#" || !objectUrl) {
+    if (downloadLink.dataset.ready !== "true") {
       event.preventDefault();
       downloadOutput();
     }
@@ -252,6 +228,5 @@
   closeButton.addEventListener("click", function () { panel.hidden = true; });
   window.addEventListener("pagehide", function () {
     polling = false;
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
   });
 })();
