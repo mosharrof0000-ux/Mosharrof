@@ -1,12 +1,11 @@
 name: Mosharrof Autonomous Engine
 on:
   schedule:
-    # Bangladesh time 20:00–08:00; GitHub schedules are best-effort, not continuous execution.
     - cron: "0 0-2,14-23 * * *"
   workflow_dispatch:
     inputs:
       request:
-        description: "Optional task for the autonomous engine"
+        description: "Task"
         required: false
         type: string
 permissions:
@@ -25,14 +24,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: main
-      - name: Install autonomous engine test dependencies
-        run: python -m pip install --disable-pip-version-check -r requirements.txt
-      - name: Install Node.js and Playwright for required visual QA
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Install browser QA dependencies
+      - name: Install Python and visual QA dependencies
         run: |
+          python -m pip install --disable-pip-version-check -r requirements.txt
+          node --version
+          npm --version
           npm init -y
           npm install --no-save playwright
           npx playwright install --with-deps chromium
