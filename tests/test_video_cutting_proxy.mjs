@@ -2,7 +2,7 @@ import { loadVideoCuttingWorker } from "./video-cutting-worker-loader.mjs";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const source = await readFile(new URL("../worker/video-cutting-proxy.js", import.meta.url), "utf8");
+const source = await readFile(new URL("../core/video-cutting/worker-proxy.js", import.meta.url), "utf8");
 const proxy = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
 const { handleVideoCuttingProxy } = proxy;
 const worker = await loadVideoCuttingWorker();
