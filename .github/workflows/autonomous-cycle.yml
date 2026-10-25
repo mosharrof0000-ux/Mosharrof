@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: mosharrof-autonomous-engine
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   autonomous:
