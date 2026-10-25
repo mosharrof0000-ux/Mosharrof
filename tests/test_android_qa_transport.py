@@ -9,10 +9,13 @@ from pathlib import Path
 
 import pytest
 
-SCRIPTS = Path(__file__).resolve().parents[1] / ".github" / "scripts"
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / ".github" / "scripts"
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SCRIPTS))
 
 import android_qa_targets
+from scripts.prepare_web_organ_runtime import LAYOUT_COMPAT_TAG, inject_chat_layout_compatibility
 
 
 def test_target_discovery_refreshes_snapshot_and_preserves_initial_evidence(tmp_path, monkeypatch):
@@ -105,3 +108,24 @@ def test_cdp_connect_stops_after_three_total_attempts(monkeypatch):
 
     assert len(attempts) == 3
     assert len(events) == 2
+
+
+def test_chat_layout_compatibility_is_injected_once_after_sidebar_recovery():
+    anchor = '<script src="./sidebar-recovery.js"></script>'
+    source = f"<html><body>{anchor}</body></html>"
+
+    prepared = inject_chat_layout_compatibility(source)
+
+    assert prepared.count(LAYOUT_COMPAT_TAG) == 1
+    assert prepared.index(anchor) < prepared.index(LAYOUT_COMPAT_TAG)
+    assert inject_chat_layout_compatibility(prepared) == prepared
+
+
+def test_chat_layout_compatibility_runtime_asset_is_copied():
+    source = (ROOT / "scripts" / "prepare_web_organ_runtime.py").read_text(encoding="utf-8")
+    assert '"core/chat-layout-compat.js": "web/core/chat-layout-compat.js"' in source
+
+
+def test_chat_layout_compatibility_injection_fails_closed_without_anchor():
+    with pytest.raises(SystemExit, match="sidebar script anchor missing for chat layout compatibility"):
+        inject_chat_layout_compatibility("<html><body></body></html>")
