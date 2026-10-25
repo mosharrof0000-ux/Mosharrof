@@ -22,5 +22,11 @@ jobs:
         run: python3 scripts/mosharrof_component_consciousness.py
       - name: Verify autonomous engine is protected
         run: |
-          grep -q 'gh", "pr", "merge", branch, "--auto", "--squash"' scripts/mosharrof_autonomous_engine.py
-          ! grep -q 'git", "push", "origin", "main' scripts/mosharrof_autonomous_engine.py
+          # AI may create a review PR, but it must never merge its own proposal.
+          ! grep -Fq '"gh", "pr", "merge"' scripts/mosharrof_autonomous_engine.py
+          ! grep -Fq '"--auto"' scripts/mosharrof_autonomous_engine.py
+          ! grep -Fq '"gh","pr","merge"' scripts/autonomous_agent.py
+          ! grep -Fq '"--auto"' scripts/autonomous_agent.py
+          grep -Fq 'PR created for review; automatic merge intentionally disabled' scripts/mosharrof_autonomous_engine.py
+          grep -Fq 'PR opened for review; automatic merge intentionally disabled' scripts/autonomous_agent.py
+          ! grep -Fq '"git", "push", "origin", "main' scripts/mosharrof_autonomous_engine.py
