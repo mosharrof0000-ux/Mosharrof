@@ -1,3 +1,4 @@
+import "../core/array-at-polyfill.js";
 import { EntityRegistry } from "./core/entity-registry.js";
 import { EntityBus } from "./core/entity-bus.js";
 import { createOrganRegistry } from "../runtime/core/organ-registry/index.js";
