@@ -105,7 +105,7 @@ jobs:
       - name: Validate Worker JavaScript syntax
         run: node --check worker/screenshot-analysis.js
       - name: Validate device bridge Worker JavaScript syntax
-        run: node --check worker/device-bridge.js
+        run: node --check worker/device-bridge.js && node --check worker/device-bridge-protocol.js
       - name: Test authenticated device bridge
         run: node tests/test_device_bridge_worker.mjs
       - name: Validate video Worker JavaScript syntax
@@ -120,7 +120,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Deploying with account $CLOUDFLARE_ACCOUNT_ID ..."
-          npx --yes wrangler@3 deploy --config wrangler.toml 2>&1 | tee /tmp/wrangler-deploy.log
+          npx --yes wrangler@3 deploy --config wrangler-device-bridge.toml 2>&1 | tee /tmp/wrangler-deploy.log
           echo "Deploy command finished."
 
       - name: Enable workers.dev subdomain for script
