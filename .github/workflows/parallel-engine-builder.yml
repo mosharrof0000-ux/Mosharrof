@@ -1,15 +1,7 @@
 name: MOSHARROF Parallel Engine Builder
 
 on:
-  # Start independent backlog work while a long Android build/real-chat QA is running.
-  workflow_run:
-    workflows:
-      - Build MOSHARROF Android APK
-      - MOSHARROF Android APK WebView Real Chat QA
-    types: [completed]
-  # Also make progress on the existing backlog between long-running builds.
-  schedule:
-    - cron: "23 */3 * * *"
+  # Manual and owner-issued commands are routed through the same serialized engine lane.
   workflow_dispatch:
   # Let the repository owner resume/start work from the persistent control-center issue.
   issue_comment:
@@ -24,7 +16,7 @@ permissions:
 
 concurrency:
   # Separate from the primary autonomous cycle so independent safe tasks can overlap.
-  group: mosharrof-parallel-engine-builder
+  group: mosharrof-autonomous-engine
   cancel-in-progress: false
 
 jobs:
