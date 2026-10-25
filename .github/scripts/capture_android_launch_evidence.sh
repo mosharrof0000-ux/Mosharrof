@@ -8,8 +8,10 @@ launch_status="NOT_CAPTURED"
 ui_state="NOT_CHECKED"
 
 # Capture as soon as Android reports the first displayed frame; otherwise capture after a bounded wait.
+# Do not use grep -q on this live pipeline under pipefail: early exit can
+# signal adb with SIGPIPE and hide the matching activity line.
 for attempt in $(seq 1 30); do
-  if adb logcat -d -s ActivityTaskManager:I 2>/dev/null | grep -q 'Displayed com.mosharrof.ai/.MainActivity'; then
+  if adb logcat -d -s ActivityTaskManager:I 2>/dev/null | grep 'Displayed com.mosharrof.ai/.MainActivity' >/dev/null; then
     activity_status="DISPLAYED"
     break
   fi
