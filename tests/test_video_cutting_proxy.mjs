@@ -1,9 +1,21 @@
+import { loadWorker } from "./worker-loader.mjs";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const source = await readFile(new URL("../worker/video-cutting-proxy.js", import.meta.url), "utf8");
 const proxy = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
 const { handleVideoCuttingProxy } = proxy;
+const worker = await loadWorker();
+const workerHealth = await worker.fetch(new Request("https://worker.test/video-cut/health", {
+  headers: { Origin: "https://mosharrof0000-ux.github.io" }
+}), {});
+assert.equal(workerHealth.status, 200);
+assert.equal(workerHealth.headers.get("access-control-allow-origin"), "https://mosharrof0000-ux.github.io");
+assert.equal((await workerHealth.json()).enabled, false);
+const deniedOrigin = await worker.fetch(new Request("https://worker.test/video-cut/health", {
+  headers: { Origin: "https://attacker.example" }
+}), {});
+assert.equal(deniedOrigin.status, 403);
 const accessToken = "access-token-for-video-cutting-test-0001";
 const apiToken = "scoped-backend-token-for-video-cutting-test-0001";
 const jobId = "123e4567-e89b-42d3-a456-426614174000";
