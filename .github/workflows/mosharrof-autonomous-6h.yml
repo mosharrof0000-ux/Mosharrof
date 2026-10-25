@@ -1,15 +1,10 @@
 name: Mosharrof Autonomous 6-Hour Cycle
 
 on:
-  push:
-    paths:
-      - ".github/workflows/mosharrof-autonomous-6h.yml"
-  schedule:
-    - cron: "17 0,6,12,18 * * *"
   workflow_dispatch:
     inputs:
       request:
-        description: "One-line task for Mosharrof"
+        description: "One-line task for Mosharrof (manual recovery only)"
         required: false
         type: string
 
@@ -19,7 +14,7 @@ permissions:
 
 # Queue new runs instead of terminating an active run.
 concurrency:
-  group: mosharrof-autonomous
+  group: mosharrof-autonomous-engine
   cancel-in-progress: false
 
 jobs:
