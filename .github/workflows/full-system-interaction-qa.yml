@@ -26,7 +26,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mosharrof-full-system-qa-${{ github.ref }}
+  group: mosharrof-full-system-qa-${{ github.run_id }}
   # Queue overlapping runs instead of cancelling in-progress verification.
   cancel-in-progress: false
 
