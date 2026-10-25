@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import time
 import sys
 from datetime import datetime, timezone
@@ -155,6 +156,7 @@ def main() -> int:
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
+        response_route = ""
         while time.monotonic() < deadline:
             state = cdp.evaluate(
                 f"""(() => {{
@@ -169,7 +171,9 @@ def main() -> int:
                     count: nodes.length,
                     typing: !!typing,
                     answer: body ? body.innerText.trim() : '',
-                    provider: last ? last.getAttribute('data-provider') : null
+                    provider: last ? last.getAttribute('data-provider') : null,
+                    route: last && last.querySelector('.response-route')
+                      ? last.querySelector('.response-route').innerText.trim() : ''
                   }};
                 }})()""",
                 retry_safe=True,
@@ -177,6 +181,15 @@ def main() -> int:
             if state and state.get("ready"):
                 answer = state.get("answer", "").strip()
                 provider = state.get("provider")
+                response_route = str(state.get("route") or "").strip()
+                if not provider:
+                    route_match = re.search(
+                        r"উত্তর:\\s*(Gemini|Workers AI|Groq|OpenRouter)\\b",
+                        response_route,
+                        re.IGNORECASE,
+                    )
+                    if route_match:
+                        provider = route_match.group(1)
                 break
             time.sleep(1)
 
@@ -193,13 +206,15 @@ def main() -> int:
             ]
             failure_marker = next((phrase for phrase in failed_phrases if phrase in lower), "")
             provider_name = str(provider or "").strip().lower()
-            mock_provider = not provider_name or any(token in provider_name for token in ("mock", "test", "fixture", "playwright"))
+            known_provider = any(name in provider_name for name in ("gemini", "workers ai", "groq", "openrouter"))
+            mock_provider = (not known_provider) or any(token in provider_name for token in ("mock", "test", "fixture", "playwright"))
             passed = bool(answer) and not failure_marker and not mock_provider
             record("real_backend_returned_non_mock_answer", passed,
                    f"response_chars={len(answer)}; provider_present={bool(provider_name)}; "
                    f"mock_provider={mock_provider}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+            report["response_route"] = response_route
             report["stage"] = "capturing_after_response"
             cdp.screenshot(out / "apk-webview-after.png")
         else:
