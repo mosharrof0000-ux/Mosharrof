@@ -1,5 +1,8 @@
 name: MOSHARROF AI Engine
 on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/mosharrof-autonomous-engine.yml"]
   schedule:
     - cron: "0 0-2,14-23 * * *"
   workflow_dispatch:
@@ -14,14 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with: {ref: main}
-      - name: Install deps
-        run: |
+      - run: |
           pip install -r requirements.txt
           npm init -y
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-      - name: Run agent
-        env:
+      - env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -33,7 +34,4 @@ jobs:
         run: python3 scripts/mosharrof_autonomous_engine.py
       - if: always()
         uses: actions/upload-artifact@v4
-        with:
-          name: engine-${{ github.run_id }}
-          path: artifacts/
-          retention-days: 30
+        with: {name: "engine-${{ github.run_id }}", path: artifacts/, retention-days: 30}
