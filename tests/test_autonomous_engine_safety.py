@@ -25,6 +25,9 @@ def test_autonomous_workflow_has_bounded_runtime_and_visual_qa_dependencies():
     assert "npm install --no-save playwright" in workflow
     assert "npx playwright install --with-deps chromium" in workflow
     assert workflow.count("    inputs:") == 1
+    assert "Preflight configured AI provider without exposing secrets" in workflow
+    assert "GEMINI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY" in workflow
+    assert "No AI provider credentials are configured" in workflow
 
 
 
