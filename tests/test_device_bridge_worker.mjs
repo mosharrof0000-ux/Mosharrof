@@ -1,8 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-
-const source = await readFile(new URL("../worker/device-bridge.js", import.meta.url), "utf8");
-const { DeviceBridge } = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
+const { DeviceBridge } = await import(new URL("../core/android-device-bridge/worker-entry.js", import.meta.url));
 
 class MemoryStorage {
   constructor() { this.values = new Map(); }
