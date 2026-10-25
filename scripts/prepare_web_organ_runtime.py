@@ -29,6 +29,7 @@ def main() -> int:
         "core/organ-runtime/scoped-api.js": "web/runtime/core/organ-runtime/scoped-api.js",
         "core/ui-module-adapter/index.js": "web/runtime/core/ui-module-adapter/index.js",
         "organs/history/history-ui.js": "web/organs/history/history-ui.js",
+        "organs/android-device-bridge/index.js": "web/organs/android-device-bridge/index.js",
         "core/composer-enhancements.js": "web/composer-enhancements.js",
         "core/composer-layout.js": "web/composer-layout.js",
         "core/composer-voice-meter.js": "web/composer-voice-meter.js",
@@ -113,6 +114,13 @@ def main() -> int:
         if video_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: video script anchor missing for memory bridge")
         index_html = index_html.replace(video_tag, video_tag + "\n" + memory_bridge_tag, 1)
+
+    bridge_tag = '<script src="./organs/android-device-bridge/index.js"></script>'
+    if bridge_tag not in index_html:
+        anchor_tag = '<script src="./sidebar-recovery.js"></script>'
+        if anchor_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for Android device bridge")
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + bridge_tag, 1)
 
     index_html = apply_manual_provider_patches(index_html)
 
