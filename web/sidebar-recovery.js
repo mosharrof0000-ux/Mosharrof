@@ -16,7 +16,7 @@
   if (bootstrapScriptUrl && !window.__mosharrofVideoCuttingLoaderRequested) {
     window.__mosharrofVideoCuttingLoaderRequested = true;
     var videoLoader = document.createElement("script");
-    videoLoader.src = new URL("./video-cutting-loader.js", bootstrapScriptUrl).href;
+    videoLoader.src = new URL("./video-cutting/loader.js", bootstrapScriptUrl).href;
     videoLoader.addEventListener("error", function () {
       console.error("[MOSHARROF Video Cutting] loader failed to load");
     }, { once: true });
