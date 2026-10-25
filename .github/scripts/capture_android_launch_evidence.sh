@@ -32,9 +32,12 @@ printf '%s\n' "$launch_status" > "$OUT/launch-screenshot-status.txt"
 
 if timeout 15s adb shell uiautomator dump /sdcard/mosharrof-ui.xml >/dev/null 2>&1; then
   ui_text="$(timeout 10s adb shell cat /sdcard/mosharrof-ui.xml 2>/dev/null | tr -d '\r' || true)"
-  if printf '%s' "$ui_text" | grep -Eqi "isn.t responding|not responding|Process system"; then
+  # Avoid grep -q over a pipe: with pipefail, the producer can receive SIGPIPE
+  # and terminate this evidence-capture script before status files are written.
+  ui_text_lower="${ui_text,,}"
+  if [[ "$ui_text_lower" == *"isn't responding"* || "$ui_text_lower" == *"not responding"* || "$ui_text_lower" == *"process system"* ]]; then
     ui_state="SYSTEM_ANR_DIALOG"
-  elif printf '%s' "$ui_text" | grep -qi 'Wait' && printf '%s' "$ui_text" | grep -qi 'Close app'; then
+  elif [[ "$ui_text_lower" == *"wait"* && "$ui_text_lower" == *"close app"* ]]; then
     ui_state="SYSTEM_ANR_DIALOG"
   else
     ui_state="NO_SYSTEM_ANR_DIALOG"
