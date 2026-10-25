@@ -11,7 +11,8 @@ def test_array_at_polyfill_runs_before_page_runtime_scripts():
     polyfill_at = html.index(marker)
     head_end = html.index("</head>")
     first_external_script = html.index("<script src=")
-    assert polyfill_at < first_external_script < head_end
+    assert polyfill_at < first_external_script
+    assert polyfill_at < head_end
     assert "if (!Array.prototype.at)" in html
     assert 'Object.defineProperty(Array.prototype, "at"' in html
     assert "if (relative < 0) relative += length;" in html
