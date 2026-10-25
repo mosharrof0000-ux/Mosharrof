@@ -162,3 +162,17 @@ def test_answer_visibility_accepts_readable_in_viewport_layout(monkeypatch):
         "viewport": {"width": 320, "height": 616},
     }
     assert module.answer_is_visibly_rendered(readable)
+
+
+def test_chat_layout_geometry_fails_closed_when_containers_collapse(monkeypatch):
+    module, _ = _load_cdp_with_fake_websocket(
+        monkeypatch, lambda _url, _timeout: types.SimpleNamespace(close=lambda: None)
+    )
+
+    class FakeCDP:
+        def evaluate(self, expression, retry_safe=False):
+            assert "getBoundingClientRect" in expression
+            assert retry_safe is True
+            return {"viewportWidth": 320, "scrollWidth": 320, "messagesWidth": 28, "ready": False}
+
+    assert module.inspect_chat_layout_geometry(FakeCDP())["ready"] is False

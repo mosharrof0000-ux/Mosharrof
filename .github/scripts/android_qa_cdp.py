@@ -87,6 +87,21 @@ def resolve_provider(provider: str | None, route: str) -> str | None:
     return match.group(1) if match else None
 
 
+
+def inspect_chat_layout_geometry(cdp: PageCDP) -> dict:
+    """Require the scroll and message containers to occupy real viewport width."""
+    result = cdp.evaluate("""(() => {
+      const scroll = document.querySelector('#chatScroll');
+      const messages = document.querySelector('#messages');
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      const scrollWidth = scroll ? scroll.getBoundingClientRect().width : 0;
+      const messagesWidth = messages ? messages.getBoundingClientRect().width : 0;
+      return {viewportWidth, scrollWidth, messagesWidth,
+        ready: !!scroll && !!messages && scrollWidth >= viewportWidth * 0.8 &&
+          messagesWidth >= viewportWidth * 0.6};
+    })()""", retry_safe=True)
+    return result if isinstance(result, dict) else {"ready": False}
+
 def answer_is_visibly_rendered(result: dict | None) -> bool:
     """Reject text that exists in the DOM but is collapsed to an unreadable sliver."""
     if not isinstance(result, dict) or result.get("visible") is not True:

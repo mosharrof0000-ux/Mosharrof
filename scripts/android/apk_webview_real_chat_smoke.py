@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / ".github" / "scripts"))
-from android_qa_cdp import PageCDP, answer_is_visibly_rendered, inspect_answer_visibility, resolve_provider
+from android_qa_cdp import PageCDP, answer_is_visibly_rendered, inspect_answer_visibility, inspect_chat_layout_geometry, resolve_provider
 from android_qa_targets import fetch_webview_targets
 
 
@@ -133,16 +133,7 @@ def main() -> int:
         if not composer_ready:
             raise TimeoutError("APK chat composer did not become visible")
 
-        geometry = cdp.evaluate("""(() => {
-          const scroll = document.querySelector('#chatScroll');
-          const messages = document.querySelector('#messages');
-          const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-          const scrollWidth = scroll ? scroll.getBoundingClientRect().width : 0;
-          const messagesWidth = messages ? messages.getBoundingClientRect().width : 0;
-          return {viewportWidth, scrollWidth, messagesWidth,
-            ready: !!scroll && !!messages && scrollWidth >= viewportWidth * 0.8 &&
-              messagesWidth >= viewportWidth * 0.6};
-        })()""", retry_safe=True)
+        geometry = inspect_chat_layout_geometry(cdp)
         geometry_ready = bool(geometry and geometry.get("ready"))
         record("chat_layout_geometry_ready", geometry_ready,
                json.dumps(geometry, ensure_ascii=False)[:500] if geometry else "No geometry result")
