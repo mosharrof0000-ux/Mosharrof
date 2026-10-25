@@ -1,15 +1,12 @@
 import { CODE_TTL_MS, COMMAND_TTL_MS, MAX_QUEUE, PACKAGE_NAME, DEVICE_ID, ACTIONS, STATUSES, json, bearer, randomHex, fromHex, sha256, sign, validTarget, terminal } from "./device-bridge-protocol.js";
-
 export class DeviceBridge {
   constructor(state, env) {
     this.state = state;
     this.env = env;
     this.storage = state.storage;
   }
-
   async fetch(request) {
-    const url = new URL(request.url);
-    try {
+    const url = new URL(request.url); try {
       if (request.method === "POST" && url.pathname === "/device/pair/start") return await this.pairStart(request);
       if (request.method === "POST" && url.pathname === "/device/pair/approve") return await this.pairApprove(request);
       if (request.method === "GET" && url.pathname === "/device/pair/status") return await this.pairStatus(request);
@@ -18,12 +15,10 @@ export class DeviceBridge {
       if (request.method === "POST" && url.pathname === "/device/result") return await this.submitResult(request);
       if (request.method === "GET" && url.pathname === "/device/results") return await this.getResult(request, url);
       if (request.method === "POST" && url.pathname === "/device/revoke") return await this.revoke(request);
-      return json({ ok: false, error: "not_found" }, 404);
-    } catch {
+      return json({ ok: false, error: "not_found" }, 404); } catch {
       return json({ ok: false, error: "invalid_request" }, 400);
     }
   }
-
   async pairStart(request) {
     const body = await request.json();
     const deviceId = String(body.deviceId || "");
@@ -54,7 +49,6 @@ export class DeviceBridge {
     });
     return json({ ok: true, deviceId, expiresAt: Date.now() + CODE_TTL_MS });
   }
-
   async pairApprove(request) {
     const body = await request.json();
     const code = String(body.pairingCode || "");
@@ -76,13 +70,11 @@ export class DeviceBridge {
     await this.storage.put("pairing", pairing);
     return json({ ok: true, deviceId: pairing.deviceId, browserToken });
   }
-
   async pairStatus(request) {
     const pairing = await this.authorizeDevice(request);
     if (!pairing) return json({ ok: false, error: "device_not_authorized" }, 401);
     return json({ ok: true, paired: !!pairing.approved, deviceId: pairing.deviceId, expiresAt: pairing.expiresAt });
   }
-
   async poll(request) {
     const pairing = await this.authorizeDevice(request);
     if (!pairing || !pairing.approved) return json({ ok: false, error: "device_not_paired" }, 401);
@@ -116,7 +108,6 @@ export class DeviceBridge {
     }
     return json({ ok: true, command: null, busy: false });
   }
-
   async createCommand(request) {
     const pairing = await this.authorizeBrowser(request);
     if (!pairing || !pairing.approved) return json({ ok: false, error: "browser_not_authorized" }, 401);
@@ -143,7 +134,6 @@ export class DeviceBridge {
     });
     return json({ ok: true, requestId: envelope.requestId, status: "REQUESTED", expiresAtMillis: envelope.expiresAtMillis }, 202);
   }
-
   async submitResult(request) {
     const pairing = await this.authorizeDevice(request);
     if (!pairing || !pairing.approved) return json({ ok: false, error: "device_not_authorized" }, 401);
@@ -155,7 +145,6 @@ export class DeviceBridge {
     const priorTerminal = prior && (terminal(prior.status) ||
       (prior.status === "AWAITING_USER_CONFIRMATION" && prior.action === "SEARCH_PLAY_STORE"));
     if (prior && prior.requestId === body.requestId && prior.action === body.action && priorTerminal) {
-      // The first server terminal result is authoritative; late callbacks cannot rewrite it.
       return json({ ok: true, accepted: true, terminal: true, ignored: prior.status !== status });
     }
     if (prior && prior.requestId === body.requestId && prior.action === body.action &&
@@ -184,7 +173,6 @@ export class DeviceBridge {
     else await this.storage.put("inflight", { ...inflight, lastStatus: status, updatedAt: Date.now() });
     return json({ ok: true, accepted: true, terminal: isTerminal });
   }
-
   async getResult(request, url) {
     const pairing = await this.authorizeBrowser(request);
     if (!pairing || !pairing.approved) return json({ ok: false, error: "browser_not_authorized" }, 401);
@@ -206,30 +194,24 @@ export class DeviceBridge {
     }
     return json({ ok: false, error: "request_not_found" }, 404);
   }
-
   async revoke(request) {
     const pairing = await this.authorizeBrowser(request);
     if (!pairing || !pairing.approved) return json({ ok: false, error: "browser_not_authorized" }, 401);
     await this.storage.deleteAll();
     return json({ ok: true, revoked: true });
   }
-
   async authorizeDevice(request) {
     const pairing = await this.storage.get("pairing");
-    if (!pairing || pairing.expiresAt <= Date.now() && !pairing.approved) return null;
-    const supplied = bearer(request);
+    if (!pairing || pairing.expiresAt <= Date.now() && !pairing.approved) return null; const supplied = bearer(request);
     if (!supplied || await sha256(supplied) !== pairing.secretHash) return null;
     return pairing;
   }
-
   async authorizeBrowser(request) {
     const pairing = await this.storage.get("pairing");
-    if (!pairing || !pairing.approved || !pairing.browserTokenHash) return null;
-    const supplied = bearer(request);
+    if (!pairing || !pairing.approved || !pairing.browserTokenHash) return null; const supplied = bearer(request);
     if (!supplied || await sha256(supplied) !== pairing.browserTokenHash) return null;
     return pairing;
   }
-
   async expireRequestIfNeeded(requestId) {
     const inflight = await this.storage.get("inflight");
     if (inflight?.envelope?.requestId === requestId && inflight.envelope.expiresAtMillis <= Date.now()) {
@@ -252,7 +234,6 @@ export class DeviceBridge {
       });
     }
   }
-
   async storeResult(record) {
     await this.storage.put("result:" + record.requestId, record);
     const recent = (await this.storage.get("recentResults")) || [];
