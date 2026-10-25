@@ -7,14 +7,12 @@ on:
         description: "Task for Mosharrof"
         required: false
         type: string
-  schedule:
-    - cron: "17 */6 * * *"
 
 permissions:
   contents: read
 
 concurrency:
-  group: mosharrof-autonomous
+  group: mosharrof-autonomous-engine
   cancel-in-progress: false
 
 jobs:
