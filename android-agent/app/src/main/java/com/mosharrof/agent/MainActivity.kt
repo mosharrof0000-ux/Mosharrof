@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
     private var devicePolling = false
     private var devicePollInFlight = false
     private var dispatchingRemoteCommand = false
-    private val devicePollTask = object : Runnable {
+    private val devicePollTask: Runnable = object : Runnable {
         override fun run() {
             if (!devicePolling || devicePollInFlight) return
             devicePollInFlight = true
