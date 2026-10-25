@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: ["feat/current-main-apk-real-chat-qa-20261019"]
+    branches: [main, "feat/current-main-apk-real-chat-qa-20261019"]
   workflow_run:
     workflows: ["Build MOSHARROF Android APK"]
     types: [completed]
