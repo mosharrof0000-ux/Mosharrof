@@ -56,3 +56,9 @@ def test_component_safety_gate_passes_without_autonomous_self_merge():
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert '"status": "PASS"' in result.stdout
+
+
+def test_central_engine_outcomes_are_recorded_in_durable_work_ledger():
+    recorder = Path(".github/workflows/automatic-work-engine.yml").read_text(encoding="utf-8")
+    assert "- MOSHARROF AI Engine" in recorder
+    assert "docs/automation/latest-state.json" in recorder
