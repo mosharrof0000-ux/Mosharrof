@@ -1,8 +1,18 @@
-name: Mosharrof 30-Minute Watchdog
+name: Mosharrof 15-Minute Recovery Watchdog
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/15 * * * *"
+  workflow_run:
+    workflows:
+      - "Mosharrof Tests"
+      - "MOSHARROF Repository Knowledge Tests"
+      - "Personal Memory Browser Smoke Test"
+      - "Mosharrof Verification Gate"
+      - "MOSHARROF Android APK WebView Real Chat QA"
+      - "Full App Interactive QA"
+      - "MOSHARROF Full-System Interaction QA"
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -10,7 +20,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mosharrof-30-minute-watchdog
+  group: mosharrof-15-minute-recovery-watchdog
   cancel-in-progress: false
 
 jobs:
@@ -27,10 +37,10 @@ jobs:
         run: |
           set -euo pipefail
           summary="$GITHUB_STEP_SUMMARY"
-          echo "# Mosharrof 30-Minute Watchdog" >> "$summary"
+          echo "# Mosharrof 15-Minute Recovery Watchdog" >> "$summary"
           echo "" >> "$summary"
           echo "- Checked at (UTC): $(date -u +'%Y-%m-%d %H:%M:%S')" >> "$summary"
-          echo "- Policy: never restart healthy running jobs; retry only allowlisted QA/test workflows that failed on attempt 1." >> "$summary"
+          echo "- Policy: never restart healthy running jobs; retry only allowlisted QA/test workflows that failed on attempt 1 and are no more than 20 minutes old." >> "$summary"
           echo "- Stale in-progress jobs are reported for diagnosis, not force-cancelled or duplicated." >> "$summary"
           echo "" >> "$summary"
 
@@ -40,9 +50,9 @@ jobs:
           stale=0
           failures=0
 
-          while IFS=$'\t' read -r run_id name status conclusion attempt started_at url; do
+          while IFS=$'\t' read -r run_id name status conclusion attempt started_at created_at url; do
             [[ -n "$run_id" ]] || continue
-            [[ "$name" == "Mosharrof 30-Minute Watchdog" ]] && continue
+            [[ "$name" == "Mosharrof 15-Minute Recovery Watchdog" ]] && continue
 
             case "$name" in
               "Mosharrof Tests"|"MOSHARROF Repository Knowledge Tests"|"Personal Memory Browser Smoke Test"|"Mosharrof Verification Gate"|"MOSHARROF Android APK WebView Real Chat QA"|"Full App Interactive QA"|"MOSHARROF Full-System Interaction QA")
@@ -61,7 +71,12 @@ jobs:
             elif [[ "$status" == "completed" && "$conclusion" == "failure" ]]; then
               echo "- FAILED: [$name #$run_id]($url) (attempt $attempt)" >> "$summary"
               failures=$((failures + 1))
-              if [[ "$eligible" == "true" && "$attempt" == "1" ]]; then
+              run_age_minutes=999999
+              if [[ -n "${created_at:-}" ]]; then
+                created_epoch="$(date -u -d "$created_at" +%s 2>/dev/null || echo "$now_epoch")"
+                run_age_minutes=$(( (now_epoch - created_epoch) / 60 ))
+              fi
+              if [[ "$eligible" == "true" && "$attempt" == "1" && "$run_age_minutes" -le 20 ]]; then
                 echo "Attempting one retry of failed jobs for allowlisted QA/test run $run_id ($name)"
                 if gh run rerun "$run_id" --failed --repo "$GH_REPO"; then
                   echo "  - RETRY REQUESTED once: [$name #$run_id]($url)" >> "$summary"
@@ -71,11 +86,13 @@ jobs:
                 fi
               elif [[ "$attempt" != "1" ]]; then
                 echo "  - No automatic retry: this run already had a retry attempt." >> "$summary"
+              elif [[ "$run_age_minutes" -gt 20 ]]; then
+                echo "  - No automatic retry: failure is older than 20 minutes; avoiding repeated retry requests." >> "$summary"
               else
                 echo "  - No automatic retry: workflow is outside the safe QA/test allowlist." >> "$summary"
               fi
             fi
-          done < <(jq -r '.workflow_runs[] | [.id, .name, .status, (.conclusion // ""), (.run_attempt|tostring), (.run_started_at // .created_at), .html_url] | @tsv' <<< "$runs")
+          done < <(jq -r '.workflow_runs[] | [.id, .name, .status, (.conclusion // ""), (.run_attempt|tostring), (.run_started_at // .created_at), .created_at, .html_url] | @tsv' <<< "$runs")
 
           echo "" >> "$summary"
           echo "## Totals" >> "$summary"
