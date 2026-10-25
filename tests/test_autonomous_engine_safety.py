@@ -42,5 +42,5 @@ def test_only_the_central_engine_has_a_recurring_ai_writer_schedule():
     )
     for filename in secondary:
         workflow = Path(filename).read_text(encoding="utf-8")
-        assert "\\n  schedule:" not in workflow, filename
+        assert "  schedule:" not in workflow, filename
         assert "group: mosharrof-autonomous-engine" in workflow, filename
