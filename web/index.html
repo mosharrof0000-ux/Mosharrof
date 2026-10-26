@@ -11,7 +11,6 @@
 <!-- Mosharrof live pages contract -->
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
-<link rel="stylesheet" href="./composer-expansion.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atma:wght@300;400;500;600;700&family=Galada&family=Hind+Siliguri:wght@300;400;500;600;700&family=Mina:wght@400;700&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -258,7 +257,6 @@ header.top{
         </div>
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
-      <button class="composer-action" id="composerExpandBtn" type="button" aria-label="সম্পূর্ণ লেখার সম্পাদক খুলুন" title="বড় সম্পাদক">↗</button>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
@@ -268,7 +266,6 @@ header.top{
   <aside class="drawer right" id="drawerRight" aria-hidden="true"></aside>
   <div class="scrim" id="scrim"></div>
   <div class="toast" id="toast"></div>
-<div id="mosharrofExpandEditor" role="dialog" aria-modal="true" aria-label="সম্পূর্ণ লেখার সম্পাদক" aria-hidden="true"><div class="expand-panel"><strong>সম্পূর্ণ লেখা সম্পাদনা</strong><textarea aria-label="সম্পূর্ণ বার্তা"></textarea><div class="expand-actions"><button type="button" data-expand-cancel>বাতিল</button><button type="button" data-expand-apply>প্রয়োগ</button></div></div></div>
 
 </div>
 <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
@@ -1252,6 +1249,5 @@ header.top{
 })();
 </script>
 <script src="./sidebar-recovery.js"></script>
-<script src="./composer-expansion.js" defer></script>
 </body>
 </html>
