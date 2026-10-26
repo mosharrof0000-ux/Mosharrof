@@ -1,0 +1,10 @@
+/* Composer expansion editor styles; kept separate from the main page. */
+#composerExpandBtn{display:none;flex:none;width:32px;height:32px;border:1px solid rgba(120,150,255,.45);border-radius:9px;background:#111;color:#cbd5ff;font-size:18px;line-height:1}
+#composerExpandBtn.is-visible{display:grid;place-items:center}
+#mosharrofExpandEditor{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78)}
+#mosharrofExpandEditor[aria-hidden="false"]{display:flex}
+#mosharrofExpandEditor .expand-panel{display:flex;flex-direction:column;gap:12px;width:min(720px,100%);max-height:85dvh;padding:16px;border:1px solid #393943;border-radius:16px;background:#171717}
+#mosharrofExpandEditor .expand-panel textarea{width:100%;min-height:45dvh;resize:vertical;padding:12px;border:1px solid #444;border-radius:10px;background:#080808;color:#f5f5f5;line-height:1.6}
+#mosharrofExpandEditor .expand-actions{display:flex;justify-content:flex-end;gap:8px}
+#mosharrofExpandEditor .expand-actions button{padding:9px 13px;border:1px solid #454550;border-radius:9px;background:#24242a}
+#mosharrofExpandEditor [data-expand-apply]{background:#253a73;border-color:#516fc4}
