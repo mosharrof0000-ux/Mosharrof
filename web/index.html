@@ -227,6 +227,9 @@ header.top{
 .audio-setting-row label{font-size:12px;color:#e5e5e5;font-weight:650}
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
+
+/* Composer expansion editor: reveal only when draft exceeds eight lines. */
+#composerExpandBtn{display:none;flex:none;width:32px;height:32px;border:1px solid rgba(120,150,255,.45);border-radius:9px;background:#111;color:#cbd5ff;font-size:18px;line-height:1}#composerExpandBtn.is-visible{display:grid;place-items:center}#mosharrofExpandEditor{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78)}#mosharrofExpandEditor[aria-hidden="false"]{display:flex}#mosharrofExpandEditor .expand-panel{display:flex;flex-direction:column;gap:12px;width:min(720px,100%);max-height:85dvh;padding:16px;border:1px solid #393943;border-radius:16px;background:#171717}#mosharrofExpandEditor .expand-panel textarea{width:100%;min-height:45dvh;resize:vertical;padding:12px;border:1px solid #444;border-radius:10px;background:#080808;color:#f5f5f5;line-height:1.6}#mosharrofExpandEditor .expand-actions{display:flex;justify-content:flex-end;gap:8px}#mosharrofExpandEditor .expand-actions button{padding:9px 13px;border:1px solid #454550;border-radius:9px;background:#24242a}#mosharrofExpandEditor [data-expand-apply]{background:#253a73;border-color:#516fc4}
 </style>
 </head>
 <body>
@@ -256,6 +259,7 @@ header.top{
         </div>
       </div>
       <textarea class="input" id="input" placeholder="আপনার প্রশ্ন লিখুন..." rows="1"></textarea>
+      <button class="composer-action" id="composerExpandBtn" type="button" aria-label="সম্পূর্ণ লেখার সম্পাদক খুলুন" title="বড় সম্পাদক">↗</button>
       <button class="composer-action" id="composerVoiceBtn" type="button" aria-label="ভয়েস ইনপুট" title="ভয়েস ইনপুট"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
       <button class="send" id="sendBtn" type="button" aria-label="মেসেজ পাঠান" title="মেসেজ পাঠান"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></button>
     </div>
@@ -265,6 +269,8 @@ header.top{
   <aside class="drawer right" id="drawerRight" aria-hidden="true"></aside>
   <div class="scrim" id="scrim"></div>
   <div class="toast" id="toast"></div>
+<div id="mosharrofExpandEditor" role="dialog" aria-modal="true" aria-label="সম্পূর্ণ লেখার সম্পাদক" aria-hidden="true"><div class="expand-panel"><strong>সম্পূর্ণ লেখা সম্পাদনা</strong><textarea aria-label="সম্পূর্ণ বার্তা"></textarea><div class="expand-actions"><button type="button" data-expand-cancel>বাতিল</button><button type="button" data-expand-apply>প্রয়োগ</button></div></div></div>
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
@@ -1240,6 +1246,20 @@ header.top{
       voiceRecorder.start(1000);
     }catch(error){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();showVoiceMessage(audioErrorMessage(error));}
   }
+
+  (function setupComposerExpansion(){
+    var expandBtn=$("#composerExpandBtn"), editor=$("#mosharrofExpandEditor"), draft=editor&&editor.querySelector("textarea");
+    if(!expandBtn||!editor||!draft)return;
+    function updateExpandVisibility(){var lines=(input.value.match(/\\n/g)||[]).length+1;expandBtn.classList.toggle("is-visible",lines>8);}
+    function closeEditor(){editor.setAttribute("aria-hidden","true");}
+    input.addEventListener("input",updateExpandVisibility);
+    expandBtn.addEventListener("click",function(){draft.value=input.value;editor.setAttribute("aria-hidden","false");draft.focus();});
+    editor.querySelector("[data-expand-cancel]").addEventListener("click",closeEditor);
+    editor.querySelector("[data-expand-apply]").addEventListener("click",function(){input.value=draft.value;input.dispatchEvent(new Event("input",{bubbles:true}));closeEditor();input.focus();});
+    editor.addEventListener("click",function(event){if(event.target===editor)closeEditor();});
+    document.addEventListener("keydown",function(event){if(event.key==="Escape"&&editor.getAttribute("aria-hidden")==="false")closeEditor();});
+    updateExpandVisibility();
+  })();
   sendBtn.onclick=send;
   imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);closeComposerTools();});
   removeImage.onclick=clearImage;
