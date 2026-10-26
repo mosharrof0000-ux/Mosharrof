@@ -1243,19 +1243,6 @@ header.top{
     }catch(error){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();showVoiceMessage(audioErrorMessage(error));}
   }
 
-  (function setupComposerExpansion(){
-    var expandBtn=$("#composerExpandBtn"), editor=$("#mosharrofExpandEditor"), draft=editor&&editor.querySelector("textarea");
-    if(!expandBtn||!editor||!draft)return;
-    function updateExpandVisibility(){var lines=(input.value.match(/\\n/g)||[]).length+1;expandBtn.classList.toggle("is-visible",lines>8);}
-    function closeEditor(){editor.setAttribute("aria-hidden","true");}
-    input.addEventListener("input",updateExpandVisibility);
-    expandBtn.addEventListener("click",function(){draft.value=input.value;editor.setAttribute("aria-hidden","false");draft.focus();});
-    editor.querySelector("[data-expand-cancel]").addEventListener("click",closeEditor);
-    editor.querySelector("[data-expand-apply]").addEventListener("click",function(){input.value=draft.value;input.dispatchEvent(new Event("input",{bubbles:true}));closeEditor();input.focus();});
-    editor.addEventListener("click",function(event){if(event.target===editor)closeEditor();});
-    document.addEventListener("keydown",function(event){if(event.key==="Escape"&&editor.getAttribute("aria-hidden")==="false")closeEditor();});
-    updateExpandVisibility();
-  })();
   sendBtn.onclick=send;
   imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);closeComposerTools();});
   removeImage.onclick=clearImage;
