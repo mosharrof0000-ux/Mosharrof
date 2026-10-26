@@ -26,7 +26,7 @@ export function initializeComposerLayout(input, composer, send) {
       "#composerTools{margin-right:auto;flex:none}",
       "#plusBtn,#composer .composer-action,#composer .send{width:38px;height:38px;min-width:38px;min-height:38px;box-sizing:border-box;border-radius:10px;display:inline-grid;place-items:center}",
       "#composerExpandBtn{display:none!important}",
-      "#composerExpandBtn.visible{display:inline-grid!important}",
+      "#composerExpandBtn.visible,#composerExpandBtn.is-visible{display:inline-grid!important}",
       "#composerExpandBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}",
       "#composerVoiceBtn.is-listening{background:#080808;border-color:rgba(255,255,255,.16);color:#f2f2f2;box-shadow:none}",
       "#composerVoiceBtn.is-listening svg{animation:none}",
