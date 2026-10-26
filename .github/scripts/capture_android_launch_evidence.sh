@@ -43,8 +43,7 @@ for attempt in 1 2 3; do
   if timeout 25s adb shell uiautomator dump /sdcard/mosharrof-ui.xml >/dev/null 2>&1; then
     ui_text="$(timeout 15s adb shell cat /sdcard/mosharrof-ui.xml 2>/dev/null | tr -d '\r' || true)"
     ui_text_lower="${ui_text,,}"
-    if [[ "$ui_text_lower" == *"isn't responding"* || "$ui_text_lower" == *"not responding"* || "$ui_text_lower" == *"process system"*
-      || ( "$ui_text_lower" == *"wait"* && "$ui_text_lower" == *"close app"* ) ]]; then
+    if [[ "$ui_text_lower" == *"isn't responding"* || "$ui_text_lower" == *"not responding"* || "$ui_text_lower" == *"process system"* || ( "$ui_text_lower" == *"wait"* && "$ui_text_lower" == *"close app"* ) ]]; then
       ui_state="SYSTEM_ANR_DIALOG"
     else
       ui_state="NO_SYSTEM_ANR_DIALOG"
