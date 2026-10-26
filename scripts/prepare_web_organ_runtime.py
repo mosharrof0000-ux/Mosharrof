@@ -109,14 +109,14 @@ def main() -> int:
     if composer_css_tag not in index_html:
         if "</head>" not in index_html:
             raise SystemExit("ORGAN ASSET PREP: HTML head anchor missing for composer expansion stylesheet")
-        index_html = index_html.replace("</head>", "  " + composer_css_tag + "\\n</head>", 1)
+        index_html = index_html.replace("</head>", "  " + composer_css_tag + "\n</head>", 1)
 
     composer_script_tag = '<script src="./core/composer-expansion.js"></script>'
     if composer_script_tag not in index_html:
         anchor_tag = '<script src="./sidebar-recovery.js"></script>'
         if anchor_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for composer expansion module")
-        index_html = index_html.replace(anchor_tag, anchor_tag + "\\n" + composer_script_tag, 1)
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + composer_script_tag, 1)
 
     design_css_tag = '<link rel="stylesheet" href="./design-intelligence.css">'
     if design_css_tag not in index_html:
