@@ -71,14 +71,27 @@ jobs:
         run: |
           set -euo pipefail
           run_id=""
-          for attempt in $(seq 1 150); do
+          for attempt in $(seq 1 30); do
             run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
             if [ -n "$run_id" ]; then break; fi
             sleep 10
           done
-          test -n "$run_id"
           mkdir -p artifacts/apk
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
+          if [ -n "$run_id" ]; then
+            gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
+          else
+            # Workflow-only/docs-only changes do not trigger the APK builder.
+            # Reuse main's APK only when every APK build input is unchanged.
+            git fetch origin main
+            if ! git diff --quiet "origin/main...$SOURCE_SHA" -- android/ web/ core/android-edge-to-edge.css scripts/android/prepare-and-install-voice.sh scripts/mosharrof_size_gate.py .github/workflows/build-apk.yml; then
+              echo "No successful APK build exists for this source SHA, and APK build inputs changed; refusing to test a stale APK." >&2
+              exit 1
+            fi
+            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+            test -n "$run_id"
+            echo "No APK inputs changed; using latest successful main APK for workflow-only QA."
+            gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
+          fi
           test -s artifacts/apk/app-debug.apk
 
       - name: Download latest successful main APK for scheduled/manual runs
