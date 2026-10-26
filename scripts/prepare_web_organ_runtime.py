@@ -47,7 +47,6 @@ def main() -> int:
         "core/composer-voice-meter.js": "web/composer-voice-meter.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
         "core/composer-expansion.js": "web/core/composer-expansion.js",
-        "core/composer-expansion.css": "web/core/composer-expansion.css",
         "core/composer-line-limit.js": "web/composer-line-limit.js",
         "core/./composer-line-limit.js": "web/core/composer-line-limit.js",
         "core/chat-layout-compat.js": "web/core/chat-layout-compat.js",
@@ -104,12 +103,6 @@ def main() -> int:
         if device_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: device-control script anchor missing for video UI")
         index_html = index_html.replace(device_tag, device_tag + "\n" + video_tag, 1)
-
-    composer_css_tag = '<link rel="stylesheet" href="./core/composer-expansion.css">'
-    if composer_css_tag not in index_html:
-        if "</head>" not in index_html:
-            raise SystemExit("ORGAN ASSET PREP: HTML head anchor missing for composer expansion stylesheet")
-        index_html = index_html.replace("</head>", "  " + composer_css_tag + "\n</head>", 1)
 
     composer_script_tag = '<script src="./core/composer-expansion.js"></script>'
     if composer_script_tag not in index_html:
