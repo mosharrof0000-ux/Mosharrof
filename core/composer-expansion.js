@@ -5,7 +5,9 @@
     var input=document.querySelector("#input");
     var voice=document.querySelector("#composerVoiceBtn");
     if(!input||!voice||document.querySelector("#composerExpandBtn"))return;
+    if(!document.getElementById("composerExpansionStyles")){var style=document.createElement("style");style.id="composerExpansionStyles";style.textContent="#composerExpandBtn{display:none;flex:none;width:32px;height:32px;border:1px solid rgba(120,150,255,.45);border-radius:9px;background:#111;color:#cbd5ff;font-size:18px;line-height:1}\n#composerExpandBtn.is-visible{display:grid;place-items:center}\n#mosharrofExpandEditor{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78)}\n#mosharrofExpandEditor[aria-hidden=\"false\"]{display:flex}\n#mosharrofExpandEditor .expand-panel{display:flex;flex-direction:column;gap:12px;width:min(720px,100%);max-height:85dvh;padding:16px;border:1px solid #393943;border-radius:16px;background:#171717}\n#mosharrofExpandEditor .expand-panel textarea{width:100%;min-height:45dvh;resize:vertical;padding:12px;border:1px solid #444;border-radius:10px;background:#080808;color:#f5f5f5;line-height:1.6}\n#mosharrofExpandEditor .expand-actions{display:flex;justify-content:flex-end;gap:8px}\n#mosharrofExpandEditor .expand-actions button{padding:9px 13px;border:1px solid #454550;border-radius:9px;background:#24242a}\n#mosharrofExpandEditor [data-expand-apply]{background:#253a73;border-color:#516fc4}";document.head.appendChild(style);}
     var button=document.createElement("button");
+    button.className="composer-action";
     button.id="composerExpandBtn";button.type="button";button.setAttribute("aria-label","সম্পূর্ণ লেখার সম্পাদক খুলুন");button.title="বড় সম্পাদক";button.textContent="↗";
     voice.parentNode.insertBefore(button,voice);
     var editor=document.createElement("div");
