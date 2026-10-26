@@ -11,6 +11,7 @@
 <!-- Mosharrof live pages contract -->
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css">
+<link rel="stylesheet" href="./composer-expansion.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atma:wght@300;400;500;600;700&family=Galada&family=Hind+Siliguri:wght@300;400;500;600;700&family=Mina:wght@400;700&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -228,8 +229,6 @@ header.top{
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
 
-/* Composer expansion editor: reveal only when draft exceeds eight lines. */
-#composerExpandBtn{display:none;flex:none;width:32px;height:32px;border:1px solid rgba(120,150,255,.45);border-radius:9px;background:#111;color:#cbd5ff;font-size:18px;line-height:1}#composerExpandBtn.is-visible{display:grid;place-items:center}#mosharrofExpandEditor{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78)}#mosharrofExpandEditor[aria-hidden="false"]{display:flex}#mosharrofExpandEditor .expand-panel{display:flex;flex-direction:column;gap:12px;width:min(720px,100%);max-height:85dvh;padding:16px;border:1px solid #393943;border-radius:16px;background:#171717}#mosharrofExpandEditor .expand-panel textarea{width:100%;min-height:45dvh;resize:vertical;padding:12px;border:1px solid #444;border-radius:10px;background:#080808;color:#f5f5f5;line-height:1.6}#mosharrofExpandEditor .expand-actions{display:flex;justify-content:flex-end;gap:8px}#mosharrofExpandEditor .expand-actions button{padding:9px 13px;border:1px solid #454550;border-radius:9px;background:#24242a}#mosharrofExpandEditor [data-expand-apply]{background:#253a73;border-color:#516fc4}
 </style>
 </head>
 <body>
@@ -282,10 +281,7 @@ header.top{
   var SESSIONS_KEY="mosharrof_chat_sessions_v1";
   var ACTIVE_SESSION_KEY="mosharrof_active_session_v1";
   var chatSessions=[];
-  function $(s){return document.querySelector(s);}
-  var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
-  var composerToolsMenu=$("#composerToolsMenu"),composerVoiceBtn=$("#composerVoiceBtn");
-  var imageInput=$("#imageInput"),imagePreview=$("#imagePreview"),previewImage=$("#previewImage"),previewName=$("#previewName"),removeImage=$("#removeImage");
+  function $veImage");
   var pendingImage=null;
   var leftBtn=$("#leftBtn"),rightBtn=$("#rightBtn"),scrim=$("#scrim"),dL=$("#drawerLeft"),dR=$("#drawerRight");
   var toastEl=$("#toast"),vStatus=$("#voiceStatus");
@@ -1265,20 +1261,10 @@ header.top{
   removeImage.onclick=clearImage;
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
   input.addEventListener("input",resize);
-  function closeComposerTools(){composerToolsMenu.classList.remove("open");plusBtn.setAttribute("aria-expanded","false");}
-  plusBtn.onclick=function(e){e.stopPropagation();var open=composerToolsMenu.classList.toggle("open");plusBtn.setAttribute("aria-expanded",open?"true":"false");};
-  composerToolsMenu.addEventListener("click",function(e){e.stopPropagation();});
-  composerVoiceBtn.onclick=startV;
-  document.addEventListener("click",function(e){if(!e.target.closest||!e.target.closest("#composerTools"))closeComposerTools();});
-  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeComposerTools();});
-  leftBtn.onclick=function(){updateMeta();openD("left");};
-  rightBtn.onclick=function(){openD("right");};
-  scrim.onclick=closeD;
-  document.addEventListener("click",function(e){var target=e.target.closest&&e.target.closest("button");if(!target)return;if(target.id==="cL"||target.id==="cR")closeD();if(target.id==="historyBtn")showHistory();if(target.id==="newChat")newChat();if(target.id==="clearMsg")clearMsg();if(target.id==="voiceBtn"){closeD();startV();}});
-  restoreMessages();initV();resize();input.focus();
-  if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
+  function closeComposerTools(){composerTools").catch(function(){});
 })();
 </script>
 <script src="./sidebar-recovery.js"></script>
+<script src="./composer-expansion.js" defer></script>
 </body>
 </html>
