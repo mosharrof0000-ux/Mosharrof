@@ -1,7 +1,6 @@
 from pathlib import Path
 import ast
 import json
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -28,12 +27,17 @@ def test_autonomous_engine_keeps_configured_fallback_order():
     assert cloudflare < groq < openrouter
 
 
-def test_gemini_structured_plan_accepts_literal_control_characters_in_strings():
-    # Regression for Gemini responses containing literal newlines/tabs in a
-    # generated file-content string. Default strict JSON parsing rejects these.
+def test_gemini_structured_plan_accepts_escaped_newlines_and_tabs_in_strings():
+    # JSON-escaped newlines/tabs are valid JSON, even with strict=True.
+    # The regression fix separately allows literal control characters from
+    # imperfect provider output via strict=False.
     raw = '{"summary":"generated file","files":[{"path":"docs/example.md","content":"line one\\nline two\\tindented"}]}'
-    with pytest.raises(json.JSONDecodeError):
-        json.loads(raw)
+    parsed = json.loads(raw)
+    assert parsed["files"][0]["content"] == "line one\nline two\tindented"
+
+
+def test_gemini_structured_plan_accepts_literal_control_characters_in_strings():
+    raw = '{"summary":"generated file","files":[{"path":"docs/example.md","content":"line one\nline two\tindented"}]}'
     parsed = json.loads(raw, strict=False)
     assert parsed["files"][0]["content"] == "line one\nline two\tindented"
 
