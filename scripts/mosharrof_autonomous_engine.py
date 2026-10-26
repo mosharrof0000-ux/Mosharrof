@@ -154,10 +154,12 @@ if data is None and provider_text is None:
     raise SystemExit(last_error or "No configured AI provider accepted the guarded planning request.")
 
 try:
+    # Gemini sometimes emits literal control characters inside generated file
+    # strings. Tolerate these while still validating the resulting plan below.
     if provider_text is not None:
-        proposal = json.loads(provider_text)
+        proposal = json.loads(provider_text, strict=False)
     else:
-        proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+        proposal = json.loads(data["candidates"][0]["content"]["parts"][0]["text"], strict=False)
 except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
     raise SystemExit(f"AI provider returned an invalid structured plan: {exc}")
 changes = proposal.get("files", [])
