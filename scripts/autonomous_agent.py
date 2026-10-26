@@ -59,5 +59,9 @@ subprocess.run(["git","remote","set-url","origin",f"https://x-access-token:{TOKE
 subprocess.run(["git","push","--set-upstream","origin",branch],check=True,env=env)
 subprocess.run(["gh","pr","create","--repo",REPO,"--base","main","--head",branch,"--title","Auto: verified Mosharrof improvement","--body",f"{summary}\n\nTests passed. Main was never edited directly."],check=True,env=env)
 pr=run("gh","pr","list","--repo",REPO,"--head",branch,"--json","number","--jq",".[0].number",env=env)
-subprocess.run(["gh","pr","merge",pr,"--repo",REPO,"--auto","--squash"],check=True,env=env)
+merge_result=subprocess.run(["gh","pr","merge",pr,"--repo",REPO,"--auto","--squash"],check=False,env=env)
+if merge_result.returncode != 0:
+    print(f"PR {pr} created and tests passed, but auto-merge was not enabled; leaving PR open for checks/review.")
+else:
+    print(f"Auto-merge enabled for PR {pr}")
 print("PR",pr)
