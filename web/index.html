@@ -227,7 +227,6 @@ header.top{
 .audio-setting-row label{font-size:12px;color:#e5e5e5;font-weight:650}
 .audio-setting-row small{font-size:10px;line-height:1.45;color:var(--muted)}
 .audio-setting-row select{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:#080808;color:#f5f5f5;padding:8px;font-size:12px}
-
 </style>
 </head>
 <body>
@@ -266,7 +265,6 @@ header.top{
   <aside class="drawer right" id="drawerRight" aria-hidden="true"></aside>
   <div class="scrim" id="scrim"></div>
   <div class="toast" id="toast"></div>
-
 </div>
 <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
@@ -278,7 +276,10 @@ header.top{
   var SESSIONS_KEY="mosharrof_chat_sessions_v1";
   var ACTIVE_SESSION_KEY="mosharrof_active_session_v1";
   var chatSessions=[];
-  function $veImage");
+  function $(s){return document.querySelector(s);}
+  var msgEl=$("#messages"),scrollEl=$("#chatScroll"),input=$("#input"),sendBtn=$("#sendBtn"),plusBtn=$("#plusBtn");
+  var composerToolsMenu=$("#composerToolsMenu"),composerVoiceBtn=$("#composerVoiceBtn");
+  var imageInput=$("#imageInput"),imagePreview=$("#imagePreview"),previewImage=$("#previewImage"),previewName=$("#previewName"),removeImage=$("#removeImage");
   var pendingImage=null;
   var leftBtn=$("#leftBtn"),rightBtn=$("#rightBtn"),scrim=$("#scrim"),dL=$("#drawerLeft"),dR=$("#drawerRight");
   var toastEl=$("#toast"),vStatus=$("#voiceStatus");
@@ -1239,13 +1240,23 @@ header.top{
       voiceRecorder.start(1000);
     }catch(error){voiceWanted=false;setVoiceButtonState(false);releaseVoiceStream();showVoiceMessage(audioErrorMessage(error));}
   }
-
   sendBtn.onclick=send;
   imageInput.addEventListener("change",function(e){readImage(e.target.files&&e.target.files[0]);closeComposerTools();});
   removeImage.onclick=clearImage;
   input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
   input.addEventListener("input",resize);
-  function closeComposerTools(){composerTools").catch(function(){});
+  function closeComposerTools(){composerToolsMenu.classList.remove("open");plusBtn.setAttribute("aria-expanded","false");}
+  plusBtn.onclick=function(e){e.stopPropagation();var open=composerToolsMenu.classList.toggle("open");plusBtn.setAttribute("aria-expanded",open?"true":"false");};
+  composerToolsMenu.addEventListener("click",function(e){e.stopPropagation();});
+  composerVoiceBtn.onclick=startV;
+  document.addEventListener("click",function(e){if(!e.target.closest||!e.target.closest("#composerTools"))closeComposerTools();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeComposerTools();});
+  leftBtn.onclick=function(){updateMeta();openD("left");};
+  rightBtn.onclick=function(){openD("right");};
+  scrim.onclick=closeD;
+  document.addEventListener("click",function(e){var target=e.target.closest&&e.target.closest("button");if(!target)return;if(target.id==="cL"||target.id==="cR")closeD();if(target.id==="historyBtn")showHistory();if(target.id==="newChat")newChat();if(target.id==="clearMsg")clearMsg();if(target.id==="voiceBtn"){closeD();startV();}});
+  restoreMessages();initV();resize();input.focus();
+  if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(function(){});
 })();
 </script>
 <script src="./sidebar-recovery.js"></script>
