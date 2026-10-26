@@ -13,6 +13,16 @@
     document.head.appendChild(organLoader);
   }
 
+  if (bootstrapScriptUrl && !window.__mosharrofVideoCuttingLoaderRequested) {
+    window.__mosharrofVideoCuttingLoaderRequested = true;
+    var videoLoader = document.createElement("script");
+    videoLoader.src = new URL("./video-cutting/loader.js", bootstrapScriptUrl).href;
+    videoLoader.addEventListener("error", function () {
+      console.error("[MOSHARROF Video Cutting] loader failed to load");
+    }, { once: true });
+    document.body.appendChild(videoLoader);
+  }
+
   var modules = [
     { title: "System & interface", items: [
       ["core", "মূল সমন্বয়", "⚙"], ["chat", "চ্যাট", "▤"], ["sidebar", "নেভিগেশন", "☷"]

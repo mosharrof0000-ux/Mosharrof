@@ -48,6 +48,10 @@ def main() -> int:
         "core/new-chat-floating/compact.css": "web/core/new-chat-floating/compact.css",
         "core/new-chat-floating/theme.css": "web/core/new-chat-floating/theme.css",
         "core/new-chat-floating/theme.js": "web/core/new-chat-floating/theme.js",
+        "core/video-cutting/loader.js": "web/video-cutting/loader.js",
+        "core/video-cutting/ui.js": "web/video-cutting/ui.js",
+        "core/video-cutting/download.js": "web/video-cutting/download.js",
+        "core/video-cutting/styles.css": "web/video-cutting/styles.css",
     }
     for source, destination in copies.items():
         src, dst = ROOT / source, ROOT / destination
