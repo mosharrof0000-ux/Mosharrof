@@ -29,15 +29,44 @@ dump_diagnostics() {
   LOGCAT_DUMPED=1
 }
 
+ensure_adb_server() {
+  # GitHub-hosted emulator runners can leave adb's local server unresponsive.
+  # Recover the host daemon with bounded attempts; never treat a missing device as ready.
+  local attempt state
+  for attempt in $(seq 1 5); do
+    if timeout 8s adb start-server >/dev/null 2>&1; then
+      state="$(timeout 8s adb get-state 2>/dev/null | tr -d '\r' || true)"
+      if [ "$state" = "device" ]; then return 0; fi
+    fi
+    echo "Recovering adb host daemon ($attempt/5)" >&2
+    timeout 5s adb kill-server >/dev/null 2>&1 || true
+    sleep 2
+  done
+  return 1
+}
+
 wait_for_adb() {
-  local attempt
+  local attempt state
   for attempt in $(seq 1 30); do
-    if timeout 8s adb get-state 2>/dev/null | grep -Fxq device; then return 0; fi
-    echo "Waiting for adb device ($attempt/30)"
+    state="$(timeout 8s adb get-state 2>/dev/null | tr -d '\r' || true)"
+    if [ "$state" = "device" ]; then return 0; fi
+    if [ "$attempt" -eq 1 ] || [ "$((attempt % 5))" -eq 0 ]; then
+      ensure_adb_server || true
+    fi
+    echo "Waiting for adb device ($attempt/30; state=${state:-unavailable})"
     sleep 2
   done
   echo "adb device did not become ready within 60 seconds" >&2
   return 1
+}
+
+assert_adb_healthy() {
+  local state
+  state="$(timeout 8s adb get-state 2>/dev/null | tr -d '\r' || true)"
+  if [ "$state" = "device" ]; then return 0; fi
+  echo "adb connection lost (state=${state:-unavailable}); attempting bounded recovery" >&2
+  ensure_adb_server
+  wait_for_adb
 }
 
 wait_for_boot() {
