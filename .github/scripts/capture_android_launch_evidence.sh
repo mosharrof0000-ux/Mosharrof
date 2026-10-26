@@ -3,6 +3,7 @@ set -euo pipefail
 
 OUT="${1:-artifacts/apk-webview-chat}"
 mkdir -p "$OUT"
+source scripts/android/android_anr_dialog_recovery.sh
 activity_status="NOT_CONFIRMED"
 launch_status="NOT_CAPTURED"
 ui_state="NOT_CHECKED"
@@ -32,8 +33,6 @@ printf '%s\n' "$launch_status" > "$OUT/launch-screenshot-status.txt"
 
 if timeout 15s adb shell uiautomator dump /sdcard/mosharrof-ui.xml >/dev/null 2>&1; then
   ui_text="$(timeout 10s adb shell cat /sdcard/mosharrof-ui.xml 2>/dev/null | tr -d '\r' || true)"
-  # Avoid grep -q over a pipe: with pipefail, the producer can receive SIGPIPE
-  # and terminate this evidence-capture script before status files are written.
   ui_text_lower="${ui_text,,}"
   if [[ "$ui_text_lower" == *"isn't responding"* || "$ui_text_lower" == *"not responding"* || "$ui_text_lower" == *"process system"* ]]; then
     ui_state="SYSTEM_ANR_DIALOG"
@@ -46,4 +45,7 @@ else
   ui_state="UI_HIERARCHY_UNAVAILABLE"
 fi
 printf '%s\n' "$ui_state" > "$OUT/launch-ui-diagnostic.txt"
+# Keep original ANR classification as a failing check, but dismiss the captured
+# system dialog so the real chat round-trip can still collect independent evidence.
+recover_anr_dialog_for_diagnostics "$OUT" "$ui_state"
 adb shell rm -f /sdcard/mosharrof-launch.png /sdcard/mosharrof-ui.xml >/dev/null 2>&1 || true
