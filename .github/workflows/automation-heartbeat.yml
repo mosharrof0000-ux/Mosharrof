@@ -1,0 +1,58 @@
+name: MOSHARROF Automation Heartbeat (15m)
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: mosharrof-automation-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  inspect-and-recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect automation engines and recover stale backlog worker
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          now=$(date -u +%s)
+          parallel_json=$(gh api "repos/$GH_REPO/actions/workflows/parallel-engine-builder.yml/runs?per_page=20")
+          automatic_json=$(gh api "repos/$GH_REPO/actions/workflows/automatic-work-engine.yml/runs?per_page=20")
+
+          echo "=== Parallel Engine Builder recent runs ==="
+          echo "$parallel_json" | jq -r '.workflow_runs[:5][] | [.id, .event, .status, (.conclusion // "running"), .created_at, .html_url] | @tsv'
+          echo "=== Automatic Work Engine recent runs ==="
+          echo "$automatic_json" | jq -r '.workflow_runs[:5][] | [.id, .event, .status, (.conclusion // "running"), .created_at, .html_url] | @tsv'
+
+          # Do not fan out another expensive model run while a worker is already active.
+          active=$(echo "$parallel_json" | jq '[.workflow_runs[] | select(.status == "in_progress" || .status == "queued")] | length')
+          if [ "$active" -gt 0 ]; then
+            echo "Parallel worker is already queued/running; no duplicate dispatch."
+            exit 0
+          fi
+
+          # Recover the backlog worker only when its latest successful run is older than 3 hours.
+          last_success=$(echo "$parallel_json" | jq -r '[.workflow_runs[] | select(.conclusion == "success" and .head_branch == "main") | .created_at] | sort | last // empty')
+          if [ -z "$last_success" ]; then
+            age=999999
+          else
+            last_epoch=$(date -u -d "$last_success" +%s)
+            age=$((now - last_epoch))
+          fi
+
+          if [ "$age" -ge 10800 ]; then
+            echo "No successful main-branch backlog run in the last 3 hours; dispatching one recovery run."
+            gh workflow run parallel-engine-builder.yml --ref main
+          else
+            echo "Backlog worker has a recent successful main-branch run; no dispatch needed."
+          fi
