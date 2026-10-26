@@ -96,9 +96,10 @@ jobs:
       - name: Install APK and test real chat inside its WebView
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          # API 30/default repeatedly produced system-wide ANRs during cold boot.
-          # Use a current Google APIs image to validate the same real-chat flow on a supported modern emulator.
-          api-level: 35
+          # API 30 repeatedly showed system-wide ANRs; API 35 has now also produced
+          # a system_server/network-stack crash during APK install. Try API 34 as an
+          # intermediate image while keeping every application-level QA assertion intact.
+          api-level: 34
           target: google_apis
           arch: x86_64
           cores: 4
