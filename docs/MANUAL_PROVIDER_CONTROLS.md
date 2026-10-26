@@ -13,6 +13,4 @@
 - Auto routing still tries Gemini, Cloudflare Workers AI, Groq, and OpenRouter in server-side order when the relevant provider is configured. Hiding a manual option does not disable that automatic fallback.
 - A model should be restored to the manual menu only after a real provider request succeeds and the result is captured in CI/health evidence; configuration presence alone is not a successful inference test.
 
-## Provider availability
-
-A menu option does not guarantee the provider's credentials/quota are configured. A selected provider that is unavailable reports its failure rather than silently pretending a different provider was used. ElevenLabs remains subject to the Worker paid-provider policy. Transcription currently supports Gemini model selection and its existing model fallback; it does not pretend Cloudflare or Microsoft transcription endpoints exist when they are not implemented in the Worker.
+See [Provider Availability and Verification](MANUAL_PROVIDER_AVAILABILITY.md) for credential, quota, and live-inference rules.
