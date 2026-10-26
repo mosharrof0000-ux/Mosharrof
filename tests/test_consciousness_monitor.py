@@ -31,3 +31,15 @@ def test_missing_brain_is_degraded_not_falsely_injected():
     assert report["state"] == "DEGRADED"
     assert report["entities"][0]["brain_declared"] is False
     assert report["entities"][0]["missing"] == ["brain"]
+
+
+def test_missing_scope_is_degraded():
+    entity = {
+        "id": "example_no_scope",
+        "brain": "example",
+        "permission_profile": "ui",
+        "delete_allowed": False,
+    }
+    report = EntityConsciousnessMonitor([entity]).scan()
+    assert report["state"] == "DEGRADED"
+    assert "scope" in report["entities"][0]["missing"]
