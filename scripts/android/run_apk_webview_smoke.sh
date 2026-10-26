@@ -13,9 +13,6 @@ finish() {
   trap - EXIT ERR
   if [ "$status" -ne 0 ] && [ "$LOGCAT_DUMPED" -eq 0 ]; then
     dump_diagnostics "exit_status=$status step=$CURRENT_STEP"
-  elif [ "$LOGCAT_DUMPED" -eq 0 ]; then
-    timeout 30s adb logcat -d -v threadtime > "$OUT/adb-logcat-full.txt" 2>&1 || true
-    tail -n 12000 "$OUT/adb-logcat-full.txt" > "$OUT/adb-logcat-tail.txt" 2>/dev/null || true
   fi
   bash .github/scripts/finalize_android_qa.sh "$status" "$OUT" || true
   exit "$status"
