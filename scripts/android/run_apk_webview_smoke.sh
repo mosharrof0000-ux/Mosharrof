@@ -25,6 +25,7 @@ test -s artifacts/apk/app-debug.apk
 CURRENT_STEP="wait for adb and Android boot"
 wait_for_adb
 wait_for_boot
+assert_adb_healthy
 CURRENT_STEP="install APK"
 timeout 90s adb install -r artifacts/apk/app-debug.apk
 timeout 10s adb shell pm path com.mosharrof.ai | grep 'package:' >/dev/null
@@ -32,11 +33,15 @@ CURRENT_STEP="clear prior logcat and launch app"
 adb logcat -c || true
 timeout 20s adb shell am start -n com.mosharrof.ai/.MainActivity
 bash .github/scripts/capture_android_launch_evidence.sh "$OUT"
+CURRENT_STEP="verify adb after launch evidence"
+assert_adb_healthy
 CURRENT_STEP="wait for app process"
 app_pid="$(wait_for_app_process)"
 CURRENT_STEP="wait for WebView DevTools socket"
 socket="webview_devtools_remote_${app_pid}"
 wait_for_devtools_socket "$socket"
+CURRENT_STEP="verify adb before CDP forwarding"
+assert_adb_healthy
 CURRENT_STEP="forward CDP port 9222"
 adb forward --remove tcp:9222 >/dev/null 2>&1 || true
 timeout 10s adb forward tcp:9222 "localabstract:$socket"
