@@ -35,7 +35,7 @@ def test_gemini_structured_plan_accepts_literal_control_characters_in_strings():
     with pytest.raises(json.JSONDecodeError):
         json.loads(raw)
     parsed = json.loads(raw, strict=False)
-    assert parsed["files"][0]["content"] == "line one\\nline two\\tindented"
+    assert parsed["files"][0]["content"] == "line one\nline two\tindented"
 
 
 def test_autonomous_engine_uses_lenient_parse_for_both_provider_paths():
