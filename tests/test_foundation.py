@@ -18,6 +18,13 @@ def test_manifest_and_registry_are_valid():
     assert all(not entity.get("delete_allowed", False) for entity in registry["entities"])
 
 
+def test_all_entities_have_valid_scope_format():
+    registry = json.loads(Path("config/entity_registry.json").read_text(encoding="utf-8"))
+    for entity in registry["entities"]:
+        assert "scope" in entity
+        assert entity["scope"].startswith(entity["id"])
+
+
 def test_brain_adapter_preserves_entity_identity():
     adapter = BrainAdapter("chat")
     assert adapter.describe()["model_independent_identity"] is True
