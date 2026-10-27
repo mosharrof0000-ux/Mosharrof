@@ -73,10 +73,12 @@ def _load_cdp_with_fake_websocket(monkeypatch, create_connection):
 
 def test_cdp_connect_retries_two_transient_timeouts_then_succeeds(monkeypatch):
     attempts = []
+    connection_options = []
     socket = types.SimpleNamespace(close=lambda: None)
 
-    def fake_create_connection(url, timeout):
+    def fake_create_connection(url, timeout, **kwargs):
         attempts.append((url, timeout))
+        connection_options.append(kwargs)
         if len(attempts) < 3:
             raise TimeoutError("Connection timed out")
         return socket
@@ -87,6 +89,7 @@ def test_cdp_connect_retries_two_transient_timeouts_then_succeeds(monkeypatch):
     client = module.PageCDP("ws://127.0.0.1:9222/devtools/page/test", events)
 
     assert len(attempts) == 3
+    assert all(options.get("suppress_origin") is True for options in connection_options)
     assert client.ws is socket
     assert [event["attempt"] for event in events] == [1, 2]
     assert all(event["method"] == "websocket_connect" for event in events)
@@ -95,9 +98,11 @@ def test_cdp_connect_retries_two_transient_timeouts_then_succeeds(monkeypatch):
 
 def test_cdp_connect_stops_after_three_total_attempts(monkeypatch):
     attempts = []
+    connection_options = []
 
-    def fake_create_connection(url, timeout):
+    def fake_create_connection(url, timeout, **kwargs):
         attempts.append(url)
+        connection_options.append(kwargs)
         raise TimeoutError("Connection timed out")
 
     module, timeout_error = _load_cdp_with_fake_websocket(monkeypatch, fake_create_connection)
@@ -107,6 +112,7 @@ def test_cdp_connect_stops_after_three_total_attempts(monkeypatch):
         module.PageCDP("ws://127.0.0.1:9222/devtools/page/test", events)
 
     assert len(attempts) == 3
+    assert all(options.get("suppress_origin") is True for options in connection_options)
     assert len(events) == 2
 
 
@@ -140,7 +146,7 @@ def test_chat_layout_compatibility_forces_viewport_sizing():
 
 def test_answer_visibility_rejects_one_pixel_collapsed_layout(monkeypatch):
     module, _ = _load_cdp_with_fake_websocket(
-        monkeypatch, lambda _url, _timeout: types.SimpleNamespace(close=lambda: None)
+        monkeypatch, lambda _url, _timeout, **_kwargs: types.SimpleNamespace(close=lambda: None)
     )
     collapsed = {
         "visible": True,
@@ -153,7 +159,7 @@ def test_answer_visibility_rejects_one_pixel_collapsed_layout(monkeypatch):
 
 def test_answer_visibility_accepts_readable_in_viewport_layout(monkeypatch):
     module, _ = _load_cdp_with_fake_websocket(
-        monkeypatch, lambda _url, _timeout: types.SimpleNamespace(close=lambda: None)
+        monkeypatch, lambda _url, _timeout, **_kwargs: types.SimpleNamespace(close=lambda: None)
     )
     readable = {
         "visible": True,
@@ -166,7 +172,7 @@ def test_answer_visibility_accepts_readable_in_viewport_layout(monkeypatch):
 
 def test_chat_layout_geometry_fails_closed_when_containers_collapse(monkeypatch):
     module, _ = _load_cdp_with_fake_websocket(
-        monkeypatch, lambda _url, _timeout: types.SimpleNamespace(close=lambda: None)
+        monkeypatch, lambda _url, _timeout, **_kwargs: types.SimpleNamespace(close=lambda: None)
     )
 
     class FakeCDP:
