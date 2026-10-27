@@ -38,24 +38,34 @@ done
 printf '%s\n' "$launch_status" > "$OUT/launch-screenshot-status.txt"
 
 # uiautomator can transiently time out while Android is settling; retry before
-# classifying the hierarchy as unavailable. Unknown remains a failure, not a pass.
+# classifying the hierarchy as unavailable. Preserve the captured hierarchy for diagnosis.
 for attempt in 1 2 3; do
   if timeout 25s adb shell uiautomator dump /sdcard/mosharrof-ui.xml >/dev/null 2>&1; then
-    ui_text="$(timeout 15s adb shell cat /sdcard/mosharrof-ui.xml 2>/dev/null | tr -d '\r' || true)"
-    ui_text_lower="${ui_text,,}"
-    if [[ "$ui_text_lower" == *"isn't responding"* || "$ui_text_lower" == *"not responding"* || "$ui_text_lower" == *"process system"* || ( "$ui_text_lower" == *"wait"* && "$ui_text_lower" == *"close app"* ) ]]; then
-      ui_state="SYSTEM_ANR_DIALOG"
-    else
-      ui_state="NO_SYSTEM_ANR_DIALOG"
-    fi
-    break
+    timeout 15s adb shell cat /sdcard/mosharrof-ui.xml > "$OUT/launch-ui-hierarchy.xml" 2>/dev/null || true
+    if [ -s "$OUT/launch-ui-hierarchy.xml" ]; then break; fi
   fi
   sleep 2
 done
-if [[ "$ui_state" == "NOT_CHECKED" ]]; then
-  ui_state="UI_HIERARCHY_UNAVAILABLE"
-fi
-printf '%s\n' "$ui_state" > "$OUT/launch-ui-diagnostic.txt"
+
+# The screenshot can show a system ANR even when uiautomator omits its dialog.
+# Cross-check the focused-window dump before recording a clean UI state.
+timeout 12s adb shell dumpsys window windows > "$OUT/launch-window-dump.txt" 2>/dev/null || true
+ui_state="$(python - "$OUT/launch-ui-hierarchy.xml" "$OUT/launch-window-dump.txt" <<'PY'
+import sys
+from pathlib import Path
+sys.path.insert(0, ".github/scripts")
+from android_qa_cdp import classify_launch_ui_state
+
+def read(path):
+    try:
+        return Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+print(classify_launch_ui_state(read(sys.argv[1]), read(sys.argv[2])))
+PY
+)"
+
 # Keep original ANR classification as a failing check, but dismiss the captured
 # system dialog so the real chat round-trip can still collect independent evidence.
 recover_anr_dialog_for_diagnostics "$OUT" "$ui_state"
