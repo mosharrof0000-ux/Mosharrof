@@ -182,3 +182,22 @@ def test_chat_layout_geometry_fails_closed_when_containers_collapse(monkeypatch)
             return {"viewportWidth": 320, "scrollWidth": 320, "messagesWidth": 28, "ready": False}
 
     assert module.inspect_chat_layout_geometry(FakeCDP())["ready"] is False
+
+
+def test_launch_ui_classifier_detects_window_anr_when_hierarchy_misses_it(monkeypatch):
+    module, _ = _load_cdp_with_fake_websocket(
+        monkeypatch, lambda _url, _timeout, **_kwargs: types.SimpleNamespace(close=lambda: None)
+    )
+    clean_hierarchy = '<hierarchy><node text="MOSHARROF" /></hierarchy>'
+    focused_window = "mCurrentFocus=Window{Application Not Responding: Process system isn't responding}"
+
+    assert module.classify_launch_ui_state(clean_hierarchy, focused_window) == "SYSTEM_ANR_DIALOG"
+
+
+def test_launch_ui_classifier_keeps_unavailable_hierarchy_as_unknown(monkeypatch):
+    module, _ = _load_cdp_with_fake_websocket(
+        monkeypatch, lambda _url, _timeout, **_kwargs: types.SimpleNamespace(close=lambda: None)
+    )
+
+    assert module.classify_launch_ui_state("", "") == "UI_HIERARCHY_UNAVAILABLE"
+    assert module.classify_launch_ui_state('<hierarchy><node text="MOSHARROF" /></hierarchy>', "") == "NO_SYSTEM_ANR_DIALOG"
