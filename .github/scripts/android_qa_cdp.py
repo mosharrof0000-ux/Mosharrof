@@ -9,6 +9,20 @@ from pathlib import Path
 
 import websocket
 
+
+def classify_launch_ui_state(hierarchy_text: str, window_text: str) -> str:
+    """Detect Android ANR dialogs using both accessibility and focused-window evidence."""
+    hierarchy = str(hierarchy_text or "")
+    window = str(window_text or "")
+    combined = " ".join(f"{hierarchy}\n{window}".casefold().split())
+    markers = ("isn't responding", "is not responding", "not responding", "process system", "application not responding")
+    if any(marker in combined for marker in markers):
+        return "SYSTEM_ANR_DIALOG"
+    if not hierarchy.strip():
+        return "UI_HIERARCHY_UNAVAILABLE"
+    return "NO_SYSTEM_ANR_DIALOG"
+
+
 class PageCDP:
     """Minimal page-target CDP client with bounded retries for idempotent commands."""
 
