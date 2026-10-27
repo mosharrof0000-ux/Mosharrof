@@ -18,7 +18,7 @@ class PageCDP:
         self.ws = None
         for attempt in range(3):
             try:
-                self.ws = websocket.create_connection(ws_url, timeout=15)
+                self.ws = websocket.create_connection(ws_url, timeout=15, suppress_origin=True)
                 break
             except (websocket.WebSocketTimeoutException, OSError) as exc:
                 if attempt >= 2:
