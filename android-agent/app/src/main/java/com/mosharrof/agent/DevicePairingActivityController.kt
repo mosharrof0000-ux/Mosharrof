@@ -26,7 +26,7 @@ class DevicePairingActivityController(
     private val handler = Handler(Looper.getMainLooper())
     private var polling = false
     private var pollInFlight = false
-    private val pollTask = object : Runnable {
+    private val pollTask: Runnable = object : Runnable {
         override fun run() {
             if (!polling || pollInFlight) return
             pollInFlight = true
