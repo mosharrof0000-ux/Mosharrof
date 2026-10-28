@@ -31,7 +31,7 @@ timeout 90s adb install -r artifacts/apk/app-debug.apk
 timeout 10s adb shell pm path com.mosharrof.ai | grep 'package:' >/dev/null
 CURRENT_STEP="clear prior logcat and launch app"
 adb logcat -c || true
-timeout 20s adb shell am start -n com.mosharrof.ai/.MainActivity
+timeout 20s adb shell am start -n com.mosharrof.ai/.MainActivity --ez mosharrof_qa_text_chat true
 bash .github/scripts/capture_android_launch_evidence.sh "$OUT"
 CURRENT_STEP="verify adb after launch evidence"
 assert_adb_healthy

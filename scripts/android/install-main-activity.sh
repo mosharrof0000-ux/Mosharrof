@@ -68,13 +68,20 @@ public class MainActivity extends BridgeActivity {
             controller.setAppearanceLightNavigationBars(lightTheme);
         }
         handleVoiceIntent(getIntent());
-        beginPermissionSetup();
+        // Text-chat QA must not block WebView startup on optional voice/contact permission dialogs.
+        if (!isQaTextChatMode()) beginPermissionSetup();
 
     }
 
     @Override public void onResume() {
         super.onResume();
-        if (Settings.canDrawOverlays(this)) startVoiceOverlay();
+        if (!isQaTextChatMode() && Settings.canDrawOverlays(this)) startVoiceOverlay();
+    }
+
+    private boolean isQaTextChatMode() {
+        return getIntent() != null
+            && getIntent().getBooleanExtra("mosharrof_qa_text_chat", false)
+            && (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
     private void beginPermissionSetup() {
@@ -204,6 +211,8 @@ grep -q 'android.permission.SYSTEM_ALERT_WINDOW' android/app/src/main/AndroidMan
 grep -q 'android.permission.READ_CONTACTS' android/app/src/main/AndroidManifest.xml
 grep -q 'android.permission.CALL_PHONE' android/app/src/main/AndroidManifest.xml
 grep -q 'beginPermissionSetup' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+grep -q 'getBooleanExtra("mosharrof_qa_text_chat", false)' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
+grep -q 'ApplicationInfo.FLAG_DEBUGGABLE' android/app/src/main/java/com/mosharrof/ai/MainActivity.java
 grep -q 'isCallCommand' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
 grep -q 'ContactsContract.CommonDataKinds.Phone.CONTENT_URI' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java
 grep -q 'Intent.ACTION_CALL' android/app/src/main/java/com/mosharrof/ai/VoiceCommandActivity.java

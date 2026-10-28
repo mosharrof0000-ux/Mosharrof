@@ -201,3 +201,14 @@ def test_launch_ui_classifier_keeps_unavailable_hierarchy_as_unknown(monkeypatch
 
     assert module.classify_launch_ui_state("", "") == "UI_HIERARCHY_UNAVAILABLE"
     assert module.classify_launch_ui_state('<hierarchy><node text="MOSHARROF" /></hierarchy>', "") == "NO_SYSTEM_ANR_DIALOG"
+
+
+def test_text_chat_qa_mode_is_debug_only_and_skips_optional_permission_onboarding():
+    installer = (ROOT / "scripts" / "android" / "install-main-activity.sh").read_text(encoding="utf-8")
+    smoke = (ROOT / "scripts" / "android" / "run_apk_webview_smoke.sh").read_text(encoding="utf-8")
+
+    assert 'getBooleanExtra("mosharrof_qa_text_chat", false)' in installer
+    assert "ApplicationInfo.FLAG_DEBUGGABLE" in installer
+    assert "if (!isQaTextChatMode()) beginPermissionSetup();" in installer
+    assert "if (!isQaTextChatMode() && Settings.canDrawOverlays(this)) startVoiceOverlay();" in installer
+    assert "--ez mosharrof_qa_text_chat true" in smoke
