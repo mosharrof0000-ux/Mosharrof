@@ -96,16 +96,16 @@ jobs:
       - name: Install APK and test real chat inside its WebView
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          # The API 34 Google APIs image repeatedly timed out during APK install while
-          # system_server, GMS, keyboard and other system apps reported ANRs. Use the
-          # same API/ABI with the lean default image to remove unnecessary GMS background
-          # services; keep all app/chat acceptance assertions unchanged.
+          # The API 34 default image removed GMS but the runner still hit system-service
+          # ANRs and ADB "Broken pipe (32)" while unlocking the booted emulator. The
+          # hosted runner is resource-limited, so use a smaller guest profile to reduce
+          # host/guest contention; keep API/ABI and every chat acceptance assertion intact.
           api-level: 34
           target: default
           arch: x86_64
-          cores: 4
-          ram-size: 4096M
-          heap-size: 1024M
+          cores: 2
+          ram-size: 3072M
+          heap-size: 512M
           emulator-port: 5554
           emulator-boot-timeout: 900
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
