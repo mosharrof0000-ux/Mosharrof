@@ -184,6 +184,12 @@ def test_chat_layout_geometry_fails_closed_when_containers_collapse(monkeypatch)
     assert module.inspect_chat_layout_geometry(FakeCDP())["ready"] is False
 
 
+def test_launch_capture_persists_ui_classification_for_failure_report():
+    capture = (ROOT / ".github" / "scripts" / "capture_android_launch_evidence.sh").read_text(encoding="utf-8")
+
+    assert 'printf \'%s\\n\' "$ui_state" > "$OUT/launch-ui-diagnostic.txt"' in capture
+
+
 def test_launch_ui_classifier_detects_window_anr_when_hierarchy_misses_it(monkeypatch):
     module, _ = _load_cdp_with_fake_websocket(
         monkeypatch, lambda _url, _timeout, **_kwargs: types.SimpleNamespace(close=lambda: None)
