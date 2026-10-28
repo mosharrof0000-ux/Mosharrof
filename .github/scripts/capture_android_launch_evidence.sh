@@ -68,5 +68,6 @@ PY
 
 # Keep original ANR classification as a failing check, but dismiss the captured
 # system dialog so the real chat round-trip can still collect independent evidence.
+printf '%s\n' "$ui_state" > "$OUT/launch-ui-diagnostic.txt"
 recover_anr_dialog_for_diagnostics "$OUT" "$ui_state"
 adb shell rm -f /sdcard/mosharrof-launch.png /sdcard/mosharrof-ui.xml >/dev/null 2>&1 || true
