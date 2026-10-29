@@ -38,7 +38,14 @@ if(!skipSave)''',
     1
 )
 # Let the native Android voice manager submit speech transcripts through the existing chat pipeline.
-bridge = '''function routeAndroidAgentCommand(command) {
+bridge = '''window.mosharrofAppendNativeResult = function (message) {
+  try {
+    if (typeof addMsg === "function") addMsg("ai", String(message || "Android কাজের ফল পাওয়া যায়নি।"));
+  } catch (error) {
+    console.error("Native Android result could not be added to chat", error);
+  }
+};
+function routeAndroidAgentCommand(command) {
   var api = window.MosharrofAndroidAgentCommandRouter;
   if (!api) return null;
   if (!window.mosharrofAndroidAgentRouterInstance) {

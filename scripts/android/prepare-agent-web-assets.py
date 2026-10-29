@@ -9,7 +9,8 @@ assets = (
     "android-agent-executor-recovery.js", "android-agent-executor.js",
     "android-agent-recovery.js", "android-agent-memory.js",
     "android-agent-memory-ui.js", "android-agent-task-planner.js",
-    "android-agent-file-command-router.js", "android-agent-command-router.js",
+    "android-agent-file-command-router.js", "android-app-package-command-router.js",
+    "android-agent-command-router.js",
 )
 for name in assets:
     source = core / name
@@ -27,7 +28,8 @@ scripts = (
     "android-agent-executor-recovery.js", "android-agent-executor.js",
     "android-agent-recovery.js", "android-agent-memory.js",
     "android-agent-memory-ui.js", "android-agent-task-planner.js",
-    "android-agent-file-command-router.js", "android-agent-command-router.js",
+    "android-agent-file-command-router.js", "android-app-package-command-router.js",
+    "android-agent-command-router.js",
 )
 for script in scripts:
     tag = f'<script src="./{script}"></script>'
