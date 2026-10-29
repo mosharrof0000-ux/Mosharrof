@@ -31,7 +31,7 @@ jobs:
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: Checkout APK source revision
         uses: actions/checkout@v4
@@ -62,22 +62,38 @@ jobs:
           github-token: ${{ github.token }}
           path: artifacts/apk
 
-      - name: Download APK from the matching branch build
+      - name: Select APK matching app-source changes (or main for test-only PRs)
         if: github.event_name == 'push' || github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          SOURCE_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'origin/main' }}
         run: |
           set -euo pipefail
-          run_id=""
-          for attempt in $(seq 1 150); do
-            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
-            if [ -n "$run_id" ]; then break; fi
-            sleep 10
-          done
-          test -n "$run_id"
-          mkdir -p artifacts/apk
+          mkdir -p artifacts/apk artifacts/apk-webview-chat
+          changed_files="$(git diff --name-only "${SOURCE_BASE_SHA}...${SOURCE_SHA}")"
+          if printf '%s\n' "$changed_files" | grep -Eq '^(android/|web/|organs/|entities/|core/|native/|config/|scripts/android/|scripts/prepare_web_organ_runtime\.py$|scripts/mosharrof_registry\.py$|scripts/manual_provider_runtime_patch\.py$|scripts/mosharrof_size_gate\.py$|\.github/workflows/build-apk\.yml$)'; then
+            echo "APK-affecting source changes detected; require a successful build for exact head $SOURCE_SHA."
+            run_id=""
+            for attempt in $(seq 1 90); do
+              run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
+              if [ -n "$run_id" ]; then break; fi
+              sleep 10
+            done
+            if [ -z "$run_id" ]; then
+              echo "::error::APK-affecting changes were detected, but no successful exact-head APK build appeared within 15 minutes."
+              exit 1
+            fi
+          else
+            echo "No APK build inputs changed; using the latest successful main APK for the QA harness-only change."
+            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+            if [ -z "$run_id" ]; then
+              echo "::error::No successful main APK build is available for this harness-only change."
+              exit 1
+            fi
+          fi
+          gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --json databaseId,headSha,headBranch,name,conclusion --jq '{run_id: .databaseId, head_sha: .headSha, branch: .headBranch, workflow: .name, conclusion: .conclusion}' > artifacts/apk-webview-chat/apk-source.json
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
           test -s artifacts/apk/app-debug.apk
 
@@ -96,16 +112,15 @@ jobs:
       - name: Install APK and test real chat inside its WebView
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          # The API 34 default image removed GMS but the runner still hit system-service
-          # ANRs and ADB "Broken pipe (32)" while unlocking the booted emulator. The
-          # hosted runner is resource-limited, so use a smaller guest profile to reduce
-          # host/guest contention; keep API/ABI and every chat acceptance assertion intact.
-          api-level: 34
+          # API 34 produced repeated system_server/System UI ANRs and a WebView renderer
+          # crash in the 2026-10-28 artifact (CPU pressure exceeded 80%; no app CDP socket).
+          # API 30 previously rendered the app/composer; bounded CDP retries are now in place.
+          api-level: 30
           target: default
           arch: x86_64
-          cores: 2
+          cores: 3
           ram-size: 3072M
-          heap-size: 512M
+          heap-size: 768M
           emulator-port: 5554
           emulator-boot-timeout: 900
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
