@@ -7,14 +7,16 @@ Playwright CDP setup is not supported by Android WebView's browser-context API.
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import time
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.request import urlopen
 
-import websocket
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / ".github" / "scripts"))
+from android_qa_cdp import PageCDP, answer_is_visibly_rendered, inspect_answer_visibility, inspect_chat_layout_geometry, resolve_provider
+from android_qa_targets import fetch_webview_targets
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
@@ -37,6 +39,16 @@ report = {
         "credentials_logged": False,
         "physical_phone_test": False,
     },
+    "launch_evidence": {
+        "screenshot_status": (out / "launch-screenshot-status.txt").read_text(encoding="utf-8").strip()
+            if (out / "launch-screenshot-status.txt").is_file() else "NOT_CAPTURED",
+        "activity_status": (out / "launch-activity-status.txt").read_text(encoding="utf-8").strip()
+            if (out / "launch-activity-status.txt").is_file() else "NOT_CONFIRMED",
+        "ui_state": (out / "launch-ui-diagnostic.txt").read_text(encoding="utf-8").strip()
+            if (out / "launch-ui-diagnostic.txt").is_file() else "NOT_CHECKED",
+    },
+    "stage": "initializing",
+    "cdp_retry_events": [],
     "checks": [],
     "errors": [],
 }
@@ -48,58 +60,31 @@ def record(name: str, passed: bool, detail: str = "") -> None:
         report["errors"].append({"check": name, "detail": detail})
 
 
-class PageCDP:
-    """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
-
-    def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
-        self.next_id = 0
-
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
-        self.next_id += 1
-        command_id = self.next_id
-        self.ws.settimeout(timeout)
-        self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            message = json.loads(self.ws.recv())
-            if message.get("id") != command_id:
-                continue
-            if "error" in message:
-                raise RuntimeError(f"CDP {method} failed: {message['error']}")
-            return message.get("result", {})
-        raise TimeoutError(f"Timed out waiting for CDP command {method}")
-
-    def evaluate(self, expression: str, timeout: float = 15):
-        result = self.command(
-            "Runtime.evaluate",
-            {"expression": expression, "returnByValue": True, "awaitPromise": True},
-            timeout=timeout,
-        )
-        if "exceptionDetails" in result:
-            raise RuntimeError(f"Page JavaScript exception: {result['exceptionDetails']}")
-        return result.get("result", {}).get("value")
-
-    def screenshot(self, path: Path) -> None:
-        result = self.command("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
-        path.write_bytes(base64.b64decode(result["data"]))
-
-    def close(self) -> None:
-        self.ws.close()
-
-
 def get_targets() -> list[dict]:
-    target_file = out / "webview-targets.json"
-    if target_file.is_file():
-        return json.loads(target_file.read_text(encoding="utf-8"))
-    endpoint = args.cdp_endpoint.rstrip("/") + "/json/list"
-    with urlopen(endpoint, timeout=15) as response:
-        return json.load(response)
+    return fetch_webview_targets(args.cdp_endpoint, out / "webview-targets.json")
 
 
 def main() -> int:
     cdp = None
     try:
+        report["stage"] = "discovering_webview_target"
+        activity_status = report["launch_evidence"]["activity_status"]
+        record("launch_activity_displayed", activity_status == "DISPLAYED",
+               f"MainActivity first-display status={activity_status}")
+        launch_png = out / "apk-webview-launch.png"
+        launch_captured = (report["launch_evidence"]["screenshot_status"] == "CAPTURED"
+                           and launch_png.is_file() and launch_png.stat().st_size > 100)
+        record("launch_screenshot_captured", launch_captured,
+               "Launch screenshot captured before chat interaction" if launch_captured
+               else "Launch screenshot missing/invalid; see launch-screenshot-status.txt")
+        ui_state = report["launch_evidence"]["ui_state"]
+        if ui_state == "SYSTEM_ANR_DIALOG":
+            report["launch_evidence"]["warning"] = "Android system/UI ANR dialog detected; chat result is evaluated separately"
+            record("launch_ui_state_clean", False, "Android system/UI ANR dialog detected in launch UI")
+        elif ui_state == "NO_SYSTEM_ANR_DIALOG":
+            record("launch_ui_state_clean", True, "No Android system/UI ANR dialog detected in launch UI")
+        else:
+            record("launch_ui_state_clean", False, "Launch UI classification unavailable; see launch-ui-diagnostic.txt")
         targets = get_targets()
         target = next(
             (item for item in targets if item.get("type") == "page" and
@@ -111,31 +96,58 @@ def main() -> int:
         if target is None:
             return 1
 
-        cdp = PageCDP(target["webSocketDebuggerUrl"])
-        cdp.command("Page.enable")
-        cdp.command("Runtime.enable")
+        report["stage"] = "connecting_cdp"
+        cdp = PageCDP(target["webSocketDebuggerUrl"], report["cdp_retry_events"])
+        cdp.command("Page.enable", retries=2)
+        cdp.command("Runtime.enable", retries=2)
         try:
-            cdp.command("Page.bringToFront", timeout=5)
+            cdp.command("Page.bringToFront", timeout=5, retries=1)
         except Exception:
             pass
 
+        report["stage"] = "checking_chat_composer"
         deadline = time.monotonic() + 30
-        ready = False
+        layout_ready = False
+        composer_ready = False
         while time.monotonic() < deadline:
-            ready = bool(cdp.evaluate(
-                "Boolean(document.querySelector('#input') && document.querySelector('#sendBtn') && "
-                "document.querySelector('#input').getClientRects().length)"
+            layout_ready = bool(cdp.evaluate(
+                "window.__mosharrofChatLayoutCompatReady === true",
+                retry_safe=True,
             ))
-            if ready:
+            composer_ready = bool(cdp.evaluate(
+                "Boolean(document.querySelector('#input') && document.querySelector('#sendBtn') && "
+                "document.querySelector('#input').getClientRects().length)",
+                retry_safe=True,
+            ))
+            if layout_ready and composer_ready:
                 break
             time.sleep(0.5)
-        record("chat_composer_visible_in_apk", ready, "Visible #input and #sendBtn found in installed app WebView")
-        if not ready:
+        record("chat_layout_compat_ready", layout_ready,
+               "Explicit chat sizing fallback initialized" if layout_ready
+               else "Chat sizing compatibility module did not initialize")
+        record("chat_composer_visible_in_apk", composer_ready,
+               "Visible #input and #sendBtn found in installed app WebView" if composer_ready
+               else "Chat composer not visible in installed app WebView")
+        if not layout_ready:
+            raise TimeoutError("Chat layout compatibility module did not initialize")
+        if not composer_ready:
             raise TimeoutError("APK chat composer did not become visible")
 
+        geometry = inspect_chat_layout_geometry(cdp)
+        geometry_ready = bool(geometry and geometry.get("ready"))
+        record("chat_layout_geometry_ready", geometry_ready,
+               json.dumps(geometry, ensure_ascii=False)[:500] if geometry else "No geometry result")
+        if not geometry_ready:
+            raise RuntimeError("Chat layout is collapsed; refusing to count DOM text as visible")
+
+        report["stage"] = "capturing_before_chat"
         cdp.screenshot(out / "apk-webview-before.png")
-        baseline = int(cdp.evaluate("document.querySelectorAll('#messages .message.ai:not(.typing)').length") or 0)
+        baseline = int(cdp.evaluate(
+            "document.querySelectorAll('#messages .message.ai:not(.typing)').length",
+            retry_safe=True,
+        ) or 0)
         prompt_js = json.dumps(prompt, ensure_ascii=False)
+        report["stage"] = "submitting_synthetic_bengali_prompt"
         submitted = cdp.evaluate(
             f"""(() => {{
               const input = document.querySelector('#input');
@@ -153,9 +165,11 @@ def main() -> int:
         if not submitted:
             raise RuntimeError("Could not submit synthetic prompt through the app composer")
 
+        report["stage"] = "waiting_for_backend_answer"
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
+        response_route = ""
         while time.monotonic() < deadline:
             state = cdp.evaluate(
                 f"""(() => {{
@@ -170,70 +184,66 @@ def main() -> int:
                     count: nodes.length,
                     typing: !!typing,
                     answer: body ? body.innerText.trim() : '',
-                    provider: last ? last.getAttribute('data-provider') : null
+                    provider: last ? last.getAttribute('data-provider') : null,
+                    route: last && last.querySelector('.response-route')
+                      ? last.querySelector('.response-route').innerText.trim() : ''
                   }};
-                }})()"""
+                }})()""",
+                retry_safe=True,
             )
             if state and state.get("ready"):
                 answer = state.get("answer", "").strip()
                 provider = state.get("provider")
+                response_route = str(state.get("route") or "").strip()
+                provider = resolve_provider(provider, response_route)
                 break
             time.sleep(1)
 
         if answer:
             lower = answer.lower()
             failed_phrases = [
-                "inspector mock response",
-                "playwright-safe-test",
-                "you exceeded your current quota",
-                "quota exceeded",
-                "failed to fetch",
-                "network error",
-                "অনুরোধটি ব্যর্থ",
-                "সংযোগে সমস্যা",
+                "inspector mock response", "playwright-safe-test", "mock response",
+                "you exceeded your current quota", "quota exceeded", "http 429", "quota",
+                "failed to fetch", "network error", "server error", "service unavailable",
+                "connection failed", "unable to connect", "unable to resolve host",
+                "ai সংযোগ ব্যর্থ", "আবার চেষ্টা করুন", "নেটওয়ার্ক সংযোগ",
+                "সার্ভারে সমস্যা", "সংযোগে সমস্যা", "সার্ভার সংযোগ",
                 "এই মুহূর্তে gemini সংযোগে সমস্যা",
             ]
             failure_marker = next((phrase for phrase in failed_phrases if phrase in lower), "")
-            passed = bool(answer) and not failure_marker
+            provider_name = str(provider or "").strip().lower()
+            known_provider = any(name in provider_name for name in ("gemini", "workers ai", "groq", "openrouter"))
+            mock_provider = (not known_provider) or any(token in provider_name for token in ("mock", "test", "fixture", "playwright"))
+            passed = bool(answer) and not failure_marker and not mock_provider
             record("real_backend_returned_non_mock_answer", passed,
-                   f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
+                   f"response_chars={len(answer)}; provider_present={bool(provider_name)}; "
+                   f"mock_provider={mock_provider}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
-
-            # The previous smoke test could pass on DOM text while the saved screenshot
-            # showed only the composer. Scroll the actual answer into view and make
-            # screenshot visibility a separate required acceptance check.
-            visibility = cdp.evaluate("""(() => {
-              const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
-              const last = nodes[nodes.length - 1];
-              const body = last && last.querySelector('.rich-content');
-              if (!body || !body.innerText.trim()) return {visible:false, text:'', rect:null};
-              body.scrollIntoView({block:'center', inline:'nearest', behavior:'instant'});
-              const r = body.getBoundingClientRect();
-              const visible = r.width > 0 && r.height > 0 &&
-                r.bottom > 0 && r.top < window.innerHeight &&
-                r.right > 0 && r.left < window.innerWidth;
-              return {visible, text:body.innerText.trim(), rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right},
-                viewport:{width:window.innerWidth,height:window.innerHeight}};
-            })()""")
+            report["response_route"] = response_route
+            report["stage"] = "checking_answer_screenshot_visibility"
+            visibility = inspect_answer_visibility(cdp)
             time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
-            screenshot_visible = bool(visibility and visibility.get("visible") and visibility.get("text"))
+            screenshot_visible = answer_is_visibly_rendered(visibility)
             record("assistant_answer_visible_in_saved_screenshot", screenshot_visible,
                    json.dumps(visibility, ensure_ascii=False)[:500])
             report["screenshot_answer_visible"] = screenshot_visible
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
+            report["stage"] = "capturing_after_timeout"
             cdp.screenshot(out / "apk-webview-failed.png")
     except Exception as exc:
-        record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
+        record("cdp_connection_and_chat", False,
+               f"stage={report.get('stage', 'unknown')}; {type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:
                 cdp.screenshot(out / "apk-webview-failed.png")
             except Exception:
                 pass
     finally:
+        report["status"] = "PASS" if report["checks"] and all(check["passed"] for check in report["checks"]) else "FAIL"
         (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         if cdp is not None:
             try:

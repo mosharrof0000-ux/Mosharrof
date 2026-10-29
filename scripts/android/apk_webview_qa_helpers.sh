@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# Shared bounded waits and failure diagnostics for Android WebView QA.
+# The caller defines OUT, STARTED_AT, CURRENT_STEP, and LOGCAT_DUMPED.
+
+dump_diagnostics() {
+  local reason="${1:-unknown}"
+  {
+    printf 'started_at=%s\n' "$STARTED_AT"
+    printf 'finished_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf 'failure_step=%s\n' "$CURRENT_STEP"
+    printf 'failure_reason=%s\n' "$reason"
+    printf '\n--- adb devices ---\n'
+    timeout 10s adb devices -l 2>&1 || true
+    printf '\n--- boot state ---\n'
+    timeout 10s adb shell getprop sys.boot_completed 2>&1 || true
+    printf '\n--- package state ---\n'
+    timeout 10s adb shell dumpsys package com.mosharrof.ai 2>&1 | head -n 120 || true
+    printf '\n--- activity/process state ---\n'
+    timeout 10s adb shell dumpsys activity activities 2>&1 | head -n 160 || true
+    timeout 10s adb shell ps -A 2>&1 | grep -E 'mosharrof|webview' || true
+    printf '\n--- webview devtools socket ---\n'
+    timeout 10s adb shell cat /proc/net/unix 2>&1 | grep -E 'webview_devtools_remote|devtools' || true
+    printf '\n--- port 9222 ---\n'
+    adb forward --list 2>&1 || true
+    timeout 5s curl -sv --max-time 4 http://127.0.0.1:9222/json/version -o "$OUT/webview-version-diagnostic.json" 2>"$OUT/webview-port-diagnostic.log" || true
+  } > "$OUT/android-diagnostics.txt" 2>&1
+  timeout 30s adb logcat -d -v threadtime > "$OUT/adb-logcat-full.txt" 2>&1 || true
+  tail -n 12000 "$OUT/adb-logcat-full.txt" > "$OUT/adb-logcat-tail.txt" 2>/dev/null || true
+  LOGCAT_DUMPED=1
+}
+
+ensure_adb_server() {
+  # GitHub-hosted emulator runners can leave adb's local server unresponsive.
+  # Recover the host daemon with bounded attempts; never treat a missing device as ready.
+  local attempt state
+  for attempt in $(seq 1 5); do
+    if timeout 8s adb start-server >/dev/null 2>&1; then
+      state="$(timeout 8s adb get-state 2>/dev/null | tr -d '\r' || true)"
+      if [ "$state" = "device" ]; then return 0; fi
+    fi
+    echo "Recovering adb host daemon ($attempt/5)" >&2
+    timeout 5s adb kill-server >/dev/null 2>&1 || true
+    sleep 2
+  done
+  return 1
+}
+
+wait_for_adb() {
+  local attempt state
+  for attempt in $(seq 1 30); do
+    state="$(timeout 8s adb get-state 2>/dev/null | tr -d '\r' || true)"
+    if [ "$state" = "device" ]; then return 0; fi
+    if [ "$attempt" -eq 1 ] || [ "$((attempt % 5))" -eq 0 ]; then
+      ensure_adb_server || true
+    fi
+    echo "Waiting for adb device ($attempt/30; state=${state:-unavailable})"
+    sleep 2
+  done
+  echo "adb device did not become ready within 60 seconds" >&2
+  return 1
+}
+
+assert_adb_healthy() {
+  local state
+  state="$(timeout 8s adb get-state 2>/dev/null | tr -d '\r' || true)"
+  if [ "$state" = "device" ]; then return 0; fi
+  echo "adb connection lost (state=${state:-unavailable}); attempting bounded recovery" >&2
+  ensure_adb_server
+  wait_for_adb
+}
+
+wait_for_boot() {
+  local attempt boot
+  for attempt in $(seq 1 60); do
+    boot="$(timeout 8s adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+    if [ "$boot" = "1" ]; then sleep 5; return 0; fi
+    echo "Waiting for Android boot ($attempt/60)"
+    sleep 2
+  done
+  echo "Android boot did not complete within 120 seconds" >&2
+  return 1
+}
+
+wait_for_app_process() {
+  local attempt pid
+  for attempt in $(seq 1 30); do
+    pid="$(timeout 8s adb shell pidof com.mosharrof.ai 2>/dev/null | tr -d '\r' | awk '{print $1}' || true)"
+    if [ -n "$pid" ]; then printf '%s' "$pid"; return 0; fi
+    echo "Waiting for app process ($attempt/30)" >&2
+    sleep 2
+  done
+  echo "MOSHARROF process did not appear within 60 seconds" >&2
+  return 1
+}
+
+wait_for_devtools_socket() {
+  local socket="$1" attempt
+  for attempt in $(seq 1 30); do
+    if timeout 8s adb shell cat /proc/net/unix 2>/dev/null | tr -d '\r' | grep -F "$socket" >/dev/null; then return 0; fi
+    echo "Waiting for WebView DevTools socket $socket ($attempt/30)"
+    sleep 2
+  done
+  echo "WebView DevTools socket did not appear within 60 seconds: $socket" >&2
+  return 1
+}
+
+wait_for_cdp() {
+  local attempt
+  for attempt in $(seq 1 30); do
+    if timeout 5s curl --silent --show-error --fail --max-time 4 http://127.0.0.1:9222/json/list -o "$OUT/webview-targets.json.tmp" 2>"$OUT/webview-cdp-wait.log"; then
+      mv "$OUT/webview-targets.json.tmp" "$OUT/webview-targets.json"
+      if python - "$OUT/webview-targets.json" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as f:
+    targets = json.load(f)
+raise SystemExit(0 if isinstance(targets, list) and any(t.get("webSocketDebuggerUrl") for t in targets) else 1)
+PY
+      then return 0; fi
+    fi
+    echo "Waiting for WebView CDP endpoint on port 9222 ($attempt/30)"
+    sleep 2
+  done
+  echo "WebView CDP endpoint did not become ready within 60 seconds" >&2
+  return 1
+}

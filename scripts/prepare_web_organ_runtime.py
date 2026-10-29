@@ -10,6 +10,19 @@ from scripts.mosharrof_registry import build_registry  # noqa: E402
 from scripts.manual_provider_runtime_patch import apply_manual_provider_patches  # noqa: E402
 
 
+LAYOUT_COMPAT_TAG = '<script type="module">import { applyChatLayoutCompatibility } from "./core/chat-layout-compat.js"; applyChatLayoutCompatibility();</script>'
+
+
+def inject_chat_layout_compatibility(index_html: str) -> str:
+    """Load the chat layout fallback in the actual WebView entrypoint, idempotently."""
+    if LAYOUT_COMPAT_TAG in index_html:
+        return index_html
+    anchor_tag = '<script src="./sidebar-recovery.js"></script>'
+    if anchor_tag not in index_html:
+        raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for chat layout compatibility")
+    return index_html.replace(anchor_tag, anchor_tag + "\n" + LAYOUT_COMPAT_TAG, 1)
+
+
 def main() -> int:
     expected = build_registry(ROOT)
     registry_path = ROOT / "web/runtime/organs.registry.json"
@@ -33,8 +46,10 @@ def main() -> int:
         "core/composer-layout.js": "web/composer-layout.js",
         "core/composer-voice-meter.js": "web/composer-voice-meter.js",
         "core/composer-autogrow.js": "web/composer-autogrow.js",
+        "core/composer-expansion.js": "web/core/composer-expansion.js",
         "core/composer-line-limit.js": "web/composer-line-limit.js",
         "core/./composer-line-limit.js": "web/core/composer-line-limit.js",
+        "core/chat-layout-compat.js": "web/core/chat-layout-compat.js",
         "core/device-control.js": "web/device-control.js",
         "core/video-generation-ui.js": "web/video-generation-ui.js",
         "core/drawer-state-guard.js": "web/core/drawer-state-guard.js",
@@ -79,6 +94,7 @@ def main() -> int:
     # Inject runtime-only enhancements into the prepared Pages artifact; keep the tracked legacy entrypoint frozen.
     index_path = ROOT / "web/index.html"
     index_html = index_path.read_text(encoding="utf-8")
+    index_html = inject_chat_layout_compatibility(index_html)
     device_tag = '<script src="./device-control.js"></script>'
     if device_tag not in index_html:
         anchor_tag = '<script src="./sidebar-recovery.js"></script>'
@@ -91,6 +107,13 @@ def main() -> int:
         if device_tag not in index_html:
             raise SystemExit("ORGAN ASSET PREP: device-control script anchor missing for video UI")
         index_html = index_html.replace(device_tag, device_tag + "\n" + video_tag, 1)
+
+    composer_script_tag = '<script src="./core/composer-expansion.js"></script>'
+    if composer_script_tag not in index_html:
+        anchor_tag = '<script src="./sidebar-recovery.js"></script>'
+        if anchor_tag not in index_html:
+            raise SystemExit("ORGAN ASSET PREP: sidebar script anchor missing for composer expansion module")
+        index_html = index_html.replace(anchor_tag, anchor_tag + "\n" + composer_script_tag, 1)
 
     design_css_tag = '<link rel="stylesheet" href="./design-intelligence.css">'
     if design_css_tag not in index_html:
