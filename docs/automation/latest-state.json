@@ -1,164 +1,101 @@
 {
-  "timestamp_utc": "2026-10-29T13:08:31+00:00",
-  "event_name": "push",
+  "timestamp_utc": "2026-10-29T13:08:58+00:00",
+  "event_name": "workflow_run",
   "workflow": "MOSHARROF Automatic Work Engine",
-  "run_id": "40879189145",
-  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40879189145",
-  "source_run_id": null,
-  "source_run_url": null,
+  "run_id": "40879242647",
+  "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40879242647",
+  "source_run_id": "40879189345",
+  "source_run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/40879189345",
   "repository": "mosharrof0000-ux/Mosharrof",
   "branch": "main",
   "sha": "46f0dafd871e19dd58121ca0d85b2d08f1970fc9",
   "checked": [
-    "Push commit: Autonomous: verified improvement (#902)",
-    "Commit SHA: 46f0dafd871e19dd58121ca0d85b2d08f1970fc9",
-    "Check: command — completed/skipped",
-    "Check: command — completed/skipped",
-    "Check: Parallel backlog engineering (review-only) — completed/skipped",
-    "Check: control-command — completed/skipped",
-    "Check: verify-repository-access — in_progress/pending",
-    "Check: control-command — completed/skipped",
-    "Check: autonomous — completed/skipped",
-    "Check: Parallel backlog engineering (review-only) — completed/skipped",
-    "Check: verify-repository-access — in_progress/pending",
-    "Check: validate — completed/skipped",
-    "Check: Component awareness heartbeat — in_progress/pending",
-    "Check: test — in_progress/pending",
-    "Check: record — in_progress/pending",
-    "Check: checkpoint — in_progress/pending",
-    "Check: Leave the repo clean — completed/success",
-    "Check: test — in_progress/pending",
-    "Check: proxy-contracts — in_progress/pending",
-    "Check: verify-ecosystem — in_progress/pending",
-    "Check: test — in_progress/pending"
+    "Completed workflow result: Deploy Mosharrof Pages = failure",
+    "Source commit: 46f0dafd871e19dd58121ca0d85b2d08f1970fc9",
+    "Job: test — completed/failure",
+    "Job: deploy — completed/skipped"
   ],
   "planned": [
-    "Record the commit message, changed paths and available checks.",
-    "Run the work-engine contract tests and validate the run metadata.",
-    "Publish a durable log entry and a machine-readable latest state."
+    "Record the completed workflow result, job-level checks and evidence URL.",
+    "Preserve the branch/SHA and determine whether a retry or follow-up is needed."
   ],
-  "next_step": "Wait for pending checks (verify-repository-access, verify-repository-access, Component awareness heartbeat, test, record); then inspect their results and artifacts.",
-  "source_workflow": null,
-  "source_conclusion": null,
+  "next_step": "Resume at failed workflow/job: test. Open the linked run logs, fix on a safe feature branch, then rerun.",
+  "source_workflow": "Deploy Mosharrof Pages",
+  "source_conclusion": "failure",
   "changed_files": [],
   "check_results": [
     {
-      "job": "command",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "command",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "Parallel backlog engineering (review-only)",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "control-command",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "verify-repository-access",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "control-command",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "autonomous",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "Parallel backlog engineering (review-only)",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "verify-repository-access",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "validate",
-      "status": "completed",
-      "conclusion": "skipped",
-      "steps": []
-    },
-    {
-      "job": "Component awareness heartbeat",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
       "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "record",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "checkpoint",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "Leave the repo clean",
       "status": "completed",
-      "conclusion": "success",
-      "steps": []
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install -r requirements.txt",
+          "conclusion": "success"
+        },
+        {
+          "name": "Enforce file and folder size budgets",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Run python -m pytest -q",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify Pages artifact",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Prepare candidate organ runtime assets",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Install Chromium for candidate runtime smoke test",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Start candidate Pages server",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Test candidate organ runtime in Chromium",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
     },
     {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "proxy-contracts",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "verify-ecosystem",
-      "status": "in_progress",
-      "conclusion": null,
-      "steps": []
-    },
-    {
-      "job": "test",
-      "status": "in_progress",
-      "conclusion": null,
+      "job": "deploy",
+      "status": "completed",
+      "conclusion": "skipped",
       "steps": []
     }
   ],
   "phase": "FINISHED",
   "status": "success",
-  "finished_at_utc": "2026-10-29T13:08:37+00:00",
+  "finished_at_utc": "2026-10-29T13:09:03+00:00",
   "outcome": "success"
 }
