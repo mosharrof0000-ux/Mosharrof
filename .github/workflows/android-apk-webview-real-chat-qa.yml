@@ -48,7 +48,9 @@ jobs:
         run: python -m py_compile scripts/android/apk_webview_real_chat_smoke.py
 
       - name: Validate emulator shell script syntax
-        run: bash -n scripts/android/run_apk_webview_smoke.sh
+        run: |
+          bash -n scripts/android/run_apk_webview_smoke.sh
+          bash -n .github/scripts/select_android_qa_apk.sh
 
       - name: Install WebView CDP WebSocket client
         run: python -m pip install --disable-pip-version-check websocket-client
@@ -69,33 +71,7 @@ jobs:
           SOURCE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           SOURCE_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'origin/main' }}
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/apk artifacts/apk-webview-chat
-          changed_files="$(git diff --name-only "${SOURCE_BASE_SHA}...${SOURCE_SHA}")"
-          if printf '%s\n' "$changed_files" | grep -Eq '^(android/|web/|organs/|entities/|core/|native/|config/|scripts/android/|scripts/prepare_web_organ_runtime\.py$|scripts/mosharrof_registry\.py$|scripts/manual_provider_runtime_patch\.py$|scripts/mosharrof_size_gate\.py$|\.github/workflows/build-apk\.yml$)'; then
-            echo "APK-affecting source changes detected; require a successful build for exact head $SOURCE_SHA."
-            run_id=""
-            for attempt in $(seq 1 90); do
-              run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
-              if [ -n "$run_id" ]; then break; fi
-              sleep 10
-            done
-            if [ -z "$run_id" ]; then
-              echo "::error::APK-affecting changes were detected, but no successful exact-head APK build appeared within 15 minutes."
-              exit 1
-            fi
-          else
-            echo "No APK build inputs changed; using the latest successful main APK for the QA harness-only change."
-            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
-            if [ -z "$run_id" ]; then
-              echo "::error::No successful main APK build is available for this harness-only change."
-              exit 1
-            fi
-          fi
-          gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --json databaseId,headSha,headBranch,name,conclusion --jq '{run_id: .databaseId, head_sha: .headSha, branch: .headBranch, workflow: .name, conclusion: .conclusion}' > artifacts/apk-webview-chat/apk-source.json
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
-          test -s artifacts/apk/app-debug.apk
+        run: bash .github/scripts/select_android_qa_apk.sh
 
       - name: Download latest successful main APK for scheduled/manual runs
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
