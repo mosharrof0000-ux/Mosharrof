@@ -52,7 +52,7 @@ class PageCDP:
     """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
 
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
+        self.ws = websocket.create_connection(ws_url, timeout=15, suppress_origin=True)
         self.next_id = 0
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
@@ -135,24 +135,52 @@ def main() -> int:
 
         cdp.screenshot(out / "apk-webview-before.png")
         baseline = int(cdp.evaluate("document.querySelectorAll('#messages .message.ai:not(.typing)').length") or 0)
-        prompt_js = json.dumps(prompt, ensure_ascii=False)
-        submitted = cdp.evaluate(
-            f"""(() => {{
-              const input = document.querySelector('#input');
-              const send = document.querySelector('#sendBtn');
-              if (!input || !send || send.disabled) return false;
-              input.focus();
-              input.value = {prompt_js};
-              input.dispatchEvent(new Event('input', {{bubbles:true}}));
-              input.dispatchEvent(new Event('change', {{bubbles:true}}));
-              send.click();
-              return true;
-            }})()"""
+        # Use CDP's native input events instead of invoking send.click() inside
+        # Runtime.evaluate. Some WebView builds block the evaluate response while
+        # the application's synchronous click handler starts the request.
+        prompt_rect = cdp.evaluate(
+            """(() => {
+              const el = document.querySelector('#input');
+              const r = el && el.getBoundingClientRect();
+              return r ? {x:r.x+r.width/2, y:r.y+r.height/2} : null;
+            })()"""
         )
-        record("synthetic_prompt_submitted", bool(submitted), "One Bengali prompt submitted through the installed APK UI")
-        if not submitted:
-            raise RuntimeError("Could not submit synthetic prompt through the app composer")
+        send_rect = cdp.evaluate(
+            """(() => {
+              const el = document.querySelector('#sendBtn');
+              const r = el && el.getBoundingClientRect();
+              return r ? {x:r.x+r.width/2, y:r.y+r.height/2, disabled:!!el.disabled} : null;
+            })()"""
+        )
+        if not prompt_rect or not send_rect or send_rect.get("disabled"):
+            raise RuntimeError("Composer or enabled send button has no usable screen coordinates")
 
+        cdp.command("Input.dispatchMouseEvent", {
+            "type": "mousePressed", "x": prompt_rect["x"], "y": prompt_rect["y"],
+            "button": "left", "clickCount": 1,
+        }, timeout=30)
+        cdp.command("Input.dispatchMouseEvent", {
+            "type": "mouseReleased", "x": prompt_rect["x"], "y": prompt_rect["y"],
+            "button": "left", "clickCount": 1,
+        }, timeout=30)
+        cdp.command("Input.insertText", {"text": prompt}, timeout=30)
+        entered = cdp.evaluate(
+            "document.querySelector('#input')?.value === " + json.dumps(prompt, ensure_ascii=False),
+            timeout=30,
+        )
+        if not entered:
+            raise RuntimeError("Native WebView text input did not populate the chat composer")
+
+        cdp.command("Input.dispatchMouseEvent", {
+            "type": "mousePressed", "x": send_rect["x"], "y": send_rect["y"],
+            "button": "left", "clickCount": 1,
+        }, timeout=30)
+        cdp.command("Input.dispatchMouseEvent", {
+            "type": "mouseReleased", "x": send_rect["x"], "y": send_rect["y"],
+            "button": "left", "clickCount": 1,
+        }, timeout=30)
+        record("synthetic_prompt_submitted", True,
+               "One Bengali prompt entered and sent through native WebView input events")
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None

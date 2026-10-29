@@ -1,0 +1,41 @@
+name: Verified Core Lock and Jackbox Gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: verified-core-lock-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verified-core:
+    name: Verify locked hashes and Jackbox boundaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposed commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Test lock and registry failure cases
+        run: |
+          python3 -m unittest -v scripts/test_verified_core_gate.py
+      - name: Validate manifest and module registry
+        run: |
+          python3 scripts/verified_core_gate.py
+      - name: Report pilot candidate digest for evidence review
+        run: sha256sum core/organ-registry/index.js
+      - name: Fetch target branch
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - name: Block edits to locked files
+        run: python3 scripts/verified_core_gate.py --base-ref origin/main

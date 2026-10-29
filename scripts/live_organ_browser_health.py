@@ -17,12 +17,15 @@ REQUIRED_ORGANS = {
 ASSETS = (
     "entities/bootstrap.js",
     "entities/organ-bootstrap.js",
+    "runtime/core/jackbox/bootstrap.js",
     "entities/ui-organ-modules.js",
     "runtime/core/organ-runtime/index.js",
     "runtime/core/organ-runtime/persistent-memory.js",
     "runtime/core/organ-runtime/scoped-api.js",
     "runtime/core/organ-runtime/persistent-memory.js",
     "runtime/core/organ-runtime/scoped-api.js",
+    "runtime/core/jackbox/index.js",
+    "runtime/core/jackbox/registry.json",
     "runtime/core/ui-module-adapter/index.js",
     "organs/chat/index.js",
     "organs/core/index.js",
@@ -57,6 +60,7 @@ def main() -> int:
             "() => window.MosharrofEntitySystem && window.MosharrofEntitySystem.ready === true",
             timeout=30000,
         )
+        assert page.evaluate("!!window.MosharrofEntitySystem.jackbox && Array.isArray(window.MosharrofEntitySystem.jackbox.list())"), "Jackbox control API missing"
         health = page.evaluate("window.MosharrofEntitySystem.organRuntime.health()")
         runtime_ids = {item["organId"] for item in health}
         assert REQUIRED_ORGANS.issubset(runtime_ids), (

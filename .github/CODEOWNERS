@@ -1,0 +1,12 @@
+# Require review of governance and lock-enforcement changes from the repository owner.
+# GitHub must also have code-owner review enabled in branch protection/rulesets for enforcement.
+/core/verified-core/** @mosharrof0000-ux
+/core/jackbox/** @mosharrof0000-ux
+/scripts/verified_core_gate.py @mosharrof0000-ux
+/scripts/test_verified_core_gate.py @mosharrof0000-ux
+/.github/workflows/verified-core-lock.yml @mosharrof0000-ux
+/.github/workflows/architecture-gate.yml @mosharrof0000-ux
+/web/entities/organ-bootstrap.js @mosharrof0000-ux
+/core/organ-runtime/index.js @mosharrof0000-ux
+/scripts/prepare_web_organ_runtime.py @mosharrof0000-ux
+/core/jackbox/bootstrap.js @mosharrof0000-ux
