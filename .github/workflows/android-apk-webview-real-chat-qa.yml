@@ -10,7 +10,6 @@ on:
       - "scripts/android/**"
       - "scripts/mosharrof_size_gate.py"
       - ".github/workflows/build-apk.yml"
-      - ".github/workflows/android-apk-webview-real-chat-qa.yml"
   push:
     branches: ["feat/current-main-apk-real-chat-qa-20261019"]
   workflow_run:
@@ -52,21 +51,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Detect whether this PR changes the Android app
-        id: android_changes
-        if: github.event_name == 'pull_request'
-        env:
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          git fetch origin "$BASE_REF" --depth=1
-          if git diff --name-only "origin/$BASE_REF...$SOURCE_SHA" | grep -Eq '^(android/|web/|core/android-edge-to-edge[.]css$|scripts/android/|scripts/mosharrof_size_gate[.]py$)'; then
-            echo "android=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "android=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Validate smoke-test script syntax
         run: python -m py_compile scripts/android/apk_webview_real_chat_smoke.py
 
@@ -86,7 +70,7 @@ jobs:
           path: artifacts/apk
 
       - name: Download APK from the matching branch build
-        if: (github.event_name == 'push' || github.event_name == 'pull_request') && (github.event_name != 'pull_request' || steps.android_changes.outputs.android == 'true')
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
@@ -94,15 +78,12 @@ jobs:
         run: |
           set -euo pipefail
           run_id=""
-          for attempt in $(seq 1 12); do
-            run_id="$(gh api --repo "$GITHUB_REPOSITORY" "repos/$GITHUB_REPOSITORY/actions/workflows/build-apk.yml/runs?head_sha=$SOURCE_SHA&per_page=100" --jq '.workflow_runs | map(select(.status == "completed" and .conclusion == "success" and .event == "pull_request")) | first | .id // empty')"
+          for attempt in $(seq 1 150); do
+            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
             if [ -n "$run_id" ]; then break; fi
             sleep 10
           done
-          if [ -z "$run_id" ]; then
-            echo "::error::No successful APK build found for source SHA $SOURCE_SHA"
-            exit 1
-          fi
+          test -n "$run_id"
           mkdir -p artifacts/apk
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
           test -s artifacts/apk/app-debug.apk
@@ -119,12 +100,7 @@ jobs:
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
           test -s artifacts/apk/app-debug.apk
 
-      - name: Skip emulator for workflow-only pull requests
-        if: github.event_name == 'pull_request' && steps.android_changes.outputs.android != 'true'
-        run: echo "No Android app inputs changed; workflow and smoke-test syntax checks passed."
-
       - name: Install APK and test real chat inside its WebView
-        if: github.event_name != 'pull_request' || steps.android_changes.outputs.android == 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
