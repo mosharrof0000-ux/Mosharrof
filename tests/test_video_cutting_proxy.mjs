@@ -9,6 +9,9 @@ const health = await worker.fetch(new Request("https://worker.test/video-cut/hea
 assert.equal(health.status, 200);
 assert.equal(health.headers.get("access-control-allow-origin"), "https://mosharrof0000-ux.github.io");
 assert.equal((await health.json()).enabled, false);
+const preflight = await worker.fetch(new Request("https://worker.test/video-cut/upload", { method: "OPTIONS", headers: { Origin: "https://mosharrof0000-ux.github.io", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "authorization,content-type,x-filename" } }), {});
+assert.equal(preflight.status, 204);
+assert.match(preflight.headers.get("access-control-allow-headers"), /x-filename/i);
 assert.equal((await worker.fetch(new Request("https://worker.test/video-cut/health", { headers: { Origin: "https://attacker.example" } }), {})).status, 403);
 
 const accessToken = "access-token-for-video-cutting-test-0001";
