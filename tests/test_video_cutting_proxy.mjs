@@ -56,13 +56,14 @@ try {
     body: "{}"
   }), env);
   assert.equal(wrongType.status, 415);
-  assert.equal((await wrongType.json()).error, "multipart_video_upload_required");
+  assert.equal((await wrongType.json()).error, "video_content_type_required");
 
   const tooLarge = await handleVideoCuttingProxy(new Request("https://worker.test/video-cut/upload", {
     method: "POST",
     headers: {
       authorization: "Bearer " + accessToken,
-      "content-type": "multipart/form-data; boundary=x",
+      "content-type": "video/mp4",
+      "x-filename": "large.mp4",
       "content-length": String(40 * 1024 * 1024 + 1)
     },
     body: "--x--"
@@ -78,20 +79,23 @@ try {
       headers: { "content-type": "application/json" }
     });
   };
-  const form = new FormData();
-  form.append("file", new Blob(["synthetic-video"]), "synthetic.mp4");
   const uploaded = await handleVideoCuttingProxy(new Request("https://worker.test/video-cut/upload", {
     method: "POST",
-    headers: { authorization: "Bearer " + accessToken },
-    body: form
+    headers: {
+      authorization: "Bearer " + accessToken,
+      "content-type": "video/mp4",
+      "x-filename": "synthetic.mp4"
+    },
+    body: new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7])
   }), env);
   assert.equal(uploaded.status, 202);
   assert.equal((await uploaded.json()).job.id, jobId);
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "https://video-api.example.test/api/v1/uploads");
   assert.equal(calls[0].init.headers.get("authorization"), "Bearer " + apiToken);
-  assert.match(calls[0].init.headers.get("content-type"), /^multipart\/form-data; boundary=/i);
-  assert.equal(calls[0].init.method, "POST");
+  assert.equal(calls[0].init.headers.get("content-type"), "video/mp4");
+  assert.equal(calls[0].init.headers.get("x-filename"), "synthetic.mp4");
+  assert.equal(calls[0].init.method, "PUT");
 
   calls = [];
   globalThis.fetch = async (url, init) => {
