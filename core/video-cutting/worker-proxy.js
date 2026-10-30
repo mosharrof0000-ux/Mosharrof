@@ -97,24 +97,29 @@ async function callApi(request, env, path, { upload = false, output = false } = 
   let body;
   if (upload) {
     const contentType = request.headers.get("content-type") || "";
-    if (!/^multipart\/form-data\s*;\s*boundary=/i.test(contentType)) {
-      return json({ error: "multipart_video_upload_required" }, 415);
+    const filename = request.headers.get("x-filename") || "";
+    if (!contentType.toLowerCase().startsWith("video/")) {
+      return json({ error: "video_content_type_required" }, 415);
+    }
+    if (!filename || filename.length > 255 || /[\\/\x00-\x1f\x7f]/.test(filename)) {
+      return json({ error: "invalid_video_filename" }, 400);
     }
     const lengthHeader = request.headers.get("content-length");
     if (lengthHeader !== null) {
       if (!/^\d+$/.test(lengthHeader)) return json({ error: "invalid_content_length" }, 400);
-      if (Number(lengthHeader) > MAX_REQUEST_BYTES) return json({ error: "video_upload_too_large", max_upload_bytes: MAX_UPLOAD_BYTES }, 413);
+      if (Number(lengthHeader) > MAX_UPLOAD_BYTES) return json({ error: "video_upload_too_large", max_upload_bytes: MAX_UPLOAD_BYTES }, 413);
     }
     headers.set("content-type", contentType);
+    headers.set("x-filename", filename);
     try {
-      body = cappedBody(request.body, MAX_REQUEST_BYTES);
+      body = cappedBody(request.body, MAX_UPLOAD_BYTES);
     } catch {
       return json({ error: "video_upload_body_missing" }, 400);
     }
   }
   try {
     const upstream = await fetch(url, {
-      method: upload ? "POST" : "GET",
+      method: upload ? "PUT" : "GET",
       headers,
       ...(upload ? { body } : {}),
       signal: AbortSignal.timeout(upload || output ? 120000 : 15000)
