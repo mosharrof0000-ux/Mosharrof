@@ -37,8 +37,10 @@ def test_video_cutting_worker_proxy_is_disabled_by_default_and_server_authentica
     assert 'VIDEO_CUTTING_API_TOKEN' in proxy
     assert 'VIDEO_CUTTING_ACCESS_TOKEN' in proxy
     assert 'url.protocol !== "https:"' in proxy
-    assert 'multipart' in proxy and 'boundary=' in proxy
-    assert 'MAX_REQUEST_BYTES' in proxy
+    assert 'video_content_type_required' in proxy
+    assert 'x-filename' in proxy
+    assert 'method: upload ? "PUT" : "GET"' in proxy
+    assert 'MAX_UPLOAD_BYTES' in proxy
     assert 'handleVideoCuttingProxy(request, env)' in worker
     assert 'content-type,authorization' in worker
     assert 'main = "../core/video-cutting/worker-entry.js"' in wrangler
