@@ -1,5 +1,4 @@
 const MAX_UPLOAD_BYTES = 39 * 1024 * 1024;
-const MAX_REQUEST_BYTES = 40 * 1024 * 1024;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function json(data, status = 200) {
