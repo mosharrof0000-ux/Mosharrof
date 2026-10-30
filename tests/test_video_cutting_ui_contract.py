@@ -38,5 +38,9 @@ def test_video_cutting_worker_proxy_is_disabled_by_default_and_server_authentica
     ):
         assert value in proxy
     assert 'handleVideoCuttingProxy(request, env)' in worker
-    assert 'content-type,authorization' in worker
+    assert 'content-type,authorization,x-filename' in worker
     assert 'main = "../core/video-cutting/worker-entry.js"' in wrangler
+    deploy = read(".github/workflows/deploy-gemini-worker.yml")
+    assert 'core/video-cutting/**' in deploy
+    for secret in ('VIDEO_CUTTING_API_URL', 'VIDEO_CUTTING_API_TOKEN', 'VIDEO_CUTTING_ACCESS_TOKEN', 'VIDEO_CUTTING_ENABLED'):
+        assert secret in deploy
