@@ -66,7 +66,8 @@
       video_cutting_not_configured: "ভিডিও কাটিং সার্ভার এখনো কনফিগার করা হয়নি। সার্ভার endpoint ও secret নিরাপদভাবে সেট করতে হবে।",
       video_cutting_access_denied: "অ্যাক্সেস টোকেন সঠিক নয় বা অনুমোদিত নয়।",
       video_upload_too_large: "ফাইলটি প্রাথমিক পরীক্ষার ৩৯ MiB সীমার চেয়ে বড়।",
-      video_content_type_required: "ভিডিওর MIME ধরন সঠিক নয়।",\n      invalid_video_filename: "ভিডিও ফাইলের নাম সঠিক নয়.",
+      video_content_type_required: "ভিডিওর MIME ধরন সঠিক নয়।",
+      invalid_video_filename: "ভিডিও ফাইলের নাম সঠিক নয়.",
       video_cutting_upstream_timeout: "ভিডিও সার্ভারে সাড়া পেতে সময় শেষ হয়েছে। Job তৈরি হয়েছে কি না status আবার পরীক্ষা করুন।",
       video_cutting_upstream_unavailable: "ভিডিও প্রসেসিং সার্ভারে সংযোগ করা যায়নি।",
       invalid_job_id: "সার্ভার থেকে পাওয়া job ID সঠিক নয়।"
