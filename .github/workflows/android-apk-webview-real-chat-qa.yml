@@ -79,12 +79,15 @@ jobs:
         run: |
           set -euo pipefail
           run_id=""
-          for attempt in $(seq 1 150); do
-            run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-apk.yml --branch "$SOURCE_BRANCH" --limit 20 --json databaseId,headSha,status,conclusion --jq 'first(.[] | select(.headSha == env.SOURCE_SHA and .status == "completed" and .conclusion == "success")) | .databaseId // empty')"
+          for attempt in $(seq 1 12); do
+            run_id="$(gh api --repo "$GITHUB_REPOSITORY" "repos/$GITHUB_REPOSITORY/actions/workflows/build-apk.yml/runs?head_sha=$SOURCE_SHA&per_page=100" --jq '.workflow_runs | map(select(.status == "completed" and .conclusion == "success" and .event == "pull_request")) | first | .id // empty')"
             if [ -n "$run_id" ]; then break; fi
             sleep 10
           done
-          test -n "$run_id"
+          if [ -z "$run_id" ]; then
+            echo "::error::No successful APK build found for source SHA $SOURCE_SHA"
+            exit 1
+          fi
           mkdir -p artifacts/apk
           gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name MOSHARROF-AI-Android-APK --dir artifacts/apk
           test -s artifacts/apk/app-debug.apk
