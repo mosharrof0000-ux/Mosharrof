@@ -29,7 +29,7 @@ function withVideoCors(response, request) {
   const headers = new Headers(response.headers);
   if (origin && isAllowedOrigin(origin)) headers.set("Access-Control-Allow-Origin", origin);
   headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "content-type,authorization");
+  headers.set("Access-Control-Allow-Headers", "content-type,authorization,x-filename");
   headers.set("Vary", "Origin");
   return new Response(response.body, {
     status: response.status,
