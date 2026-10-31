@@ -1,3 +1,4 @@
+import "./knowledge-continuity-bridge.js";
 /* Bridges local chronological memory to the live chat Worker without blocking streaming. */
 import { createPersonalMemoryEngine } from "./personal-memory-engine.js";
 
