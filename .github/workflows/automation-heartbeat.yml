@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
+  # Run once when this monitor is updated on main, so the first deployment is verifiable
+  # without waiting for the next scheduled quarter-hour.
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/automation-heartbeat.yml"
 
 permissions:
   actions: write
