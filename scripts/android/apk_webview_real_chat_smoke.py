@@ -230,15 +230,52 @@ def main() -> int:
               const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
               const last = nodes[nodes.length - 1];
               const body = last && last.querySelector('.rich-content');
-              if (!body || !body.innerText.trim()) return {visible:false, text:'', rect:null};
+              if (!body || !body.innerText.trim()) return {visible:false, text:'', rect:null, nonZeroBoxes:false};
               body.scrollIntoView({block:'center', inline:'nearest', behavior:'instant'});
+              const describe = (element, selector) => {
+                if (!element) return null;
+                const r = element.getBoundingClientRect();
+                const cs = window.getComputedStyle(element);
+                return {
+                  selector,
+                  rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height},
+                  scroll:{width:element.scrollWidth,height:element.scrollHeight},
+                  styles:{display:cs.display,width:cs.width,minWidth:cs.minWidth,maxWidth:cs.maxWidth,
+                    flex:cs.flex,flexBasis:cs.flexBasis,alignSelf:cs.alignSelf,justifyContent:cs.justifyContent,
+                    overflowX:cs.overflowX,overflowY:cs.overflowY,position:cs.position,transform:cs.transform,
+                    boxSizing:cs.boxSizing}
+                };
+              };
+              const boxes = {
+                chatScroll:describe(document.querySelector('#chatScroll'),'#chatScroll'),
+                messages:describe(document.querySelector('#messages'),'#messages'),
+                message:describe(last,'.message.ai'),
+                richContent:describe(body,'.rich-content')
+              };
+              const ancestors = [];
+              let ancestor = body;
+              while (ancestor && ancestors.length < 7) {
+                const label = ancestor.id ? '#'+ancestor.id :
+                  (typeof ancestor.className === 'string' && ancestor.className.trim()
+                    ? '.'+ancestor.className.trim().split(/\\s+/).join('.')
+                    : ancestor.tagName.toLowerCase());
+                ancestors.push(describe(ancestor,label));
+                ancestor = ancestor.parentElement;
+              }
+              const nonZeroBoxes = ['chatScroll','messages','message','richContent'].every(key =>
+                boxes[key] && boxes[key].rect.width > 0 && boxes[key].rect.height > 0
+              );
               const r = body.getBoundingClientRect();
-              const visible = r.width > 0 && r.height > 0 &&
+              const visible = r.width > 0 && r.height > 0 && nonZeroBoxes &&
                 r.bottom > 0 && r.top < window.innerHeight &&
                 r.right > 0 && r.left < window.innerWidth;
-              return {visible, text:body.innerText.trim(), rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right},
-                viewport:{width:window.innerWidth,height:window.innerHeight}};
+              return {visible,text:body.innerText.trim(),rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height},
+                viewport:{width:window.innerWidth,height:window.innerHeight},boxes,ancestors,nonZeroBoxes};
             })()""")
+            report["answer_layout_diagnostics"] = visibility
+            layout_boxes_pass = bool(visibility and visibility.get("nonZeroBoxes"))
+            record("answer_layout_boxes_nonzero", layout_boxes_pass,
+                   json.dumps(visibility, ensure_ascii=False)[:1500])
             time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
             screenshot_visible = bool(visibility and visibility.get("visible") and visibility.get("text"))
