@@ -16,7 +16,7 @@ from urllib.request import urlopen
 
 import websocket
 
-from webview_layout_diagnostics import answer_state_js, layout_visibility_js
+from webview_layout_diagnostics import CDP_COMMAND_TIMEOUT_SECONDS, answer_state_js, layout_visibility_js
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
@@ -79,10 +79,12 @@ class PageCDP:
                 + " | ".join(failures)
             )
         self.next_id = 0
+        self.last_command = None
 
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
+    def command(self, method: str, params: dict | None = None, timeout: float = CDP_COMMAND_TIMEOUT_SECONDS) -> dict:
         self.next_id += 1
         command_id = self.next_id
+        self.last_command = method
         self.ws.settimeout(timeout)
         self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
         deadline = time.monotonic() + timeout
@@ -95,7 +97,7 @@ class PageCDP:
             return message.get("result", {})
         raise TimeoutError(f"Timed out waiting for CDP command {method}")
 
-    def evaluate(self, expression: str, timeout: float = 15):
+    def evaluate(self, expression: str, timeout: float = CDP_COMMAND_TIMEOUT_SECONDS):
         result = self.command(
             "Runtime.evaluate",
             {"expression": expression, "returnByValue": True, "awaitPromise": True},
@@ -232,6 +234,7 @@ def main() -> int:
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
             cdp.screenshot(out / "apk-webview-failed.png")
     except Exception as exc:
+        report["last_cdp_method"] = cdp.last_command if cdp else None
         record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:

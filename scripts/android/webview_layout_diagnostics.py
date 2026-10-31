@@ -1,5 +1,7 @@
 """Read-only CDP snapshots for the Android WebView real-chat acceptance test."""
 
+CDP_COMMAND_TIMEOUT_SECONDS = 45
+
 
 def answer_state_js(baseline: int) -> str:
     """Read the latest assistant answer and its provider route without resubmitting."""
