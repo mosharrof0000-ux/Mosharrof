@@ -1,0 +1,88 @@
+name: 15-minute project monitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: project-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check live endpoints and public CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_MONITOR_TOKEN: ${{ secrets.GH_MONITOR_TOKEN }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p monitor-report
+          REPORT="monitor-report/status.md"
+          echo "# 15-minute project monitor" > "$REPORT"
+          echo "" >> "$REPORT"
+          echo "- Checked at (UTC): $(date -u +%FT%TZ)" >> "$REPORT"
+          failed=0
+          check_url() {
+            name="$1"; url="$2"
+            code="$(curl -L -sS -o /tmp/monitor-body -w '%{http_code}' --max-time 20 "$url" || true)"
+            if [[ "$code" =~ ^2[0-9][0-9]$ ]]; then
+              echo "- PASS — $name (HTTP $code)" | tee -a "$REPORT"
+            else
+              echo "- FAIL — $name (HTTP ${code:-no response})" | tee -a "$REPORT"
+              failed=1
+            fi
+          }
+          check_url "Mosharrof live site" "https://mosharrof0000-ux.github.io/Mosharrof/"
+          check_url "Al-Quran Research Worker" "https://al-quran-research.mosharrof0000.workers.dev/"
+          # The video-processing repository is private; a scoped token is required to inspect its Actions.
+          if [[ -n "${GH_MONITOR_TOKEN:-}" ]]; then
+            code="$(curl -sS -o /tmp/video-runs.json -w '%{http_code}' --max-time 20 \
+              -H "Authorization: Bearer $GH_MONITOR_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/mosharrof0000-ux/mosharrof-video-processing/actions/runs?per_page=1" || true)"
+            if [[ "$code" == "200" ]]; then
+              status="$(jq -r '.workflow_runs[0].status // "no-runs"' /tmp/video-runs.json)"
+              conclusion="$(jq -r '.workflow_runs[0].conclusion // "in-progress"' /tmp/video-runs.json)"
+              echo "- INFO — Video-processing latest CI: status=$status, conclusion=$conclusion" | tee -a "$REPORT"
+              if [[ "$status" == "completed" && "$conclusion" != "success" ]]; then failed=1; fi
+            else
+              echo "- FAIL — Video-processing Actions API (HTTP $code)" | tee -a "$REPORT"
+              failed=1
+            fi
+          else
+            echo "- BLOCKED — Video-processing CI not inspected; add repository secret GH_MONITOR_TOKEN with read-only Actions access." | tee -a "$REPORT"
+          fi
+          # Capture the latest workflow state for this public repository.
+          code="$(curl -sS -o /tmp/mosharrof-runs.json -w '%{http_code}' --max-time 20 \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mosharrof0000-ux/Mosharrof/actions/runs?per_page=1" || true)"
+          if [[ "$code" == "200" ]]; then
+            status="$(jq -r '.workflow_runs[0].status // "no-runs"' /tmp/mosharrof-runs.json)"
+            conclusion="$(jq -r '.workflow_runs[0].conclusion // "in-progress"' /tmp/mosharrof-runs.json)"
+            echo "- INFO — Mosharrof latest CI: status=$status, conclusion=$conclusion" | tee -a "$REPORT"
+            if [[ "$status" == "completed" && "$conclusion" != "success" ]]; then failed=1; fi
+          else
+            echo "- FAIL — Mosharrof Actions API (HTTP $code)" | tee -a "$REPORT"
+            failed=1
+          fi
+          echo "" >> "$REPORT"
+          echo "A green run means the configured checks passed, not that physical-device QA or a real video upload was completed." >> "$REPORT"
+          cat "$REPORT"
+          exit "$failed"
+      - name: Save monitoring evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-monitor-report
+          path: monitor-report/status.md
+          if-no-files-found: warn
+          retention-days: 30
