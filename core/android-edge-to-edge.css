@@ -25,7 +25,7 @@ html, body, .app {
 }
 .main {
   position: absolute !important;
-  inset: 0 !important;
+  top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important;
   width: 100% !important;
   height: 100% !important;
   min-height: 100% !important;
@@ -80,7 +80,12 @@ header.top .right-btn, .top .right-btn {
   overflow: hidden !important;
   background: transparent !important;
 }
-.hero { position: absolute !important; inset: 0 !important; min-height: 0 !important; }
+.hero {
+  position: absolute !important;
+  top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important;
+  width: 100% !important; height: 100% !important;
+  min-height: 0 !important;
+}
 .chat-scroll {
   position: absolute !important;
   inset: 0 !important;

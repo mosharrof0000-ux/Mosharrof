@@ -16,6 +16,8 @@ from urllib.request import urlopen
 
 import websocket
 
+from webview_layout_diagnostics import CDP_COMMAND_TIMEOUT_SECONDS, answer_state_js, layout_visibility_js
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
 parser.add_argument("--output-dir", default="artifacts/apk-webview-chat")
@@ -77,10 +79,12 @@ class PageCDP:
                 + " | ".join(failures)
             )
         self.next_id = 0
+        self.last_command = None
 
-    def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
+    def command(self, method: str, params: dict | None = None, timeout: float = CDP_COMMAND_TIMEOUT_SECONDS) -> dict:
         self.next_id += 1
         command_id = self.next_id
+        self.last_command = method
         self.ws.settimeout(timeout)
         self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
         deadline = time.monotonic() + timeout
@@ -93,7 +97,7 @@ class PageCDP:
             return message.get("result", {})
         raise TimeoutError(f"Timed out waiting for CDP command {method}")
 
-    def evaluate(self, expression: str, timeout: float = 15):
+    def evaluate(self, expression: str, timeout: float = CDP_COMMAND_TIMEOUT_SECONDS):
         result = self.command(
             "Runtime.evaluate",
             {"expression": expression, "returnByValue": True, "awaitPromise": True},
@@ -179,27 +183,15 @@ def main() -> int:
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
+        response_model = None
+        response_route = None
         while time.monotonic() < deadline:
-            state = cdp.evaluate(
-                f"""(() => {{
-                  const send = document.querySelector('#sendBtn');
-                  const typing = document.querySelector('#typing');
-                  const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
-                  const last = nodes[nodes.length - 1];
-                  const body = last && last.querySelector('.rich-content');
-                  return {{
-                    ready: !!send && !send.disabled && !typing && nodes.length > {baseline} &&
-                           !!body && body.innerText.trim().length > 0,
-                    count: nodes.length,
-                    typing: !!typing,
-                    answer: body ? body.innerText.trim() : '',
-                    provider: last ? last.getAttribute('data-provider') : null
-                  }};
-                }})()"""
-            )
+            state = cdp.evaluate(answer_state_js(baseline))
             if state and state.get("ready"):
                 answer = state.get("answer", "").strip()
                 provider = state.get("provider")
+                response_model = state.get("model")
+                response_route = state.get("route")
                 break
             time.sleep(1)
 
@@ -222,23 +214,15 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+            report["response_model"] = response_model
+            report["response_route"] = response_route
+            record("provider_route_identified", bool(provider), response_route or "Provider route metadata missing")
 
             # The previous smoke test could pass on DOM text while the saved screenshot
             # showed only the composer. Scroll the actual answer into view and make
             # screenshot visibility a separate required acceptance check.
-            visibility = cdp.evaluate("""(() => {
-              const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
-              const last = nodes[nodes.length - 1];
-              const body = last && last.querySelector('.rich-content');
-              if (!body || !body.innerText.trim()) return {visible:false, text:'', rect:null};
-              body.scrollIntoView({block:'center', inline:'nearest', behavior:'instant'});
-              const r = body.getBoundingClientRect();
-              const visible = r.width > 0 && r.height > 0 &&
-                r.bottom > 0 && r.top < window.innerHeight &&
-                r.right > 0 && r.left < window.innerWidth;
-              return {visible, text:body.innerText.trim(), rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right},
-                viewport:{width:window.innerWidth,height:window.innerHeight}};
-            })()""")
+            visibility = cdp.evaluate(layout_visibility_js())
+            report["layout_diagnostics"] = visibility.get("layout") if visibility else None
             time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
             screenshot_visible = bool(visibility and visibility.get("visible") and visibility.get("text"))
@@ -250,6 +234,7 @@ def main() -> int:
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
             cdp.screenshot(out / "apk-webview-failed.png")
     except Exception as exc:
+        report["last_cdp_method"] = cdp.last_command if cdp else None
         record("cdp_connection_and_chat", False, f"{type(exc).__name__}: {str(exc)[:500]}")
         if cdp is not None:
             try:
