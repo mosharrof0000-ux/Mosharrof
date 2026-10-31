@@ -185,6 +185,12 @@ def main() -> int:
         response_route = None
         while time.monotonic() < deadline:
             state = cdp.evaluate(answer_state_js(baseline))
+            if state and state.get("ready"):
+                answer = state.get("answer", "").strip()
+                provider = state.get("provider")
+                response_model = state.get("model")
+                response_route = state.get("route")
+                break
             time.sleep(1)
 
         if answer:
