@@ -7,18 +7,20 @@ on:
       - "android/**"
       - "web/**"
       - "core/android-edge-to-edge.css"
-      - "scripts/android/prepare-and-install-voice.sh"
+      - "scripts/android/**"
       - "scripts/mosharrof_size_gate.py"
       - ".github/workflows/build-apk.yml"
+      - ".github/workflows/android-apk-webview-real-chat-qa.yml"
   pull_request:
     branches: [main]
     paths:
       - "android/**"
       - "web/**"
       - "core/android-edge-to-edge.css"
-      - "scripts/android/prepare-and-install-voice.sh"
+      - "scripts/android/**"
       - "scripts/mosharrof_size_gate.py"
       - ".github/workflows/build-apk.yml"
+      - ".github/workflows/android-apk-webview-real-chat-qa.yml"
   workflow_dispatch:
 
 permissions:

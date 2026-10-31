@@ -3,6 +3,13 @@ name: MOSHARROF Android APK WebView Real Chat QA
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "android/**"
+      - "web/**"
+      - "core/android-edge-to-edge.css"
+      - "scripts/android/**"
+      - "scripts/mosharrof_size_gate.py"
+      - ".github/workflows/build-apk.yml"
   push:
     branches: ["feat/current-main-apk-real-chat-qa-20261019"]
   workflow_run:
@@ -17,8 +24,8 @@ permissions:
   actions: read
 
 concurrency:
-  group: mosharrof-apk-webview-real-chat
-  cancel-in-progress: false
+  group: mosharrof-apk-webview-real-chat-${{ github.event.pull_request.number || github.event.workflow_run.id || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   apk-webview-real-chat:

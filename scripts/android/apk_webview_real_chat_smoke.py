@@ -52,7 +52,30 @@ class PageCDP:
     """Minimal page-target CDP client, avoiding unsupported Browser-domain methods."""
 
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=15)
+        # Android WebView can publish /json/list before its page-target WebSocket
+        # endpoint is ready. Also, some WebView builds reject the default Origin
+        # header. Retry the handshake with a longer timeout and then without Origin.
+        self.ws = None
+        failures = []
+        for attempt in range(1, 3):
+            for options in ({}, {"suppress_origin": True}):
+                try:
+                    self.ws = websocket.create_connection(ws_url, timeout=45, **options)
+                    break
+                except Exception as exc:
+                    origin_mode = "default-origin" if not options else "no-origin"
+                    failures.append(
+                        f"attempt={attempt} mode={origin_mode} "
+                        f"error={type(exc).__name__}: {str(exc)[:180]}"
+                    )
+            if self.ws is not None:
+                break
+            time.sleep(2)
+        if self.ws is None:
+            raise RuntimeError(
+                "Could not attach to Android WebView CDP target after handshake retries: "
+                + " | ".join(failures)
+            )
         self.next_id = 0
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
