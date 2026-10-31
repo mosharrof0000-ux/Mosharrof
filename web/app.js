@@ -8,6 +8,15 @@
  * - No destructive delete of system state
  */
 
+if (!Array.prototype.at) {
+  Array.prototype.at = function (index) {
+    let n = Math.trunc(index) || 0;
+    if (n < 0) n += this.length;
+    if (n < 0 || n >= this.length) return undefined;
+    return this[n];
+  };
+}
+
 /* ── Entity Registry (frontend mirror) ── */
 const REGISTRY = {
   core:            { responsibility: "coordination and governance" },
