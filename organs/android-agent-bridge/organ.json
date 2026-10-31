@@ -1,0 +1,10 @@
+{
+  "id": "android-agent-bridge",
+  "name": "Android Agent Bridge",
+  "description": "Authenticated pairing between MOSHARROF chat and the Android agent, with expiring commands and verified package outcomes.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

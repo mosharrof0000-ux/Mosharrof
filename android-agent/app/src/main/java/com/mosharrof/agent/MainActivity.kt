@@ -26,6 +26,7 @@ import com.mosharrof.agent.execution.AppPackageTaskResult
 import com.mosharrof.agent.execution.AppPackageTaskResultStore
 import com.mosharrof.agent.execution.AppPackageTaskStatus
 import com.mosharrof.agent.execution.DeviceIntentControl
+import com.mosharrof.agent.execution.DevicePairingBridge
 import com.mosharrof.agent.execution.TaskControlButtons
 import com.mosharrof.agent.execution.ScreenInspectionController
 import com.mosharrof.agent.voice.AgentSpeechOutput
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var commandInput: EditText
     private lateinit var confirmButton: Button
     private var speechOutput: AgentSpeechOutput? = null
+    private lateinit var devicePairingController: DevicePairingActivityController
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (::status.isInitialized) UserFileAccessControl.scanSelectedFolder(this, uri, status)
     }
@@ -83,6 +85,11 @@ class MainActivity : ComponentActivity() {
             hint = "যেমন: Open YouTube / ইউটিউব খুলুন"
             setSingleLine(true)
         }
+        devicePairingController = DevicePairingActivityController(
+            this, status, speechStatus, commandInput,
+            { command, fromRemote -> prepareCommand(command, fromRemote) },
+            ::publishAppPackageResult
+        )
         confirmButton = Button(this).apply {
             text = "নিশ্চিত করে চালান"
             isEnabled = false
@@ -99,6 +106,10 @@ class MainActivity : ComponentActivity() {
         val voiceButton = Button(this).apply {
             text = "কথা বলে কমান্ড দিন"
             setOnClickListener { startSpeechInput() }
+        }
+        val pairDeviceButton = Button(this).apply {
+            text = "MOSHARROF AI-এর সঙ্গে ফোন যুক্ত করুন"
+            setOnClickListener { devicePairingController.startPairing() }
         }
         val inspectButton = Button(this).apply {
             text = "বর্তমান স্ক্রিন পরীক্ষা করুন"
@@ -119,6 +130,7 @@ class MainActivity : ComponentActivity() {
             addView(title)
             addView(status)
             addView(speechStatus)
+            addView(pairDeviceButton)
             addView(commandInput)
             addView(voiceButton)
             addView(planButton)
@@ -126,7 +138,7 @@ class MainActivity : ComponentActivity() {
             SpeechOutputControls.addTo(this@MainActivity, this, speechOutput, status)
             TaskControlButtons.addCancelButton(this@MainActivity, this) { taskController.cancelPending() }
             addView(inspectButton)
-            ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled, ::prepareCommand)
+            ScreenshotAnalysisControl.addTo(this@MainActivity, this, status, ::isServiceEnabled) { command -> prepareCommand(command) }
             addView(screenDetails)
             DeviceDiagnosticsControl.addTo(this@MainActivity, this)
             UserFileAccessControl.addTo(this@MainActivity, this, status) { folderPicker.launch(null) }
@@ -156,6 +168,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::status.isInitialized) {
+            devicePairingController.startPolling()
             if (AppPackageInstallControl.resumePendingInstallIfGranted(this, status, ::publishAppPackageResult)) return
             val packageResult: AppPackageTaskResult? = AppPackagePendingOperationStore.resolveAfterReturn(this)
             if (packageResult != null) {
@@ -166,7 +179,12 @@ class MainActivity : ComponentActivity() {
             if (actionResult != null) status.text = actionResult else refreshServiceStatus()
         }
     }
-    private fun prepareCommand(command: String) {
+    override fun onPause() { devicePairingController.stopPolling(); super.onPause() }
+    private fun prepareCommand(command: String, fromRemote: Boolean = false) {
+        if (DevicePairingBridge.pendingRemote(this) != null && !fromRemote) {
+            status.text = "একটি দূরবর্তী Android কাজ এখনো নিশ্চিত/যাচাই হচ্ছে। সেটি শেষ বা বাতিল না হওয়া পর্যন্ত নতুন কমান্ড বন্ধ রাখা হয়েছে।"
+            return
+        }
         if (AppPackageControl.handleCommand(
                 this, command, status,
                 pickApk = { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) },
@@ -199,6 +217,7 @@ class MainActivity : ComponentActivity() {
     private fun publishAppPackageResult(result: AppPackageTaskResult) {
         AppPackageTaskResultStore.save(this, result)
         status.text = "কাজের ফল: ${result.status} • ID: ${result.requestId}\n${result.detail}"
+        DevicePairingBridge.recordRemoteResult(this, result)
     }
     private fun startSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
