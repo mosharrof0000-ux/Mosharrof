@@ -11,7 +11,7 @@ on:
       - "scripts/mosharrof_size_gate.py"
       - ".github/workflows/build-apk.yml"
   push:
-    branches: ["feat/current-main-apk-real-chat-qa-20261019"]
+    branches: [main, "feat/current-main-apk-real-chat-qa-20261019"]
   workflow_run:
     workflows: ["Build MOSHARROF Android APK"]
     types: [completed]
