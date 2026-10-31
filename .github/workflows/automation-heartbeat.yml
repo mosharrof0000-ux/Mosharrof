@@ -74,7 +74,7 @@ jobs:
           }
 
           # Root project: the three-hour backlog worker plus event-driven work ledger.
-          inspect_engine "$GH_REPO" "parallel-engine-builder.yml" "Mosharrof parallel backlog" 10800 yes
+          inspect_engine "$GH_REPO" "parallel-engine-builder.yml" "Mosharrof parallel backlog" 900 yes
           inspect_engine "$GH_REPO" "automatic-work-engine.yml" "Mosharrof work ledger" 0 no
 
           # Android QA is observed, never blindly rerun: emulator/ANR failures need log diagnosis.
@@ -83,7 +83,7 @@ jobs:
 
           # Al-Quran Research already has a six-hour autonomous cycle. Resume only if stale
           # and idle; its own workflow enforces agent URL/token secrets and branch/verification gates.
-          inspect_engine "mosharrof0000-ux/al-quran-research" "mosharrof-autonomous-development.yml" "Al-Quran Research worker" 21600 yes
+          inspect_engine "mosharrof0000-ux/al-quran-research" "mosharrof-autonomous-development.yml" "Al-Quran Research worker" 900 yes
 
           # Video repo currently exposes CI, not a scheduled autonomous job processor.
           # Observe CI only; never mistake test runs for actual video cutting/export work.
