@@ -9,7 +9,7 @@ on:
     types: [completed]
   # Also make progress on the existing backlog between long-running builds.
   schedule:
-    - cron: "23 */3 * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
   # Let the repository owner resume/start work from the persistent control-center issue.
   issue_comment:
