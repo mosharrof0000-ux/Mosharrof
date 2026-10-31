@@ -16,6 +16,8 @@ from urllib.request import urlopen
 
 import websocket
 
+from webview_layout_diagnostics import answer_state_js, layout_visibility_js
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--cdp-endpoint", default="http://127.0.0.1:9222")
 parser.add_argument("--output-dir", default="artifacts/apk-webview-chat")
@@ -179,28 +181,10 @@ def main() -> int:
         deadline = time.monotonic() + args.timeout_ms / 1000
         answer = ""
         provider = None
+        response_model = None
+        response_route = None
         while time.monotonic() < deadline:
-            state = cdp.evaluate(
-                f"""(() => {{
-                  const send = document.querySelector('#sendBtn');
-                  const typing = document.querySelector('#typing');
-                  const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
-                  const last = nodes[nodes.length - 1];
-                  const body = last && last.querySelector('.rich-content');
-                  return {{
-                    ready: !!send && !send.disabled && !typing && nodes.length > {baseline} &&
-                           !!body && body.innerText.trim().length > 0,
-                    count: nodes.length,
-                    typing: !!typing,
-                    answer: body ? body.innerText.trim() : '',
-                    provider: last ? last.getAttribute('data-provider') : null
-                  }};
-                }})()"""
-            )
-            if state and state.get("ready"):
-                answer = state.get("answer", "").strip()
-                provider = state.get("provider")
-                break
+            state = cdp.evaluate(answer_state_js(baseline))
             time.sleep(1)
 
         if answer:
@@ -222,23 +206,15 @@ def main() -> int:
                    f"response_chars={len(answer)}; failure_marker={failure_marker or 'none'}")
             report["response_preview"] = answer[:240]
             report["response_provider"] = provider
+            report["response_model"] = response_model
+            report["response_route"] = response_route
+            record("provider_route_identified", bool(provider), response_route or "Provider route metadata missing")
 
             # The previous smoke test could pass on DOM text while the saved screenshot
             # showed only the composer. Scroll the actual answer into view and make
             # screenshot visibility a separate required acceptance check.
-            visibility = cdp.evaluate("""(() => {
-              const nodes = [...document.querySelectorAll('#messages .message.ai:not(.typing)')];
-              const last = nodes[nodes.length - 1];
-              const body = last && last.querySelector('.rich-content');
-              if (!body || !body.innerText.trim()) return {visible:false, text:'', rect:null};
-              body.scrollIntoView({block:'center', inline:'nearest', behavior:'instant'});
-              const r = body.getBoundingClientRect();
-              const visible = r.width > 0 && r.height > 0 &&
-                r.bottom > 0 && r.top < window.innerHeight &&
-                r.right > 0 && r.left < window.innerWidth;
-              return {visible, text:body.innerText.trim(), rect:{top:r.top,bottom:r.bottom,left:r.left,right:r.right},
-                viewport:{width:window.innerWidth,height:window.innerHeight}};
-            })()""")
+            visibility = cdp.evaluate(layout_visibility_js())
+            report["layout_diagnostics"] = visibility.get("layout") if visibility else None
             time.sleep(0.5)
             cdp.screenshot(out / "apk-webview-after.png")
             screenshot_visible = bool(visibility and visibility.get("visible") and visibility.get("text"))
