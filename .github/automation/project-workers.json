@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "cadence_minutes": 15,
+  "policy": {
+    "dispatch_only_registered_workers": true,
+    "suppress_if_active": true,
+    "never_dispatch_ci_as_a_task_worker": true,
+    "never_merge_or_deploy": true
+  },
+  "workers": [
+    {
+      "project": "Mosharrof core backlog",
+      "repository": "mosharrof0000-ux/Mosharrof",
+      "workflow": "parallel-engine-builder.yml",
+      "stale_after_seconds": 900,
+      "dispatch": true,
+      "purpose": "Triage existing PRs, failed runs, issues and safe source/test backlog"
+    },
+    {
+      "project": "Al-Quran Research",
+      "repository": "mosharrof0000-ux/al-quran-research",
+      "workflow": "mosharrof-autonomous-development.yml",
+      "stale_after_seconds": 900,
+      "dispatch": true,
+      "purpose": "Quran-only research and implementation through isolated verified PRs"
+    },
+    {
+      "project": "Video Processing",
+      "repository": "mosharrof0000-ux/mosharrof-video-processing",
+      "workflow": "ci.yml",
+      "stale_after_seconds": 0,
+      "dispatch": false,
+      "purpose": "Observe CI only; this workflow is not a video cutting/export worker"
+    },
+    {
+      "project": "Android APK build",
+      "repository": "mosharrof0000-ux/Mosharrof",
+      "workflow": "build-apk.yml",
+      "stale_after_seconds": 0,
+      "dispatch": false,
+      "purpose": "Observe build failures; diagnose logs before retry"
+    },
+    {
+      "project": "Android real-chat QA",
+      "repository": "mosharrof0000-ux/Mosharrof",
+      "workflow": "android-apk-webview-real-chat-qa.yml",
+      "stale_after_seconds": 0,
+      "dispatch": false,
+      "purpose": "Observe device/chat evidence; never claim physical-device proof from CI alone"
+    },
+    {
+      "project": "Work ledger",
+      "repository": "mosharrof0000-ux/Mosharrof",
+      "workflow": "automatic-work-engine.yml",
+      "stale_after_seconds": 0,
+      "dispatch": false,
+      "purpose": "Record work events; not an autonomous task worker"
+    }
+  ]
+}
