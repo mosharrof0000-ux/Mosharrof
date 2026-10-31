@@ -18,74 +18,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Inspect all automation engines and recover stale scheduled workers
+      - name: Checkout orchestration registry and dispatcher
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Inspect registered projects and recover idle workers
         env:
-          # For cross-repository dispatch, configure a fine-grained token with Actions: write
-          # on the Al-Quran Research and video-processing repositories. The fallback token
-          # can operate only on this repository.
+          # Cross-repository dispatch requires Actions: write on Al-Quran Research.
+          # Fallback github.token is limited to this repository.
           GH_TOKEN: ${{ secrets.MOSHARROF_AUTOMATION_TOKEN || secrets.MOSHARROF_RECOVERY_TOKEN || github.token }}
           GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
           set -euo pipefail
-          now=$(date -u +%s)
-
-          inspect_engine() {
-            local repo="$1" workflow="$2" label="$3" stale_after="$4" dispatch="$5"
-            local response latest active created conclusion age
-            echo "=== $label ($repo / $workflow) ==="
-            if ! response="$(gh api "repos/$repo/actions/workflows/$workflow/runs?per_page=20" 2>&1)"; then
-              echo "STATUS=UNAVAILABLE; reason=read permission/API failure; no action taken"
-              echo "$response" | tail -n 2
-              return 0
-            fi
-
-            latest="$(jq -c '.workflow_runs[0] // empty' <<<"$response")"
-            active="$(jq '[.workflow_runs[] | select(.status == "queued" or .status == "in_progress")] | length' <<<"$response")"
-            jq -r '.workflow_runs[:5][] | [.id, .status, (.conclusion // "running"), .created_at, .html_url] | @tsv' <<<"$response" || true
-
-            if [ "$active" -gt 0 ]; then
-              echo "STATUS=ACTIVE; duplicate dispatch suppressed"
-              return 0
-            fi
-            if [ -z "$latest" ]; then
-              age="$stale_after"
-              conclusion="none"
-            else
-              created="$(jq -r '.created_at' <<<"$latest")"
-              conclusion="$(jq -r '.conclusion // "running"' <<<"$latest")"
-              age=$((now - $(date -u -d "$created" +%s)))
-            fi
-
-            if [ "$dispatch" != "yes" ]; then
-              echo "STATUS=OBSERVE_ONLY; no automatic dispatch configured for this workflow"
-              return 0
-            fi
-            if [ "$age" -lt "$stale_after" ]; then
-              echo "STATUS=RECENT; latest run age ${age}s; no dispatch"
-              return 0
-            fi
-            echo "STATUS=STALE; latest conclusion=$conclusion; attempting one workflow dispatch"
-            if gh workflow run "$workflow" --repo "$repo" --ref main; then
-              echo "RECOVERY=DISPATCHED"
-            else
-              echo "RECOVERY=BLOCKED; token lacks Actions: write on $repo or workflow is not dispatchable"
-            fi
-          }
-
-          # Root project: the three-hour backlog worker plus event-driven work ledger.
-          inspect_engine "$GH_REPO" "parallel-engine-builder.yml" "Mosharrof parallel backlog" 900 yes
-          inspect_engine "$GH_REPO" "automatic-work-engine.yml" "Mosharrof work ledger" 0 no
-
-          # Android QA is observed, never blindly rerun: emulator/ANR failures need log diagnosis.
-          inspect_engine "$GH_REPO" "build-apk.yml" "Android APK build" 0 no
-          inspect_engine "$GH_REPO" "android-apk-webview-real-chat-qa.yml" "Android real-chat QA" 0 no
-
-          # Al-Quran Research already has a six-hour autonomous cycle. Resume only if stale
-          # and idle; its own workflow enforces agent URL/token secrets and branch/verification gates.
-          inspect_engine "mosharrof0000-ux/al-quran-research" "mosharrof-autonomous-development.yml" "Al-Quran Research worker" 900 yes
-
-          # Video repo currently exposes CI, not a scheduled autonomous job processor.
-          # Observe CI only; never mistake test runs for actual video cutting/export work.
-          inspect_engine "mosharrof0000-ux/mosharrof-video-processing" "ci.yml" "Video project CI (not a worker)" 0 no
-          echo "VIDEO_WORKER=NOT_CONFIGURED; durable server-side queue/scheduler and deployed worker still required"
+          bash -n scripts/automation/dispatch_registered_workers.sh
+          bash scripts/automation/dispatch_registered_workers.sh .github/automation/project-workers.json
