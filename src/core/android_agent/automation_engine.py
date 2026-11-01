@@ -24,8 +24,12 @@ def health_summary(metrics: dict[str, Any]) -> dict[str, Any]:
 class AutomationEngine:
     """SQLite schedules, bounded retries, run history, audit and reversible actions."""
     def __init__(self, database=":memory:", *, max_attempts=3, retry_base_seconds=60):
-        self.database=str(database); self.max_attempts=max(1,min(int(max_attempts),10)); self.retry_base_seconds=max(1,int(retry_base_seconds)); self.handlers={}; self.undo_handlers={}; self._init_db()
+        self.database=str(database); self.max_attempts=max(1,min(int(max_attempts),10)); self.retry_base_seconds=max(1,int(retry_base_seconds)); self.handlers={}; self.undo_handlers={}
+        self._memory_connection = sqlite3.connect(":memory:") if self.database == ":memory:" else None
+        if self._memory_connection is not None: self._memory_connection.row_factory = sqlite3.Row
+        self._init_db()
     def _connect(self):
+        if self._memory_connection is not None: return self._memory_connection
         db=sqlite3.connect(self.database); db.row_factory=sqlite3.Row; return db
     def _init_db(self):
         with self._connect() as db:
