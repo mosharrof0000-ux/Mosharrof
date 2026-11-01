@@ -1,0 +1,13 @@
+{
+  "id": "android_agent",
+  "type": "engine_entity",
+  "owner": "Mosharrof Core",
+  "brain": "android_agent",
+  "responsibility": "Bengali-first planning and safe, permission-scoped automation for a user-paired Android companion.",
+  "scope": "android_agent/*",
+  "permission_profile": "android_agent",
+  "memory": "entities/android_agent/memory",
+  "tools": "entities/android_agent/tools",
+  "audit": "entities/android_agent/audit",
+  "delete_allowed": false
+}

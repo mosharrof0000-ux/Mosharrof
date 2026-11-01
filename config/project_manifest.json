@@ -25,7 +25,8 @@
     "audit",
     "versioning",
     "universal_capability_registry",
-    "trusted_permission_context"
+    "trusted_permission_context",
+    "android_agent_automation"
   ],
   "entity_contract": [
     "identity",

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "profile_id": "android_agent",
+  "allow": [
+    "read",
+    "classify",
+    "schedule",
+    "audit",
+    "request_device_permission"
+  ],
+  "deny": [
+    "delete",
+    "destructive",
+    "arbitrary_shell",
+    "scope_escape",
+    "silent_device_control"
+  ],
+  "note": "Capability registration never grants authority; all device actions require trusted grants, policy and explicit user approval."
+}
