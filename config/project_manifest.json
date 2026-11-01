@@ -65,14 +65,5 @@
   "capability_registry": "config/capability_registry.json",
   "permission_engine": "src/core/universal_permission_engine.py",
   "trusted_permission_service": "src/core/trusted_permission_service.py",
-  "trusted_permission_docs": "docs/TRUSTED_PERMISSION_CONTEXT.md",
-  "android_agent": {
-    "entity_id": "android_agent",
-    "documentation": "docs/ANDROID_AI_AGENT.md",
-    "implementation": "src/core/android_agent/automation_engine.py",
-    "status": "backend_foundation_only",
-    "companion_required": true,
-    "capability_extension": "config/android_agent_capabilities.json",
-    "permission_profile": "config/permission_profiles/android_agent.json"
-  }
+  "trusted_permission_docs": "docs/TRUSTED_PERMISSION_CONTEXT.md"
 }
