@@ -22,11 +22,16 @@ class UniversalPermissionEngine:
             Path(__file__).resolve().parents[2] / "config" / "capability_registry.json"
         )
         self.registry = json.loads(self.registry_path.read_text(encoding="utf-8"))
-        self.capabilities = {
-            capability
-            for values in self.registry.get("categories", {}).values()
-            for capability in values
-        }
+        categories = dict(self.registry.get("categories", {}))
+        extension_path = self.registry_path.parent / "android_agent_capabilities.json"
+        extension = json.loads(extension_path.read_text(encoding="utf-8")) if extension_path.exists() else {}
+        categories.update(extension.get("categories", {}))
+        self.capabilities = {capability for values in categories.values() for capability in values}
+        merged_rules = dict(self.registry.get("rules", {}))
+        extension_rules = extension.get("rules", {})
+        merged_rules["explicit_user_approval"] = list(set(merged_rules.get("explicit_user_approval", ())) | set(extension_rules.get("explicit_user_approval", ())))
+        merged_rules["provider_required_prefixes"] = list(set(merged_rules.get("provider_required_prefixes", ())) | set(extension_rules.get("provider_required_prefixes", ())))
+        self.registry["rules"] = merged_rules
         rules = self.registry.get("rules", {})
         self.blocked_patterns = tuple(rules.get("permanently_blocked", ()))
         self.approval_required = set(rules.get("explicit_user_approval", ()))
