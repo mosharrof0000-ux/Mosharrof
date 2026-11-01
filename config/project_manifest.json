@@ -25,7 +25,8 @@
     "audit",
     "versioning",
     "universal_capability_registry",
-    "trusted_permission_context"
+    "trusted_permission_context",
+    "android_agent_automation"
   ],
   "entity_contract": [
     "identity",
@@ -64,5 +65,12 @@
   "capability_registry": "config/capability_registry.json",
   "permission_engine": "src/core/universal_permission_engine.py",
   "trusted_permission_service": "src/core/trusted_permission_service.py",
-  "trusted_permission_docs": "docs/TRUSTED_PERMISSION_CONTEXT.md"
+  "trusted_permission_docs": "docs/TRUSTED_PERMISSION_CONTEXT.md",
+  "android_agent": {
+    "entity_id": "android_agent",
+    "documentation": "docs/ANDROID_AI_AGENT.md",
+    "implementation": "src/core/android_agent/automation_engine.py",
+    "status": "backend_foundation_only",
+    "companion_required": true
+  }
 }
