@@ -67,3 +67,8 @@ The scheduled/manual autonomous pipeline uses a short-lived GitHub App token to 
 - `GEMINI_API_KEY` must remain an Actions secret for model calls.
 
 If the App variable or secret is missing, the workflow safely pauses and records the reason in its Actions summary; it does not print secret values, write files, or claim a PR was created. If token creation reports “Integration not found,” confirm that the Client ID/private key belong to the same App and that the App is installed on this repository. Do not paste private keys or tokens into chat or commit them.
+
+
+## Android AI Agent & Automation
+
+A Bengali-first Android agent foundation is registered as the `android_agent` entity. It currently provides a safe scheduler, bounded retries, audit history, reversible-handler contract, download classification and phone-health metric normalization. Actual phone access requires a separately installed, paired Android companion and explicit Android permissions. See `docs/ANDROID_AI_AGENT.md`; device control, cloud sync, screen capture, ChatGPT relay and offline local AI are not claimed as live.
