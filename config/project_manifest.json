@@ -71,6 +71,8 @@
     "documentation": "docs/ANDROID_AI_AGENT.md",
     "implementation": "src/core/android_agent/automation_engine.py",
     "status": "backend_foundation_only",
-    "companion_required": true
+    "companion_required": true,
+    "capability_extension": "config/android_agent_capabilities.json",
+    "permission_profile": "config/permission_profiles/android_agent.json"
   }
 }
