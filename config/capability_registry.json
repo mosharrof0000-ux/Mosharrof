@@ -178,6 +178,23 @@
       "quran.research.search",
       "quran.research.analyze",
       "quran.research.export"
+    ],
+    "android_agent": [
+      "android.device.health.read",
+      "android.files.index",
+      "android.files.classify",
+      "android.downloads.classify",
+      "android.automation.schedule",
+      "android.automation.execute",
+      "android.automation.pause",
+      "android.automation.resume",
+      "android.automation.history.read",
+      "android.automation.undo",
+      "android.screen.capture.request",
+      "android.app.action.request",
+      "android.backup.create",
+      "android.backup.restore",
+      "android.local_ai.status.read"
     ]
   },
   "rules": {
@@ -212,7 +229,16 @@
       "storage.backup.restore",
       "system.permission.catalog.manage",
       "ai.tool.register",
-      "ai.tool.execute"
+      "ai.tool.execute",
+      "android.files.index",
+      "android.files.classify",
+      "android.automation.schedule",
+      "android.automation.execute",
+      "android.automation.undo",
+      "android.screen.capture.request",
+      "android.app.action.request",
+      "android.backup.create",
+      "android.backup.restore"
     ],
     "provider_required_prefixes": [
       "video.",
@@ -221,7 +247,8 @@
       "ai.",
       "network.",
       "communication.",
-      "publish."
+      "publish.",
+      "android."
     ]
   }
 }
