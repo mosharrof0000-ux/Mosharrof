@@ -9,6 +9,7 @@ on:
       - ".github/workflows/deploy-gemini-worker.yml"
       - "core/video-generation/**"
       - "core/video-generation-ui.js"
+      - "core/video-cutting/**"
       - "scripts/prepare_web_organ_runtime.py"
 
 permissions:
@@ -106,6 +107,8 @@ jobs:
         run: node --check worker/screenshot-analysis.js
       - name: Validate video Worker JavaScript syntax
         run: node --input-type=module --check < core/video-generation/worker.js
+      - name: Validate video cutting Worker JavaScript syntax
+        run: node --check core/video-cutting/worker-proxy.js && node --input-type=module --check < core/video-cutting/worker-entry.js
 
       - name: Run safe video Worker contract tests
         run: node tests/test_video_generation_worker.mjs
@@ -225,6 +228,36 @@ jobs:
             echo "OpenRouter chat fallback configured (secret value hidden)."
           else
             echo "OpenRouter secret not set; provider will be skipped by the Worker."
+          fi
+
+      - name: Configure optional video cutting proxy secrets (disabled unless complete)
+        working-directory: worker
+        env:
+          RAW_VIDEO_CUTTING_API_URL: ${{ secrets.VIDEO_CUTTING_API_URL }}
+          RAW_VIDEO_CUTTING_API_TOKEN: ${{ secrets.VIDEO_CUTTING_API_TOKEN }}
+          RAW_VIDEO_CUTTING_ACCESS_TOKEN: ${{ secrets.VIDEO_CUTTING_ACCESS_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          clean() { printf '%s' "$1" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+          API_URL="$(clean "$RAW_VIDEO_CUTTING_API_URL")"
+          API_TOKEN="$(clean "$RAW_VIDEO_CUTTING_API_TOKEN")"
+          ACCESS_TOKEN="$(clean "$RAW_VIDEO_CUTTING_ACCESS_TOKEN")"
+          READY=true
+          [ -n "$API_URL" ] && [ "${#API_TOKEN}" -ge 32 ] && [ "${#ACCESS_TOKEN}" -ge 32 ] || READY=false
+          if [ "$READY" = true ]; then
+            node - "$API_URL" <<'NODE'
+          const u = new URL(process.argv[2]);
+          if (u.protocol !== "https:" || u.username || u.password || u.search || u.hash || u.pathname !== "/") process.exit(1);
+          NODE
+            printf '%s' "$API_URL" | npx --yes wrangler@3 secret put VIDEO_CUTTING_API_URL --config wrangler.toml
+            printf '%s' "$API_TOKEN" | npx --yes wrangler@3 secret put VIDEO_CUTTING_API_TOKEN --config wrangler.toml
+            printf '%s' "$ACCESS_TOKEN" | npx --yes wrangler@3 secret put VIDEO_CUTTING_ACCESS_TOKEN --config wrangler.toml
+            printf 'true' | npx --yes wrangler@3 secret put VIDEO_CUTTING_ENABLED --config wrangler.toml
+            echo "Video cutting proxy enabled with configured HTTPS endpoint and scoped tokens (values hidden)."
+          else
+            printf 'false' | npx --yes wrangler@3 secret put VIDEO_CUTTING_ENABLED --config wrangler.toml
+            echo "Video cutting proxy explicitly disabled: endpoint and both scoped tokens are not all configured."
           fi
 
       - name: Configure keyless Cloudflare chat model fallback list
@@ -365,6 +398,31 @@ jobs:
           assert raw[:3] == b"\xff\xd8\xff" or raw[:8] == b"\x89PNG\r\n\x1a\n", raw[:8]
           print("REAL FREE IMAGE GENERATION VERIFIED:", len(raw), "bytes")
           print("Model:", d.get("model"))
+          PY
+
+      - name: Verify live video cutting proxy configuration
+        env:
+          RAW_VIDEO_CUTTING_API_URL: ${{ secrets.VIDEO_CUTTING_API_URL }}
+          RAW_VIDEO_CUTTING_API_TOKEN: ${{ secrets.VIDEO_CUTTING_API_TOKEN }}
+          RAW_VIDEO_CUTTING_ACCESS_TOKEN: ${{ secrets.VIDEO_CUTTING_ACCESS_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED=false
+          if [ -n "$RAW_VIDEO_CUTTING_API_URL" ] && [ "${#RAW_VIDEO_CUTTING_API_TOKEN}" -ge 32 ] && [ "${#RAW_VIDEO_CUTTING_ACCESS_TOKEN}" -ge 32 ]; then EXPECTED=true; fi
+          URL="https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/video-cut/health"
+          curl -fsS --connect-timeout 5 --max-time 15 "$URL" > /tmp/video-cut-health.json
+          cat /tmp/video-cut-health.json
+          python - "$EXPECTED" <<'PY'
+          import json,sys
+          data=json.load(open("/tmp/video-cut-health.json",encoding="utf-8"))
+          expected=sys.argv[1].lower()=="true"
+          assert data.get("ok") is True, data
+          assert data.get("authentication_required") is True, data
+          assert data.get("enabled") is expected, data
+          assert data.get("max_upload_bytes")==39*1024*1024, data
+          assert data.get("large_uploads_supported") is False, data
+          print("VIDEO CUTTING PROXY HEALTH VERIFIED; enabled=", expected)
           PY
 
       - name: Verify Worker health
