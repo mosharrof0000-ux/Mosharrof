@@ -36,8 +36,19 @@ const OPERATIONS = Object.freeze({
       return { path: "/accounts/" + account + "/workers/scripts/" + script, scope: "/accounts/" + account + "/workers/scripts/" + script, script_content: input.script_content };
     },
   },
+  "token.list": {
+    method: "GET", permissions: ["User API Tokens Read"],
+    buildPath: () => ({ path: "/user/tokens", scope: "/user/tokens" }),
+  },
+  "token.revoke": {
+    method: "DELETE", permissions: ["User API Tokens Write"], privileged: true,
+    buildPath: (input) => {
+      const id = safeId(input.token_id);
+      return id ? { path: "/user/tokens/" + id, scope: "/user/tokens/" + id } : null;
+    },
+  },
   "token.create": {
-    method: "POST", permissions: ["API Tokens Write"], privileged: true,
+    method: "POST", permissions: ["User API Tokens Write"], privileged: true,
     buildPath: (input) => {
       if (typeof input.token_name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9 ._-]{2,79}$/.test(input.token_name) || !Array.isArray(input.policies) || !input.policies.length || input.policies.length > 10) return null;
       const valid = input.policies.every((p) => p && typeof p === "object" && !Array.isArray(p) && p.effect === "allow" && Array.isArray(p.permission_groups) && p.permission_groups.length > 0 && p.permission_groups.every((g) => g && typeof g.id === "string" && /^[a-f0-9]{32}$/.test(g.id)) && p.resources && typeof p.resources === "object" && !Array.isArray(p.resources) && Object.keys(p.resources).length > 0 && Object.keys(p.resources).every((k) => /^[a-f0-9]{32}$/.test(k) && Array.isArray(p.resources[k]) && p.resources[k].length > 0 && p.resources[k].every((v) => typeof v === "string" && v.length < 256 && !/[\\r\\n]/.test(v))));
@@ -221,7 +232,7 @@ export default {
       if (raw.length > MAX_BODY_BYTES) return json({ error: "REQUEST_TOO_LARGE" }, 413);
       input = JSON.parse(raw);
     } catch { return json({ error: "INVALID_JSON" }, 400); }
-    const allowedFields = ["operation", "zone_id", "account_id", "script_name", "secret_name", "secret_value", "script_content", "token_name", "policies", "expires_in"];
+    const allowedFields = ["operation", "zone_id", "account_id", "script_name", "secret_name", "secret_value", "script_content", "token_name", "token_id", "policies", "expires_in"];
     if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((k) => !allowedFields.includes(k))) return json({ error: "INVALID_REQUEST_FIELDS" }, 400);
     const operation = OPERATIONS[String(input.operation || "")];
     if (!operation) return json({ error: "OPERATION_NOT_ALLOWED" }, 403);
