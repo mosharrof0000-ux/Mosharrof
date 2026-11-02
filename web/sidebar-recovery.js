@@ -1,6 +1,31 @@
 /* Sidebar safety net: restore navigation if the primary UI script fails before rendering it. */
 (function () {
   "use strict";
+  if (!Array.prototype.at) {
+    Object.defineProperty(Array.prototype, "at", {
+      value: function (n) {
+        n = Math.trunc(n) || 0;
+        if (n < 0) n += this.length;
+        if (n < 0 || n >= this.length) return undefined;
+        return this[n];
+      },
+      writable: true,
+      configurable: true
+    });
+  }
+  if (!String.prototype.at) {
+    Object.defineProperty(String.prototype, "at", {
+      value: function (n) {
+        n = Math.trunc(n) || 0;
+        if (n < 0) n += this.length;
+        if (n < 0 || n >= this.length) return undefined;
+        return this[n];
+      },
+      writable: true,
+      configurable: true
+    });
+  }
+
   var bootstrapScriptUrl = document.currentScript && document.currentScript.src;
   if (bootstrapScriptUrl && !window.__mosharrofOrganBootstrapRequested) {
     window.__mosharrofOrganBootstrapRequested = true;
