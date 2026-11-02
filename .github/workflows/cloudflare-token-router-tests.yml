@@ -11,6 +11,7 @@ on:
       - "feat/router-write-capabilities-staged"
     paths:
       - "cloudflare-token-router-worker/**"
+      - "core/cloudflare-token-router/**"
       - ".github/workflows/cloudflare-token-router-tests.yml"
 
 permissions:
