@@ -4,15 +4,10 @@ var manualCss=document.createElement("style");manualCss.setAttribute("data-organ
 var sendButton=document.querySelector("#sendBtn");
 var CHAT_KEY="mosharrof_chat_route_v1",STT_KEY="mosharrof_stt_model_v1";
 var chatChoices=[
-{value:"auto",label:"স্বয়ংক্রিয় · সব সংযোগ পরীক্ষা",tone:"green"},
-{value:"gemini|gemini-3.8-flash",label:"Gemini · 3.8 Flash",tone:"blue"},
-{value:"gemini|gemini-3.7-flash",label:"Gemini · 3.7 Flash",tone:"blue"},
-{value:"gemini|gemini-3.6-flash",label:"Gemini · 3.6 Flash",tone:"blue"},
-{value:"gemini|gemini-3.5-flash",label:"Gemini · 3.5 Flash",tone:"blue"},
-{value:"cloudflare-workers-ai|@cf/zai-org/glm-4.7-flash",label:"Cloudflare · GLM 4.7 Flash",tone:"yellow"},
-{value:"cloudflare-workers-ai|@cf/meta/llama-3.3-70b-instruct-fp8-fast",label:"Cloudflare · Llama 3.3 70B",tone:"yellow"},
-{value:"groq|llama-3.1-8b-instant",label:"Groq · Llama 3.1 8B",tone:"blue"},
-{value:"openrouter|meta-llama/llama-3.3-70b-instruct:free",label:"OpenRouter · Llama 3.3 Free",tone:"blue"}];
+{value:"auto",label:"স্বয়ংক্রিয় · Gemini → Cloudflare → Groq",tone:"green"},
+{value:"gemini|gemini-3.6-flash",label:"প্রধান · Gemini 3.6 Flash",tone:"blue"},
+{value:"cloudflare-workers-ai|@cf/meta/llama-3.3-70b-instruct-fp8-fast",label:"বিকল্প ১ · Cloudflare Llama 3.3 70B",tone:"yellow"},
+{value:"groq|llama-3.1-8b-instant",label:"বিকল্প ২ · Groq Llama 3.1 8B",tone:"blue"}];
 var ttsChoices=[
 {value:"auto",label:"স্বয়ংক্রিয় · ফ্রি-ফার্স্ট",tone:"green"},
 {value:"edge",label:"Edge-TTS · বাংলা কণ্ঠ",tone:"blue"},
@@ -39,7 +34,7 @@ function openMenu(target,title,choices,current,onChoose,foot){closeMenu();var no
 function setChatMode(value){write(CHAT_KEY,value);var item=chatChoices.find(function(x){return x.value===value;})||chatChoices[0];var provider=String(value||"auto").split("|")[0];var accents={"auto":"#f2f2f2","gemini":"#8ab4f8","cloudflare-workers-ai":"#f38020","groq":"#ff6b6b","openrouter":"#b6a0ff"};if(sendButton){sendButton.style.setProperty("--chat-provider-accent",accents[provider]||accents.auto);sendButton.title="মেসেজ পাঠান";sendButton.setAttribute("aria-label","মেসেজ পাঠান");}if(sendButton){sendButton.title="মেসেজ পাঠান · দীর্ঘক্ষণ চেপে ধরলে সার্ভার / মডেল নির্বাচন";sendButton.setAttribute("aria-label","মেসেজ পাঠান · দীর্ঘক্ষণ চেপে ধরলে সার্ভার নির্বাচন");}var status=document.querySelector("#voiceStatus");if(status){status.textContent="মডেল মোড: "+item.label;status.classList.add("show");window.setTimeout(function(){status.classList.remove("show");},1800);}}
 function setTtsMode(value){write("mosharrof_tts_provider_v1",value);var select=document.querySelector("#ttsProviderSelect");if(select){select.value=value;select.dispatchEvent(new Event("change",{bubbles:true}));}}
 function setSttMode(value){write(STT_KEY,value);var status=document.querySelector("#voiceStatus");if(status){status.textContent="ট্রান্সক্রিপশন: "+(sttChoices.find(function(x){return x.value===value;})||sttChoices[0]).label;status.classList.add("show");window.setTimeout(function(){status.classList.remove("show");},1800);}}
-function menuFor(target,kind){if(kind==="chat")openMenu(target,"AI MODEL / CONNECTION",chatChoices,chatValue(),setChatMode,"Auto: সব সংযোগ পরীক্ষা করবে। Manual: নির্বাচিত provider/model-ই ব্যবহার করবে।");else if(kind==="tts")openMenu(target,"READ ALOUD / TTS",ttsChoices,ttsValue(),setTtsMode,"Manual: নির্বাচিত provider-ই। Auto: ফ্রি-ফার্স্ট fallback।");else if(kind==="stt")openMenu(target,"RECORDING / SPEECH TO TEXT",sttChoices,sttValue(),setSttMode,"নির্বাচিত মডেল সার্ভারে ট্রান্সক্রিপশনের জন্য পাঠানো হবে।");}
+function menuFor(target,kind){if(kind==="chat")openMenu(target,"AI MODEL / CONNECTION",chatChoices,chatValue(),setChatMode,"Auto: Gemini → Cloudflare → Groq fallback। Manual: নির্বাচিত সংযোগই ব্যবহার করবে।");else if(kind==="tts")openMenu(target,"READ ALOUD / TTS",ttsChoices,ttsValue(),setTtsMode,"Manual: নির্বাচিত provider-ই। Auto: ফ্রি-ফার্স্ট fallback।");else if(kind==="stt")openMenu(target,"RECORDING / SPEECH TO TEXT",sttChoices,sttValue(),setSttMode,"নির্বাচিত মডেল সার্ভারে ট্রান্সক্রিপশনের জন্য পাঠানো হবে।");}
 function kindOf(target){if(!target||!target.closest)return null;if(target.closest("#sendBtn"))return "chat";if(target.closest("#composerVoiceBtn"))return "stt";var tts=target.closest('[data-manual-menu="tts"],.message-speak-shortcut');if(tts)return "tts";var action=target.closest(".message-action");if(action&&/পড়ে শোনান|read aloud|speak/i.test(action.textContent||""))return "tts";return null;}
 function startHold(target,kind){clearTimeout(pressTimer);pressTarget=target;pressTimer=window.setTimeout(function(){if(!pressTarget)return;suppressClickTarget=pressTarget;menuFor(pressTarget,kind);},520);}
 function stopHold(event){clearTimeout(pressTimer);pressTimer=null;pressTarget=null;if(event&&event.type!=="pointerup"&&suppressClickTarget)window.setTimeout(function(){suppressClickTarget=null;},0);}

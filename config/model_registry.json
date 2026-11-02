@@ -1,6 +1,52 @@
 {
   "schema_version": "1.0.0",
   "strategy": "model-agnostic",
-  "providers": [],
+  "routing_order": [
+    "gemini",
+    "cloudflare-workers-ai",
+    "groq"
+  ],
+  "providers": [
+    {
+      "id": "gemini",
+      "role": "primary",
+      "model": "gemini-3.6-flash",
+      "requires_secret": "GEMINI_API_KEY",
+      "fallback_on": [
+        "network_error",
+        "timeout",
+        "rate_limit",
+        "provider_error"
+      ]
+    },
+    {
+      "id": "cloudflare-workers-ai",
+      "role": "fallback_1",
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "requires_server_binding": true,
+      "fallback_on": [
+        "network_error",
+        "timeout",
+        "rate_limit",
+        "provider_error"
+      ]
+    },
+    {
+      "id": "groq",
+      "role": "fallback_2",
+      "model": "llama-3.1-8b-instant",
+      "requires_secret": "GROQ_API_KEY",
+      "optional_until_verified": true
+    }
+  ],
+  "security": [
+    "Never expose provider API keys to browser code or localStorage.",
+    "Keep provider credentials in server-side secrets/bindings only."
+  ],
+  "validation": [
+    "A provider is enabled only after a real authenticated chat request succeeds.",
+    "Report the actual provider/model and attempted fallback chain.",
+    "Never mark chat healthy based only on HTTP health or placeholder text."
+  ],
   "rule": "Changing a model must not change entity identity, memory, responsibility, permissions, scope, or audit history."
 }
