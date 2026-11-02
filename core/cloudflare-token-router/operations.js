@@ -68,3 +68,5 @@ function safeId(value) {
   if (typeof value !== "string" || value.length < 1 || value.length > 128) return null;
   return /^[A-Za-z0-9._~-]+$/.test(value) && value !== "." && value !== ".." ? value : null;
 }
+
+export { OPERATIONS, safeId };
