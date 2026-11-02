@@ -140,6 +140,15 @@ object AppPackageInstallControl {
                 status.text = outcome.toDisplayText()
             }
             .setPositiveButton("ইনস্টলার খুলুন") { _, _ ->
+                if (DevicePairingBridge.isRemoteCommandExpired(activity)) {
+                    AppPackagePendingOperationStore.clear(activity)
+                    val outcome = result(requestId, AppPackageTaskStatus.TIMED_OUT,
+                        "দূরবর্তী কমান্ডের মেয়াদ শেষ; Android ইনস্টলার খোলা হয়নি।",
+                        packageName, expectedVersion, previousVersion)
+                    onTaskResult(outcome)
+                    status.text = outcome.toDisplayText()
+                    return@setPositiveButton
+                }
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(apkUri, "application/vnd.android.package-archive")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

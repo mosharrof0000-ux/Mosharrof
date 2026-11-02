@@ -78,6 +78,13 @@ object AppPackageControl {
                 status.text = outcome.toDisplayText()
             }
             .setPositiveButton("Play Store খুলুন") { _, _ ->
+                if (DevicePairingBridge.isRemoteCommandExpired(activity)) {
+                    val outcome = result(requestId, AppPackageTaskAction.SEARCH_PLAY_STORE,
+                        AppPackageTaskStatus.TIMED_OUT, "দূরবর্তী কমান্ডের মেয়াদ শেষ; Play Store খোলা হয়নি।")
+                    onTaskResult(outcome)
+                    status.text = outcome.toDisplayText()
+                    return@setPositiveButton
+                }
                 val market = Uri.parse("market://search?q=" + Uri.encode(query))
                 try {
                     activity.startActivity(Intent(Intent.ACTION_VIEW, market))

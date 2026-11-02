@@ -58,6 +58,14 @@ object AppPackageUninstallControl {
                 status.text = outcome.toDisplayText()
             }
             .setPositiveButton("আনইনস্টল স্ক্রিন খুলুন") { _, _ ->
+                if (DevicePairingBridge.isRemoteCommandExpired(activity)) {
+                    AppPackagePendingOperationStore.clear(activity)
+                    val outcome = result(requestId, AppPackageTaskStatus.TIMED_OUT,
+                        "দূরবর্তী কমান্ডের মেয়াদ শেষ; Android আনইনস্টল স্ক্রিন খোলা হয়নি।", normalized)
+                    onTaskResult(outcome)
+                    status.text = outcome.toDisplayText()
+                    return@setPositiveButton
+                }
                 try {
                     AppPackagePendingOperationStore.beginUninstall(activity, requestId, normalized)
                     activity.startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:$normalized")))

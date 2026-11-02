@@ -110,7 +110,7 @@ class DeviceCommandAuthenticator(
         return when (e.action) {
             DeviceCommandAction.INSTALL_APK -> e.target.isBlank()
             DeviceCommandAction.SEARCH_PLAY_STORE -> e.target.isNotBlank() && e.target.trim().length <= 120
-            DeviceCommandAction.UNINSTALL_APP -> PACKAGE_NAME.matches(e.target)
+            DeviceCommandAction.UNINSTALL_APP -> PACKAGE_NAME.matches(e.target) || APP_LABEL.matches(e.target)
         }
     }
 
@@ -125,6 +125,7 @@ class DeviceCommandAuthenticator(
 
     companion object {
         private val PACKAGE_NAME = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
+    private val APP_LABEL = Regex("[\\p{L}\\p{N}][\\p{L}\\p{N} ._()+-]{0,79}")
 
         /** Signing helper for the trusted paired client; callers must protect the key. */
         fun sign(secret: ByteArray, canonicalPayload: String): String =
