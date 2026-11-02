@@ -131,7 +131,7 @@ test("health endpoint is public, read-only, and reports configuration presence w
   assert.deepEqual(await unconfigured.json(), {
     ok: true,
     service: "mosharrof-cloudflare-token-router",
-    build: "2026-10-12-token-router-worker-v2",
+    build: "2026-11-02-router-admin-ops-v1",
     mode: "read-only",
     access_configured: false,
     profiles_configured: false,
@@ -311,4 +311,39 @@ test("missing or disabled matching token fails closed without upstream calls", a
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+
+test("privileged write operations fail closed until separately enabled and owner-approved", async () => {
+  const env = {
+    ROUTER_ACCESS_TOKEN: "router-key",
+    CLOUDFLARE_TOKEN_PROFILES: "[]",
+  };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls += 1; throw new Error("must not reach upstream"); };
+  try {
+    const disabled = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST", headers: { authorization: "Bearer router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "worker.secret.write", account_id: "acct1", script_name: "app", secret_name: "API_KEY", secret_value: "sensitive" }),
+    }), env);
+    assert.equal(disabled.status, 403);
+    assert.equal((await disabled.json()).error, "PRIVILEGED_OPERATIONS_DISABLED");
+    env.PRIVILEGED_OPERATIONS_ENABLED = "true";
+    const noApproval = await worker.fetch(new Request("https://router.example/v1/operation", {
+      method: "POST", headers: { authorization: "Bearer router-key", "content-type": "application/json" },
+      body: JSON.stringify({ operation: "worker.secret.write", account_id: "acct1", script_name: "app", secret_name: "API_KEY", secret_value: "sensitive" }),
+    }), env);
+    assert.equal(noApproval.status, 403);
+    assert.equal((await noApproval.json()).error, "OWNER_APPROVAL_REQUIRED");
+    assert.equal(calls, 0);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("privileged operations have strict resource and payload allowlists", () => {
+  assert.equal(OPERATIONS["worker.secret.write"].method, "PUT");
+  assert.equal(OPERATIONS["worker.script.deploy"].method, "PUT");
+  assert.equal(OPERATIONS["token.create"].method, "POST");
+  assert.equal(OPERATIONS["token.create"].buildPath({ token_name: "Router test", policies: [{ effect: "deny", permission_groups: [{ id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }], resources: { aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: ["*"] } }] }), null);
+  assert.equal(OPERATIONS["worker.secret.write"].buildPath({ account_id: "../user", script_name: "app", secret_name: "X", secret_value: "v" }), null);
 });
