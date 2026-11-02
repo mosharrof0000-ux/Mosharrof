@@ -272,6 +272,7 @@ test("authenticated zone.read uses only the allowlisted GET endpoint and returns
       token_id: "zone-read",
       permissions: ["Zone Read"],
       resource_scope: "/zones/zone-1",
+      privileged: false,
       outcome: "success",
       http_status: 200,
     });
