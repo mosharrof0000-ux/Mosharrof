@@ -1,6 +1,9 @@
 name: Cloudflare Token Router — Isolated Deploy
 
 on:
+  push:
+    branches:
+      - ops/router-isolated-deploy-20261102
   workflow_dispatch:
     inputs:
       confirm_isolated_deploy:
@@ -21,7 +24,7 @@ concurrency:
 
 jobs:
   deploy-isolated-worker:
-    if: ${{ inputs.confirm_isolated_deploy == 'yes' }}
+    if: ${{ github.event_name == 'push' || inputs.confirm_isolated_deploy == 'yes' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: cloudflare-router-staging
