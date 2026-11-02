@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import worker, { covers, parseProfiles, safeId, selectToken, OPERATIONS } from "./index.js";
+import worker, { covers, parseProfiles, safeId, selectToken, OPERATIONS } from "../core/cloudflare-token-router/index.js";
 
 test("resource IDs reject traversal and path injection", () => {
   assert.equal(safeId("zone-123"), "zone-123");
