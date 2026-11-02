@@ -41,7 +41,7 @@ def organ_name(path: str) -> str | None:
 
 def is_policy_or_test(path: str) -> bool:
     p = Path(path)
-    return p.parts[0] in {"scripts", "tests", "docs", ".github", "config"} or (p.parts[0] == "entities" and p.name == "ENTITY.json") or p.name.endswith((".test.js", ".spec.js", "_test.py"))
+    return p.parts[0] in {"scripts", "tests", "docs", ".github", "config"} or p.name == "package.json" or (p.parts[0] == "entities" and p.name == "ENTITY.json") or p.name.endswith((".test.js", ".spec.js", "_test.py"))
 
 
 def resolve_import(source: Path, specifier: str) -> Path | None:
