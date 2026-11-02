@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen
 
+from webview_cdp import connect_page_cdp
+
 import websocket
 
 parser = argparse.ArgumentParser()
@@ -134,9 +136,7 @@ def main() -> int:
         if target is None:
             return 1
 
-        cdp = PageCDP(target["webSocketDebuggerUrl"])
-        cdp.command("Page.enable")
-        cdp.command("Runtime.enable")
+        cdp = connect_page_cdp(target["webSocketDebuggerUrl"], PageCDP)
         try:
             cdp.command("Page.bringToFront", timeout=5)
         except Exception:
