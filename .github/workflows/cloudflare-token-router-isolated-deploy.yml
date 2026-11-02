@@ -65,6 +65,24 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@3.90.0 deploy --config wrangler.toml --dry-run=false
 
+      - name: Verify isolated workers.dev health endpoint
+        run: |
+          set -euo pipefail
+          base="https://mosharrof-cloudflare-token-router.mosharrof0000.workers.dev"
+          health=$(curl --fail --silent --show-error --max-time 20 "$base/health")
+          echo "$health" | jq -e '.ok == true and .service == "mosharrof-cloudflare-token-router"'
+          ready_code=$(curl --silent --show-error --max-time 20 -o /tmp/router-ready.json -w "%{http_code}" "$base/ready")
+          echo "Readiness HTTP status: $ready_code"
+          jq '{ok, mode, access_configured, profiles_configured, profile_config_valid, enabled_profiles_count, enabled_profiles_with_secret_count}' /tmp/router-ready.json
+          if [ "$ready_code" = "200" ]; then
+            echo "Router readiness checks passed."
+          elif [ "$ready_code" = "503" ]; then
+            echo "::warning::Worker is reachable, but runtime access/profile secrets are not configured yet."
+          else
+            echo "::error::Unexpected readiness response."
+            exit 1
+          fi
+
       - name: Report safety boundary
         run: |
           echo "Deployment command completed. This workflow does not configure routes, workers.dev, or Worker secrets."
