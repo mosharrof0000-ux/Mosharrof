@@ -10,7 +10,7 @@ This Worker is isolated from the existing chat/TTS Worker. It never changes live
 - `token.list`: list user API tokens (`API Tokens Read`).
 - `token.permission_groups.list`: list selectable user-token permission groups (`API Tokens Read`).
 - `token.create`: create a scoped API token (`API Tokens Write`); accepts only allow policies with explicit permission-group IDs and resource IDs.
-- `token.revoke`: revoke one explicitly named API token (`User API Tokens Write`); privileged approval required.
+- `token.revoke`: revoke one explicitly named API token (`API Tokens Write`); privileged approval required.
 
 All writes fail closed unless both server-side settings are present:
 - `PRIVILEGED_OPERATIONS_ENABLED=true`
@@ -26,8 +26,8 @@ Every privileged request also requires `x-router-admin-approval: <approval-secre
 - Strict operation-specific payload validation; no arbitrary proxy.
 - Secret values and authorization headers are not returned in responses.
 - Script source is limited to 300 KB; request body limit is 350 KB.
-- Token creation accepts only allow policies with explicit 32-hex permission-group/resource IDs; expiry is limited to 1–1440 minutes when supplied.
-- No token update/revoke endpoint is exposed.
+- Token creation accepts only allow policies with explicit 32-hex permission-group IDs and specific Cloudflare user/account/zone resource IDs; broad wildcard resources are rejected. Expiry is limited to 1–1440 minutes when supplied.
+- Token revocation is available only through the approval-gated operation; token update/rotation is not exposed.
 - `/health` and `/ready` return configuration presence/counts only.
 
 ## Deployment
