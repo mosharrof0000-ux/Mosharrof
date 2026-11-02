@@ -1,6 +1,6 @@
 const API_BASE = "https://api.cloudflare.com/client/v4";
 const BUILD_ID = "2026-11-02-router-admin-ops-v1";
-const MAX_BODY_BYTES = 4096;
+const MAX_BODY_BYTES = 350000;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
 
 const OPERATIONS = Object.freeze({
