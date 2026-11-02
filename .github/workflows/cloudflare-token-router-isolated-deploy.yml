@@ -48,6 +48,17 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Set CLOUDFLARE_API_TOKEN as an environment secret in cloudflare-router-staging."; exit 1; }
           test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Set CLOUDFLARE_ACCOUNT_ID as an environment variable in cloudflare-router-staging."; exit 1; }
 
+      - name: Diagnose Cloudflare token without exposing it
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set +e
+          verify=$(curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify)
+          echo "$verify" | jq '{success, errors, result: {id: .result.id, status: .result.status, expires_on: .result.expires_on}}'
+          access=$(curl -sS -o /tmp/cf-workers.json -w "%{http_code}" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts?per_page=1")
+          echo "Workers Scripts API HTTP status: $access"
+          jq '{success, errors}' /tmp/cf-workers.json
       - name: Deploy isolated Worker without route
         working-directory: cloudflare-token-router-worker
         env:
