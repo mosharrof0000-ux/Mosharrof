@@ -5,13 +5,17 @@
   "purpose": "Validate recorder and durable resume behavior",
   "step": "Run work-engine and work-gate contract tests",
   "reason": null,
-  "details": "",
+  "details": "next: run Python compilation and both contract test suites",
   "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/41459286744",
   "branch": "main",
   "sha": "2d6d5c818b465e8e3e976bed83fb83993f47dc0e",
   "status": "in_progress",
-  "completed_steps": [],
+  "completed_steps": [
+    "Recorder start entry written"
+  ],
   "interruption": null,
-  "resume_from": "Run work-engine and work-gate contract tests",
-  "updated_at_utc": "2026-11-02T14:09:50Z"
+  "resume_from": "next: run Python compilation and both contract test suites",
+  "updated_at_utc": "2026-11-02T14:09:53Z",
+  "last_checkpoint_utc": "2026-11-02T14:09:53Z",
+  "last_completed_step": "Recorder start entry written"
 }
