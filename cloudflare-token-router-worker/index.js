@@ -25,7 +25,7 @@ const OPERATIONS = Object.freeze({
     buildPath: (input) => {
       const account = safeId(input.account_id), script = safeId(input.script_name);
       if (!account || !script || typeof input.secret_name !== "string" || !/^[A-Z][A-Z0-9_]{0,99}$/.test(input.secret_name) || typeof input.secret_value !== "string" || !input.secret_value || input.secret_value.length > 2048) return null;
-      return { path: "/accounts/" + account + "/workers/scripts/" + script + "/secrets", scope: "/accounts/" + account + "/workers/scripts/" + script, body: { name: input.secret_name, text: input.secret_value, type: "secret" }, sensitive: true };
+      return { path: "/accounts/" + account + "/workers/scripts/" + script + "/secrets", scope: "/accounts/" + account + "/workers/scripts/" + script, body: { name: input.secret_name, text: input.secret_value, type: "secret_text" }, sensitive: true };
     },
   },
   "worker.script.deploy": {
