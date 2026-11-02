@@ -194,7 +194,8 @@ export default {
 
     try {
       const result = await cloudflareRequest(operation.method, target.path, selected.token, target.body, target.script_content);
-      const audit = { operation: input.operation, token_id: selected.p.token_id, permissions: operation.permissions, resource_scope: target.scope, privileged: operation.privileged === true, outcome: result.ok ? "success" : "failure", http_status: result.status };
+      const audit = { operation: input.operation, token_id: selected.p.token_id, permissions: operation.permissions, resource_scope: target.scope, outcome: result.ok ? "success" : "failure", http_status: result.status };
+      if (operation.privileged) audit.privileged = true;
       if (!result.ok) return json({ error: result.error, audit }, result.status === 401 || result.status === 403 ? 502 : result.status);
       return json({ ok: true, result: result.payload.result ?? null, audit }, 200);
     } catch {
