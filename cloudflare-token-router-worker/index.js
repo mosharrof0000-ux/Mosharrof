@@ -1,5 +1,5 @@
 const API_BASE = "https://api.cloudflare.com/client/v4";
-const BUILD_ID = "2026-10-12-token-router-worker-v2";
+const BUILD_ID = "2026-11-02-router-admin-ops-v1";
 const MAX_BODY_BYTES = 4096;
 const MAX_RESPONSE_BYTES = 1024 * 1024;
 
@@ -18,6 +18,33 @@ const OPERATIONS = Object.freeze({
     buildPath: (input) => {
       const id = safeId(input.account_id);
       return id ? { path: "/accounts/" + id + "/workers/scripts", scope: "/accounts/" + id + "/workers/scripts" } : null;
+    },
+  },
+  "worker.secret.write": {
+    method: "PUT", permissions: ["Workers Scripts Write"], privileged: true,
+    buildPath: (input) => {
+      const account = safeId(input.account_id), script = safeId(input.script_name);
+      if (!account || !script || typeof input.secret_name !== "string" || !/^[A-Z][A-Z0-9_]{0,99}$/.test(input.secret_name) || typeof input.secret_value !== "string" || !input.secret_value || input.secret_value.length > 2048) return null;
+      return { path: "/accounts/" + account + "/workers/scripts/" + script + "/secrets", scope: "/accounts/" + account + "/workers/scripts/" + script, body: { name: input.secret_name, text: input.secret_value, type: "secret" }, sensitive: true };
+    },
+  },
+  "worker.script.deploy": {
+    method: "PUT", permissions: ["Workers Scripts Write"], privileged: true,
+    buildPath: (input) => {
+      const account = safeId(input.account_id), script = safeId(input.script_name);
+      if (!account || !script || typeof input.script_content !== "string" || !input.script_content.trim() || input.script_content.length > 300000) return null;
+      return { path: "/accounts/" + account + "/workers/scripts/" + script, scope: "/accounts/" + account + "/workers/scripts/" + script, script_content: input.script_content };
+    },
+  },
+  "token.create": {
+    method: "POST", permissions: ["API Tokens Write"], privileged: true,
+    buildPath: (input) => {
+      if (typeof input.token_name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9 ._-]{2,79}$/.test(input.token_name) || !Array.isArray(input.policies) || !input.policies.length || input.policies.length > 10) return null;
+      const valid = input.policies.every((p) => p && typeof p === "object" && !Array.isArray(p) && p.effect === "allow" && Array.isArray(p.permission_groups) && p.permission_groups.length > 0 && p.permission_groups.every((g) => g && typeof g.id === "string" && /^[a-f0-9]{32}$/.test(g.id)) && p.resources && typeof p.resources === "object" && !Array.isArray(p.resources) && Object.keys(p.resources).length > 0 && Object.keys(p.resources).every((k) => /^[a-f0-9]{32}$/.test(k) && Array.isArray(p.resources[k]) && p.resources[k].length > 0 && p.resources[k].every((v) => typeof v === "string" && v.length < 256 && !/[\\r\\n]/.test(v))));
+      if (!valid) return null;
+      const body = { name: input.token_name, policies: input.policies };
+      if (Number.isInteger(input.expires_in) && input.expires_in >= 1 && input.expires_in <= 1440) body.expires_in = input.expires_in;
+      return { path: "/user/tokens", scope: "/user/tokens", body };
     },
   },
 });
@@ -124,12 +151,19 @@ async function readLimited(response, maxBytes) {
   return new TextDecoder().decode(merged);
 }
 
-async function cloudflareRequest(method, path, token) {
-  const response = await fetch(API_BASE + path, {
-    method,
-    headers: { Authorization: "Bearer " + token, Accept: "application/json", "User-Agent": "MOSHARROF-Token-Router/1" },
-    redirect: "error",
-  });
+async function cloudflareRequest(method, path, token, body, scriptContent) {
+  const headers = { Authorization: "Bearer " + token, Accept: "application/json", "User-Agent": "MOSHARROF-Token-Router/1" };
+  let requestBody;
+  if (typeof scriptContent === "string") {
+    const form = new FormData();
+    form.set("metadata", new Blob([JSON.stringify({ main_module: "index.js", compatibility_date: "2026-11-02" })], { type: "application/json" }), "metadata.json");
+    form.set("index.js", new Blob([scriptContent], { type: "application/javascript+module" }), "index.js");
+    requestBody = form;
+  } else if (body !== undefined) {
+    headers["content-type"] = "application/json";
+    requestBody = JSON.stringify(body);
+  }
+  const response = await fetch(API_BASE + path, { method, headers, body: requestBody, redirect: "error" });
   if (response.status === 401 || response.status === 403) {
     return { ok: false, status: response.status, error: "CLOUDFLARE_AUTHORIZATION_DENIED" };
   }
@@ -167,7 +201,7 @@ export default {
         ok: url.pathname === "/health" ? true : ready,
         service: "mosharrof-cloudflare-token-router",
         build: BUILD_ID,
-        mode: "read-only",
+        mode: env.PRIVILEGED_OPERATIONS_ENABLED === "true" && !!env.ROUTER_ADMIN_APPROVAL_TOKEN ? "read-write-approval-gated" : "read-only",
         access_configured: accessConfigured,
         profiles_configured: !!env.CLOUDFLARE_TOKEN_PROFILES,
         profile_config_valid: profileConfigValid,
@@ -187,13 +221,18 @@ export default {
       if (raw.length > MAX_BODY_BYTES) return json({ error: "REQUEST_TOO_LARGE" }, 413);
       input = JSON.parse(raw);
     } catch { return json({ error: "INVALID_JSON" }, 400); }
-    if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((k) => !["operation", "zone_id", "account_id"].includes(k))) {
-      return json({ error: "INVALID_REQUEST_FIELDS" }, 400);
-    }
+    const allowedFields = ["operation", "zone_id", "account_id", "script_name", "secret_name", "secret_value", "script_content", "token_name", "policies", "expires_in"];
+    if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((k) => !allowedFields.includes(k))) return json({ error: "INVALID_REQUEST_FIELDS" }, 400);
     const operation = OPERATIONS[String(input.operation || "")];
     if (!operation) return json({ error: "OPERATION_NOT_ALLOWED" }, 403);
+    if (operation.privileged) {
+      if (env.PRIVILEGED_OPERATIONS_ENABLED !== "true") return json({ error: "PRIVILEGED_OPERATIONS_DISABLED" }, 403);
+      const approval = request.headers.get("x-router-admin-approval") || "";
+      const expectedApproval = String(env.ROUTER_ADMIN_APPROVAL_TOKEN || "");
+      if (!expectedApproval || !approval || approval.length > 4096 || (await digest(approval)) !== (await digest(expectedApproval))) return json({ error: "OWNER_APPROVAL_REQUIRED" }, 403);
+    }
     const target = operation.buildPath(input);
-    if (!target) return json({ error: "INVALID_RESOURCE_ID" }, 400);
+    if (!target) return json({ error: "INVALID_OPERATION_PAYLOAD" }, 400);
 
     let profiles;
     try { profiles = parseProfiles(env); } catch { return json({ error: "TOKEN_PROFILE_CONFIG_INVALID" }, 503); }
@@ -201,8 +240,8 @@ export default {
     if (!selected) return json({ error: "NO_ENABLED_TOKEN_COVERS_REQUEST" }, 403);
 
     try {
-      const result = await cloudflareRequest(operation.method, target.path, selected.token);
-      const audit = { operation: input.operation, token_id: selected.p.token_id, permissions: operation.permissions, resource_scope: target.scope, outcome: result.ok ? "success" : "failure", http_status: result.status };
+      const result = await cloudflareRequest(operation.method, target.path, selected.token, target.body, target.script_content);
+      const audit = { operation: input.operation, token_id: selected.p.token_id, permissions: operation.permissions, resource_scope: target.scope, privileged: operation.privileged === true, outcome: result.ok ? "success" : "failure", http_status: result.status };
       if (!result.ok) return json({ error: result.error, audit }, result.status === 401 || result.status === 403 ? 502 : result.status);
       return json({ ok: true, result: result.payload.result ?? null, audit }, 200);
     } catch {
