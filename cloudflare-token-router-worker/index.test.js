@@ -348,3 +348,27 @@ test("privileged operations have strict resource and payload allowlists", () => 
   assert.equal(OPERATIONS["token.create"].buildPath({ token_name: "Router test", policies: [{ effect: "deny", permission_groups: [{ id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }], resources: { aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: ["*"] } }] }), null);
   assert.equal(OPERATIONS["worker.secret.write"].buildPath({ account_id: "../user", script_name: "app", secret_name: "X", secret_value: "v" }), null);
 });
+
+test("token creation uses Cloudflare resource-map schema and bounded expiry", () => {
+  const op = OPERATIONS["token.create"];
+  const valid = op.buildPath({
+    token_name: "Router least privilege",
+    expires_in: 60,
+    policies: [{
+      effect: "allow",
+      permission_groups: [{ id: "c8fed203ed3043cba015a93ad1616f1f" }],
+      resources: { "com.cloudflare.api.account.zone.22b1de5f1c0e4b3ea97bb1e963b06a43": "*" },
+    }],
+  });
+  assert.ok(valid);
+  assert.equal(valid.body.name, "Router least privilege");
+  assert.match(valid.body.expires_on, /^20\d\d-/);
+  assert.equal(op.buildPath({
+    token_name: "Router least privilege", expires_in: 1441,
+    policies: [{ effect: "allow", permission_groups: [{ id: "c8fed203ed3043cba015a93ad1616f1f" }], resources: { "com.cloudflare.api.account.zone.22b1de5f1c0e4b3ea97bb1e963b06a43": "*" } }],
+  }), null);
+  assert.equal(op.buildPath({
+    token_name: "Router least privilege",
+    policies: [{ effect: "allow", permission_groups: [{ id: "c8fed203ed3043cba015a93ad1616f1f" }], resources: { "com.cloudflare.api.account.zone.22b1de5f1c0e4b3ea97bb1e963b06a43": ["*"] } }],
+  }), null);
+});
