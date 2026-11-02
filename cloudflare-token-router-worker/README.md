@@ -7,7 +7,9 @@ This Worker is isolated from the existing chat/TTS Worker. It never changes live
 - `worker.scripts.list`: list scripts in an account (`Workers Scripts Read`).
 - `worker.secret.write`: write one named Worker secret (`Workers Scripts Write`).
 - `worker.script.deploy`: deploy one JavaScript module to one script name (`Workers Scripts Write`).
-- `token.create`: create a scoped Cloudflare API token (`API Tokens Write`); accepts only allow policies with explicit permission-group IDs and resource IDs.
+- `token.list`: list API tokens (`User API Tokens Read`).
+- `token.create`: create a scoped API token (`User API Tokens Write`); accepts only allow policies with explicit permission-group IDs and resource IDs.
+- `token.revoke`: revoke one explicitly named API token (`User API Tokens Write`); privileged approval required.
 
 All writes fail closed unless both server-side settings are present:
 - `PRIVILEGED_OPERATIONS_ENABLED=true`
