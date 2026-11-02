@@ -1,0 +1,32 @@
+name: Cloudflare Token Router Tests
+
+on:
+  pull_request:
+    paths:
+      - "cloudflare-token-router-worker/**"
+      - "core/cloudflare-token-router/**"
+      - ".github/workflows/cloudflare-token-router-tests.yml"
+  push:
+    branches:
+      - "feat/router-write-capabilities-staged"
+    paths:
+      - "cloudflare-token-router-worker/**"
+      - "core/cloudflare-token-router/**"
+      - ".github/workflows/cloudflare-token-router-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  worker-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Run isolated router unit tests
+        run: npm --prefix cloudflare-token-router-worker test

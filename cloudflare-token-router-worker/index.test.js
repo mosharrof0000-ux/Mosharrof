@@ -131,7 +131,7 @@ test("health endpoint is public, read-only, and reports configuration presence w
   assert.deepEqual(await unconfigured.json(), {
     ok: true,
     service: "mosharrof-cloudflare-token-router",
-    build: "2026-10-12-token-router-worker-v2",
+    build: "2026-11-02-router-admin-ops-v1",
     mode: "read-only",
     access_configured: false,
     profiles_configured: false,
