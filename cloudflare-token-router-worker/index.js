@@ -55,8 +55,8 @@ const OPERATIONS = Object.freeze({
     method: "POST", permissions: ["API Tokens Write"], privileged: true,
     buildPath: (input) => {
       if (typeof input.token_name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9 ._-]{2,119}$/.test(input.token_name) || !Array.isArray(input.policies) || !input.policies.length || input.policies.length > 10) return null;
-      const resourceKey = (key) => typeof key === "string" && /^com\.cloudflare\.(api\.(user|account)|edge\.r2\.bucket)(\.[A-Za-z0-9_*.-]+)*$/.test(key) && !/[\r\n]/.test(key);
-      const resourceValue = (value) => value === "*" || (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0 && Object.entries(value).every(([key, nested]) => resourceKey(key) && nested === "*"));
+      const resourceKey = (key) => typeof key === "string" && (/^com\.cloudflare\.api\.user\.[A-Za-z0-9_-]{32}$/.test(key) || /^com\.cloudflare\.api\.account\.[A-Za-z0-9_-]{32}$/.test(key) || /^com\.cloudflare\.api\.account\.zone\.[A-Za-z0-9_-]{32}$/.test(key)) && !/[\r\n]/.test(key);
+      const resourceValue = (value) => value === "*" || (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0 && Object.entries(value).every(([key, nested]) => /^com\.cloudflare\.api\.account\.zone\.(\*|[A-Za-z0-9_-]{32})$/.test(key) && nested === "*"));
       const valid = input.policies.every((p) => p && typeof p === "object" && !Array.isArray(p) && p.effect === "allow" && Array.isArray(p.permission_groups) && p.permission_groups.length > 0 && p.permission_groups.length <= 90 && p.permission_groups.every((g) => g && typeof g.id === "string" && /^[a-f0-9]{32}$/.test(g.id)) && p.resources && typeof p.resources === "object" && !Array.isArray(p.resources) && Object.keys(p.resources).length > 0 && Object.entries(p.resources).every(([key, value]) => resourceKey(key) && resourceValue(value)));
       if (!valid) return null;
       const body = { name: input.token_name, policies: input.policies };
@@ -258,6 +258,7 @@ export default {
     try { profiles = parseProfiles(env); } catch { return json({ error: "TOKEN_PROFILE_CONFIG_INVALID" }, 503); }
     const selected = selectToken(profiles, env, operation.permissions, target.scope);
     if (!selected) return json({ error: "NO_ENABLED_TOKEN_COVERS_REQUEST" }, 403);
+    if (input.operation === "token.revoke" && input.token_id === selected.p.token_id) return json({ error: "CANNOT_REVOKE_ACTIVE_ROUTER_CREDENTIAL" }, 409);
 
     try {
       const result = await cloudflareRequest(operation.method, target.path, selected.token, target.body, target.script_content);
