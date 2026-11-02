@@ -238,7 +238,7 @@ export default {
     let input;
     try {
       const raw = await request.text();
-      if (raw.length > MAX_BODY_BYTES) return json({ error: "REQUEST_TOO_LARGE" }, 413);
+      if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) return json({ error: "REQUEST_TOO_LARGE" }, 413);
       input = JSON.parse(raw);
     } catch { return json({ error: "INVALID_JSON" }, 400); }
     const allowedFields = ["operation", "zone_id", "account_id", "script_name", "secret_name", "secret_value", "script_content", "token_name", "token_id", "policies", "expires_in"];
