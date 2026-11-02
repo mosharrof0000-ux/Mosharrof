@@ -37,24 +37,33 @@ const OPERATIONS = Object.freeze({
     },
   },
   "token.list": {
-    method: "GET", permissions: ["User API Tokens Read"],
+    method: "GET", permissions: ["API Tokens Read"],
     buildPath: () => ({ path: "/user/tokens", scope: "/user/tokens" }),
   },
+  "token.permission_groups.list": {
+    method: "GET", permissions: ["API Tokens Read"],
+    buildPath: () => ({ path: "/user/tokens/permission_groups", scope: "/user/tokens/permission_groups" }),
+  },
   "token.revoke": {
-    method: "DELETE", permissions: ["User API Tokens Write"], privileged: true,
+    method: "DELETE", permissions: ["API Tokens Write"], privileged: true,
     buildPath: (input) => {
       const id = safeId(input.token_id);
       return id ? { path: "/user/tokens/" + id, scope: "/user/tokens/" + id } : null;
     },
   },
   "token.create": {
-    method: "POST", permissions: ["User API Tokens Write"], privileged: true,
+    method: "POST", permissions: ["API Tokens Write"], privileged: true,
     buildPath: (input) => {
-      if (typeof input.token_name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9 ._-]{2,79}$/.test(input.token_name) || !Array.isArray(input.policies) || !input.policies.length || input.policies.length > 10) return null;
-      const valid = input.policies.every((p) => p && typeof p === "object" && !Array.isArray(p) && p.effect === "allow" && Array.isArray(p.permission_groups) && p.permission_groups.length > 0 && p.permission_groups.every((g) => g && typeof g.id === "string" && /^[a-f0-9]{32}$/.test(g.id)) && p.resources && typeof p.resources === "object" && !Array.isArray(p.resources) && Object.keys(p.resources).length > 0 && Object.keys(p.resources).every((k) => /^[a-f0-9]{32}$/.test(k) && Array.isArray(p.resources[k]) && p.resources[k].length > 0 && p.resources[k].every((v) => typeof v === "string" && v.length < 256 && !/[\\r\\n]/.test(v))));
+      if (typeof input.token_name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9 ._-]{2,119}$/.test(input.token_name) || !Array.isArray(input.policies) || !input.policies.length || input.policies.length > 10) return null;
+      const resourceKey = (key) => typeof key === "string" && /^com\.cloudflare\.(api\.(user|account)|edge\.r2\.bucket)(\.[A-Za-z0-9_*.-]+)*$/.test(key) && !/[\r\n]/.test(key);
+      const resourceValue = (value) => value === "*" || (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0 && Object.entries(value).every(([key, nested]) => resourceKey(key) && nested === "*"));
+      const valid = input.policies.every((p) => p && typeof p === "object" && !Array.isArray(p) && p.effect === "allow" && Array.isArray(p.permission_groups) && p.permission_groups.length > 0 && p.permission_groups.length <= 90 && p.permission_groups.every((g) => g && typeof g.id === "string" && /^[a-f0-9]{32}$/.test(g.id)) && p.resources && typeof p.resources === "object" && !Array.isArray(p.resources) && Object.keys(p.resources).length > 0 && Object.entries(p.resources).every(([key, value]) => resourceKey(key) && resourceValue(value)));
       if (!valid) return null;
       const body = { name: input.token_name, policies: input.policies };
-      if (Number.isInteger(input.expires_in) && input.expires_in >= 1 && input.expires_in <= 1440) body.expires_in = input.expires_in;
+      if (Number.isInteger(input.expires_in)) {
+        if (input.expires_in < 1 || input.expires_in > 1440) return null;
+        body.expires_on = new Date(Date.now() + input.expires_in * 60000).toISOString();
+      } else if (input.expires_in !== undefined) return null;
       return { path: "/user/tokens", scope: "/user/tokens", body };
     },
   },
