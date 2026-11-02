@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "cloudflare-token-router-worker/**"
+      - "core/cloudflare-token-router/**"
       - ".github/workflows/cloudflare-token-router-tests.yml"
   push:
     branches:
