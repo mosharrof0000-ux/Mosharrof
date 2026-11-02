@@ -1,5 +1,5 @@
 name = "mosharrof-cloudflare-token-router"
-main = "index.js"
+main = "../core/cloudflare-token-router/index.js"
 compatibility_date = "2026-10-01"
 workers_dev = false
 
