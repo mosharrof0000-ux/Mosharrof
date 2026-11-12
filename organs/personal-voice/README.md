@@ -5,7 +5,7 @@ The personal voice feature lives inside the existing **Read Aloud** action. A lo
 ## Implemented in this branch
 
 - Owner-private profile API under the existing Cloudflare Worker at `/personal-voice/*`.
-- Supabase Auth user verification plus the existing `asm_is_registered_owner` owner gate. Database and Storage access use the user's JWT and RLS; no service-role key is shipped or required by the Worker.
+- Owner Login is available inside the same Read Aloud menu. The Worker forwards credentials to Supabase Auth over HTTPS, does not log or persist passwords, verifies the resulting user JWT, and applies the existing `asm_is_registered_owner` gate. Database and Storage access use the user JWT and RLS; no service-role key is shipped or required.
 - Supabase Postgres schema with owner-scoped profiles, separate consent flags, profile defaults, saved catalog voices, and one global non-cycling serial sequence shared across cloned profiles and saved catalog voices.
 - Private Supabase Storage bucket. The Worker encrypts uploaded audio with AES-256-GCM before upload and decrypts only for the private inference request. Raw samples are not logged.
 - Multiple reusable profiles, rename, default profile, per-message voice selection, deletion, and separate consent for voice use, sample retention, and model training (training defaults off).
@@ -17,6 +17,7 @@ The personal voice feature lives inside the existing **Read Aloud** action. A lo
 ## Routes
 
 - `GET /personal-voice/health`: safe readiness flags only.
+- `POST /personal-voice/auth/login` and `/auth/refresh`: server-mediated Supabase Auth session and refresh.
 - `GET|POST /personal-voice/profiles`: list/create owner profiles.
 - `PATCH|DELETE /personal-voice/profiles/:id`: rename/revoke/delete.
 - `POST /personal-voice/profiles/:id/sample`: explicit-consent sample upload.
@@ -35,7 +36,7 @@ Set these only as server-side Worker variables/secrets; never in Pages/browser c
 - `PERSONAL_VOICE_API_URL`: private HTTPS URL for the isolated IndicF5 API
 - `PERSONAL_VOICE_API_TOKEN`: strong server-to-server bearer token
 
-The inference service separately requires `HF_TOKEN`, a reviewed exact `INDICF5_MODEL_REVISION` commit SHA, and the model's accepted access terms. The Worker verifies the user's Supabase JWT and `asm_is_registered_owner` RPC before any profile/catalog operation. The user's browser must already have a valid Supabase Owner Login session; the menu does not create a second login system.
+The inference service separately requires `HF_TOKEN`, a reviewed exact `INDICF5_MODEL_REVISION` commit SHA, and the model's accepted access terms. The Worker verifies the user's Supabase JWT and `asm_is_registered_owner` RPC before any profile/catalog operation. The email/password form is embedded inside the existing Read Aloud menu and uses the same Supabase Auth project and owner-registry RPC; it does not create a second identity store. A user must be registered in the Owner Registry before profile/catalog APIs are accessible.
 
 The current project and service have not been activated or deployed by this PR. The Supabase migration is source-only until explicitly applied to an active project; the Worker secrets and inference endpoint are not configured here. The health endpoint keeps profile setup unavailable until the required authentication and encryption configuration exists. Do not upload a sample until the live health/readiness checks pass.
 
