@@ -1,4 +1,3 @@
-import { handlePersonalVoiceRequest } from "./personal-voice.js";
 import { buildChatContext } from "../core/chat-context.js";
 import { buildReflectiveSystemPrompt, buildReflectiveUserPrompt } from "../core/reflective-chat-prompt.js";
 import { runChatUntilAnswer, withChatProviderTimeout } from "../core/chat-provider-retry.js";
@@ -546,7 +545,6 @@ if(!isAllowedOrigin(origin))return reply({error:"origin_not_allowed",origin},403
 if(request.method!=="POST")return reply({error:"POST only"},405);
 try{
   const pathname=new URL(request.url).pathname;
-  if(pathname.startsWith("/personal-voice/"))return await handlePersonalVoiceRequest(request,env);
   if(pathname==="/generate-image")return await generateImage(request,env);
   if(pathname==="/tts")return await tts(request,env);
   if(pathname==="/chat")return await chat(request,env);
