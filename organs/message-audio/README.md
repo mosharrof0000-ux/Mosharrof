@@ -8,4 +8,4 @@ Owns the read-aloud and generated-audio download controls for user-sent chat mes
 - Adds a download control only when actual server-generated audio bytes are available.
 - Does not store message text or audio in persistent storage.
 
-The organ is loaded through the existing UI-organ composition root and owns its feature modules and component tests. Folder budgets count production implementation files; tests, README documentation, and organ manifests remain covered by per-file checks but are not counted as production implementation files.
+The organ is loaded through the existing UI-organ composition root and owns its feature modules and component tests. Folder budgets count production implementation files; tests, README documentation, and organ manifests remain covered by per-file checks but are not counted as production implementation files. The generated browser mirror under `web/organs/` is excluded from recursive folder totals because its canonical source is already counted under `organs/`.
