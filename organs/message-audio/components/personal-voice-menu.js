@@ -194,7 +194,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
         if (!result.voices?.length) catalogResults.appendChild(element(documentRef, "p", "এই অনুসন্ধানে কোনো ভয়েস পাওয়া যায়নি।", "pv-muted"));
         for (const voiceItem of result.voices || []) {
           const row = element(documentRef, "div", undefined, "pv-catalog-row");
-          row.append(element(documentRef, "strong", voiceItem.display_name), element(documentRef, "small", voiceItem.language + " · " + voiceItem.style + " · " + (voiceItem.available ? "সার্ভার প্রস্তুত" : "সার্ভার অনুপলব্ধ") + " · লাইসেন্স: " + voiceItem.license_status));
+          row.append(element(documentRef, "strong", voiceItem.display_name), element(documentRef, "small", voiceItem.language + " · " + voiceItem.style + " · " + (voiceItem.available ? "সার্ভার প্রস্তুত" : "সার্ভার অনুপলব্ধ") + " · লাইসেন্স: " + voiceItem.license_status + " · অনুমতি: " + voiceItem.consent_status));
           const controls = element(documentRef, "div", undefined, "pv-catalog-controls");
           controls.appendChild(action("সংরক্ষণ", async () => {
             const saved = await apiRequest("/catalog/saved", { method: "POST", body: JSON.stringify({ catalog_voice_id: voiceItem.id }) });
@@ -259,6 +259,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
       profilesBox.replaceChildren();
       try {
         const data = await apiRequest("/profiles");
+        if (!button.dataset.voiceProfileId && data.default_profile_id) button.dataset.voiceProfileId = data.default_profile_id;
         setStatus(data.profiles?.length ? "সংরক্ষিত কণ্ঠ নির্বাচন করুন" : "এখনো কোনো ব্যক্তিগত কণ্ঠ নেই");
         for (const profile of data.profiles || []) {
           const row = element(documentRef, "div", undefined, "pv-profile-row");
