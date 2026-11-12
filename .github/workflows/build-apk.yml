@@ -6,6 +6,7 @@ on:
     paths:
       - "android/**"
       - "web/**"
+      - "organs/**"
       - "core/android-edge-to-edge.css"
       - "scripts/android/**"
       - "scripts/mosharrof_size_gate.py"
