@@ -161,3 +161,20 @@ create policy "personal voice sample owner delete" on storage.objects
 
 -- Identity sequences are intentionally never reset or reused when a profile row is deleted.
 -- Display serials as VOICE-001, VOICE-002, ... in the application; gaps are expected after deletion.
+
+insert into public.personal_voice_catalog
+  (id, display_name, language, style, provider_id, provider_voice_id, preview_url, license_status, consent_status, enabled)
+values
+  ('edge-bn-pradeep', 'Pradeep Neural · বাংলা পুরুষ', 'bn-BD', 'standard', 'edge', 'bn-BD-PradeepNeural', null, 'unknown', 'required', true),
+  ('edge-bn-nabanita', 'Nabanita Neural · বাংলা নারী', 'bn-BD', 'standard', 'edge', 'bn-BD-NabanitaNeural', null, 'unknown', 'required', true),
+  ('azure-bn-pradeep', 'Pradeep Neural · বাংলা পুরুষ', 'bn-BD', 'standard', 'azure', 'bn-BD-PradeepNeural', null, 'unknown', 'required', true),
+  ('azure-bn-nabanita', 'Nabanita Neural · বাংলা নারী', 'bn-BD', 'standard', 'azure', 'bn-BD-NabanitaNeural', null, 'unknown', 'required', true)
+on conflict (id) do update set
+  display_name = excluded.display_name,
+  language = excluded.language,
+  style = excluded.style,
+  provider_id = excluded.provider_id,
+  provider_voice_id = excluded.provider_voice_id,
+  license_status = excluded.license_status,
+  consent_status = excluded.consent_status,
+  enabled = excluded.enabled;
