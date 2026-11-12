@@ -85,12 +85,16 @@ class PageCDP:
                 + " | ".join(failures)
             )
         self.next_id = 0
+        self.session_id = None
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
         self.next_id += 1
         command_id = self.next_id
         self.ws.settimeout(timeout)
-        self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
+        payload = {"id": command_id, "method": method, "params": params or {}}
+        if self.session_id:
+            payload["sessionId"] = self.session_id
+        self.ws.send(json.dumps(payload))
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             message = json.loads(self.ws.recv())
@@ -142,7 +146,23 @@ def main() -> int:
         if target is None:
             return 1
 
-        cdp = PageCDP(target["webSocketDebuggerUrl"])
+        # Android WebView 83 exposes a browser-level CDP endpoint more reliably
+        # than its per-page socket through adb forwarding. Attach the page target
+        # explicitly, then send normal Page/Runtime commands in that session.
+        version_file = out / "webview-version.json"
+        version = json.loads(version_file.read_text(encoding="utf-8")) if version_file.is_file() else {}
+        browser_ws = version.get("webSocketDebuggerUrl")
+        if browser_ws:
+            cdp = PageCDP(browser_ws)
+            attached = cdp.command("Target.attachToTarget", {"targetId": target["id"], "flatten": True})
+            cdp.session_id = attached.get("sessionId")
+            record("browser_cdp_attached_to_app_page", bool(cdp.session_id),
+                   "Attached the installed APK page through Android WebView browser target")
+            if not cdp.session_id:
+                raise RuntimeError("Browser CDP did not return a page session")
+        else:
+            cdp = PageCDP(target["webSocketDebuggerUrl"])
+            record("browser_cdp_attached_to_app_page", True, "Using direct page-target CDP")
         cdp.command("Page.enable")
         cdp.command("Runtime.enable")
         try:
