@@ -9,13 +9,16 @@
   "run_url": "https://github.com/mosharrof0000-ux/Mosharrof/actions/runs/43302765659",
   "branch": "main",
   "sha": "16aaf5a29b5e222e2afa17fa860cc2e44143eb2e",
-  "status": "in_progress",
+  "status": "completed",
   "completed_steps": [
-    "Recorder start entry written"
+    "Recorder start entry written",
+    "Python compilation and contract tests"
   ],
   "interruption": null,
-  "resume_from": "next: run Python compilation and both contract test suites",
-  "updated_at_utc": "2026-11-12T20:41:32Z",
+  "resume_from": null,
+  "updated_at_utc": "2026-11-12T20:41:36Z",
   "last_checkpoint_utc": "2026-11-12T20:41:32Z",
-  "last_completed_step": "Recorder start entry written"
+  "last_completed_step": "Python compilation and contract tests",
+  "finished_at_utc": "2026-11-12T20:41:36Z",
+  "exit_details": "All focused tests passed; inspect workflow result and artifacts next."
 }
