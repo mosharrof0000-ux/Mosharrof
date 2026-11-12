@@ -213,7 +213,7 @@ async function profilesRoute(request, env, auth, url) {
     return json({ voice: row ? { id: row.id, serial: "VOICE-" + String(row.voice_serial).padStart(3, "0"), catalog_voice_id: row.catalog_voice_id } : null }, 201);
   }
 
-  const savedDelete = path.match(/^\\/personal-voice\\/catalog\\/saved\\/([0-9a-f-]{36})$/i);
+  const savedDelete = path.match(/^\/personal-voice\/catalog\/saved\/([0-9a-f-]{36})$/i);
   if (savedDelete && request.method === "DELETE" && UUID.test(savedDelete[1])) {
     const response = await supabaseFetch(env, token, "rest/v1/personal_voice_saved_catalog?id=eq." + savedDelete[1] + "&owner_id=eq." + user.id, { method: "DELETE" });
     if (!response.ok) return json({ error: "saved_voice_delete_failed" }, 502);
