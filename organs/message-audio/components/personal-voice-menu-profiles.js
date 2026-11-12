@@ -69,6 +69,23 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, action,
         });
         row.append(info, choose);
         const controls = element(documentRef, "div", undefined, "pv-profile-row");
+        if (profile.status === "active") controls.appendChild(action("নমুনা বদল", async () => {
+          profileControls.replaceChildren();
+          const transcript = element(documentRef, "textarea"); transcript.rows = 2; transcript.maxLength = 500; transcript.placeholder = "নতুন নমুনার হুবহু ট্রান্সক্রিপ্ট"; transcript.className = "pv-input";
+          const file = element(documentRef, "input"); file.type = "file"; file.accept = "audio/wav,audio/flac,audio/ogg"; file.className = "pv-input";
+          profileControls.append(transcript, file);
+          profileControls.appendChild(action("নতুন নমুনা সংরক্ষণ", async () => {
+            if (!file.files?.[0] || !transcript.value.trim()) throw new Error("অডিও ও হুবহু ট্রান্সক্রিপ্ট দিন");
+            const form = new FormData();
+            form.append("reference_text", transcript.value.trim());
+            form.append("reference_audio", file.files[0]);
+            await apiRequest("/profiles/" + encodeURIComponent(profile.id) + "/sample", { method: "POST", body: form });
+            profileControls.replaceChildren();
+            setStatus("নতুন নমুনা সংরক্ষিত হয়েছে");
+            await loadProfiles();
+          }, "pv-primary"));
+          profileControls.appendChild(action("বাতিল", () => profileControls.replaceChildren()));
+        }));
         controls.append(action("ডিফল্ট করুন", async () => {
           await apiRequest("/preferences/default", { method: "PUT", body: JSON.stringify({ profile_id: profile.id }) });
           setStatus("ডিফল্ট কণ্ঠ সংরক্ষণ করা হয়েছে");
