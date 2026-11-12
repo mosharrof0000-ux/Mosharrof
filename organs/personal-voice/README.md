@@ -16,7 +16,8 @@ The personal voice feature lives inside the existing **Read Aloud** action. A lo
 
 ## Routes
 
-- `GET /personal-voice/health`: safe readiness flags only.
+- `GET /personal-voice/health`: safe configuration flags only.
+- `GET /personal-voice/readiness`: authenticated checks for migration, owner-private Storage, encryption and inference before enabling sample enrollment.
 - `POST /personal-voice/auth/login` and `/auth/refresh`: server-mediated Supabase Auth session and refresh.
 - `GET|POST /personal-voice/profiles`: list/create owner profiles.
 - `PATCH|DELETE /personal-voice/profiles/:id`: rename/revoke/delete.
@@ -38,7 +39,7 @@ Set these only as server-side Worker variables/secrets; never in Pages/browser c
 
 The inference service separately requires `HF_TOKEN`, a reviewed exact `INDICF5_MODEL_REVISION` commit SHA, and the model's accepted access terms. The Worker verifies the user's Supabase JWT and `asm_is_registered_owner` RPC before any profile/catalog operation. The email/password form is embedded inside the existing Read Aloud menu and uses the same Supabase Auth project and owner-registry RPC; it does not create a second identity store. A user must be registered in the Owner Registry before profile/catalog APIs are accessible.
 
-The current project and service have not been activated or deployed by this PR. The Supabase migration is source-only until explicitly applied to an active project; the Worker secrets and inference endpoint are not configured here. The health endpoint keeps profile setup unavailable until the required authentication and encryption configuration exists. Do not upload a sample until the live health/readiness checks pass.
+The current project and service have not been activated or deployed by this PR. The Supabase migration is source-only until explicitly applied to an active project; the Worker secrets and inference endpoint are not configured here. The Read Aloud menu keeps profile enrollment unavailable until the authenticated readiness endpoint confirms the database migration, private Storage bucket, encryption key, and inference endpoint are all ready. Do not upload a sample until the live health/readiness checks pass.
 
 ## Consent, retention, and safety
 
