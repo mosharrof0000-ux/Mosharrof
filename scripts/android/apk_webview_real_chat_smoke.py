@@ -266,6 +266,60 @@ def main() -> int:
             record("assistant_answer_visible_in_saved_screenshot", screenshot_visible,
                    json.dumps(visibility, ensure_ascii=False)[:500])
             report["screenshot_answer_visible"] = screenshot_visible
+
+
+            # Exercise the real sent-message Read Aloud -> Download chain in the installed APK.
+            native_ready = bool(cdp.evaluate("""Boolean(window.Capacitor && window.Capacitor.Plugins &&
+              window.Capacitor.Plugins.MessageAudioDownload &&
+              typeof window.Capacitor.Plugins.MessageAudioDownload.save === "function")"""))
+            record("native_message_audio_download_plugin_registered", native_ready,
+                   "Capacitor MessageAudioDownload plugin is exposed in APK WebView")
+            if native_ready:
+                read_clicked = bool(cdp.evaluate("""(() => {
+                  const messages = [...document.querySelectorAll("#messages .message.user")];
+                  const last = messages[messages.length - 1];
+                  const button = last && last.querySelector("[data-message-audio-read]");
+                  if (!button) return false;
+                  button.click(); return true;
+                })()"""))
+                record("sent_message_read_aloud_clicked", read_clicked,
+                       "Clicked Read Aloud on the latest sent message")
+                download_ready = False
+                download_deadline = time.monotonic() + 90
+                while read_clicked and time.monotonic() < download_deadline:
+                    download_ready = bool(cdp.evaluate("""Boolean(document.querySelector(
+                      '#messages .message.user [data-message-audio-download]'))"""))
+                    if download_ready: break
+                    time.sleep(1)
+                record("generated_audio_download_action_appeared", download_ready,
+                       "TTS generated audio bytes and exposed the Download action")
+                if download_ready:
+                    download_clicked = bool(cdp.evaluate("""(() => {
+                      const messages = [...document.querySelectorAll("#messages .message.user")];
+                      const last = messages[messages.length - 1];
+                      const button = last && last.querySelector("[data-message-audio-download]");
+                      if (!button) return false;
+                      button.click(); return true;
+                    })()"""))
+                    record("audio_download_action_clicked", download_clicked,
+                           "Clicked Download Audio in the installed APK")
+                    saved = False
+                    save_deadline = time.monotonic() + 45
+                    while download_clicked and time.monotonic() < save_deadline:
+                        saved = bool(cdp.evaluate("""Boolean(document.querySelector(
+                          '#messages .message.user [data-download-complete="true"]'))"""))
+                        if saved: break
+                        time.sleep(0.5)
+                    save_state = cdp.evaluate("""(() => {
+                      const node = document.querySelector("#messages .message.user [data-message-audio-download]");
+                      return node ? {title:node.title, filename:node.dataset.filename,
+                        complete:node.dataset.downloadComplete === "true",
+                        error:node.dataset.downloadError || ""} : null;
+                    })()""")
+                    record("android_audio_file_saved_to_downloads", saved,
+                           json.dumps(save_state, ensure_ascii=False)[:500])
+                    report["audio_download"] = save_state
+                    cdp.screenshot(out / "apk-webview-audio-download.png")
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")
