@@ -16,11 +16,11 @@ function extensionFor(blob) {
 }
 
 export function createAudioTitle(value, maxLength = 72) {
-  const text = String(value == null ? "" : value).replace(/[\\t\\r\\n ]+/g, " ").trim();
+  const text = String(value == null ? "" : value).replace(/[\t\r\n ]+/g, " ").trim();
   if (!text) return "MOSHARROF Audio";
   const chars = Array.from(text);
   if (chars.length <= maxLength) return text;
-  const firstSentence = text.split(/(?<=[.!?।！？])\\s+/u)[0].trim();
+  const firstSentence = text.split(/(?<=[.!?।！？])\s+/u)[0].trim();
   if (Array.from(firstSentence).length <= maxLength) return firstSentence;
   const words = text.split(" ");
   let excerpt = "";
@@ -34,8 +34,8 @@ export function createAudioTitle(value, maxLength = 72) {
 
 export function sanitizeAudioFilenameTitle(value) {
   let safe = createAudioTitle(value)
-    .replace(/[\\u0000-\\u001f\\u007f\\/\\\\:*?"<>|]/g, " ")
-    .replace(/[\\s]+/gu, "_")
+    .replace(/[\u0000-\u001f\u007f\\/\\\\:*?"<>|]/g, " ")
+    .replace(/[\s]+/gu, "_")
     .replace(/^[._ ]+|[._ ]+$/g, "")
     .slice(0, 120);
   if (!safe || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(safe)) safe = "MOSHARROF_Audio";
