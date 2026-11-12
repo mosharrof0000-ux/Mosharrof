@@ -144,6 +144,12 @@ export async function profilesRoute(request, env, auth, url) {
     const inferenceUrl = (() => { try { const value = new URL(String(env.PERSONAL_VOICE_API_URL || "")); return value.protocol === "https:" && !value.username && !value.password ? value : null; } catch { return null; } })();
     const inferenceToken = String(env.PERSONAL_VOICE_API_TOKEN || "").trim();
     if (!inferenceUrl || !inferenceToken) return json({ error: "personal_voice_inference_not_configured" }, 503);
+    const quotaResponse = await supabaseFetch(env, token, "rest/v1/rpc/personal_voice_consume_synthesis_quota", {
+      method: "POST", body: "{}"
+    });
+    if (!quotaResponse.ok) return json({ error: "personal_voice_quota_check_unavailable" }, 503);
+    const quotaAllowed = await readJson(quotaResponse);
+    if (quotaAllowed !== true) return json({ error: "personal_voice_rate_limit_exceeded", retry_after_seconds: 60 }, 429);
     const body = await request.json().catch(() => null);
     const text = String(body?.text || "").trim();
     if (!text || text.length > MAX_TEXT_CHARS) return json({ error: "text_must_be_1_to_800_chars" }, 400);
