@@ -16,6 +16,7 @@ export const TTS_ENDPOINT = "https://mosharrof-screenshot-analysis.mosharrof0000
 export const PERSONAL_VOICE_ENDPOINT = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/personal-voice";
 const PROVIDERS = new Set(["auto", "edge", "gemini", "azure", "elevenlabs", "browser", "sarvam"]);
 const VOICES = new Set(["bn-BD-PradeepNeural", "bn-BD-NabanitaNeural"]);
+const PACE_KEY = "mosharrof_tts_pace_v1";
 
 export function normalizeSpeechText(value) {
   return String(value == null ? "" : value)
@@ -159,6 +160,8 @@ export function createReadAloudController(options = {}) {
     try {
       if (typeof fetchImpl !== "function") throw new Error("tts_fetch_unavailable");
       const voice = preference(storage, "mosharrof_tts_voice_v1", VOICES, "bn-BD-PradeepNeural");
+      const savedPace = Number(storage?.getItem?.(PACE_KEY) || 1);
+      const pace = Number.isFinite(savedPace) ? Math.min(1.25, Math.max(0.75, savedPace)) : 1;
       const profileId = String(speakOptions.profileId || button?.dataset?.voiceProfileId || "");
       let response;
       let data = {};
@@ -207,7 +210,7 @@ export function createReadAloudController(options = {}) {
         response = await fetchImpl(TTS_ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, language_code: "bn-BD", pace: 1, provider, genre: "general", voice })
+          body: JSON.stringify({ text, language_code: "bn-BD", pace: provider === "edge" || provider === "sarvam" ? pace : 1, provider, genre: "general", voice })
         });
         data = await response.json().catch(() => ({}));
         if (!response.ok || !data.audio_data) throw new Error(data.reason || data.error || "tts_generation_failed");
