@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -268,6 +269,7 @@ def main() -> int:
             report["screenshot_answer_visible"] = screenshot_visible
 
 
+            sys.path.insert(0, str(Path(__file__).resolve().parent / "tests"))
             from apk_webview_audio_download_smoke import verify_message_audio_download
             verify_message_audio_download(cdp, out, record, report)
         else:
