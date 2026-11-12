@@ -1,10 +1,27 @@
 -- Personal Voice: owner-isolated profiles, permanent serials, and private encrypted sample objects.
 -- Samples are AES-256-GCM encrypted by the MOSHARROF Worker before upload to this private bucket.
 
+create sequence if not exists public.personal_voice_serial_seq start 1 increment 1 no cycle;
+
+create or replace function public.personal_voice_assign_serial()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $
+begin
+  if new.voice_serial is null then
+    new.voice_serial := nextval('public.personal_voice_serial_seq');
+  end if;
+  return new;
+end;
+$;
+revoke all on function public.personal_voice_assign_serial() from public, anon, authenticated;
+
 create table if not exists public.personal_voice_profiles (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  voice_serial bigint generated always as identity unique,
+  voice_serial bigint not null unique,
   name text not null check (char_length(btrim(name)) between 1 and 80),
   language text not null default 'bn-BD' check (language ~ '^[A-Za-z0-9_-]{2,16}$'),
   provider_id text not null default 'indicf5',
@@ -26,6 +43,24 @@ create table if not exists public.personal_voice_profiles (
   ),
   unique (owner_id, id)
 );
+
+drop trigger if exists personal_voice_assign_serial on public.personal_voice_profiles;
+create trigger personal_voice_assign_serial before insert on public.personal_voice_profiles
+for each row execute function public.personal_voice_assign_serial();
+
+create table if not exists public.personal_voice_saved_catalog (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  voice_serial bigint not null unique,
+  catalog_voice_id text not null references public.personal_voice_catalog(id) on delete restrict,
+  nickname text,
+  created_at timestamptz not null default now(),
+  unique(owner_id, catalog_voice_id)
+);
+
+drop trigger if exists personal_voice_saved_catalog_assign_serial on public.personal_voice_saved_catalog;
+create trigger personal_voice_saved_catalog_assign_serial before insert on public.personal_voice_saved_catalog
+for each row execute function public.personal_voice_assign_serial();
 
 create index if not exists personal_voice_profiles_owner_idx
   on public.personal_voice_profiles(owner_id, voice_serial);
@@ -74,6 +109,7 @@ for each row execute function public.personal_voice_protect_identity();
 alter table public.personal_voice_profiles enable row level security;
 alter table public.personal_voice_preferences enable row level security;
 alter table public.personal_voice_catalog enable row level security;
+alter table public.personal_voice_saved_catalog enable row level security;
 
 drop policy if exists "personal voice owner select" on public.personal_voice_profiles;
 create policy "personal voice owner select" on public.personal_voice_profiles
@@ -178,3 +214,17 @@ on conflict (id) do update set
   license_status = excluded.license_status,
   consent_status = excluded.consent_status,
   enabled = excluded.enabled;
+
+drop policy if exists "personal voice saved catalog owner select" on public.personal_voice_saved_catalog;
+create policy "personal voice saved catalog owner select" on public.personal_voice_saved_catalog
+  for select to authenticated using (owner_id = (select auth.uid()));
+
+drop policy if exists "personal voice saved catalog owner insert" on public.personal_voice_saved_catalog;
+create policy "personal voice saved catalog owner insert" on public.personal_voice_saved_catalog
+  for insert to authenticated with check (owner_id = (select auth.uid()));
+
+drop policy if exists "personal voice saved catalog owner delete" on public.personal_voice_saved_catalog;
+create policy "personal voice saved catalog owner delete" on public.personal_voice_saved_catalog
+  for delete to authenticated using (owner_id = (select auth.uid()));
+
+grant select, insert, delete on public.personal_voice_saved_catalog to authenticated;
