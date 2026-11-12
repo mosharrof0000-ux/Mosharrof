@@ -6,5 +6,10 @@
     "getHealth",
     "reportIssue"
   ],
-  "dependencies": []
+  "dependencies": [
+    {
+      "organ_id": "personal-voice",
+      "api": "getProviderControlCapabilities"
+    }
+  ]
 }
