@@ -120,8 +120,8 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     function refreshProviderControls() {
       const supported = !button.dataset.voiceProfileId && ["edge", "sarvam"].includes(provider.value);
       speedLabel.hidden = !supported;
+      if (typeof voiceLabel !== "undefined") voiceLabel.hidden = !!button.dataset.voiceProfileId;
     }
-    refreshProviderControls();
 
     const voiceLabel = element(documentRef, "label", "বাংলা সার্ভার ভয়েস", "pv-label");
     const voice = element(documentRef, "select", undefined, "pv-select");
@@ -134,6 +134,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     voice.addEventListener("change", () => { try { storage?.setItem(VOICE_KEY, voice.value); } catch {} });
     voiceLabel.appendChild(voice);
     panel.appendChild(voiceLabel);
+    refreshProviderControls();
 
     panel.appendChild(element(documentRef, "div", "ব্যক্তিগত কণ্ঠ", "pv-section-title"));
     status = element(documentRef, "p", "প্রোফাইল লোড হচ্ছে…", "pv-status");
