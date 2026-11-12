@@ -34,7 +34,7 @@ export function installMessageAudioActions(options = {}) {
         if (blob) {
           const previous = group.querySelector("[data-message-audio-download]");
           if (previous) previous.remove();
-          group.appendChild(createAudioDownloadButton(blob, { documentRef }));
+          group.appendChild(await createAudioDownloadButton(blob, { documentRef, title: extractMessageText(message) }));
         } else if (blob === null) {
           button.title = "ব্রাউজার ভয়েস চলছে; ডাউনলোডযোগ্য অডিও তৈরি হয়নি";
         }
