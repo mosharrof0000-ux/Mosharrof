@@ -152,7 +152,7 @@ export function createReadAloudController(options = {}) {
             if (auth && typeof auth.getAccessToken === "function") token = await auth.getAccessToken();
           }
           if (!token && storage) {
-            const keys = ["sb-jphortpnuddfsynqyock-auth-token"];
+            const keys = [];
             if (typeof storage.length === "number" && typeof storage.key === "function") {
               for (let i = 0; i < storage.length; i += 1) {
                 const key = storage.key(i);
