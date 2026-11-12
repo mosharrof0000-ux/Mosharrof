@@ -27,6 +27,10 @@ replacements = [
         "    private void continueOverlaySetup() {\n        if (disableVoiceOverlayForTest) return;\n",
     ),
     (
+        "    private void startVoiceOverlay() {\\n",
+        "    private void startVoiceOverlay() {\\n        if (disableVoiceOverlayForTest) return;\\n",
+    ),
+    (
         "        if (requestCode == OVERLAY_REQUEST && Settings.canDrawOverlays(this)) startVoiceOverlay();\n",
         "        if (!disableVoiceOverlayForTest && requestCode == OVERLAY_REQUEST && Settings.canDrawOverlays(this)) startVoiceOverlay();\n",
     ),
