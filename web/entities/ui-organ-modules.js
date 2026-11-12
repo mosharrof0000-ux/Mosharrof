@@ -4,7 +4,8 @@ import * as VoiceOrgan from "../organs/voice/index.js";
 import * as StorageOrgan from "../organs/storage/index.js";
 import * as ToolFactoryOrgan from "../organs/tool-factory/index.js";
 import * as QuranResearchOrgan from "../organs/quran-research/index.js";
+import * as MessageAudioOrgan from "../organs/message-audio/index.js";
 
 export const extraUiOrgans = Object.freeze([
-  CoreOrgan, SidebarOrgan, VoiceOrgan, StorageOrgan, ToolFactoryOrgan, QuranResearchOrgan
+  CoreOrgan, SidebarOrgan, VoiceOrgan, StorageOrgan, ToolFactoryOrgan, QuranResearchOrgan, MessageAudioOrgan
 ]);
