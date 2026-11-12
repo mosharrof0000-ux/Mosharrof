@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS personal_voice_profiles (
   sample_object_key TEXT,
   sample_mime_type TEXT,
   sample_bytes INTEGER,
+  reference_text TEXT,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
   updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
   deleted_at TEXT,
@@ -64,3 +65,11 @@ BEFORE UPDATE OF owner_id ON personal_voice_profiles
 BEGIN
   SELECT RAISE(ABORT, 'voice_profile_owner_immutable');
 END;
+
+INSERT OR IGNORE INTO personal_voice_catalog
+  (id, display_name, language, style, provider_id, provider_voice_id, preview_url, license_status, consent_status, enabled)
+VALUES
+  ('edge-bn-pradeep', 'Pradeep Neural · বাংলা পুরুষ', 'bn-BD', 'standard', 'edge', 'bn-BD-PradeepNeural', NULL, 'unknown', 'required', 1),
+  ('edge-bn-nabanita', 'Nabanita Neural · বাংলা নারী', 'bn-BD', 'standard', 'edge', 'bn-BD-NabanitaNeural', NULL, 'unknown', 'required', 1),
+  ('azure-bn-pradeep', 'Pradeep Neural · বাংলা পুরুষ', 'bn-BD', 'standard', 'azure', 'bn-BD-PradeepNeural', NULL, 'unknown', 'required', 1),
+  ('azure-bn-nabanita', 'Nabanita Neural · বাংলা নারী', 'bn-BD', 'standard', 'azure', 'bn-BD-NabanitaNeural', NULL, 'unknown', 'required', 1);
