@@ -16,6 +16,7 @@ This organ extends the existing **Read Aloud** action; it does not add a separat
 ## Architecture boundary
 
 - `domain/`: provider-neutral profile, consent, serial, and capability contracts.
+- `server/migrations/`: D1 schema for owner-private profiles, consent, preferences, catalog metadata, and an AUTOINCREMENT serial ledger. The ledger is deliberately separate so deleted profile serials are never reused.
 - `providers/`: provider adapters. The Gemini adapter must preserve the existing Gemini TTS request behavior.
 - `catalog/`: searchable provider-backed voices with explicit license and availability metadata.
 - `service/`: authenticated server API boundary; no browser-side secrets or authoritative profile storage.
@@ -30,4 +31,8 @@ This organ extends the existing **Read Aloud** action; it does not add a separat
 5. Read Aloud integration, Gemini preservation and fallback, per-message/default profile selection.
 6. Provider-specific controls, accessibility, security tests, Bengali quality tests, and live browser/device verification.
 
-This branch starts Gate 1. It does **not** claim that cloning, storage, catalog search, or UI is live yet. The earlier PRs #525–#527 are prior groundwork and must be reconciled during implementation; they are not treated as production-ready.
+## Infrastructure prerequisites and current status
+
+The D1 migration is a schema artifact only. It has not been applied to a Cloudflare database, and no D1/R2 bindings, Supabase JWT verification configuration, or voice-encryption secret are present in this PR. The existing TTS Worker does not yet expose personal-voice routes. Do not enable profile creation or request a sample until those server controls and private-storage checks are deployed and verified.
+
+This branch starts with the domain contract and database schema. It does **not** claim that cloning, storage, catalog search, or UI is live yet. The earlier PRs #525–#527 are prior groundwork and must be reconciled during implementation; they are not treated as production-ready.
