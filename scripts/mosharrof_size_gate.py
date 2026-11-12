@@ -41,6 +41,16 @@ def source_file(path: str, policy: dict) -> bool:
     return not excluded(path, policy) and Path(path).suffix.lower() in policy["source_extensions"]
 
 
+def folder_budget_file(path: str, policy: dict) -> bool:
+    """Count production implementation in folder budgets, not tests or organ metadata."""
+    if not source_file(path, policy):
+        return False
+    parts = Path(path).parts
+    excluded_parts = policy.get("folder_budget_excluded_path_parts", [])
+    excluded_names = policy.get("folder_budget_excluded_file_names", [])
+    return not any(part in excluded_parts for part in parts) and Path(path).name not in excluded_names
+
+
 def line_limit(path: str, policy: dict) -> int:
     """Use stricter language-specific caps before falling back to the general limit."""
     suffix = Path(path).suffix.lower()
@@ -66,7 +76,8 @@ def current_metrics(policy: dict) -> tuple[dict, dict]:
             continue
         data = p.read_bytes()
         files[rel] = (len(data), len(data.splitlines()))
-        add_folder_metrics(folders, rel, len(data))
+        if folder_budget_file(rel, policy):
+            add_folder_metrics(folders, rel, len(data))
     return files, {k: (v[0], v[1]) for k, v in folders.items()}
 
 
@@ -87,7 +98,8 @@ def base_metrics(base: str, policy: dict) -> tuple[dict, dict]:
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             ).stdout
             files[path] = (size, len(raw.splitlines()))
-            add_folder_metrics(folders, path, size)
+            if folder_budget_file(path, policy):
+                add_folder_metrics(folders, path, size)
         except (ValueError, subprocess.CalledProcessError):
             raise RuntimeError(f"Unable to inspect base file entry: {entry[:160]}")
     return files, {k: (v[0], v[1]) for k, v in folders.items()}
@@ -128,7 +140,7 @@ def main() -> int:
 
     changed_folders = set()
     for path in changed:
-        if source_file(path, policy):
+        if folder_budget_file(path, policy):
             parent = str(Path(path).parent)
             while parent not in (".", ""):
                 changed_folders.add(parent)
@@ -152,7 +164,7 @@ def main() -> int:
         "base": args.base,
         "changed_source_files_checked": sum(1 for p in changed if source_file(p, policy)),
         "file_budget": {"max_bytes": limits["max_file_bytes"], "default_max_lines": limits["max_file_lines"], "per_extension_max_lines": policy.get("line_limits_by_extension", {})},
-        "folder_budget": {"max_recursive_source_bytes": limits["max_folder_source_bytes"], "max_recursive_source_files": limits["max_folder_source_files"]},
+        "folder_budget": {"max_recursive_source_bytes": limits["max_folder_source_bytes"], "max_recursive_source_files": limits["max_folder_source_files"], "excluded_path_parts": policy.get("folder_budget_excluded_path_parts", []), "excluded_file_names": policy.get("folder_budget_excluded_file_names", [])},
         "warnings": warnings,
         "errors": errors,
     }

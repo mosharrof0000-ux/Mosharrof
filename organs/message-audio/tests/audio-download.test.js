@@ -10,7 +10,7 @@ test("creates a download control for generated MP3 audio and revokes its URL", (
     body: { appendChild(element) { element.parent = this; } },
     createElement(tag) {
       const element = {
-        tag, style: {}, listeners: {}, removed: false,
+        tag, style: {}, dataset: {}, listeners: {}, removed: false,
         setAttribute(name, value) { this[name] = value; },
         addEventListener(name, callback) { this.listeners[name] = callback; },
         click() { this.clicked = true; },

@@ -1,7 +1,7 @@
 {
   "name": "mosharrof-file-folder-size-gate",
   "version": "1.2",
-  "purpose": "Prevent oversized files and folders from growing unnoticed. Enforce strict language-specific budgets for web, script, and Android native source files; legacy oversized files may only remain unchanged or shrink.",
+  "purpose": "Prevent oversized files and production source folders from growing unnoticed. Per-file checks still include tests and metadata; recursive folder budgets count production implementation only.",
   "source_extensions": [
     ".py",
     ".js",
@@ -71,5 +71,12 @@
     "report_bytes_lines_and_folder_budget": true,
     "honor_existing_organ_line_limits": true,
     "do_not_auto_delete_or_auto_split_files": true
-  }
+  },
+  "folder_budget_excluded_path_parts": [
+    "tests"
+  ],
+  "folder_budget_excluded_file_names": [
+    "README.md",
+    "organ.json"
+  ]
 }
