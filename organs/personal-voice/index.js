@@ -12,3 +12,5 @@ export function getHealth(runtime) {
 export function reportIssue(runtime, summary = "personal voice issue reported") {
   return runtime.reportIssue(organId, summary);
 }
+
+export { getProviderControlCapabilities } from "./domain/provider-capabilities.js";
