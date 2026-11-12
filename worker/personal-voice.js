@@ -2,7 +2,8 @@ const MAX_SAMPLE_BYTES = 5 * 1024 * 1024;
 const MAX_TEXT_CHARS = 800;
 const MAX_REFERENCE_TEXT_CHARS = 500;
 const AUDIO_TYPES = new Set(["audio/wav", "audio/x-wav", "audio/wave", "audio/vnd.wave", "audio/flac", "audio/ogg"]);
-const PROFILE_COLUMNS = "id, serial_id, name, language, provider_id, status, consent_voice_use, consent_sample_storage, consent_model_training, sample_mime_type, sample_bytes, created_at, updated_at";
+const PROFILE_FIELDS = "id,owner_id,voice_serial,name,language,provider_id,status,consent_voice_use,consent_sample_storage,consent_model_training,sample_object_key,sample_mime_type,sample_bytes,reference_text,created_at,updated_at";
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -11,11 +12,68 @@ function json(data, status = 200) {
   });
 }
 
+function baseUrl(env) {
+  try {
+    const url = new URL(String(env.SUPABASE_URL || "").trim());
+    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) return null;
+    return url;
+  } catch { return null; }
+}
+
+function publishableKey(env) {
+  return String(env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY || "").trim();
+}
+
+async function supabaseFetch(env, token, path, options = {}) {
+  const base = baseUrl(env);
+  const key = publishableKey(env);
+  if (!base || !key) throw new Error("supabase_not_configured");
+  const headers = new Headers(options.headers || {});
+  headers.set("apikey", key);
+  headers.set("authorization", "Bearer " + token);
+  headers.set("accept", "application/json");
+  if (options.body !== undefined && !headers.has("content-type")) headers.set("content-type", "application/json");
+  const response = await fetch(new URL(path.replace(/^\//, ""), base.toString().replace(/\/$/, "") + "/"), {
+    ...options, headers, signal: options.signal || AbortSignal.timeout(15000)
+  });
+  return response;
+}
+
+async function authenticatedUser(request, env) {
+  const base = baseUrl(env);
+  const key = publishableKey(env);
+  const match = (request.headers.get("authorization") || "").match(/^Bearer ([\x21-\x7e]{20,8192})$/);
+  if (!base || !key || !match) return null;
+  const token = match[1];
+  try {
+    const auth = await fetch(new URL("/auth/v1/user", base), {
+      headers: { apikey: key, authorization: "Bearer " + token, accept: "application/json" },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!auth.ok) return null;
+    const user = await auth.json();
+    if (typeof user?.id !== "string" || !UUID.test(user.id)) return null;
+
+    // Respect the existing MOSHARROF Owner Login authorization contract.
+    const ownerCheck = await fetch(new URL("/rest/v1/rpc/asm_is_registered_owner", base), {
+      method: "POST",
+      headers: { apikey: key, authorization: "Bearer " + token, "content-type": "application/json", accept: "application/json" },
+      body: "{}",
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!ownerCheck.ok) return null;
+    const value = await ownerCheck.json().catch(() => false);
+    const registered = value === true || value?.asm_is_registered_owner === true ||
+      (Array.isArray(value) && value.some(row => row === true || row?.asm_is_registered_owner === true));
+    return registered ? { user, token } : null;
+  } catch { return null; }
+}
+
 function asProfile(row) {
   if (!row) return null;
   return {
     id: row.id,
-    serial: "VOICE-" + String(row.serial_id).padStart(3, "0"),
+    serial: "VOICE-" + String(row.voice_serial).padStart(3, "0"),
     name: row.name,
     language: row.language,
     provider: row.provider_id || "indicf5",
@@ -31,34 +89,6 @@ function asProfile(row) {
   };
 }
 
-function db(env) { return env.PERSONAL_VOICE_DB || null; }
-function bucket(env) { return env.PERSONAL_VOICE_BUCKET || null; }
-
-function configuredBase(value) {
-  try {
-    const url = new URL(String(value || "").trim());
-    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) return null;
-    return url;
-  } catch { return null; }
-}
-
-async function authenticatedUser(request, env) {
-  const base = configuredBase(env.SUPABASE_URL);
-  const key = String(env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY || "").trim();
-  const authorization = request.headers.get("authorization") || "";
-  const match = authorization.match(/^Bearer ([\x21-\x7e]{20,8192})$/);
-  if (!base || !key || !match) return null;
-  try {
-    const response = await fetch(new URL("/auth/v1/user", base), {
-      headers: { apikey: key, authorization: "Bearer " + match[1], accept: "application/json" },
-      signal: AbortSignal.timeout(10000)
-    });
-    if (!response.ok) return null;
-    const user = await response.json();
-    return typeof user?.id === "string" && user.id ? user : null;
-  } catch { return null; }
-}
-
 function encryptionKey(env) {
   const raw = String(env.PERSONAL_VOICE_ENCRYPTION_KEY || "").trim();
   if (!raw) return null;
@@ -69,31 +99,44 @@ function encryptionKey(env) {
 }
 
 async function encryptSample(raw, env) {
-  const keyBytes = encryptionKey(env);
-  if (!keyBytes) throw new Error("voice_encryption_not_configured");
+  const bytes = encryptionKey(env);
+  if (!bytes) throw new Error("voice_encryption_not_configured");
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["encrypt"]);
-  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, raw));
-  const packed = new Uint8Array(iv.length + ciphertext.length);
+  const key = await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["encrypt"]);
+  const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, raw));
+  const packed = new Uint8Array(iv.length + encrypted.length);
   packed.set(iv, 0);
-  packed.set(ciphertext, iv.length);
+  packed.set(encrypted, iv.length);
   return packed;
 }
 
 async function decryptSample(packed, env) {
-  const keyBytes = encryptionKey(env);
-  if (!keyBytes || packed.byteLength < 29) throw new Error("voice_sample_unavailable");
-  const bytes = new Uint8Array(packed);
-  const iv = bytes.slice(0, 12);
-  const ciphertext = bytes.slice(12);
-  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
-  return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext));
+  const bytes = encryptionKey(env);
+  if (!bytes || packed.byteLength < 29) throw new Error("voice_sample_unavailable");
+  const data = new Uint8Array(packed);
+  const key = await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["decrypt"]);
+  return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: data.slice(0, 12) }, key, data.slice(12)));
 }
 
-async function ownedProfile(database, ownerId, profileId) {
-  return database.prepare(
-    "SELECT " + PROFILE_COLUMNS + ", sample_object_key, reference_text FROM personal_voice_profiles WHERE owner_id = ? AND id = ? AND deleted_at IS NULL"
-  ).bind(ownerId, profileId).first();
+async function readJson(response) {
+  return response.json().catch(() => null);
+}
+
+async function getProfile(env, token, ownerId, id) {
+  const query = new URLSearchParams({ select: PROFILE_FIELDS, id: "eq." + id, owner_id: "eq." + ownerId, limit: "1" });
+  const response = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?" + query);
+  if (!response.ok) throw new Error("profile_lookup_failed");
+  const rows = await readJson(response);
+  return Array.isArray(rows) ? rows[0] || null : null;
+}
+
+async function removeStoredSample(env, token, key) {
+  if (!key) return;
+  const response = await supabaseFetch(env, token, "storage/v1/object/personal-voice-samples", {
+    method: "DELETE",
+    body: JSON.stringify({ prefixes: [key] })
+  });
+  if (!response.ok && response.status !== 404) throw new Error("sample_delete_failed");
 }
 
 function providerAvailability(env, provider) {
@@ -105,62 +148,70 @@ function providerAvailability(env, provider) {
   return false;
 }
 
-async function profilesRoute(request, env, user, url) {
-  const database = db(env);
-  if (!database) return json({ error: "personal_voice_database_not_configured" }, 503);
-  if (request.method === "GET" && url.pathname === "/personal-voice/profiles") {
-    const result = await database.prepare(
-      "SELECT " + PROFILE_COLUMNS + " FROM personal_voice_profiles WHERE owner_id = ? AND deleted_at IS NULL ORDER BY serial_id"
-    ).bind(user.id).all();
-    const pref = await database.prepare("SELECT default_profile_id FROM personal_voice_preferences WHERE owner_id = ?").bind(user.id).first();
-    return json({ profiles: (result.results || []).map(asProfile), default_profile_id: pref?.default_profile_id || null });
+async function profilesRoute(request, env, auth, url) {
+  const { user, token } = auth;
+  const path = url.pathname;
+  if (request.method === "GET" && path === "/personal-voice/profiles") {
+    const query = new URLSearchParams({ select: PROFILE_FIELDS, owner_id: "eq." + user.id, order: "voice_serial.asc" });
+    const [profilesResponse, preferenceResponse] = await Promise.all([
+      supabaseFetch(env, token, "rest/v1/personal_voice_profiles?" + query),
+      supabaseFetch(env, token, "rest/v1/personal_voice_preferences?select=default_profile_id&owner_id=eq." + user.id + "&limit=1")
+    ]);
+    if (!profilesResponse.ok || !preferenceResponse.ok) throw new Error("profile_list_failed");
+    const profiles = await readJson(profilesResponse);
+    const preferences = await readJson(preferenceResponse);
+    return json({ profiles: (profiles || []).map(asProfile), default_profile_id: preferences?.[0]?.default_profile_id || null });
   }
 
-  if (request.method === "POST" && url.pathname === "/personal-voice/profiles") {
+  if (request.method === "POST" && path === "/personal-voice/profiles") {
     const length = Number(request.headers.get("content-length") || 0);
     if (length > 8192) return json({ error: "request_too_large" }, 413);
     const body = await request.json().catch(() => null);
     const name = String(body?.name || "").trim().slice(0, 80);
     const language = String(body?.language || "bn-BD").trim().slice(0, 16);
     const consent = body?.consent || {};
-    if (!name || !/^[a-zA-Z0-9_-]+(?:-[a-zA-Z0-9_-]+)*$/.test(language)) return json({ error: "valid_name_and_language_required" }, 400);
+    if (!name || !/^[A-Za-z0-9_-]{2,16}$/.test(language)) return json({ error: "valid_name_and_language_required" }, 400);
     if (consent.voice_use !== true || consent.sample_storage !== true) return json({ error: "explicit_voice_use_and_sample_storage_consent_required" }, 400);
-    const serial = await database.prepare("INSERT INTO personal_voice_serials DEFAULT VALUES").run();
-    const serialId = Number(serial.meta?.last_row_id || 0);
-    if (!Number.isSafeInteger(serialId) || serialId < 1) return json({ error: "serial_allocation_failed" }, 500);
-    const inserted = await database.prepare(
-      "INSERT INTO personal_voice_profiles (owner_id, serial_id, name, language, status, consent_voice_use, consent_sample_storage, consent_model_training) VALUES (?, ?, ?, ?, 'draft', 1, 1, ?)"
-    ).bind(user.id, serialId, name, language, consent.model_training === true ? 1 : 0).run();
-    const id = Number(inserted.meta?.last_row_id || 0);
-    const row = await ownedProfile(database, user.id, id);
-    return json({ profile: asProfile(row) }, 201);
+    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles", {
+      method: "POST",
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify({
+        owner_id: user.id, name, language, provider_id: "indicf5", status: "draft",
+        consent_voice_use: true, consent_sample_storage: true, consent_model_training: consent.model_training === true
+      })
+    });
+    if (!response.ok) return json({ error: "voice_profile_create_failed" }, 502);
+    const rows = await readJson(response);
+    return json({ profile: asProfile(rows?.[0]) }, 201);
   }
 
-  const preferenceMatch = url.pathname === "/personal-voice/preferences/default";
-  if (preferenceMatch && request.method === "PUT") {
+  if (path === "/personal-voice/preferences/default" && request.method === "PUT") {
     const body = await request.json().catch(() => null);
-    const profileId = Number(body?.profile_id);
-    if (!Number.isSafeInteger(profileId) || profileId < 1) return json({ error: "valid_profile_id_required" }, 400);
-    const profile = await ownedProfile(database, user.id, profileId);
+    const profileId = String(body?.profile_id || "");
+    if (!UUID.test(profileId)) return json({ error: "valid_profile_id_required" }, 400);
+    const profile = await getProfile(env, token, user.id, profileId);
     if (!profile || profile.status !== "active" || !profile.sample_object_key || !profile.consent_voice_use) return json({ error: "active_owned_voice_profile_required" }, 404);
-    await database.prepare(
-      "INSERT INTO personal_voice_preferences (owner_id, default_profile_id) VALUES (?, ?) ON CONFLICT(owner_id) DO UPDATE SET default_profile_id = excluded.default_profile_id, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')"
-    ).bind(user.id, profileId).run();
+    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_preferences?on_conflict=owner_id", {
+      method: "POST",
+      headers: { prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ owner_id: user.id, default_profile_id: profileId })
+    });
+    if (!response.ok) return json({ error: "default_voice_update_failed" }, 502);
     return json({ ok: true, default_profile_id: profileId });
   }
 
-  const match = url.pathname.match(/^\/personal-voice\/profiles\/(\d+)(?:\/(sample|synthesize))?$/);
-  if (!match) return json({ error: "personal_voice_route_not_found" }, 404);
-  const profileId = Number(match[1]);
-  if (!Number.isSafeInteger(profileId) || profileId < 1) return json({ error: "invalid_profile_id" }, 400);
+  const match = path.match(/^\/personal-voice\/profiles\/([0-9a-f-]{36})(?:\/(sample|synthesize))?$/i);
+  if (!match || !UUID.test(match[1])) return json({ error: "personal_voice_route_not_found" }, 404);
+  const profileId = match[1];
   const action = match[2] || "";
-  const profile = await ownedProfile(database, user.id, profileId);
+  const profile = await getProfile(env, token, user.id, profileId);
   if (!profile) return json({ error: "voice_profile_not_found" }, 404);
 
   if (action === "sample" && request.method === "POST") {
-    if (!bucket(env)) return json({ error: "personal_voice_storage_not_configured" }, 503);
     if (!encryptionKey(env)) return json({ error: "voice_encryption_not_configured" }, 503);
     if (!profile.consent_voice_use || !profile.consent_sample_storage) return json({ error: "voice_and_storage_consent_required" }, 403);
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > MAX_SAMPLE_BYTES + 1024 * 1024) return json({ error: "audio_must_be_under_5_mib" }, 413);
     const form = await request.formData().catch(() => null);
     const file = form?.get("reference_audio");
     const referenceText = String(form?.get("reference_text") || "").trim();
@@ -170,29 +221,41 @@ async function profilesRoute(request, env, user, url) {
     const raw = new Uint8Array(await file.arrayBuffer());
     const objectKey = user.id + "/" + profileId + "/" + crypto.randomUUID() + ".enc";
     const encrypted = await encryptSample(raw, env);
-    await bucket(env).put(objectKey, encrypted, {
-      httpMetadata: { contentType: "application/octet-stream", cacheControl: "private, no-store" },
-      customMetadata: { encryption: "AES-256-GCM", sourceType: String(file.type).toLowerCase() }
+    const upload = await supabaseFetch(env, token, "storage/v1/object/personal-voice-samples/" + objectKey.split("/").map(encodeURIComponent).join("/"), {
+      method: "POST",
+      headers: { "content-type": "application/octet-stream", "x-upsert": "false" },
+      body: encrypted
     });
-    if (profile.sample_object_key) await bucket(env).delete(profile.sample_object_key);
-    await database.prepare(
-      "UPDATE personal_voice_profiles SET sample_object_key = ?, sample_mime_type = ?, sample_bytes = ?, reference_text = ?, status = 'active', updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE owner_id = ? AND id = ?"
-    ).bind(objectKey, String(file.type).toLowerCase(), raw.byteLength, referenceText, user.id, profileId).run();
-    const updated = await ownedProfile(database, user.id, profileId);
-    return json({ profile: asProfile(updated) }, 200);
+    if (!upload.ok) return json({ error: "private_voice_sample_upload_failed" }, 502);
+    if (profile.sample_object_key) await removeStoredSample(env, token, profile.sample_object_key);
+    const update = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
+      method: "PATCH",
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify({
+        sample_object_key: objectKey, sample_mime_type: String(file.type).toLowerCase(),
+        sample_bytes: raw.byteLength, reference_text: referenceText, status: "active"
+      })
+    });
+    if (!update.ok) {
+      await removeStoredSample(env, token, objectKey);
+      return json({ error: "voice_profile_sample_link_failed" }, 502);
+    }
+    const rows = await readJson(update);
+    return json({ profile: asProfile(rows?.[0]) });
   }
 
   if (action === "synthesize" && request.method === "POST") {
     if (profile.status !== "active" || !profile.sample_object_key || !profile.consent_voice_use || !profile.consent_sample_storage) return json({ error: "active_consented_voice_profile_required" }, 409);
-    const inferenceUrl = configuredBase(env.PERSONAL_VOICE_API_URL);
+    if (!encryptionKey(env)) return json({ error: "voice_encryption_not_configured" }, 503);
+    const inferenceUrl = (() => { try { const value = new URL(String(env.PERSONAL_VOICE_API_URL || "")); return value.protocol === "https:" && !value.username && !value.password ? value : null; } catch { return null; } })();
     const inferenceToken = String(env.PERSONAL_VOICE_API_TOKEN || "").trim();
     if (!inferenceUrl || !inferenceToken) return json({ error: "personal_voice_inference_not_configured" }, 503);
     const body = await request.json().catch(() => null);
     const text = String(body?.text || "").trim();
     if (!text || text.length > MAX_TEXT_CHARS) return json({ error: "text_must_be_1_to_800_chars" }, 400);
-    const object = await bucket(env).get(profile.sample_object_key);
-    if (!object) return json({ error: "voice_sample_not_found" }, 410);
-    const decrypted = await decryptSample(await object.arrayBuffer(), env);
+    const download = await supabaseFetch(env, token, "storage/v1/object/authenticated/personal-voice-samples/" + profile.sample_object_key.split("/").map(encodeURIComponent).join("/"));
+    if (!download.ok) return json({ error: "voice_sample_not_found" }, 410);
+    const decrypted = await decryptSample(await download.arrayBuffer(), env);
     const form = new FormData();
     form.append("text", text);
     form.append("reference_text", profile.reference_text || "");
@@ -200,9 +263,7 @@ async function profilesRoute(request, env, user, url) {
     let response;
     try {
       response = await fetch(new URL("/synthesize", inferenceUrl), {
-        method: "POST",
-        headers: { authorization: "Bearer " + inferenceToken },
-        body: form,
+        method: "POST", headers: { authorization: "Bearer " + inferenceToken }, body: form,
         signal: AbortSignal.timeout(120000)
       });
     } catch { return json({ error: "personal_voice_inference_unavailable" }, 502); }
@@ -222,48 +283,55 @@ async function profilesRoute(request, env, user, url) {
     const voiceUse = consent.voice_use === undefined ? !!profile.consent_voice_use : consent.voice_use === true;
     const sampleStorage = consent.sample_storage === undefined ? !!profile.consent_sample_storage : consent.sample_storage === true;
     const training = consent.model_training === undefined ? !!profile.consent_model_training : consent.model_training === true;
-    if (!voiceUse || !sampleStorage) {
-      if (profile.sample_object_key && !sampleStorage && bucket(env)) await bucket(env).delete(profile.sample_object_key);
-      await database.prepare(
-        "UPDATE personal_voice_profiles SET name = ?, consent_voice_use = ?, consent_sample_storage = ?, consent_model_training = ?, sample_object_key = ?, sample_mime_type = ?, sample_bytes = ?, reference_text = ?, status = 'revoked', updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE owner_id = ? AND id = ?"
-      ).bind(name, voiceUse ? 1 : 0, sampleStorage ? 1 : 0, training ? 1 : 0, sampleStorage ? profile.sample_object_key : null, sampleStorage ? profile.sample_mime_type : null, sampleStorage ? profile.sample_bytes : null, sampleStorage ? profile.reference_text : null, user.id, profileId).run();
-      await database.prepare("UPDATE personal_voice_preferences SET default_profile_id = NULL WHERE owner_id = ? AND default_profile_id = ?").bind(user.id, profileId).run();
-    } else {
-      await database.prepare(
-        "UPDATE personal_voice_profiles SET name = ?, consent_model_training = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE owner_id = ? AND id = ?"
-      ).bind(name, training ? 1 : 0, user.id, profileId).run();
+    const patch = {
+      name, consent_voice_use: voiceUse, consent_sample_storage: sampleStorage, consent_model_training: training,
+      status: voiceUse && sampleStorage && profile.sample_object_key ? "active" : "revoked"
+    };
+    if (!sampleStorage) {
+      if (profile.sample_object_key) await removeStoredSample(env, token, profile.sample_object_key);
+      Object.assign(patch, { sample_object_key: null, sample_mime_type: null, sample_bytes: null, reference_text: null });
     }
-    return json({ profile: asProfile(await ownedProfile(database, user.id, profileId)) });
+    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
+      method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify(patch)
+    });
+    if (!response.ok) return json({ error: "voice_profile_update_failed" }, 502);
+    if (!voiceUse || !sampleStorage) {
+      await supabaseFetch(env, token, "rest/v1/personal_voice_preferences?owner_id=eq." + user.id + "&default_profile_id=eq." + profileId, {
+        method: "PATCH", headers: { prefer: "return=minimal" }, body: JSON.stringify({ default_profile_id: null })
+      });
+    }
+    const rows = await readJson(response);
+    return json({ profile: asProfile(rows?.[0]) });
   }
 
   if (action === "" && request.method === "DELETE") {
-    if (profile.sample_object_key && bucket(env)) await bucket(env).delete(profile.sample_object_key);
-    await database.prepare("UPDATE personal_voice_preferences SET default_profile_id = NULL WHERE owner_id = ? AND default_profile_id = ?").bind(user.id, profileId).run();
-    await database.prepare("DELETE FROM personal_voice_profiles WHERE owner_id = ? AND id = ?").bind(user.id, profileId).run();
+    if (profile.sample_object_key) await removeStoredSample(env, token, profile.sample_object_key);
+    await supabaseFetch(env, token, "rest/v1/personal_voice_preferences?owner_id=eq." + user.id + "&default_profile_id=eq." + profileId, {
+      method: "PATCH", headers: { prefer: "return=minimal" }, body: JSON.stringify({ default_profile_id: null })
+    });
+    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, { method: "DELETE" });
+    if (!response.ok) return json({ error: "voice_profile_delete_failed" }, 502);
     return json({ ok: true, serial_retained: true });
   }
-
   return json({ error: "method_not_allowed" }, 405);
 }
 
-async function catalogRoute(request, env, user, url) {
-  const database = db(env);
-  if (!database) return json({ error: "personal_voice_database_not_configured" }, 503);
+async function catalogRoute(request, env, auth, url) {
   if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
-  const query = String(url.searchParams.get("q") || "").trim().slice(0, 80);
+  const query = new URLSearchParams({
+    select: "id,display_name,language,style,provider_id,provider_voice_id,preview_url,license_status,consent_status",
+    enabled: "eq.true", order: "display_name.asc", limit: "50"
+  });
+  const q = String(url.searchParams.get("q") || "").trim().slice(0, 80);
   const language = String(url.searchParams.get("language") || "").trim().slice(0, 16);
   const style = String(url.searchParams.get("style") || "").trim().slice(0, 32);
-  const rows = await database.prepare(
-    "SELECT id, display_name, language, style, provider_id, provider_voice_id, preview_url, license_status, consent_status FROM personal_voice_catalog WHERE enabled = 1 AND (? = '' OR display_name LIKE '%' || ? || '%' OR provider_voice_id LIKE '%' || ? || '%') AND (? = '' OR language = ?) AND (? = '' OR style = ?) ORDER BY display_name LIMIT 50"
-  ).bind(query, query, query, language, language, style, style).all();
-  return json({
-    voices: (rows.results || []).map(row => ({
-      ...row,
-      available: providerAvailability(env, row.provider_id),
-      license_status: row.license_status,
-      consent_status: row.consent_status
-    }))
-  });
+  if (q) query.set("or", "(display_name.ilike.*" + q.replace(/[(),]/g, "") + "*,provider_voice_id.ilike.*" + q.replace(/[(),]/g, "") + "*)");
+  if (language) query.set("language", "eq." + language);
+  if (style) query.set("style", "eq." + style);
+  const response = await supabaseFetch(env, auth.token, "rest/v1/personal_voice_catalog?" + query);
+  if (!response.ok) return json({ error: "voice_catalog_unavailable" }, 502);
+  const rows = await readJson(response);
+  return json({ voices: (rows || []).map(row => ({ ...row, available: providerAvailability(env, row.provider_id) })) });
 }
 
 export async function handlePersonalVoiceRequest(request, env = {}) {
@@ -271,27 +339,29 @@ export async function handlePersonalVoiceRequest(request, env = {}) {
   if (!url.pathname.startsWith("/personal-voice/")) return null;
   if (request.method === "OPTIONS") return new Response(null, { status: 204 });
   if (request.method === "GET" && url.pathname === "/personal-voice/health") {
+    const inference = (() => { try { const value = new URL(String(env.PERSONAL_VOICE_API_URL || "")); return value.protocol === "https:" && !!env.PERSONAL_VOICE_API_TOKEN; } catch { return false; } })();
     return json({
       ok: true,
-      enabled: !!db(env) && !!bucket(env) && !!configuredBase(env.SUPABASE_URL) && !!(env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY) && !!encryptionKey(env),
-      database_configured: !!db(env),
-      private_storage_configured: !!bucket(env) && !!encryptionKey(env),
-      auth_configured: !!configuredBase(env.SUPABASE_URL) && !!(env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY),
-      inference_configured: !!configuredBase(env.PERSONAL_VOICE_API_URL) && !!env.PERSONAL_VOICE_API_TOKEN
+      enabled: !!baseUrl(env) && !!publishableKey(env) && !!encryptionKey(env),
+      auth_configured: !!baseUrl(env) && !!publishableKey(env),
+      encrypted_storage_configured: !!baseUrl(env) && !!publishableKey(env) && !!encryptionKey(env),
+      inference_configured: inference,
+      owner_verification: "asm_is_registered_owner"
     });
   }
-  const user = await authenticatedUser(request, env);
-  if (!user) return json({ error: "authentication_required" }, 401);
-  if (url.pathname === "/personal-voice/catalog") return catalogRoute(request, env, user, url);
-  if (url.pathname.startsWith("/personal-voice/profiles") || url.pathname === "/personal-voice/preferences/default") {
-    try { return await profilesRoute(request, env, user, url); }
-    catch (error) {
-      const code = String(error?.message || "");
-      if (code.includes("voice_encryption_not_configured")) return json({ error: "voice_encryption_not_configured" }, 503);
-      return json({ error: "personal_voice_request_failed" }, 500);
+  const auth = await authenticatedUser(request, env);
+  if (!auth) return json({ error: "registered_owner_authentication_required" }, 401);
+  try {
+    if (url.pathname === "/personal-voice/catalog") return await catalogRoute(request, env, auth, url);
+    if (url.pathname.startsWith("/personal-voice/profiles") || url.pathname === "/personal-voice/preferences/default") {
+      return await profilesRoute(request, env, auth, url);
     }
+    return json({ error: "personal_voice_route_not_found" }, 404);
+  } catch (error) {
+    const code = String(error?.message || "");
+    if (code === "voice_encryption_not_configured") return json({ error: code }, 503);
+    return json({ error: "personal_voice_request_failed" }, 500);
   }
-  return json({ error: "personal_voice_route_not_found" }, 404);
 }
 
 export const PERSONAL_VOICE_LIMITS = Object.freeze({
