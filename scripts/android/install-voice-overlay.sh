@@ -139,7 +139,7 @@ public class VoiceOverlayService extends Service {
         activeInstance = this;
         createChannel();
         hidden = getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).getBoolean("hidden", false);
-        startForeground(NOTIFICATION_ID, notification());
+        enterForeground();
         if (!Settings.canDrawOverlays(this)) {
             Toast.makeText(this, "MOSHARROF ভাসমান বাটনের জন্য Display over other apps অনুমতি দিন", Toast.LENGTH_LONG).show();
             stopSelf();
@@ -151,20 +151,20 @@ public class VoiceOverlayService extends Service {
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         // startForegroundService() may be called again when MainActivity resumes. Every
         // start command must refresh foreground state immediately or Android can kill the app.
-        startForeground(NOTIFICATION_ID, notification());
+        enterForeground();
         String action = intent == null ? null : intent.getAction();
         if ("com.mosharrof.ai.HIDE_VOICE_OVERLAY".equals(action)) {
             hidden = true;
             getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).edit().putBoolean("hidden", true).apply();
             removeBubble();
-            startForeground(NOTIFICATION_ID, notification());
+            enterForeground();
             return START_STICKY;
         }
         if ("com.mosharrof.ai.SHOW_VOICE_OVERLAY".equals(action)) {
             hidden = false;
             getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).edit().putBoolean("hidden", false).apply();
             if (Settings.canDrawOverlays(this) && bubble == null) showBubble();
-            startForeground(NOTIFICATION_ID, notification());
+            enterForeground();
             return START_STICKY;
         }
         if (ACTION_STOP.equals(action)) {
@@ -182,6 +182,20 @@ public class VoiceOverlayService extends Service {
             NotificationChannel channel = new NotificationChannel(CHANNEL, "MOSHARROF Voice Manager", NotificationManager.IMPORTANCE_LOW);
             channel.setDescription("Notification to keep the user-enabled floating voice manager available");
             ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(channel);
+        }
+    }
+
+    private void enterForeground() {
+        Notification current = notification();
+        if (Build.VERSION.SDK_INT >= 34) {
+            startForeground(NOTIFICATION_ID, current,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        } else if (Build.VERSION.SDK_INT >= 29) {
+            // Android 10–13 do not know the specialUse FGS type. Pass NONE explicitly
+            // instead of inheriting the unknown manifest type through the two-arg API.
+            startForeground(NOTIFICATION_ID, current, 0);
+        } else {
+            startForeground(NOTIFICATION_ID, current);
         }
     }
 
@@ -228,7 +242,7 @@ public class VoiceOverlayService extends Service {
                         getSharedPreferences("mosharrof_voice_overlay", MODE_PRIVATE).edit().putBoolean("hidden", true).apply();
                         Toast.makeText(VoiceOverlayService.this, "MOSHARROF আইকন লুকানো হয়েছে · নোটিফিকেশনের ‘দেখান’ চাপলে ফিরবে", Toast.LENGTH_LONG).show();
                         removeBubble();
-                        startForeground(NOTIFICATION_ID, notification());
+                        enterForeground();
                     }
                     else if (!moved) {
                         if (compact) { compact = false; styleBubble(); }

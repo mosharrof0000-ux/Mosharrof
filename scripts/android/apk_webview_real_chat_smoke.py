@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -60,7 +61,15 @@ class PageCDP:
         for attempt in range(1, 3):
             for options in ({}, {"suppress_origin": True}):
                 try:
-                    self.ws = websocket.create_connection(ws_url, timeout=45, **options)
+                    # GitHub-hosted runners may define HTTP(S)_PROXY globally.
+                    # CDP is forwarded over adb to loopback and must bypass all proxies.
+                    self.ws = websocket.create_connection(
+                        ws_url,
+                        timeout=45,
+                        http_no_proxy=["127.0.0.1", "localhost"],
+                        http_proxy_host=None,
+                        **options,
+                    )
                     break
                 except Exception as exc:
                     origin_mode = "default-origin" if not options else "no-origin"
@@ -77,12 +86,16 @@ class PageCDP:
                 + " | ".join(failures)
             )
         self.next_id = 0
+        self.session_id = None
 
     def command(self, method: str, params: dict | None = None, timeout: float = 15) -> dict:
         self.next_id += 1
         command_id = self.next_id
         self.ws.settimeout(timeout)
-        self.ws.send(json.dumps({"id": command_id, "method": method, "params": params or {}}))
+        payload = {"id": command_id, "method": method, "params": params or {}}
+        if self.session_id:
+            payload["sessionId"] = self.session_id
+        self.ws.send(json.dumps(payload))
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             message = json.loads(self.ws.recv())
@@ -134,7 +147,16 @@ def main() -> int:
         if target is None:
             return 1
 
-        cdp = PageCDP(target["webSocketDebuggerUrl"])
+        # Use the exact page-target socket published by /json/list.
+        # The browser-level /devtools/browser endpoint on the Android 11
+        # WebView 83 emulator accepts HTTP discovery but stalls on WebSocket
+        # upgrade; page-target sockets are the supported path for this smoke test.
+        page_ws = target.get("webSocketDebuggerUrl")
+        if not page_ws:
+            raise RuntimeError("Android WebView page target did not publish webSocketDebuggerUrl")
+        cdp = PageCDP(page_ws)
+        record("browser_cdp_attached_to_app_page", True,
+               "Attached directly to the installed APK page-target WebSocket")
         cdp.command("Page.enable")
         cdp.command("Runtime.enable")
         try:
@@ -245,6 +267,11 @@ def main() -> int:
             record("assistant_answer_visible_in_saved_screenshot", screenshot_visible,
                    json.dumps(visibility, ensure_ascii=False)[:500])
             report["screenshot_answer_visible"] = screenshot_visible
+
+
+            sys.path.insert(0, str(Path(__file__).resolve().parent / "tests"))
+            from apk_webview_audio_download_smoke import verify_message_audio_download
+            verify_message_audio_download(cdp, out, record, report)
         else:
             record("real_backend_returned_non_mock_answer", False,
                    f"Timed out waiting for assistant reply after {args.timeout_ms} ms")

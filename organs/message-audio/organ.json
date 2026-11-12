@@ -1,0 +1,10 @@
+{
+  "id": "message-audio",
+  "name": "Message Audio",
+  "description": "Adds read-aloud and generated-audio download controls to user-sent chat messages.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}

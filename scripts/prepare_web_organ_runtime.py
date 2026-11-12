@@ -10,6 +10,14 @@ from scripts.mosharrof_registry import build_registry  # noqa: E402
 from scripts.manual_provider_runtime_patch import apply_manual_provider_patches  # noqa: E402
 
 
+def copy_organ_components(source_folder: Path, destination_folder: Path) -> None:
+    """Copy an organ's private component modules beside its browser entrypoint."""
+    source = source_folder / "components"
+    if source.is_dir():
+        destination = destination_folder / "components"
+        shutil.copytree(source, destination, dirs_exist_ok=True)
+
+
 def main() -> int:
     expected = build_registry(ROOT)
     registry_path = ROOT / "web/runtime/organs.registry.json"
@@ -156,6 +164,7 @@ def main() -> int:
         dst = ROOT / "web/organs" / organ_id / "index.js"
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text(content, encoding="utf-8")
+        copy_organ_components(folder, dst.parent)
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",

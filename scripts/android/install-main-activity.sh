@@ -7,6 +7,7 @@ cp native/android/AndroidAccessibilityPlugin.java android/app/src/main/java/com/
 cp native/android/AndroidFileManagerPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidFileManagerPlugin.java
 cp native/android/AndroidMediaOrganizerPlugin.java android/app/src/main/java/com/mosharrof/ai/AndroidMediaOrganizerPlugin.java
 cp native/android/AndroidDuplicateScanner.java android/app/src/main/java/com/mosharrof/ai/AndroidDuplicateScanner.java
+cp native/android/MessageAudioDownloadPlugin.java android/app/src/main/java/com/mosharrof/ai/MessageAudioDownloadPlugin.java
 
 cat > android/app/src/main/java/com/mosharrof/ai/MainActivity.java <<'JAVA'
 package com.mosharrof.ai;
@@ -46,6 +47,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AndroidAccessibilityPlugin.class);
         registerPlugin(AndroidFileManagerPlugin.class);
         registerPlugin(AndroidMediaOrganizerPlugin.class);
+        registerPlugin(MessageAudioDownloadPlugin.class);
         super.onCreate(savedInstanceState);
         // Enable remote inspection only for debug APKs so CI can test the installed WebView.
         if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) android.webkit.WebView.setWebContentsDebuggingEnabled(true);

@@ -23,19 +23,9 @@ fi
 adb shell pm grant com.mosharrof.ai android.permission.RECORD_AUDIO || true
 adb shell pm grant com.mosharrof.ai android.permission.READ_CONTACTS || true
 adb shell pm grant com.mosharrof.ai android.permission.CALL_PHONE || true
-adb shell appops set com.mosharrof.ai SYSTEM_ALERT_WINDOW allow || true
-adb shell am start -n com.mosharrof.ai/.MainActivity
-sleep 15
+# The APK is launched with a test-only flag that skips the unrelated voice overlay.
+adb shell am start -n com.mosharrof.ai/.MainActivity --ez mosharrof_disable_voice_overlay true
+sleep 25
 
-socket=""
-for attempt in $(seq 1 30); do
-  socket="$(timeout 10s adb shell cat /proc/net/unix 2>/dev/null | tr -d '\r' | grep -o 'webview_devtools_remote_[0-9]*' | head -n 1 || true)"
-  if [ -n "$socket" ]; then
-    break
-  fi
-  sleep 2
-done
-test -n "$socket"
-adb forward tcp:9222 "localabstract:$socket"
-timeout 30s curl --retry 10 --retry-delay 2 --retry-connrefused http://127.0.0.1:9222/json/list -o artifacts/apk-webview-chat/webview-targets.json
+bash scripts/android/forward-webview-cdp.sh
 python scripts/android/apk_webview_real_chat_smoke.py --cdp-endpoint http://127.0.0.1:9222 --output-dir artifacts/apk-webview-chat
