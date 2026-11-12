@@ -39,6 +39,7 @@ public class MainActivity extends BridgeActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private String[] requiredPermissions;
     private int permissionIndex = 0;
+    private boolean disableVoiceOverlayForTest = false;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(DeviceControlPlugin.class);
@@ -47,6 +48,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AndroidFileManagerPlugin.class);
         registerPlugin(AndroidMediaOrganizerPlugin.class);
         super.onCreate(savedInstanceState);
+        disableVoiceOverlayForTest = getIntent() != null && getIntent().getBooleanExtra("mosharrof_disable_voice_overlay", false);
         // Enable remote inspection only for debug APKs so CI can test the installed WebView.
         if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) android.webkit.WebView.setWebContentsDebuggingEnabled(true);
         Window window = getWindow();
@@ -68,13 +70,13 @@ public class MainActivity extends BridgeActivity {
             controller.setAppearanceLightNavigationBars(lightTheme);
         }
         handleVoiceIntent(getIntent());
-        beginPermissionSetup();
+        if (!disableVoiceOverlayForTest) beginPermissionSetup();
 
     }
 
     @Override public void onResume() {
         super.onResume();
-        if (Settings.canDrawOverlays(this)) startVoiceOverlay();
+        if (!disableVoiceOverlayForTest && Settings.canDrawOverlays(this)) startVoiceOverlay();
     }
 
     private void beginPermissionSetup() {
@@ -123,6 +125,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void continueOverlaySetup() {
+        if (disableVoiceOverlayForTest) return;
         if (Settings.canDrawOverlays(this)) startVoiceOverlay();
         else if (!askedForOverlayThisSession) {
             askedForOverlayThisSession = true;
@@ -147,10 +150,12 @@ public class MainActivity extends BridgeActivity {
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        disableVoiceOverlayForTest = intent != null && intent.getBooleanExtra("mosharrof_disable_voice_overlay", false);
         handleVoiceIntent(intent);
     }
 
     private void startVoiceOverlay() {
+        if (disableVoiceOverlayForTest) return;
         Intent service = new Intent(this, VoiceOverlayService.class);
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(service); else startService(service);
     }
