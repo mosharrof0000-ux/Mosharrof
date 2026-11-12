@@ -60,7 +60,15 @@ class PageCDP:
         for attempt in range(1, 3):
             for options in ({}, {"suppress_origin": True}):
                 try:
-                    self.ws = websocket.create_connection(ws_url, timeout=45, **options)
+                    # GitHub-hosted runners may define HTTP(S)_PROXY globally.
+                    # CDP is forwarded over adb to loopback and must bypass all proxies.
+                    self.ws = websocket.create_connection(
+                        ws_url,
+                        timeout=45,
+                        http_no_proxy=["127.0.0.1", "localhost"],
+                        http_proxy_host=None,
+                        **options,
+                    )
                     break
                 except Exception as exc:
                     origin_mode = "default-origin" if not options else "no-origin"
