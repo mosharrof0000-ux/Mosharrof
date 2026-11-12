@@ -30,7 +30,7 @@ function storedSession() {
   return null;
 }
 
-async function accessToken() {
+export async function getAccessToken() {
   try {
     const auth = globalThis.MOSHARROF_AUTH || globalThis.mosharrofAuth;
     if (auth && typeof auth.getAccessToken === "function") {
@@ -60,7 +60,7 @@ async function accessToken() {
 }
 
 export async function apiRequest(path, options = {}) {
-  const token = await accessToken();
+  const token = await getAccessToken();
   if (!token) throw new Error("owner_login_required");
   const headers = new Headers(options.headers || {});
   headers.set("Authorization", "Bearer " + token);
