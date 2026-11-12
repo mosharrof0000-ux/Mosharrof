@@ -307,6 +307,16 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
               await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "PATCH", body: JSON.stringify({ name: next.trim() }) });
               await loadProfiles();
             }
+          }), action("ব্যবহারের সম্মতি প্রত্যাহার", async () => {
+            if (!globalThis.confirm?.("এই কণ্ঠের ব্যবহার বন্ধ করবেন?")) return;
+            await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "PATCH", body: JSON.stringify({ consent: { voice_use: false } }) });
+            if (button.dataset.voiceProfileId === profile.id) delete button.dataset.voiceProfileId;
+            await loadProfiles();
+          }), action("নমুনা ও সংরক্ষণ মুছুন", async () => {
+            if (!globalThis.confirm?.("সংরক্ষিত নমুনা স্থায়ীভাবে মুছবেন?")) return;
+            await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "PATCH", body: JSON.stringify({ consent: { sample_storage: false } }) });
+            if (button.dataset.voiceProfileId === profile.id) delete button.dataset.voiceProfileId;
+            await loadProfiles();
           }), action("মুছুন", async () => {
             if (!globalThis.confirm?.("এই কণ্ঠ ও নমুনা মুছে ফেলবেন?")) return;
             await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "DELETE" });
