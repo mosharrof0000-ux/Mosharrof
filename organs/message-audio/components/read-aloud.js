@@ -1,3 +1,5 @@
+import { normalizeSpeechText, extractMessageText } from "./read-aloud-text.js";
+export { normalizeSpeechText, extractMessageText } from "./read-aloud-text.js";
 function iconMarkup(kind) {
   const paths = {
     speak: '<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
@@ -17,30 +19,6 @@ export const PERSONAL_VOICE_ENDPOINT = "https://mosharrof-screenshot-analysis.mo
 const PROVIDERS = new Set(["auto", "edge", "gemini", "azure", "elevenlabs", "browser", "sarvam"]);
 const VOICES = new Set(["bn-BD-PradeepNeural", "bn-BD-NabanitaNeural"]);
 const PACE_KEY = "mosharrof_tts_pace_v1";
-
-export function normalizeSpeechText(value) {
-  return String(value == null ? "" : value)
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/[*_~>#|]/g, " ")
-    .replace(/[ \t\r\n]+/g, " ")
-    .trim();
-}
-
-export function extractMessageText(message) {
-  if (!message) return "";
-  let source = message;
-  if (typeof message.cloneNode === "function") {
-    source = message.cloneNode(true);
-    if (typeof source.querySelectorAll === "function") {
-      source.querySelectorAll(".message-actions-wrap,.message-actions,.message-actions-toggle,.message-action,.message-meta-row,.time,.label")
-        .forEach((element) => element.remove());
-    }
-  }
-  return normalizeSpeechText(source.innerText || source.textContent || "");
-}
 
 export function decodeAudioBlob(encoded, mimeType = "audio/mpeg", options = {}) {
   const BlobCtor = options.BlobCtor || globalThis.Blob;
