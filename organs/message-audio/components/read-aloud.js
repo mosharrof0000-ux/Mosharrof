@@ -129,7 +129,8 @@ export function createReadAloudController(options = {}) {
     }
 
     const provider = preference(storage, "mosharrof_tts_provider_v1", PROVIDERS, "auto");
-    if (provider === "browser") {
+    const selectedProfileId = String(speakOptions.profileId || button?.dataset?.voiceProfileId || "");
+    if (provider === "browser" && !selectedProfileId) {
       if (startBrowserSpeech(text, button)) return null;
       resetButton(button);
       throw new Error("browser_speech_unavailable");
@@ -140,7 +141,7 @@ export function createReadAloudController(options = {}) {
       const voice = preference(storage, "mosharrof_tts_voice_v1", VOICES, "bn-BD-PradeepNeural");
       const savedPace = Number(storage?.getItem?.(PACE_KEY) || 1);
       const pace = Number.isFinite(savedPace) ? Math.min(1.25, Math.max(0.75, savedPace)) : 1;
-      const profileId = String(speakOptions.profileId || button?.dataset?.voiceProfileId || "");
+      const profileId = selectedProfileId;
       let response;
       let data = {};
       if (profileId) {
