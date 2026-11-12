@@ -5,6 +5,7 @@ import {
 import { profilesRoute } from "./personal-voice-profiles.js";
 import { catalogRoute } from "./personal-voice-catalog.js";
 import { handlePersonalVoiceAuth } from "./personal-voice-auth.js";
+import { getPersonalVoiceReadiness } from "./personal-voice-readiness.js";
 
 export async function handlePersonalVoiceRequest(request, env = {}) {
   const url = new URL(request.url);
@@ -26,6 +27,7 @@ export async function handlePersonalVoiceRequest(request, env = {}) {
   }
   const auth = await authenticatedUser(request, env);
   if (!auth) return json({ error: "registered_owner_authentication_required" }, 401);
+  if (request.method === "GET" && url.pathname === "/personal-voice/readiness") return getPersonalVoiceReadiness(env, auth);
   try {
     if (url.pathname === "/personal-voice/catalog") return await catalogRoute(request, env, auth, url);
     if (url.pathname.startsWith("/personal-voice/profiles") || url.pathname.startsWith("/personal-voice/catalog/saved") || url.pathname === "/personal-voice/preferences/default") {
