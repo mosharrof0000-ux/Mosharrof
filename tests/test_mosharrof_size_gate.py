@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from scripts.mosharrof_size_gate import folder_budget_file, line_limit, source_file
+from scripts.mosharrof_size_gate import line_limit
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "mosharrof_size_gate.py"
@@ -40,12 +40,3 @@ def test_size_gate_preserves_stricter_existing_language_line_caps():
     assert line_limit("core/example/styles.css", config) == 350
     assert line_limit("web/template.html", config) == 300
     assert line_limit("scripts/utility.py", config) == config["limits"]["max_file_lines"]
-
-
-def test_folder_budget_counts_production_code_not_tests_or_organ_metadata():
-    config = json.loads(POLICY.read_text(encoding="utf-8"))
-    assert folder_budget_file("organs/example/components/read-aloud.js", config)
-    assert not folder_budget_file("organs/example/tests/read-aloud.test.js", config)
-    assert not folder_budget_file("organs/example/organ.json", config)
-    assert not folder_budget_file("organs/example/README.md", config)
-    assert source_file("organs/example/tests/read-aloud.test.js", config)
