@@ -27,7 +27,7 @@ replacements = [
         "    private void continueOverlaySetup() {\n        if (disableVoiceOverlayForTest) return;\n",
     ),
     (
-        "    private void startVoiceOverlay() {\\n",
+        "    private void startVoiceOverlay() {\n",
         "    private void startVoiceOverlay() {\\n        if (disableVoiceOverlayForTest) return;\\n",
     ),
     (
