@@ -146,23 +146,16 @@ def main() -> int:
         if target is None:
             return 1
 
-        # Android WebView 83 exposes a browser-level CDP endpoint more reliably
-        # than its per-page socket through adb forwarding. Attach the page target
-        # explicitly, then send normal Page/Runtime commands in that session.
-        version_file = out / "webview-version.json"
-        version = json.loads(version_file.read_text(encoding="utf-8")) if version_file.is_file() else {}
-        browser_ws = version.get("webSocketDebuggerUrl")
-        if browser_ws:
-            cdp = PageCDP(browser_ws)
-            attached = cdp.command("Target.attachToTarget", {"targetId": target["id"], "flatten": True})
-            cdp.session_id = attached.get("sessionId")
-            record("browser_cdp_attached_to_app_page", bool(cdp.session_id),
-                   "Attached the installed APK page through Android WebView browser target")
-            if not cdp.session_id:
-                raise RuntimeError("Browser CDP did not return a page session")
-        else:
-            cdp = PageCDP(target["webSocketDebuggerUrl"])
-            record("browser_cdp_attached_to_app_page", True, "Using direct page-target CDP")
+        # Use the exact page-target socket published by /json/list.
+        # The browser-level /devtools/browser endpoint on the Android 11
+        # WebView 83 emulator accepts HTTP discovery but stalls on WebSocket
+        # upgrade; page-target sockets are the supported path for this smoke test.
+        page_ws = target.get("webSocketDebuggerUrl")
+        if not page_ws:
+            raise RuntimeError("Android WebView page target did not publish webSocketDebuggerUrl")
+        cdp = PageCDP(page_ws)
+        record("browser_cdp_attached_to_app_page", True,
+               "Attached directly to the installed APK page-target WebSocket")
         cdp.command("Page.enable")
         cdp.command("Runtime.enable")
         try:
