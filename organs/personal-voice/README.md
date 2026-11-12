@@ -1,38 +1,60 @@
 # Personal Voice System
 
-This organ extends the existing **Read Aloud** action; it does not add a separate page or toolbar button.
+The personal voice feature lives inside the existing **Read Aloud** action. A long press on the existing speaker action opens its compact menu; an ordinary tap keeps the current read-aloud behavior. No extra toolbar button or separate settings page is introduced.
 
-## Product contract
+## Implemented in this branch
 
-- Keep the existing MOSHARROF TTS Worker and Gemini voice available. Gemini remains a selectable provider and the safe fallback when a selected non-Gemini provider fails.
-- Expose voice profiles, provider voices, and the licensed voice catalog from the existing Read Aloud menu.
-- A profile is registered once and reused. Its permanent serial is assigned by an authenticated server-side allocator (for example, `VOICE-001`); serials are never recycled, including after deletion. The browser must never allocate authoritative serials.
-- Support multiple profiles per owner, per-message voice choice, a default profile, rename/edit, preview/test, and deletion.
-- Show only controls the selected provider actually supports. Do not silently pretend pitch, emotion, pauses, or intensity are supported.
-- Search the catalog by name, language, and style; show preview, provider availability, and license/consent status before saving.
-- A catalog listing is not permission to clone a real person's voice. Cloning requires proof of ownership or explicit authorization and separate consent for sample use, improvement/training, and retention.
-- Audio samples and generated voice assets must remain private, encrypted at rest, owner-scoped, excluded from logs, and deletable. No sample is requested until the setup UI and secure upload path are ready.
+- Owner-private profile API under the existing Cloudflare Worker at `/personal-voice/*`.
+- Supabase Auth user verification plus the existing `asm_is_registered_owner` owner gate. Database and Storage access use the user's JWT and RLS; no service-role key is shipped or required by the Worker.
+- Supabase Postgres schema with owner-scoped profiles, separate consent flags, profile defaults, saved catalog voices, and one global non-cycling serial sequence shared across cloned profiles and saved catalog voices.
+- Private Supabase Storage bucket. The Worker encrypts uploaded audio with AES-256-GCM before upload and decrypts only for the private inference request. Raw samples are not logged.
+- Multiple reusable profiles, rename, default profile, per-message voice selection, deletion, and separate consent for voice use, sample retention, and model training (training defaults off).
+- Searchable provider catalog, language/style filters, provider availability, explicit unknown-license status, sample preview through the existing TTS Worker, and saved catalog voices with permanent serials.
+- IndicF5 inference proxy contract using the existing isolated personal-voice API prototype. A failed personal-voice request falls back to the existing Gemini TTS route.
+- Provider controls are capability-filtered. Speed is shown only for Edge/Sarvam; unsupported pitch, emotion, intensity, pause, and emphasis controls are not displayed.
+- Tests for owner gating, safe health metadata, limits, personal-voice-to-Gemini fallback, and provider capability filtering.
 
-## Architecture boundary
+## Routes
 
-- `domain/`: provider-neutral profile, consent, serial, and capability contracts.
-- `server/migrations/`: D1 schema for owner-private profiles, consent, preferences, catalog metadata, and an AUTOINCREMENT serial ledger. The ledger is deliberately separate so deleted profile serials are never reused.
-- `providers/`: provider adapters. The Gemini adapter must preserve the existing Gemini TTS request behavior.
-- `catalog/`: searchable provider-backed voices with explicit license and availability metadata.
-- `service/`: authenticated server API boundary; no browser-side secrets or authoritative profile storage.
-- Existing `organs/message-audio` remains the integration point for the Read Aloud menu and message action.
+- `GET /personal-voice/health`: safe readiness flags only.
+- `GET|POST /personal-voice/profiles`: list/create owner profiles.
+- `PATCH|DELETE /personal-voice/profiles/:id`: rename/revoke/delete.
+- `POST /personal-voice/profiles/:id/sample`: explicit-consent sample upload.
+- `POST /personal-voice/profiles/:id/synthesize`: personal voice synthesis.
+- `PUT /personal-voice/preferences/default`: set the default profile.
+- `GET /personal-voice/catalog`: search enabled catalog entries.
+- `GET|POST /personal-voice/catalog/saved` and `DELETE /personal-voice/catalog/saved/:id`: saved catalog library.
 
-## Delivery gates
+## Required server configuration
 
-1. Domain and capability contracts with tests.
-2. Authenticated owner-scoped profile API, persistent non-recycled serial allocator, encrypted private sample storage, revocation/deletion.
-3. Consent and sample-registration UI inside the Read Aloud menu.
-4. Provider adapters and licensed catalog search/preview.
-5. Read Aloud integration, Gemini preservation and fallback, per-message/default profile selection.
-6. Provider-specific controls, accessibility, security tests, Bengali quality tests, and live browser/device verification.
+Set these only as server-side Worker variables/secrets; never in Pages/browser code:
 
-## Infrastructure prerequisites and current status
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY` (public application key; user identity still requires a valid session JWT)
+- `PERSONAL_VOICE_ENCRYPTION_KEY`: base64-encoded 32-byte AES-256 key
+- `PERSONAL_VOICE_API_URL`: private HTTPS URL for the isolated IndicF5 API
+- `PERSONAL_VOICE_API_TOKEN`: strong server-to-server bearer token
 
-The D1 migration is a schema artifact only. It has not been applied to a Cloudflare database, and no D1/R2 bindings, Supabase JWT verification configuration, or voice-encryption secret are present in this PR. The existing TTS Worker does not yet expose personal-voice routes. Do not enable profile creation or request a sample until those server controls and private-storage checks are deployed and verified.
+The inference service separately requires `HF_TOKEN`, a reviewed exact `INDICF5_MODEL_REVISION` commit SHA, and the model's accepted access terms. The Worker verifies the user's Supabase JWT and `asm_is_registered_owner` RPC before any profile/catalog operation. The user's browser must already have a valid Supabase Owner Login session; the menu does not create a second login system.
 
-This branch starts with the domain contract and database schema. It does **not** claim that cloning, storage, catalog search, or UI is live yet. The earlier PRs #525–#527 are prior groundwork and must be reconciled during implementation; they are not treated as production-ready.
+The current project and service have not been activated or deployed by this PR. The Supabase migration is source-only until explicitly applied to an active project; the Worker secrets and inference endpoint are not configured here. The health endpoint keeps profile setup unavailable until the required authentication and encryption configuration exists. Do not upload a sample until the live health/readiness checks pass.
+
+## Consent, retention, and safety
+
+- Voice use and sample storage require separate explicit consent. Model-training consent is separate and defaults off.
+- Only the registered owner can read or change their profiles. Storage object paths are owner-prefixed and protected by Storage RLS.
+- Sample files are encrypted before Storage upload using AES-256-GCM. The encryption key is server-only.
+- Deleting a profile removes its private sample and database row; the global serial sequence is not reset, so deleted serials are never reused.
+- Revoking voice-use consent disables the profile. Revoking sample-storage consent deletes the stored sample.
+- Catalog entries currently have `license_status=unknown` and `consent_status=required`; they are not represented as licensed celebrity/real-person clones. Only provider voices already present in the existing TTS implementation are seeded.
+- IndicF5 is reference-audio synthesis, not a promise of exact voice identity or fine-tuned model weights. No Quran recitation or tajwid capability is claimed.
+
+## Still required for production completion
+
+- Apply the SQL migration to the active Supabase project and verify RLS/Storage policies with real owner and non-owner sessions.
+- Configure Worker secrets and verify `/personal-voice/health`.
+- Deploy the pinned IndicF5 service privately after model/license/code review; test Bengali quality and quotas.
+- Run CI, browser verification, and a real Android-device test. Confirm that Gemini's existing request path and all current TTS providers still work.
+- Verify sample upload, encrypted object bytes, synthesis, fallback, consent revocation, hard deletion, and permanent serial non-reuse end-to-end.
+
+This PR contains the implementation source and tests, but it is not live until the infrastructure steps above are completed and evidenced. It must remain a Draft until then.
