@@ -103,7 +103,7 @@ jobs:
       - name: Install APK and test real chat inside its WebView
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 34
           target: default
           arch: x86_64
           cores: 3
