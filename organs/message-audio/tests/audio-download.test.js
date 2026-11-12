@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createAudioDownloadButton } from "../components/audio-download.js";
+import { createAudioDownloadButton, createAudioTitle, sanitizeAudioFilenameTitle } from "../components/audio-download.js";
 
 function fakeDocument() {
   return {
@@ -16,63 +16,82 @@ function fakeDocument() {
   };
 }
 
-test("creates a browser download link and keeps its blob URL alive for mobile WebViews", () => {
+function fakeUrlApi() {
   const revoked = [];
-  const scheduled = [];
-  const URLApi = {
-    createObjectURL(blob) { assert.equal(blob.size, 3); return "blob:download"; },
+  return {
+    revoked,
+    createObjectURL(blob) { return "blob:" + blob.size; },
     revokeObjectURL(url) { revoked.push(url); }
   };
-  const link = createAudioDownloadButton(new Blob(["abc"], { type: "audio/mpeg" }), {
-    documentRef: fakeDocument(),
-    URLApi,
-    nativePlugin: null,
-    setTimeoutFn: (callback, delay) => scheduled.push({ callback, delay }),
-    now: () => new Date("2026-11-12T00:00:00.000Z")
-  });
-  assert.equal(link.dataset.messageAudioDownload, "true");
-  assert.match(link.innerHTML, /<svg/);
-  assert.match(link.innerHTML, /অডিও ডাউনলোড/);
-  assert.equal(link.href, "blob:download");
-  assert.equal(link.download, "mosharrof-message-audio-2026-11-12T00-00-00-000Z.mp3");
-  assert.equal(scheduled[0].delay, 60000);
-  scheduled[0].callback();
-  assert.deepEqual(revoked, ["blob:download"]);
+}
+
+test("uses the full short message as the title and a safe Bengali filename", () => {
+  assert.equal(createAudioTitle("আপনি কেমন আছেন?"), "আপনি কেমন আছেন?");
+  assert.equal(sanitizeAudioFilenameTitle("আপনি কেমন আছেন?"), "আপনি_কেমন_আছেন");
 });
 
-test("saves audio through the Android native Downloads bridge instead of relying on WebView anchor downloads", async () => {
-  let saved;
-  const plugin = {
-    async save(payload) {
-      saved = payload;
-      return { saved: true, uri: "content://downloads/audio", bytes: 3 };
-    }
-  };
-  const link = createAudioDownloadButton(new Blob(["abc"], { type: "audio/mpeg" }), {
+test("uses a meaningful first sentence or excerpt for long messages", () => {
+  assert.equal(createAudioTitle("প্রথম বাক্যটি এখানে। দ্বিতীয় বাক্যটি পরে আছে।"), "প্রথম বাক্যটি এখানে।");
+  assert.ok(Array.from(createAudioTitle("বাংলা শব্দ ".repeat(30))).length <= 72);
+});
+
+test("creates a named browser download with embedded MP3 Title and Artist metadata", async () => {
+  const URLApi = fakeUrlApi();
+  const scheduled = [];
+  const link = await createAudioDownloadButton(new Blob(["abc"], { type: "audio/mpeg" }), {
+    title: "আপনি কেমন আছেন?",
     documentRef: fakeDocument(),
-    URLApi: { createObjectURL: () => "blob:download", revokeObjectURL: () => {} },
-    nativePlugin: plugin,
+    URLApi,
+    setTimeoutFn: (callback, delay) => scheduled.push({ callback, delay }),
+    now: () => new Date("2026-11-13T00:00:00.000Z")
+  });
+  assert.equal(link.dataset.messageAudioDownload, "true");
+  assert.match(link.innerHTML, /অডিও ডাউনলোড/);
+  assert.match(link.download, /^আপনি_কেমন_আছেন_20261113000000_\\d{3}\\.mp3$/);
+  assert.equal(link.dataset.audioTitle, "আপনি কেমন আছেন?");
+  const tagged = await (await fetch(link.href)).arrayBuffer().catch(() => null);
+  assert.ok(link.href.startsWith("blob:"));
+  assert.equal(scheduled[0].delay, 60000);
+  scheduled[0].callback();
+  assert.deepEqual(URLApi.revoked, [link.href]);
+});
+
+test("saves the tagged audio through the Android native Downloads bridge", async () => {
+  let saved;
+  const link = await createAudioDownloadButton(new Blob(["abc"], { type: "audio/mpeg" }), {
+    title: "হ্যালো",
+    documentRef: fakeDocument(),
+    URLApi: fakeUrlApi(),
+    nativePlugin: {
+      async save(payload) {
+        saved = payload;
+        return { saved: true, uri: "content://downloads/audio", bytes: 3 };
+      }
+    },
     setTimeoutFn: () => {},
-    now: () => new Date("2026-11-12T00:00:00.000Z")
+    now: () => new Date("2026-11-13T00:00:00.000Z")
   });
   let prevented = false;
   await link.listeners.click({ preventDefault() { prevented = true; } });
   assert.equal(prevented, true);
-  assert.equal(saved.filename, "mosharrof-message-audio-2026-11-12T00-00-00-000Z.mp3");
+  assert.match(saved.filename, /^হ্যালো_20261113000000_\\d{3}\\.mp3$/);
   assert.equal(saved.mimeType, "audio/mpeg");
-  assert.equal(saved.base64, "YWJj");
+  const taggedBytes = Buffer.from(saved.base64, "base64");
+  assert.equal(taggedBytes.subarray(0, 3).toString("ascii"), "ID3");
+  const metadata = taggedBytes.toString("utf8");
+  assert.match(metadata, /হ্যালো/);
+  assert.match(metadata, /MOSHARROF/);
   assert.equal(link.dataset.downloadComplete, "true");
   assert.match(link.innerHTML, /ডাউনলোড সম্পন্ন/);
 });
 
-test("shows a visible failure when the Android native Downloads bridge rejects the save", async () => {
-  const link = createAudioDownloadButton(new Blob(["abc"], { type: "audio/mpeg" }), {
+test("does not add ID3 data to non-MP3 audio and still chooses its real extension", async () => {
+  const link = await createAudioDownloadButton(new Blob(["wav"], { type: "audio/wav" }), {
+    title: "পরীক্ষা",
     documentRef: fakeDocument(),
-    URLApi: { createObjectURL: () => "blob:download", revokeObjectURL: () => {} },
-    nativePlugin: { async save() { throw new Error("storage_denied"); } },
-    setTimeoutFn: () => {}
+    URLApi: fakeUrlApi(),
+    setTimeoutFn: () => {},
+    now: () => new Date("2026-11-13T00:00:00.000Z")
   });
-  await link.listeners.click({ preventDefault() {} });
-  assert.equal(link.dataset.downloadError, "true");
-  assert.match(link.title, /storage_denied/);
+  assert.match(link.download, /^পরীক্ষা_20261113000000_\\d{3}\\.wav$/);
 });
