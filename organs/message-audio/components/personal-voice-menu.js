@@ -186,6 +186,11 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
       profileControls.appendChild(action("বাতিল", () => profileControls.replaceChildren()));
     }, "pv-primary");
     panel.appendChild(addButton);
+    panel.appendChild(action("এই বার্তার ব্যক্তিগত কণ্ঠ সরান", () => {
+      delete button.dataset.voiceProfileId;
+      refreshProviderControls();
+      setStatus("এই বার্তায় সাধারণ TTS ভয়েস ব্যবহার হবে");
+    }));
 
     panel.appendChild(element(documentRef, "div", "ভয়েস ক্যাটালগ", "pv-section-title"));
     const catalogSearch = element(documentRef, "input");
@@ -246,6 +251,14 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
         for (const saved of result.voices || []) {
           const row = element(documentRef, "div", undefined, "pv-catalog-row");
           row.append(element(documentRef, "strong", saved.voice?.display_name || saved.catalog_voice_id), element(documentRef, "small", saved.serial));
+          row.appendChild(action("এই বার্তায় ব্যবহার", () => {
+            if (saved.voice?.provider_id) provider.value = saved.voice.provider_id;
+            if (saved.voice?.provider_voice_id) voice.value = saved.voice.provider_voice_id;
+            delete button.dataset.voiceProfileId;
+            refreshProviderControls();
+            try { storage?.setItem(PROVIDER_KEY, provider.value); storage?.setItem(VOICE_KEY, voice.value); } catch {}
+            setStatus(saved.serial + " ভয়েস এই বার্তার জন্য নির্বাচিত");
+          }));
           row.appendChild(action("তালিকা থেকে সরান", async () => {
             await apiRequest("/catalog/saved/" + encodeURIComponent(saved.id), { method: "DELETE" });
             await loadSavedVoices();
