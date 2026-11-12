@@ -5,6 +5,7 @@ on:
     branches: [main, "feat/**"]
     paths:
       - "android/**"
+      - "native/android/**"
       - "web/**"
       - "organs/**"
       - "core/android-edge-to-edge.css"
