@@ -10,7 +10,8 @@ The personal voice feature lives inside the existing **Read Aloud** action. A lo
 - Private Supabase Storage bucket. The Worker encrypts uploaded audio with AES-256-GCM before upload and decrypts only for the private inference request. Raw samples are not logged.
 - Multiple reusable profiles, rename, default profile, per-message voice selection, deletion, and separate consent for voice use, sample retention, and model training (training defaults off).
 - Searchable provider catalog, language/style filters, provider availability, explicit unknown-license status, sample preview through the existing TTS Worker, and saved catalog voices with permanent serials.
-- IndicF5 inference proxy contract using the existing isolated personal-voice API prototype. A failed personal-voice request falls back to the existing Gemini TTS route.
+- Isolated IndicF5 inference service source with pinned upstream code, exact model revision requirement, bearer authentication, audio/text/duration limits and temporary-file cleanup. The Worker uses a dedicated provider adapter; a failed personal-voice request falls back to the existing Gemini TTS route.
+- Per-owner synthesis quota of 10 requests per rolling minute, enforced atomically by a Supabase RPC.
 - Provider controls are capability-filtered. Speed is shown only for Edge/Sarvam; unsupported pitch, emotion, intensity, pause, and emphasis controls are not displayed.
 - Tests for owner gating, safe health metadata, limits, personal-voice-to-Gemini fallback, and provider capability filtering.
 
@@ -37,7 +38,7 @@ Set these only as server-side Worker variables/secrets; never in Pages/browser c
 - `PERSONAL_VOICE_API_URL`: private HTTPS URL for the isolated IndicF5 API
 - `PERSONAL_VOICE_API_TOKEN`: strong server-to-server bearer token
 
-The inference service separately requires `HF_TOKEN`, a reviewed exact `INDICF5_MODEL_REVISION` commit SHA, and the model's accepted access terms. The Worker verifies the user's Supabase JWT and `asm_is_registered_owner` RPC before any profile/catalog operation. The email/password form is embedded inside the existing Read Aloud menu and uses the same Supabase Auth project and owner-registry RPC; it does not create a second identity store. A user must be registered in the Owner Registry before profile/catalog APIs are accessible.
+The included inference service separately requires `HF_TOKEN`, a reviewed exact `INDICF5_MODEL_REVISION` commit SHA, and the model's accepted access terms. The Worker verifies the user's Supabase JWT and `asm_is_registered_owner` RPC before any profile/catalog operation. The email/password form is embedded inside the existing Read Aloud menu and uses the same Supabase Auth project and owner-registry RPC; it does not create a second identity store. A user must be registered in the Owner Registry before profile/catalog APIs are accessible.
 
 The current project and service have not been activated or deployed by this PR. The Supabase migration is source-only until explicitly applied to an active project; the Worker secrets and inference endpoint are not configured here. The Read Aloud menu keeps profile enrollment unavailable until the authenticated readiness endpoint confirms the database migration, private Storage bucket, encryption key, and inference endpoint are all ready. Do not upload a sample until the live health/readiness checks pass.
 
@@ -57,6 +58,7 @@ The current project and service have not been activated or deployed by this PR. 
 - Configure Worker secrets and verify `/personal-voice/health`.
 - Deploy the pinned IndicF5 service privately after model/license/code review; test Bengali quality and quotas.
 - Run CI, browser verification, and a real Android-device test. Confirm that Gemini's existing request path and all current TTS providers still work.
+- Complete a model license/code review and real Bengali similarity/latency tests; the prototype does not promise exact identity and does not fine-tune model weights.
 - Verify sample upload, encrypted object bytes, synthesis, fallback, consent revocation, hard deletion, and permanent serial non-reuse end-to-end.
 
 This PR contains the implementation source and tests, but it is not live until the infrastructure steps above are completed and evidenced. It must remain a Draft until then.
