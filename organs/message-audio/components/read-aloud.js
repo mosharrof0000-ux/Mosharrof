@@ -152,8 +152,12 @@ export function createReadAloudController(options = {}) {
             if (auth && typeof auth.getAccessToken === "function") token = await auth.getAccessToken();
           }
           if (!token && storage) {
+            try {
+              const ownSession = JSON.parse(storage.getItem("mosharrof_personal_voice_auth_v1") || "null");
+              if (ownSession?.access_token) token = ownSession.access_token;
+            } catch {}
             const keys = [];
-            if (typeof storage.length === "number" && typeof storage.key === "function") {
+            if (!token && typeof storage.length === "number" && typeof storage.key === "function") {
               for (let i = 0; i < storage.length; i += 1) {
                 const key = storage.key(i);
                 if (key && /^sb-.+-auth-token$/.test(key) && !keys.includes(key)) keys.push(key);
