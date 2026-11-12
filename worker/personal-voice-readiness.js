@@ -19,7 +19,11 @@ export async function getPersonalVoiceReadiness(env, auth) {
   let inferenceReady = false;
   try {
     const endpoint = new URL(String(env.PERSONAL_VOICE_API_URL || ""));
-    inferenceReady = endpoint.protocol === "https:" && !endpoint.username && !endpoint.password && !!String(env.PERSONAL_VOICE_API_TOKEN || "").trim();
+    if (endpoint.protocol === "https:" && !endpoint.username && !endpoint.password && String(env.PERSONAL_VOICE_API_TOKEN || "").trim()) {
+      const response = await fetch(new URL("/health", endpoint), { signal: AbortSignal.timeout(8000), cache: "no-store" });
+      const health = await response.json().catch(() => ({}));
+      inferenceReady = response.ok && health.configured === true;
+    }
   } catch {}
   return json({
     ready: databaseReady && storageReady && encryptionReady && inferenceReady,
