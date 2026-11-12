@@ -14,3 +14,5 @@ export function reportIssue(runtime, summary = "personal voice issue reported") 
 }
 
 export { getProviderControlCapabilities } from "./domain/provider-capabilities.js";
+
+export { getIndicF5Capabilities } from "./providers/indicf5.js";
