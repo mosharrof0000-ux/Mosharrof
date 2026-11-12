@@ -4,9 +4,7 @@ create or replace function public.personal_voice_assign_serial()
 returns trigger language plpgsql security definer set search_path = ''
 as $function$
 begin
-  if new.voice_serial is null then
-    new.voice_serial := nextval('public.personal_voice_serial_seq');
-  end if;
+  new.voice_serial := nextval('public.personal_voice_serial_seq');
   return new;
 end;
 $function$;
@@ -114,10 +112,12 @@ create policy "personal voice saved catalog owner insert" on public.personal_voi
 drop policy if exists "personal voice saved catalog owner delete" on public.personal_voice_saved_catalog;
 create policy "personal voice saved catalog owner delete" on public.personal_voice_saved_catalog for delete to authenticated using (owner_id = (select auth.uid()));
 
-grant select, insert, update, delete on public.personal_voice_profiles to authenticated;
+grant select, update, delete on public.personal_voice_profiles to authenticated;
+grant insert (owner_id, name, language, provider_id, status, consent_voice_use, consent_sample_storage, consent_model_training) on public.personal_voice_profiles to authenticated;
 grant select, insert, update on public.personal_voice_preferences to authenticated;
 grant select on public.personal_voice_catalog to authenticated;
-grant select, insert, delete on public.personal_voice_saved_catalog to authenticated;
+grant select, delete on public.personal_voice_saved_catalog to authenticated;
+grant insert (owner_id, catalog_voice_id, nickname) on public.personal_voice_saved_catalog to authenticated;
 
 insert into public.personal_voice_catalog
 (id,display_name,language,style,provider_id,provider_voice_id,license_status,consent_status,enabled)
