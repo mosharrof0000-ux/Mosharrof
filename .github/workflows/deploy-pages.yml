@@ -50,6 +50,10 @@ jobs:
           cat /tmp/mosharrof-pages.log
           echo "Server readiness timed out."
           exit 1
+      - name: Verify sent-message audio controls in Chromium
+        env:
+          PAGE_URL: http://127.0.0.1:4173/
+        run: python3 scripts/message_audio_browser_check.py
       - name: Test candidate organ runtime in Chromium
         env:
           PAGE_URL: http://127.0.0.1:4173/
