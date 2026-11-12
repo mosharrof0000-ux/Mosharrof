@@ -1,3 +1,4 @@
+import { createIndicF5Request, synthesizeWithIndicF5 } from "../organs/personal-voice/providers/indicf5.js";
 import {
   MAX_SAMPLE_BYTES, MAX_TEXT_CHARS, MAX_REFERENCE_TEXT_CHARS, AUDIO_TYPES, PROFILE_FIELDS, UUID,
   json, supabaseFetch, asProfile, encryptionKey, encryptSample, decryptSample, readJson,
@@ -141,35 +142,34 @@ export async function profilesRoute(request, env, auth, url) {
   if (action === "synthesize" && request.method === "POST") {
     if (profile.status !== "active" || !profile.sample_object_key || !profile.consent_voice_use || !profile.consent_sample_storage) return json({ error: "active_consented_voice_profile_required" }, 409);
     if (!encryptionKey(env)) return json({ error: "voice_encryption_not_configured" }, 503);
-    const inferenceUrl = (() => { try { const value = new URL(String(env.PERSONAL_VOICE_API_URL || "")); return value.protocol === "https:" && !value.username && !value.password ? value : null; } catch { return null; } })();
+    const inferenceUrl = String(env.PERSONAL_VOICE_API_URL || "").trim();
     const inferenceToken = String(env.PERSONAL_VOICE_API_TOKEN || "").trim();
     if (!inferenceUrl || !inferenceToken) return json({ error: "personal_voice_inference_not_configured" }, 503);
+    const body = await request.json().catch(() => null);
+    const text = String(body?.text || "").trim();
+    if (!text || text.length > MAX_TEXT_CHARS) return json({ error: "text_must_be_1_to_800_chars" }, 400);
     const quotaResponse = await supabaseFetch(env, token, "rest/v1/rpc/personal_voice_consume_synthesis_quota", {
       method: "POST", body: "{}"
     });
     if (!quotaResponse.ok) return json({ error: "personal_voice_quota_check_unavailable" }, 503);
     const quotaAllowed = await readJson(quotaResponse);
     if (quotaAllowed !== true) return json({ error: "personal_voice_rate_limit_exceeded", retry_after_seconds: 60 }, 429);
-    const body = await request.json().catch(() => null);
-    const text = String(body?.text || "").trim();
-    if (!text || text.length > MAX_TEXT_CHARS) return json({ error: "text_must_be_1_to_800_chars" }, 400);
     const download = await supabaseFetch(env, token, "storage/v1/object/authenticated/personal-voice-samples/" + profile.sample_object_key.split("/").map(encodeURIComponent).join("/"));
     if (!download.ok) return json({ error: "voice_sample_not_found" }, 410);
     const decrypted = await decryptSample(await download.arrayBuffer(), env);
-    const form = new FormData();
-    form.append("text", text);
-    form.append("reference_text", profile.reference_text || "");
-    form.append("reference_audio", new Blob([decrypted], { type: profile.sample_mime_type || "audio/wav" }), "reference-audio");
-    let response;
+    let synthesis;
     try {
-      response = await fetch(new URL("/synthesize", inferenceUrl), {
-        method: "POST", headers: { authorization: "Bearer " + inferenceToken }, body: form,
-        signal: AbortSignal.timeout(120000)
+      const form = createIndicF5Request({
+        text, referenceText: profile.reference_text || "",
+        audioBytes: decrypted, mimeType: profile.sample_mime_type || "audio/wav"
       });
-    } catch { return json({ error: "personal_voice_inference_unavailable" }, 502); }
-    if (!response.ok) return json({ error: "personal_voice_inference_failed", status: response.status }, 502);
-    const audio = new Uint8Array(await response.arrayBuffer());
-    if (!audio.length || audio.byteLength > 20 * 1024 * 1024) return json({ error: "invalid_voice_audio_response" }, 502);
+      synthesis = await synthesizeWithIndicF5({ endpoint: inferenceUrl, token: inferenceToken, formData: form });
+    } catch (error) {
+      const code = String(error?.message || "");
+      if (code.includes("not_configured")) return json({ error: "personal_voice_inference_not_configured" }, 503);
+      return json({ error: "personal_voice_inference_failed" }, 502);
+    }
+    const audio = synthesis.audio;
     let binary = "";
     for (let offset = 0; offset < audio.length; offset += 0x8000) binary += String.fromCharCode(...audio.subarray(offset, offset + 0x8000));
     return json({ ok: true, provider: "personal-voice", profile_id: profileId, mime_type: "audio/wav", audio_data: btoa(binary) });
