@@ -4,11 +4,15 @@ import {
 } from "./personal-voice-shared.js";
 import { profilesRoute } from "./personal-voice-profiles.js";
 import { catalogRoute } from "./personal-voice-catalog.js";
+import { handlePersonalVoiceAuth } from "./personal-voice-auth.js";
 
 export async function handlePersonalVoiceRequest(request, env = {}) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/personal-voice/")) return null;
   if (request.method === "OPTIONS") return new Response(null, { status: 204 });
+  if (url.pathname === "/personal-voice/auth/login" || url.pathname === "/personal-voice/auth/refresh") {
+    return handlePersonalVoiceAuth(request, env);
+  }
   if (request.method === "GET" && url.pathname === "/personal-voice/health") {
     const inference = (() => { try { const value = new URL(String(env.PERSONAL_VOICE_API_URL || "")); return value.protocol === "https:" && !!env.PERSONAL_VOICE_API_TOKEN; } catch { return false; } })();
     return json({
