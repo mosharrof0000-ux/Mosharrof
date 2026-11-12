@@ -2,16 +2,23 @@ export const API = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.
 export const PROVIDER_KEY = "mosharrof_tts_provider_v1";
 export const VOICE_KEY = "mosharrof_tts_voice_v1";
 export const PACE_KEY = "mosharrof_tts_pace_v1";
-function supabaseConfig() {
-  const config = globalThis.MOSHARROF_SUPABASE_CONFIG || {};
-  const url = String(config.url || "").trim().replace(/\/$/, "");
-  const publishableKey = String(config.publishableKey || "").trim();
-  return url && publishableKey ? { url, publishableKey } : null;
+const AUTH_STORAGE_KEY = "mosharrof_personal_voice_auth_v1";
+
+export function element(documentRef, tag, text, className) {
+  const node = documentRef.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className) node.className = className;
+  return node;
 }
 
 function storedSession() {
   try {
     const store = globalThis.localStorage;
+    const own = store?.getItem(AUTH_STORAGE_KEY);
+    if (own) {
+      const session = JSON.parse(own);
+      if (session?.access_token) return { key: AUTH_STORAGE_KEY, session };
+    }
     if (!store) return null;
     for (let i = 0; i < store.length; i += 1) {
       const key = store.key(i);
@@ -21,13 +28,6 @@ function storedSession() {
     }
   } catch {}
   return null;
-}
-
-export function element(documentRef, tag, text, className) {
-  const node = documentRef.createElement(tag);
-  if (text !== undefined) node.textContent = text;
-  if (className) node.className = className;
-  return node;
 }
 
 async function accessToken() {
@@ -40,15 +40,14 @@ async function accessToken() {
   } catch {}
   try {
     const stored = storedSession();
-    const config = supabaseConfig();
     if (!stored) return null;
     const { key, session } = stored;
     const expiry = Number(session.expires_at || 0);
     if (session.access_token && (!expiry || expiry > Math.floor(Date.now() / 1000) + 30)) return session.access_token;
-    if (!session.refresh_token || !config) return null;
-    const response = await fetch(config.url + "/auth/v1/token?grant_type=refresh_token", {
+    if (!session.refresh_token) return null;
+    const response = await fetch(API + "/auth/refresh", {
       method: "POST",
-      headers: { apikey: config.publishableKey, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token: session.refresh_token }),
       cache: "no-store"
     });
@@ -76,26 +75,26 @@ export function statusText(error) {
   const value = String(error?.message || error);
   const messages = {
     owner_login_required: "Owner Login সেশন পাওয়া যায়নি",
-    registered_owner_authentication_required: "Owner Login যাচাই প্রয়োজন",
+    registered_owner_authentication_required: "এই অ্যাকাউন্ট Owner Registry-তে অনুমোদিত নয়",
     personal_voice_request_failed: "ভয়েস সার্ভার এখন প্রস্তুত নয়",
-    personal_voice_inference_not_configured: "ক্লোন কণ্ঠের মডেল সার্ভার এখনো সংযুক্ত হয়নি"
+    personal_voice_inference_not_configured: "ক্লোন কণ্ঠের মডেল সার্ভার এখনো সংযুক্ত হয়নি",
+    email_not_confirmed: "ইমেইল যাচাই সম্পন্ন হয়নি",
+    owner_login_invalid: "ইমেইল বা পাসওয়ার্ড সঠিক নয়",
+    owner_login_unavailable: "Owner Login সার্ভার অনুপলব্ধ",
+    supabase_auth_not_configured: "Owner Login সার্ভার কনফিগার করা নেই"
   };
   return messages[value] || value.replaceAll("_", " ");
 }
 
 export async function signIn(email, password) {
-  const config = supabaseConfig();
-  if (!config) throw new Error("supabase_auth_not_configured");
-  const response = await fetch(config.url + "/auth/v1/token?grant_type=password", {
+  const response = await fetch(API + "/auth/login", {
     method: "POST",
-    headers: { apikey: config.publishableKey, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: String(email || "").trim(), password: String(password || "") }),
     cache: "no-store"
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.access_token) throw new Error(data.msg || data.message || data.error_description || data.error || "login_failed");
+  if (!response.ok || !data.access_token) throw new Error(data.error || "owner_login_invalid");
   const saved = { ...data, expires_at: Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600) };
-  const existing = storedSession();
-  const storageKey = existing?.key || "sb-" + new URL(config.url).hostname.split(".")[0] + "-auth-token";
-  globalThis.localStorage?.setItem(storageKey, JSON.stringify(saved));
+  globalThis.localStorage?.setItem(AUTH_STORAGE_KEY, JSON.stringify(saved));
 }
