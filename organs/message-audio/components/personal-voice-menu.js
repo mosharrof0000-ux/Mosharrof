@@ -1,6 +1,7 @@
 const API = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/personal-voice";
 const PROVIDER_KEY = "mosharrof_tts_provider_v1";
 const VOICE_KEY = "mosharrof_tts_voice_v1";
+const PACE_KEY = "mosharrof_tts_pace_v1";
 
 function element(documentRef, tag, text, className) {
   const node = documentRef.createElement(tag);
@@ -102,9 +103,25 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
       provider.appendChild(option);
     }
     try { provider.value = storage?.getItem(PROVIDER_KEY) || "auto"; } catch {}
-    provider.addEventListener("change", () => { try { storage?.setItem(PROVIDER_KEY, provider.value); } catch {} });
+    provider.addEventListener("change", () => { try { storage?.setItem(PROVIDER_KEY, provider.value); } catch {} refreshProviderControls(); });
     providerLabel.appendChild(provider);
     panel.appendChild(providerLabel);
+    const speedLabel = element(documentRef, "label", "গতি", "pv-label");
+    const speed = element(documentRef, "input");
+    speed.type = "range"; speed.min = "0.75"; speed.max = "1.25"; speed.step = "0.05"; speed.className = "pv-speed";
+    try { speed.value = storage?.getItem(PACE_KEY) || "1"; } catch { speed.value = "1"; }
+    const speedValue = element(documentRef, "span", speed.value + "×", "pv-muted");
+    speed.addEventListener("input", () => {
+      speedValue.textContent = Number(speed.value).toFixed(2).replace(/0$/, "") + "×";
+      try { storage?.setItem(PACE_KEY, speed.value); } catch {}
+    });
+    speedLabel.append(speed, speedValue);
+    panel.appendChild(speedLabel);
+    function refreshProviderControls() {
+      const supported = !button.dataset.voiceProfileId && ["edge", "sarvam"].includes(provider.value);
+      speedLabel.hidden = !supported;
+    }
+    refreshProviderControls();
 
     const voiceLabel = element(documentRef, "label", "বাংলা সার্ভার ভয়েস", "pv-label");
     const voice = element(documentRef, "select", undefined, "pv-select");
@@ -260,6 +277,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
       try {
         const data = await apiRequest("/profiles");
         if (!button.dataset.voiceProfileId && data.default_profile_id) button.dataset.voiceProfileId = data.default_profile_id;
+        refreshProviderControls();
         setStatus(data.profiles?.length ? "সংরক্ষিত কণ্ঠ নির্বাচন করুন" : "এখনো কোনো ব্যক্তিগত কণ্ঠ নেই");
         for (const profile of data.profiles || []) {
           const row = element(documentRef, "div", undefined, "pv-profile-row");
@@ -268,6 +286,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
           info.appendChild(element(documentRef, "small", profile.status === "active" ? "ব্যবহারযোগ্য" : "নিষ্ক্রিয়"));
           const choose = action(button.dataset.voiceProfileId === profile.id ? "নির্বাচিত" : "এই বার্তার জন্য", () => {
             button.dataset.voiceProfileId = profile.id;
+            refreshProviderControls();
             setStatus(profile.name + " এই বার্তার কণ্ঠ হিসেবে নির্বাচিত");
           });
           row.append(info, choose);
