@@ -21,7 +21,7 @@ export function installMessageAudioActions(options = {}) {
     const button = documentRef.createElement("button");
     button.type = "button";
     button.className = "message-action message-audio-read";
-    button.textContent = "🔊 পড়ে শোনান";
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg><span>পড়ে শোনান</span>';
     button.title = "পাঠানো মেসেজটি পড়ে শোনান";
     button.setAttribute("aria-label", button.title);
     button.dataset.messageAudioRead = "true";
