@@ -139,6 +139,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     panel.appendChild(element(documentRef, "div", "ব্যক্তিগত কণ্ঠ", "pv-section-title"));
     status = element(documentRef, "p", "প্রোফাইল লোড হচ্ছে…", "pv-status");
     panel.appendChild(status);
+    let enrollmentReady = false;
     const profilesBox = element(documentRef, "div", undefined, "pv-profiles");
     panel.appendChild(profilesBox);
 
@@ -276,10 +277,15 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     async function loadProfiles() {
       profilesBox.replaceChildren();
       try {
+        const healthResponse = await fetch(API + "/health", { cache: "no-store" });
+        const health = await healthResponse.json().catch(() => ({}));
+        enrollmentReady = healthResponse.ok && health.enabled === true;
+        addButton.disabled = !enrollmentReady;
+        addButton.title = enrollmentReady ? "" : "নিরাপদ স্টোরেজ ও ইনফারেন্স সার্ভার প্রস্তুত নয়";
         const data = await apiRequest("/profiles");
         if (!button.dataset.voiceProfileId && data.default_profile_id) button.dataset.voiceProfileId = data.default_profile_id;
         refreshProviderControls();
-        setStatus(data.profiles?.length ? "সংরক্ষিত কণ্ঠ নির্বাচন করুন" : "এখনো কোনো ব্যক্তিগত কণ্ঠ নেই");
+        setStatus(data.profiles?.length ? "সংরক্ষিত কণ্ঠ নির্বাচন করুন" : enrollmentReady ? "এখনো কোনো ব্যক্তিগত কণ্ঠ নেই" : "কণ্ঠ নিবন্ধন বন্ধ: নিরাপদ সার্ভার প্রস্তুত নয়");
         for (const profile of data.profiles || []) {
           const row = element(documentRef, "div", undefined, "pv-profile-row");
           const info = element(documentRef, "div");
