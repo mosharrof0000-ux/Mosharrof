@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   chooseSpeechProvider,
+  getProviderControlCapabilities,
   filterVoiceControls,
   resolveSpeechFallback
 } from "../domain/provider-capabilities.js";
@@ -29,4 +30,13 @@ test("Gemini remains the fallback when another provider fails", () => {
     failedProvider: "gemini",
     availableProviders: ["gemini"]
   }), null);
+});
+
+test("only real provider controls are exposed", () => {
+  assert.deepEqual(getProviderControlCapabilities("edge").controls, {
+    speed: true, pitch: false, emotion: false, intensity: false, pause: false, emphasis: false
+  });
+  assert.deepEqual(getProviderControlCapabilities("indicf5").controls, {
+    speed: false, pitch: false, emotion: false, intensity: false, pause: false, emphasis: false
+  });
 });
