@@ -104,9 +104,10 @@ async function encryptSample(raw, env) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["encrypt"]);
   const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, raw));
-  const packed = new Uint8Array(iv.length + encrypted.length);
-  packed.set(iv, 0);
-  packed.set(encrypted, iv.length);
+  const packed = new Uint8Array(1 + iv.length + encrypted.length);
+  packed[0] = 1;
+  packed.set(iv, 1);
+  packed.set(encrypted, 1 + iv.length);
   return packed;
 }
 
