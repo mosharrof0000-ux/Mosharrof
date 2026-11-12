@@ -377,7 +377,7 @@ export async function handlePersonalVoiceRequest(request, env = {}) {
     const inference = (() => { try { const value = new URL(String(env.PERSONAL_VOICE_API_URL || "")); return value.protocol === "https:" && !!env.PERSONAL_VOICE_API_TOKEN; } catch { return false; } })();
     return json({
       ok: true,
-      enabled: !!baseUrl(env) && !!publishableKey(env) && !!encryptionKey(env),
+      enabled: !!baseUrl(env) && !!publishableKey(env) && !!encryptionKey(env) && inference,
       auth_configured: !!baseUrl(env) && !!publishableKey(env),
       encrypted_storage_configured: !!baseUrl(env) && !!publishableKey(env) && !!encryptionKey(env),
       inference_configured: inference,
