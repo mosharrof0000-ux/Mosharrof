@@ -118,7 +118,6 @@ export async function profilesRoute(request, env, auth, url) {
       body: encrypted
     });
     if (!upload.ok) return json({ error: "private_voice_sample_upload_failed" }, 502);
-    if (profile.sample_object_key) await removeStoredSample(env, token, profile.sample_object_key);
     const update = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
       method: "PATCH",
       headers: { prefer: "return=representation" },
@@ -132,6 +131,10 @@ export async function profilesRoute(request, env, auth, url) {
       return json({ error: "voice_profile_sample_link_failed" }, 502);
     }
     const rows = await readJson(update);
+    if (profile.sample_object_key) {
+      try { await removeStoredSample(env, token, profile.sample_object_key); }
+      catch { return json({ profile: asProfile(rows?.[0]), old_sample_cleanup_pending: true }, 202); }
+    }
     return json({ profile: asProfile(rows?.[0]) });
   }
 
@@ -174,18 +177,35 @@ export async function profilesRoute(request, env, auth, url) {
     const voiceUse = consent.voice_use === undefined ? !!profile.consent_voice_use : consent.voice_use === true;
     const sampleStorage = consent.sample_storage === undefined ? !!profile.consent_sample_storage : consent.sample_storage === true;
     const training = consent.model_training === undefined ? !!profile.consent_model_training : consent.model_training === true;
-    const patch = {
-      name, consent_voice_use: voiceUse, consent_sample_storage: sampleStorage, consent_model_training: training,
-      status: voiceUse && sampleStorage && profile.sample_object_key ? "active" : "revoked"
-    };
-    if (!sampleStorage) {
-      if (profile.sample_object_key) await removeStoredSample(env, token, profile.sample_object_key);
-      Object.assign(patch, { sample_object_key: null, sample_mime_type: null, sample_bytes: null, reference_text: null });
-    }
-    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
-      method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify(patch)
+    const sampleKey = profile.sample_object_key;
+
+    // First revoke synthesis so a concurrent request cannot continue using the profile.
+    const revoke = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
+      method: "PATCH", headers: { prefer: "return=minimal" },
+      body: JSON.stringify({
+        name, consent_voice_use: voiceUse, consent_model_training: training,
+        status: (!voiceUse || !sampleStorage) ? "revoked" : (sampleKey ? "active" : "draft")
+      })
     });
-    if (!response.ok) return json({ error: "voice_profile_update_failed" }, 502);
+    if (!revoke.ok) return json({ error: "voice_profile_revoke_failed" }, 502);
+
+    if (!sampleStorage && sampleKey) {
+      try { await removeStoredSample(env, token, sampleKey); }
+      catch { return json({ error: "sample_deletion_pending_profile_revoked" }, 502); }
+    }
+
+    const finalPatch = {
+      name, consent_voice_use: voiceUse, consent_sample_storage: sampleStorage,
+      consent_model_training: training,
+      status: voiceUse && sampleStorage && sampleKey ? "active" : "revoked"
+    };
+    if (!sampleStorage) Object.assign(finalPatch, {
+      sample_object_key: null, sample_mime_type: null, sample_bytes: null, reference_text: null
+    });
+    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
+      method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify(finalPatch)
+    });
+    if (!response.ok) return json({ error: "voice_profile_update_failed_profile_revoked" }, 502);
     if (!voiceUse || !sampleStorage) {
       await supabaseFetch(env, token, "rest/v1/personal_voice_preferences?owner_id=eq." + user.id + "&default_profile_id=eq." + profileId, {
         method: "PATCH", headers: { prefer: "return=minimal" }, body: JSON.stringify({ default_profile_id: null })
@@ -196,7 +216,16 @@ export async function profilesRoute(request, env, auth, url) {
   }
 
   if (action === "" && request.method === "DELETE") {
-    if (profile.sample_object_key) await removeStoredSample(env, token, profile.sample_object_key);
+    // Revoke first; if storage deletion fails, the still-present revoked row allows a safe retry.
+    const revoke = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
+      method: "PATCH", headers: { prefer: "return=minimal" },
+      body: JSON.stringify({ status: "revoked", consent_voice_use: false })
+    });
+    if (!revoke.ok) return json({ error: "voice_profile_revoke_failed" }, 502);
+    if (profile.sample_object_key) {
+      try { await removeStoredSample(env, token, profile.sample_object_key); }
+      catch { return json({ error: "sample_deletion_pending_profile_revoked" }, 502); }
+    }
     await supabaseFetch(env, token, "rest/v1/personal_voice_preferences?owner_id=eq." + user.id + "&default_profile_id=eq." + profileId, {
       method: "PATCH", headers: { prefer: "return=minimal" }, body: JSON.stringify({ default_profile_id: null })
     });
