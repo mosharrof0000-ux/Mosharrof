@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "status": "design_only_not_live",
+  "provider_id": "personal_voice",
+  "default_provider_unchanged": "gemini",
+  "routes_proposed": [
+    {
+      "method": "POST",
+      "path": "/v1/voice-profiles",
+      "purpose": "Create an owner-scoped profile after explicit cloning consent"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/voice-profiles/{profile_id}/samples",
+      "purpose": "Register a user-selected sample after separate improvement consent and approval"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/voice-profiles/{profile_id}/synthesize",
+      "purpose": "Generate speech with the active user-approved voice version and optional delivery settings"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/voice-profiles/{profile_id}",
+      "purpose": "Revoke use and permanently delete private audio and derived artifacts"
+    }
+  ],
+  "synthesis_request_style": {
+    "status": "design_only_not_live",
+    "voice_identity_separate_from_delivery_style": true,
+    "supported_settings_contract": {
+      "reading_style": {
+        "enum": ["conversational", "poetry", "article", "news", "storytelling", "educational", "quran_recitation", "formal"],
+        "default": "conversational"
+      },
+      "speed": {"type": "number", "min": 0.5, "max": 2.0, "default": 1.0},
+      "emotion": {
+        "enum": ["neutral", "warm", "joyful", "sad", "soothing", "dramatic", "confident"],
+        "default": "neutral"
+      },
+      "emotion_intensity": {"type": "number", "min": 0.0, "max": 1.0, "default": 0.35},
+      "pitch": {"type": "number", "min": -1.0, "max": 1.0, "default": 0.0, "note": "Only expose/apply when the selected provider supports it"},
+      "pause_scale": {"type": "number", "min": 0.5, "max": 2.0, "default": 1.0},
+      "emphasis": {"type": "number", "min": 0.0, "max": 1.0, "default": 0.25}
+    },
+    "presets": ["natural", "poetry", "article", "news", "story", "study", "quran"],
+    "requirements": [
+      "editable_presets_and_reset_to_natural",
+      "provider_capability_reporting",
+      "send_only_supported_controls",
+      "never_claim_unsupported_controls_were_applied",
+      "voice_identity_must_not_change_when_style_changes",
+      "preserve_existing_gemini_tts_defaults",
+      "quran_tajwid_claims_require_a_reviewed_recitation_path"
+    ]
+  },
+  "required_security": [
+    "verified_user_identity",
+    "owner_isolation_on_every_operation",
+    "private_audio_storage",
+    "explicit_granular_consent",
+    "per_user_rate_limits",
+    "request_size_limits",
+    "audit_events_without_audio_or_secrets",
+    "verified_deletion"
+  ],
+  "automatic_sample_ingestion": false,
+  "automatic_model_training": false,
+  "live_routes_added": false
+}
