@@ -49,9 +49,8 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, action,
   async function loadProfiles() {
     profilesBox.replaceChildren();
     try {
-      const healthResponse = await fetch("https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/personal-voice/health", { cache: "no-store" });
-      const health = await healthResponse.json().catch(() => ({}));
-      enrollmentReady = healthResponse.ok && health.enabled === true;
+      const readiness = await apiRequest("/readiness");
+      enrollmentReady = readiness.ready === true;
       addButton.disabled = !enrollmentReady;
       addButton.title = enrollmentReady ? "" : "নিরাপদ স্টোরেজ ও ইনফারেন্স সার্ভার প্রস্তুত নয়";
       const data = await apiRequest("/profiles");
