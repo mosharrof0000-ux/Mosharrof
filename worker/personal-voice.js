@@ -185,6 +185,41 @@ async function profilesRoute(request, env, auth, url) {
     return json({ profile: asProfile(rows?.[0]) }, 201);
   }
 
+  if (path === "/personal-voice/catalog/saved" && request.method === "GET") {
+    const query = new URLSearchParams({
+      select: "id,voice_serial,nickname,catalog_voice_id,personal_voice_catalog(id,display_name,language,style,provider_id,provider_voice_id,license_status,consent_status)",
+      owner_id: "eq." + user.id, order: "voice_serial.asc"
+    });
+    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_saved_catalog?" + query);
+    if (!response.ok) return json({ error: "saved_voice_list_failed" }, 502);
+    const rows = await readJson(response);
+    return json({ voices: (rows || []).map(row => ({
+      id: row.id, serial: "VOICE-" + String(row.voice_serial).padStart(3, "0"),
+      nickname: row.nickname, catalog_voice_id: row.catalog_voice_id, voice: row.personal_voice_catalog
+    })) });
+  }
+
+  if (path === "/personal-voice/catalog/saved" && request.method === "POST") {
+    const body = await request.json().catch(() => null);
+    const catalogId = String(body?.catalog_voice_id || "").slice(0, 100);
+    if (!catalogId) return json({ error: "catalog_voice_id_required" }, 400);
+    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_saved_catalog", {
+      method: "POST", headers: { prefer: "return=representation" },
+      body: JSON.stringify({ owner_id: user.id, catalog_voice_id: catalogId, nickname: String(body?.nickname || "").trim().slice(0, 80) || null })
+    });
+    if (!response.ok) return json({ error: "catalog_voice_save_failed" }, response.status === 409 ? 409 : 502);
+    const rows = await readJson(response);
+    const row = rows?.[0];
+    return json({ voice: row ? { id: row.id, serial: "VOICE-" + String(row.voice_serial).padStart(3, "0"), catalog_voice_id: row.catalog_voice_id } : null }, 201);
+  }
+
+  const savedDelete = path.match(/^\\/personal-voice\\/catalog\\/saved\\/([0-9a-f-]{36})$/i);
+  if (savedDelete && request.method === "DELETE" && UUID.test(savedDelete[1])) {
+    const response = await supabaseFetch(env, token, "rest/v1/personal_voice_saved_catalog?id=eq." + savedDelete[1] + "&owner_id=eq." + user.id, { method: "DELETE" });
+    if (!response.ok) return json({ error: "saved_voice_delete_failed" }, 502);
+    return json({ ok: true, serial_retained: true });
+  }
+
   if (path === "/personal-voice/preferences/default" && request.method === "PUT") {
     const body = await request.json().catch(() => null);
     const profileId = String(body?.profile_id || "");
@@ -353,7 +388,7 @@ export async function handlePersonalVoiceRequest(request, env = {}) {
   if (!auth) return json({ error: "registered_owner_authentication_required" }, 401);
   try {
     if (url.pathname === "/personal-voice/catalog") return await catalogRoute(request, env, auth, url);
-    if (url.pathname.startsWith("/personal-voice/profiles") || url.pathname === "/personal-voice/preferences/default") {
+    if (url.pathname.startsWith("/personal-voice/profiles") || url.pathname.startsWith("/personal-voice/catalog/saved") || url.pathname === "/personal-voice/preferences/default") {
       return await profilesRoute(request, env, auth, url);
     }
     return json({ error: "personal_voice_route_not_found" }, 404);
