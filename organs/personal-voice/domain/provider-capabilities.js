@@ -1,4 +1,16 @@
 const CONTROL_KEYS = Object.freeze(["speed", "pitch", "emotion", "intensity", "pause", "emphasis"]);
+const PROVIDER_CONTROLS = Object.freeze({
+  edge: Object.freeze({ speed: true }),
+  sarvam: Object.freeze({ speed: true }),
+  gemini: Object.freeze({}),
+  azure: Object.freeze({}),
+  elevenlabs: Object.freeze({}),
+  indicf5: Object.freeze({})
+});
+
+export function getProviderControlCapabilities(providerId) {
+  return normalizeProviderCapabilities({ providerId, controls: PROVIDER_CONTROLS[String(providerId || "").toLowerCase()] || {} });
+}
 
 export function normalizeProviderCapabilities(input = {}) {
   const controls = Object.fromEntries(CONTROL_KEYS.map((key) => [key, input.controls?.[key] === true]));
