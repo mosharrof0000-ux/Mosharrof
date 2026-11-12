@@ -13,4 +13,5 @@ def test_folder_budget_counts_production_code_not_tests_or_organ_metadata():
     assert not folder_budget_file("organs/example/tests/read-aloud.test.js", config)
     assert not folder_budget_file("organs/example/organ.json", config)
     assert not folder_budget_file("organs/example/README.md", config)
+    assert not folder_budget_file("web/organs/message-audio/components/read-aloud.js", config)
     assert source_file("organs/example/tests/read-aloud.test.js", config)

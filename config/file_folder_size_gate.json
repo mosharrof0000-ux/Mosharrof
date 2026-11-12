@@ -78,5 +78,8 @@
   "folder_budget_excluded_file_names": [
     "README.md",
     "organ.json"
+  ],
+  "folder_budget_excluded_path_prefixes": [
+    "web/organs"
   ]
 }

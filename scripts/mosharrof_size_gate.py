@@ -48,7 +48,9 @@ def folder_budget_file(path: str, policy: dict) -> bool:
     parts = Path(path).parts
     excluded_parts = policy.get("folder_budget_excluded_path_parts", [])
     excluded_names = policy.get("folder_budget_excluded_file_names", [])
-    return not any(part in excluded_parts for part in parts) and Path(path).name not in excluded_names
+    excluded_prefixes = policy.get("folder_budget_excluded_path_prefixes", [])
+    under_generated_prefix = any(path == prefix or path.startswith(prefix.rstrip("/") + "/") for prefix in excluded_prefixes)
+    return not under_generated_prefix and not any(part in excluded_parts for part in parts) and Path(path).name not in excluded_names
 
 
 def line_limit(path: str, policy: dict) -> int:
@@ -164,7 +166,7 @@ def main() -> int:
         "base": args.base,
         "changed_source_files_checked": sum(1 for p in changed if source_file(p, policy)),
         "file_budget": {"max_bytes": limits["max_file_bytes"], "default_max_lines": limits["max_file_lines"], "per_extension_max_lines": policy.get("line_limits_by_extension", {})},
-        "folder_budget": {"max_recursive_source_bytes": limits["max_folder_source_bytes"], "max_recursive_source_files": limits["max_folder_source_files"], "excluded_path_parts": policy.get("folder_budget_excluded_path_parts", []), "excluded_file_names": policy.get("folder_budget_excluded_file_names", [])},
+        "folder_budget": {"max_recursive_source_bytes": limits["max_folder_source_bytes"], "max_recursive_source_files": limits["max_folder_source_files"], "excluded_path_parts": policy.get("folder_budget_excluded_path_parts", []), "excluded_file_names": policy.get("folder_budget_excluded_file_names", []), "excluded_path_prefixes": policy.get("folder_budget_excluded_path_prefixes", [])},
         "warnings": warnings,
         "errors": errors,
     }
