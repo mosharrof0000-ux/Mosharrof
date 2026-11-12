@@ -190,6 +190,10 @@ public class VoiceOverlayService extends Service {
         if (Build.VERSION.SDK_INT >= 34) {
             startForeground(NOTIFICATION_ID, current,
                 android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        } else if (Build.VERSION.SDK_INT >= 29) {
+            // Android 10–13 do not know the specialUse FGS type. Pass NONE explicitly
+            // instead of inheriting the unknown manifest type through the two-arg API.
+            startForeground(NOTIFICATION_ID, current, 0);
         } else {
             startForeground(NOTIFICATION_ID, current);
         }
