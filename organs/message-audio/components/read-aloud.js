@@ -1,3 +1,17 @@
+function iconMarkup(kind) {
+  const paths = {
+    speak: '<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
+    pause: '<path d="M8 5v14M16 5v14"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'
+  };
+  return '<svg viewBox="0 0 24 24" aria-hidden="true">' + paths[kind] + '</svg>';
+}
+
+function setButtonContent(button, kind, label) {
+  if (!button) return;
+  button.innerHTML = iconMarkup(kind) + '<span>' + label + '</span>';
+}
+
 export const TTS_ENDPOINT = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts";
 const PROVIDERS = new Set(["auto", "edge", "gemini", "azure", "elevenlabs", "browser", "sarvam"]);
 const VOICES = new Set(["bn-BD-PradeepNeural", "bn-BD-NabanitaNeural"]);
@@ -56,7 +70,7 @@ function preference(storage, key, allowed, fallback) {
 function resetButton(button) {
   if (!button) return;
   button.disabled = false;
-  button.textContent = "🔊 পড়ে শোনান";
+  setButtonContent(button, "speak", "পড়ে শোনান");
   button.title = "পাঠানো মেসেজটি পড়ে শোনান";
   if (button.dataset) button.dataset.audioState = "idle";
 }
@@ -105,7 +119,7 @@ export function createReadAloudController(options = {}) {
     activeUtterance = utterance;
     if (button) {
       button.disabled = false;
-      button.textContent = "⏸ বন্ধ করুন";
+      setButtonContent(button, "pause", "বন্ধ করুন");
       button.title = "ব্রাউজার ভয়েস চলছে; এই অডিও ডাউনলোড করা যাবে না";
       if (button.dataset) button.dataset.audioState = "speaking";
     }
@@ -129,7 +143,7 @@ export function createReadAloudController(options = {}) {
     if (!text) throw new Error("empty_message");
     if (button) {
       button.disabled = true;
-      button.textContent = "⏳ প্রস্তুত হচ্ছে…";
+      setButtonContent(button, "speak", "প্রস্তুত হচ্ছে…");
       button.title = "অডিও তৈরি হচ্ছে";
       if (button.dataset) button.dataset.audioState = "loading";
     }
@@ -155,7 +169,7 @@ export function createReadAloudController(options = {}) {
       activeButton = button || null;
       if (button) {
         button.disabled = false;
-        button.textContent = "⏸ বন্ধ করুন";
+        setButtonContent(button, "pause", "বন্ধ করুন");
         button.title = "তৈরি অডিও চলছে";
         if (button.dataset) button.dataset.audioState = "speaking";
       }
@@ -173,18 +187,18 @@ export function createReadAloudController(options = {}) {
             try { await activeAudio.play(); }
             catch {
               if (button) {
-                button.textContent = "▶ আবার শুনুন";
+                setButtonContent(button, "speak", "আবার শুনুন");
                 button.title = "অডিও তৈরি হয়েছে; প্লে না হলে নিচের ডাউনলোড ব্যবহার করুন";
               }
             }
           } else if (button) {
-            button.textContent = "▶ আবার শুনুন";
+            setButtonContent(button, "speak", "আবার শুনুন");
             button.title = "অডিও তৈরি হয়েছে; ডাউনলোড করতে নিচের বোতাম চাপুন";
           }
         } catch {
           releaseAudioUrl();
           if (button) {
-            button.textContent = "▶ আবার শুনুন";
+            setButtonContent(button, "speak", "আবার শুনুন");
             button.title = "অডিও তৈরি হয়েছে; ডাউনলোড করতে নিচের বোতাম চাপুন";
           }
         }
