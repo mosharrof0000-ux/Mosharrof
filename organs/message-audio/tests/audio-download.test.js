@@ -18,9 +18,15 @@ function fakeDocument() {
 
 function fakeUrlApi() {
   const revoked = [];
+  const blobs = new Map();
   return {
     revoked,
-    blobs: new Map(),\n    createObjectURL(blob) { const url = "blob:" + blob.size; this.blobs.set(url, blob); return url; },
+    blobs,
+    createObjectURL(blob) {
+      const url = "blob:" + blob.size;
+      blobs.set(url, blob);
+      return url;
+    },
     revokeObjectURL(url) { revoked.push(url); }
   };
 }
@@ -49,7 +55,10 @@ test("creates a named browser download with embedded MP3 Title and Artist metada
   assert.match(link.innerHTML, /অডিও ডাউনলোড/);
   assert.match(link.download, /^আপনি_কেমন_আছেন_20261113000000_\d{3}\.mp3$/);
   assert.equal(link.dataset.audioTitle, "আপনি কেমন আছেন?");
-  const tagged = await (await fetch(link.href)).arrayBuffer().catch(() => null);
+  const browserBlob = URLApi.blobs.get(link.href);
+  const browserBytes = new Uint8Array(await browserBlob.arrayBuffer());
+  assert.equal(String.fromCharCode(...browserBytes.subarray(0, 3)), "ID3");
+  assert.ok(new TextDecoder().decode(browserBytes).includes("আপনি কেমন আছেন?"));
   assert.ok(link.href.startsWith("blob:"));
   assert.equal(scheduled[0].delay, 60000);
   scheduled[0].callback();
