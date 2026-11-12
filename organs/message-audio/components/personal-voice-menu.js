@@ -2,6 +2,9 @@ const API = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/per
 const PROVIDER_KEY = "mosharrof_tts_provider_v1";
 const VOICE_KEY = "mosharrof_tts_voice_v1";
 const PACE_KEY = "mosharrof_tts_pace_v1";
+const SUPABASE_URL = "https://jphortpnuddfsynqyock.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_uq6UyghZx8NsSYQmL6gCTQ_2zBQZdKW";
+const AUTH_STORAGE_KEY = "sb-jphortpnuddfsynqyock-auth-token";
 
 function element(documentRef, tag, text, className) {
   const node = documentRef.createElement(tag);
@@ -10,28 +13,35 @@ function element(documentRef, tag, text, className) {
   return node;
 }
 
-function accessToken() {
+async function accessToken() {
   try {
     const auth = globalThis.MOSHARROF_AUTH || globalThis.mosharrofAuth;
-    if (auth && typeof auth.getAccessToken === "function") return Promise.resolve(auth.getAccessToken());
+    if (auth && typeof auth.getAccessToken === "function") {
+      const token = await auth.getAccessToken();
+      if (token) return token;
+    }
   } catch {}
   try {
     const store = globalThis.localStorage;
-    if (!store) return Promise.resolve(null);
-    const preferred = "sb-jphortpnuddfsynqyock-auth-token";
-    const keys = [preferred];
-    for (let i = 0; i < store.length; i += 1) {
-      const key = store.key(i);
-      if (key && /^sb-.+-auth-token$/.test(key) && !keys.includes(key)) keys.push(key);
-    }
-    for (const key of keys) {
-      const raw = store.getItem(key);
-      if (!raw) continue;
-      const session = JSON.parse(raw);
-      if (typeof session?.access_token === "string" && session.access_token.length > 20) return Promise.resolve(session.access_token);
-    }
-  } catch {}
-  return Promise.resolve(null);
+    if (!store) return null;
+    const raw = store.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    const expiry = Number(session.expires_at || 0);
+    if (session.access_token && (!expiry || expiry > Math.floor(Date.now() / 1000) + 30)) return session.access_token;
+    if (!session.refresh_token) return null;
+    const response = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: { apikey: SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: session.refresh_token }),
+      cache: "no-store"
+    });
+    const next = await response.json().catch(() => ({}));
+    if (!response.ok || !next.access_token) return null;
+    const saved = { ...next, expires_at: Math.floor(Date.now() / 1000) + Number(next.expires_in || 3600) };
+    store.setItem(AUTH_STORAGE_KEY, JSON.stringify(saved));
+    return saved.access_token;
+  } catch { return null; }
 }
 
 async function apiRequest(path, options = {}) {
@@ -62,6 +72,19 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
   let panel = null;
   let holdTimer = null;
   let suppressClick = false;
+
+  async function signIn(email, password) {
+    const response = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password", {
+      method: "POST",
+      headers: { apikey: SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ email: String(email || "").trim(), password: String(password || "") }),
+      cache: "no-store"
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.access_token) throw new Error(data.msg || data.message || data.error_description || data.error || "login_failed");
+    const saved = { ...data, expires_at: Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600) };
+    globalThis.localStorage?.setItem(AUTH_STORAGE_KEY, JSON.stringify(saved));
+  }
 
   function close() {
     if (panel) panel.remove();
@@ -339,8 +362,17 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
           profilesBox.append(row, controls);
         }
       } catch (error) {
-        setStatus(statusText(error) + " · ব্যক্তিগত কণ্ঠের জন্য Owner Login প্রয়োজন");
+        setStatus(statusText(error) + " · Owner Login প্রয়োজন");
         addButton.disabled = true;
+        profilesBox.replaceChildren();
+        const loginBox = element(documentRef, "div", undefined, "pv-login");
+        const email = element(documentRef, "input"); email.type = "email"; email.autocomplete = "username"; email.placeholder = "Owner email"; email.className = "pv-input";
+        const password = element(documentRef, "input"); password.type = "password"; password.autocomplete = "current-password"; password.placeholder = "Password"; password.className = "pv-input";
+        loginBox.append(email, password, action("Owner Login", async () => {
+          await signIn(email.value, password.value);
+          await loadProfiles();
+        }, "pv-primary"));
+        profilesBox.appendChild(loginBox);
       }
     }
     await loadProfiles();
