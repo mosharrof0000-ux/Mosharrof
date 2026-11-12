@@ -1,5 +1,5 @@
 /* Mosharrof SW — network-first for HTML so UI updates reach users */
-const CACHE = "mosharrof-v8-2026-10-18-organ-runtime-floating-chat";
+const CACHE = "mosharrof-v9-2026-11-13-message-audio-toolbar";
 const PRECACHE = ["./manifest.json"];
 
 self.addEventListener("install", (event) => {
