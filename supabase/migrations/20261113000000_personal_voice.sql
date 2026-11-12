@@ -149,3 +149,40 @@ create policy "personal voice sample owner delete" on storage.objects for delete
 using (bucket_id='personal-voice-samples' and (storage.foldername(name))[1]=(select auth.uid())::text);
 
 -- One sequence is shared by cloned profiles and saved catalog voices. Deletion never recycles serials.
+
+create table if not exists public.personal_voice_synthesis_usage (
+  owner_id uuid primary key references auth.users(id) on delete cascade,
+  window_started_at timestamptz not null default now(),
+  request_count integer not null default 0 check (request_count between 0 and 10)
+);
+alter table public.personal_voice_synthesis_usage enable row level security;
+
+create or replace function public.personal_voice_consume_synthesis_quota()
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare allowed boolean;
+begin
+  if auth.uid() is null then return false; end if;
+  insert into public.personal_voice_synthesis_usage as usage
+    (owner_id, window_started_at, request_count)
+  values (auth.uid(), now(), 1)
+  on conflict (owner_id) do update set
+    window_started_at = case
+      when usage.window_started_at <= now() - interval '1 minute' then now()
+      else usage.window_started_at
+    end,
+    request_count = case
+      when usage.window_started_at <= now() - interval '1 minute' then 1
+      else usage.request_count + 1
+    end
+  where usage.window_started_at <= now() - interval '1 minute'
+     or usage.request_count < 10
+  returning true into allowed;
+  return coalesce(allowed, false);
+end;
+$function$;
+revoke all on function public.personal_voice_consume_synthesis_quota() from public, anon;
+grant execute on function public.personal_voice_consume_synthesis_quota() to authenticated;
