@@ -53,7 +53,14 @@ export function installMessageAudioActions(options = {}) {
 
   function scan(node) {
     if (!node) return;
-    if (typeof node.matches === "function" && node.matches(".message.user")) attach(node);
+    if (typeof node.matches === "function" && node.matches(".message.user")) {
+      attach(node);
+    } else if (typeof node.closest === "function") {
+      // A message can be inserted before its action toolbar is rendered.
+      // When the toolbar arrives later, resolve its owning sent message.
+      const ownerMessage = node.closest(".message.user");
+      if (ownerMessage) attach(ownerMessage);
+    }
     if (typeof node.querySelectorAll === "function") {
       node.querySelectorAll(".message.user").forEach(attach);
     }
