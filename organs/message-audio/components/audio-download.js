@@ -1,3 +1,5 @@
+import { addMp3Metadata, createAudioTitle, sanitizeAudioFilenameTitle } from "./audio-metadata.js";
+
 function iconMarkup(kind) {
   const paths = {
     speak: '<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
@@ -28,12 +30,16 @@ function toBase64(blob) {
   });
 }
 
-export function createAudioDownloadButton(blob, options = {}) {
+let filenameSequence = 0;
+
+export async function createAudioDownloadButton(blob, options = {}) {
   if (!blob) throw new TypeError("generated audio blob is required");
   const documentRef = options.documentRef || globalThis.document;
   const URLApi = options.URLApi || globalThis.URL;
   const now = options.now || (() => new Date());
   const schedule = options.setTimeoutFn || globalThis.setTimeout;
+  const title = createAudioTitle(options.title);
+  const safeTitle = sanitizeAudioFilenameTitle(title);
   const nativePlugin = options.nativePlugin || (() => {
     const capacitor = globalThis.Capacitor;
     if (capacitor?.Plugins?.MessageAudioDownload) return capacitor.Plugins.MessageAudioDownload;
@@ -45,20 +51,25 @@ export function createAudioDownloadButton(blob, options = {}) {
     throw new Error("audio download URLs are unavailable");
   }
 
+  const audioBlob = await addMp3Metadata(blob, title);
+  const timestamp = now().toISOString();
+  const stamp = timestamp.slice(0, 19).replace(/[-:T]/g, "");
+  filenameSequence = (filenameSequence % 999) + 1;
+  const sequence = String(filenameSequence).padStart(3, "0");
+  const filename = safeTitle + "_" + stamp + "_" + sequence + "." + extensionFor(audioBlob);
+  const url = URLApi.createObjectURL(audioBlob);
   const link = documentRef.createElement("a");
-  const stamp = now().toISOString().replace(/[:.]/g, "-");
-  const filename = "mosharrof-message-audio-" + stamp + "." + extensionFor(blob);
-  const url = URLApi.createObjectURL(blob);
   link.className = "message-action message-audio-download";
   link.style.textDecoration = "none";
   link.style.color = "inherit";
   link.href = url;
   link.download = filename;
   link.innerHTML = iconMarkup("download") + "<span>অডিও ডাউনলোড</span>";
-  link.title = "এই মেসেজের তৈরি অডিও ফাইল ডাউনলোড করুন";
+  link.title = "“" + title + "” শিরোনামে তৈরি অডিও ফাইল ডাউনলোড করুন";
   link.setAttribute("aria-label", link.title);
   link.dataset.messageAudioDownload = "true";
   link.dataset.filename = filename;
+  link.dataset.audioTitle = title;
   link.addEventListener("click", async (event) => {
     if (!nativePlugin || typeof nativePlugin.save !== "function") return;
     if (event && typeof event.preventDefault === "function") event.preventDefault();
@@ -67,11 +78,11 @@ export function createAudioDownloadButton(blob, options = {}) {
     link.setAttribute("aria-busy", "true");
     link.title = "অডিও Downloads ফোল্ডারে সংরক্ষণ হচ্ছে";
     try {
-      const base64 = await toBase64(blob);
+      const base64 = await toBase64(audioBlob);
       const result = await nativePlugin.save({
         base64,
         filename,
-        mimeType: blob.type || "audio/mpeg"
+        mimeType: audioBlob.type || "audio/mpeg"
       });
       if (!result || result.saved !== true) throw new Error("native_download_not_confirmed");
       link.innerHTML = iconMarkup("download") + "<span>ডাউনলোড সম্পন্ন</span>";
@@ -86,8 +97,6 @@ export function createAudioDownloadButton(blob, options = {}) {
       link.removeAttribute("aria-busy");
     }
   });
-  // Browser downloads need a live object URL. Android Capacitor uses the native
-  // MediaStore bridge above and does not depend on WebView's missing download listener.
   schedule(() => URLApi.revokeObjectURL(url), 60000);
   return link;
 }

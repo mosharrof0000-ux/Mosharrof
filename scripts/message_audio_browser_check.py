@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
@@ -77,9 +78,12 @@ def main() -> int:
         with page.expect_download(timeout=10000) as download_info:
             download_button.click()
         download = download_info.value
-        assert download.suggested_filename.startswith("mosharrof-message-audio-"), (
-            "generated audio download filename is incorrect"
+        assert download.suggested_filename.startswith("পাঠানো_মেসেজের_অডিও_পরীক্ষা_"), (
+            f"message-derived audio filename is incorrect: {download.suggested_filename}"
         )
+        audio_bytes = Path(download.path()).read_bytes()
+        assert audio_bytes.startswith(b"ID3"), "MP3 Title metadata is missing"
+        assert "MOSHARROF".encode("utf-8") in audio_bytes, "MP3 Artist metadata is missing"
         print("MESSAGE AUDIO BROWSER CHECK: PASS — sent-message Read Aloud and MP3 download controls work")
         context.close()
         browser.close()
