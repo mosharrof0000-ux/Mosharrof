@@ -2,9 +2,26 @@ export const API = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.
 export const PROVIDER_KEY = "mosharrof_tts_provider_v1";
 export const VOICE_KEY = "mosharrof_tts_voice_v1";
 export const PACE_KEY = "mosharrof_tts_pace_v1";
-const SUPABASE_URL = "https://jphortpnuddfsynqyock.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_uq6UyghZx8NsSYQmL6gCTQ_2zBQZdKW";
-const AUTH_STORAGE_KEY = "sb-jphortpnuddfsynqyock-auth-token";
+function supabaseConfig() {
+  const config = globalThis.MOSHARROF_SUPABASE_CONFIG || {};
+  const url = String(config.url || "").trim().replace(/\/$/, "");
+  const publishableKey = String(config.publishableKey || "").trim();
+  return url && publishableKey ? { url, publishableKey } : null;
+}
+
+function storedSession() {
+  try {
+    const store = globalThis.localStorage;
+    if (!store) return null;
+    for (let i = 0; i < store.length; i += 1) {
+      const key = store.key(i);
+      if (!key || !/^sb-.+-auth-token$/.test(key)) continue;
+      const session = JSON.parse(store.getItem(key) || "null");
+      if (session?.access_token) return { key, session };
+    }
+  } catch {}
+  return null;
+}
 
 export function element(documentRef, tag, text, className) {
   const node = documentRef.createElement(tag);
@@ -22,24 +39,23 @@ async function accessToken() {
     }
   } catch {}
   try {
-    const store = globalThis.localStorage;
-    if (!store) return null;
-    const raw = store.getItem(AUTH_STORAGE_KEY);
-    if (!raw) return null;
-    const session = JSON.parse(raw);
+    const stored = storedSession();
+    const config = supabaseConfig();
+    if (!stored) return null;
+    const { key, session } = stored;
     const expiry = Number(session.expires_at || 0);
     if (session.access_token && (!expiry || expiry > Math.floor(Date.now() / 1000) + 30)) return session.access_token;
-    if (!session.refresh_token) return null;
-    const response = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
+    if (!session.refresh_token || !config) return null;
+    const response = await fetch(config.url + "/auth/v1/token?grant_type=refresh_token", {
       method: "POST",
-      headers: { apikey: SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+      headers: { apikey: config.publishableKey, "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token: session.refresh_token }),
       cache: "no-store"
     });
     const next = await response.json().catch(() => ({}));
     if (!response.ok || !next.access_token) return null;
     const saved = { ...next, expires_at: Math.floor(Date.now() / 1000) + Number(next.expires_in || 3600) };
-    store.setItem(AUTH_STORAGE_KEY, JSON.stringify(saved));
+    globalThis.localStorage?.setItem(key, JSON.stringify(saved));
     return saved.access_token;
   } catch { return null; }
 }
@@ -68,14 +84,18 @@ export function statusText(error) {
 }
 
 export async function signIn(email, password) {
-  const response = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password", {
+  const config = supabaseConfig();
+  if (!config) throw new Error("supabase_auth_not_configured");
+  const response = await fetch(config.url + "/auth/v1/token?grant_type=password", {
     method: "POST",
-    headers: { apikey: SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+    headers: { apikey: config.publishableKey, "Content-Type": "application/json" },
     body: JSON.stringify({ email: String(email || "").trim(), password: String(password || "") }),
     cache: "no-store"
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok || !data.access_token) throw new Error(data.msg || data.message || data.error_description || data.error || "login_failed");
   const saved = { ...data, expires_at: Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600) };
-  globalThis.localStorage?.setItem(AUTH_STORAGE_KEY, JSON.stringify(saved));
+  const existing = storedSession();
+  const storageKey = existing?.key || "sb-" + new URL(config.url).hostname.split(".")[0] + "-auth-token";
+  globalThis.localStorage?.setItem(storageKey, JSON.stringify(saved));
 }
