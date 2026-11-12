@@ -1,7 +1,7 @@
 import { PACE_KEY, PROVIDER_KEY, VOICE_KEY, element, statusText } from "./personal-voice-menu-api.js";
 import { mountPersonalVoiceProfiles } from "./personal-voice-menu-profiles.js";
 import { mountVoiceCatalog } from "./personal-voice-menu-catalog.js";
-import { getProviderControlCapabilities } from "../../personal-voice/domain/provider-capabilities.js";
+import { getProviderControlCapabilities } from "../../personal-voice/index.js";
 
 export function createPersonalVoiceMenu({ button, message, controller, documentRef = globalThis.document, storage = globalThis.localStorage } = {}) {
   if (!button || !documentRef || !controller) return () => {};
