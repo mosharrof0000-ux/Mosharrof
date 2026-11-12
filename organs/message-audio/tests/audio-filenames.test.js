@@ -8,7 +8,7 @@ test("uses the full short message as the title and safe Bengali filename", () =>
 });
 
 test("uses the first meaningful sentence or a bounded excerpt for long messages", () => {
-  assert.equal(createAudioTitle("প্রথম বাক্যটি এখানে। দ্বিতীয় বাক্যটি পরে আছে।"), "প্রথম বাক্যটি এখানে।");
+  assert.equal(createAudioTitle("প্রথম বাক্যটি এখানে। " + "দ্বিতীয় বাক্যটি অনেক বড় এবং এতে আরও অনেক কথা বলা হয়েছে যাতে মোট লেখাটি বাহাত্তর অক্ষরের সীমা ছাড়িয়ে যায়।"), "প্রথম বাক্যটি এখানে।");
   assert.ok(Array.from(createAudioTitle("বাংলা শব্দ ".repeat(30))).length <= 72);
 });
 
