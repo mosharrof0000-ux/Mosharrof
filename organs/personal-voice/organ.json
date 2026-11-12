@@ -1,0 +1,10 @@
+{
+  "id": "personal-voice",
+  "name": "Personal Voice",
+  "description": "Owner-private voice profiles, consent, encrypted sample storage and provider capabilities used inside Read Aloud.",
+  "public_api": [
+    "getHealth",
+    "reportIssue"
+  ],
+  "dependencies": []
+}
