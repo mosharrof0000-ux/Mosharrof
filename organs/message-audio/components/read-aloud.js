@@ -13,6 +13,7 @@ function setButtonContent(button, kind, label) {
 }
 
 export const TTS_ENDPOINT = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts";
+export const PERSONAL_VOICE_ENDPOINT = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/personal-voice";
 const PROVIDERS = new Set(["auto", "edge", "gemini", "azure", "elevenlabs", "browser", "sarvam"]);
 const VOICES = new Set(["bn-BD-PradeepNeural", "bn-BD-NabanitaNeural"]);
 
@@ -133,7 +134,7 @@ export function createReadAloudController(options = {}) {
     return true;
   }
 
-  async function speak(value, button) {
+  async function speak(value, button, speakOptions = {}) {
     if (activeButton === button && button) {
       stop();
       return false;
@@ -158,13 +159,59 @@ export function createReadAloudController(options = {}) {
     try {
       if (typeof fetchImpl !== "function") throw new Error("tts_fetch_unavailable");
       const voice = preference(storage, "mosharrof_tts_voice_v1", VOICES, "bn-BD-PradeepNeural");
-      const response = await fetchImpl(TTS_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, language_code: "bn-BD", pace: 1, provider, genre: "general", voice })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.audio_data) throw new Error(data.reason || data.error || "tts_generation_failed");
+      const profileId = String(speakOptions.profileId || button?.dataset?.voiceProfileId || "");
+      let response;
+      let data = {};
+      if (profileId) {
+        try {
+          let token = null;
+          if (typeof options.authTokenProvider === "function") token = await options.authTokenProvider();
+          if (!token) {
+            const auth = globalThis.MOSHARROF_AUTH || globalThis.mosharrofAuth;
+            if (auth && typeof auth.getAccessToken === "function") token = await auth.getAccessToken();
+          }
+          if (!token && storage) {
+            const keys = ["sb-jphortpnuddfsynqyock-auth-token"];
+            if (typeof storage.length === "number" && typeof storage.key === "function") {
+              for (let i = 0; i < storage.length; i += 1) {
+                const key = storage.key(i);
+                if (key && /^sb-.+-auth-token$/.test(key) && !keys.includes(key)) keys.push(key);
+              }
+            }
+            for (const key of keys) {
+              try {
+                const session = JSON.parse(storage.getItem(key) || "null");
+                if (session?.access_token) { token = session.access_token; break; }
+              } catch {}
+            }
+          }
+          if (!token) throw new Error("owner_login_required");
+          response = await fetchImpl(PERSONAL_VOICE_ENDPOINT + "/profiles/" + encodeURIComponent(profileId) + "/synthesize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ text })
+          });
+          data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.audio_data) throw new Error(data.error || "personal_voice_failed");
+        } catch {
+          // A personal voice failure must preserve the established Gemini voice as fallback.
+          response = await fetchImpl(TTS_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text, language_code: "bn-BD", pace: 1, provider: "gemini", genre: "general" })
+          });
+          data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.audio_data) throw new Error(data.error || "gemini_fallback_failed");
+        }
+      } else {
+        response = await fetchImpl(TTS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, language_code: "bn-BD", pace: 1, provider, genre: "general", voice })
+        });
+        data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.audio_data) throw new Error(data.reason || data.error || "tts_generation_failed");
+      }
       const blob = decodeAudioBlob(data.audio_data, data.mime_type || "audio/mpeg", { BlobCtor, atobImpl });
       activeButton = button || null;
       if (button) {
