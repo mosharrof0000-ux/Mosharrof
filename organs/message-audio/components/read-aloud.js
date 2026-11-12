@@ -1,4 +1,5 @@
 import { normalizeSpeechText, extractMessageText } from "./read-aloud-text.js";
+import { getAccessToken } from "./personal-voice-menu-api.js";
 export { normalizeSpeechText, extractMessageText } from "./read-aloud-text.js";
 function iconMarkup(kind) {
   const paths = {
@@ -148,29 +149,7 @@ export function createReadAloudController(options = {}) {
         try {
           let token = null;
           if (typeof options.authTokenProvider === "function") token = await options.authTokenProvider();
-          if (!token) {
-            const auth = globalThis.MOSHARROF_AUTH || globalThis.mosharrofAuth;
-            if (auth && typeof auth.getAccessToken === "function") token = await auth.getAccessToken();
-          }
-          if (!token && storage) {
-            try {
-              const ownSession = JSON.parse(storage.getItem("mosharrof_personal_voice_auth_v1") || "null");
-              if (ownSession?.access_token) token = ownSession.access_token;
-            } catch {}
-            const keys = [];
-            if (!token && typeof storage.length === "number" && typeof storage.key === "function") {
-              for (let i = 0; i < storage.length; i += 1) {
-                const key = storage.key(i);
-                if (key && /^sb-.+-auth-token$/.test(key) && !keys.includes(key)) keys.push(key);
-              }
-            }
-            for (const key of keys) {
-              try {
-                const session = JSON.parse(storage.getItem(key) || "null");
-                if (session?.access_token) { token = session.access_token; break; }
-              } catch {}
-            }
-          }
+          if (!token) token = await getAccessToken();
           if (!token) throw new Error("owner_login_required");
           response = await fetchImpl(PERSONAL_VOICE_ENDPOINT + "/profiles/" + encodeURIComponent(profileId) + "/synthesize", {
             method: "POST",
