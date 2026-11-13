@@ -26,7 +26,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
     const trainingConsent = element(documentRef, "label", undefined, "pv-check");
     const trainingCheck = element(documentRef, "input"); trainingCheck.type = "checkbox";
     trainingConsent.append(trainingCheck, element(documentRef, "span", "ভবিষ্যৎ মডেল প্রশিক্ষণে আলাদা সম্মতি (ঐচ্ছিক; এখন সক্রিয় নয়)"));
-    profileControls.append(name, transcript, file, element(documentRef, "small", "WAV / FLAC / OGG · সর্বোচ্চ ৫ MB · অডিও ২০ সেকেন্ডের মধ্যে", "pv-muted"), voiceConsent, storageConsent, trainingConsent);
+    profileControls.append(name, transcript, file, element(documentRef, "small", "WAV / FLAC / OGG · সর্বোচ্চ ৫ MB · অডিও ২০ সেকেন্ডের মধ্যে। এটি নমুনা-নির্দেশিত TTS; হুবহু কণ্ঠের নিশ্চয়তা নয়।", "pv-muted"), voiceConsent, storageConsent, trainingConsent);
     profileControls.appendChild(action("প্রোফাইল তৈরি ও নমুনা সংরক্ষণ", async () => {
       if (!isVoiceEnrollmentValid({ name: name.value, transcript: transcript.value, file: file.files?.[0], voiceConsent: voiceCheck.checked, storageConsent: storageCheck.checked })) {
         throw new Error("নাম, অডিও, হুবহু ট্রান্সক্রিপ্ট এবং দুইটি বাধ্যতামূলক সম্মতি দিন");
