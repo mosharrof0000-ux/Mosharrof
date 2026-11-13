@@ -1,6 +1,6 @@
 import chatWorker from "../../worker/screenshot-analysis.js";
 import { handleVideoCuttingProxy } from "./worker-proxy.js";
-import { handlePersonalVoiceRequest } from "../../organs/personal-voice/worker/index.js";
+import { handlePersonalVoiceRequest } from "../../organs/personal-voice/worker-entry.js";
 
 const TRUSTED_APP_ORIGINS = new Set([
   "https://mosharrof0000-ux.github.io",
