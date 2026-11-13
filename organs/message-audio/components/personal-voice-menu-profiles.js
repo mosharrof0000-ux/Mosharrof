@@ -1,7 +1,7 @@
 import { apiRequest, cacheDefaultVoiceProfileId, element, signIn, statusText } from "./personal-voice-menu-api.js";
 
 export function isVoiceEnrollmentValid({ name, transcript, file, voiceConsent, storageConsent } = {}) {
-  return !!String(name || "").trim() && !!String(transcript || "").trim() && !!file && file.size > 0 &&
+  return !!String(name || "").trim() && !!String(transcript || "").trim() && !!file && file.size > 0 && file.size <= 5 * 1024 * 1024 &&
     voiceConsent === true && storageConsent === true;
 }
 
@@ -26,7 +26,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
     const trainingConsent = element(documentRef, "label", undefined, "pv-check");
     const trainingCheck = element(documentRef, "input"); trainingCheck.type = "checkbox";
     trainingConsent.append(trainingCheck, element(documentRef, "span", "ভবিষ্যৎ মডেল উন্নয়নে আলাদা সম্মতি (ঐচ্ছিক)"));
-    profileControls.append(name, transcript, file, voiceConsent, storageConsent, trainingConsent);
+    profileControls.append(name, transcript, file, element(documentRef, "small", "WAV / FLAC / OGG · সর্বোচ্চ ৫ MB · অডিও ২০ সেকেন্ডের মধ্যে", "pv-muted"), voiceConsent, storageConsent, trainingConsent);
     profileControls.appendChild(action("প্রোফাইল তৈরি ও নমুনা সংরক্ষণ", async () => {
       if (!isVoiceEnrollmentValid({ name: name.value, transcript: transcript.value, file: file.files?.[0], voiceConsent: voiceCheck.checked, storageConsent: storageCheck.checked })) {
         throw new Error("নাম, অডিও, হুবহু ট্রান্সক্রিপ্ট এবং দুইটি বাধ্যতামূলক সম্মতি দিন");
@@ -83,7 +83,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
           profileControls.replaceChildren();
           const transcript = element(documentRef, "textarea"); transcript.rows = 2; transcript.maxLength = 500; transcript.placeholder = "নতুন নমুনার হুবহু ট্রান্সক্রিপ্ট"; transcript.className = "pv-input";
           const file = element(documentRef, "input"); file.type = "file"; file.accept = "audio/wav,audio/flac,audio/ogg"; file.className = "pv-input";
-          profileControls.append(transcript, file);
+          profileControls.append(transcript, file, element(documentRef, "small", "WAV / FLAC / OGG · সর্বোচ্চ ৫ MB · অডিও ২০ সেকেন্ডের মধ্যে", "pv-muted"));
           profileControls.appendChild(action("নতুন নমুনা সংরক্ষণ", async () => {
             if (!file.files?.[0] || !transcript.value.trim()) throw new Error("অডিও ও হুবহু ট্রান্সক্রিপ্ট দিন");
             const form = new FormData();
