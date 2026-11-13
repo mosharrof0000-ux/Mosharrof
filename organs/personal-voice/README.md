@@ -11,7 +11,7 @@ The personal voice feature lives inside the existing **Read Aloud** action. A lo
 - Multiple reusable profiles, rename, default profile, per-message voice selection, deletion, and separate consent for voice use, sample retention, and model training (training defaults off).
 - Searchable provider catalog, language/style filters, provider availability, explicit unknown-license status, sample preview through the existing TTS Worker, and saved catalog voices with permanent serials.
 - Isolated IndicF5 inference service source with pinned upstream code, exact model revision requirement, bearer authentication, audio/text/duration limits and temporary-file cleanup. The Worker uses a dedicated provider adapter; a failed personal-voice request falls back to the existing Gemini TTS route.
-- Per-owner synthesis quota of 10 requests per rolling minute, enforced atomically by a Supabase RPC.
+- Per-owner synthesis quota of 10 requests per 60-second quota window, enforced atomically by a Supabase RPC.
 - Provider controls are capability-filtered. Speed is shown only for Edge/Sarvam; unsupported pitch, emotion, intensity, pause, and emphasis controls are not displayed.
 - Tests for owner gating, safe health metadata, limits, personal-voice-to-Gemini fallback, and provider capability filtering.
 
