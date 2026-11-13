@@ -93,6 +93,19 @@ def health() -> dict[str, Any]:
     }
 
 
+@app.get("/ready")
+def ready(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    """Authenticate the Worker and load the pinned model before sample enrollment."""
+    _authorize(authorization)
+    _get_model()
+    return {
+        "ready": True,
+        "provider": "IndicF5",
+        "model_loaded": _model is not None,
+        "model_reviewed": MODEL_REVIEWED,
+    }
+
+
 @app.post("/synthesize")
 async def synthesize(
     text: str = Form(...),
