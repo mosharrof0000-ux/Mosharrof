@@ -89,7 +89,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     status = element(documentRef, "p", "প্রোফাইল লোড হচ্ছে…", "pv-status");
     panel.appendChild(status);
     const profileManager = mountPersonalVoiceProfiles({
-      documentRef, panel, button, action, setStatus, refreshProviderControls
+      documentRef, panel, button, controller, action, setStatus, refreshProviderControls
     });
     const catalogManager = mountVoiceCatalog({
       documentRef, panel, action, setStatus, provider, voice, button, storage, refreshProviderControls
