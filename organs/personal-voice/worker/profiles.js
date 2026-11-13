@@ -2,7 +2,7 @@ import { createIndicF5Request, synthesizeWithIndicF5 } from "../providers/indicf
 import { clearPreviousSample, removeProfileSamples } from "./sample-cleanup.js";
 import {
   MAX_SAMPLE_BYTES, MAX_TEXT_CHARS, MAX_REFERENCE_TEXT_CHARS, AUDIO_TYPES, PROFILE_FIELDS, UUID,
-  json, supabaseFetch, asProfile, encryptionKey, encryptSample, decryptSample, readJson,
+  json, supabaseFetch, asProfile, encryptionKey, encryptSample, decryptSample, encryptText, decryptText, readJson,
   getProfile, removeStoredSample, providerAvailability
 } from "./shared.js";
 
@@ -116,6 +116,7 @@ export async function profilesRoute(request, env, auth, url) {
     const raw = new Uint8Array(await file.arrayBuffer());
     const objectKey = user.id + "/" + profileId + "/" + crypto.randomUUID() + ".enc";
     const encrypted = await encryptSample(raw, env);
+    const encryptedReferenceText = await encryptText(referenceText, env);
     const upload = await supabaseFetch(env, token, "storage/v1/object/personal-voice-samples/" + objectKey.split("/").map(encodeURIComponent).join("/"), {
       method: "POST",
       headers: { "content-type": "application/octet-stream", "x-upsert": "false" },
@@ -127,7 +128,7 @@ export async function profilesRoute(request, env, auth, url) {
       headers: { prefer: "return=representation" },
       body: JSON.stringify({
         sample_object_key: objectKey, previous_sample_object_key: profile.sample_object_key || null, sample_mime_type: String(file.type).toLowerCase(),
-        sample_bytes: raw.byteLength, reference_text: referenceText, status: "active"
+        sample_bytes: raw.byteLength, reference_text_ciphertext: encryptedReferenceText, status: "active"
       })
     });
     if (!update.ok) {
@@ -160,7 +161,7 @@ export async function profilesRoute(request, env, auth, url) {
     let synthesis;
     try {
       const form = createIndicF5Request({
-        text, referenceText: profile.reference_text || "",
+        text, referenceText: await decryptText(profile.reference_text_ciphertext, env),
         audioBytes: decrypted, mimeType: profile.sample_mime_type || "audio/wav"
       });
       synthesis = await synthesizeWithIndicF5({ endpoint: inferenceUrl, token: inferenceToken, formData: form });
@@ -203,7 +204,7 @@ export async function profilesRoute(request, env, auth, url) {
       status: voiceUse && sampleStorage && sampleKey ? "active" : "revoked"
     };
     if (!sampleStorage) Object.assign(finalPatch, {
-      sample_object_key: null, previous_sample_object_key: null, sample_mime_type: null, sample_bytes: null, reference_text: null
+      sample_object_key: null, previous_sample_object_key: null, sample_mime_type: null, sample_bytes: null, reference_text_ciphertext: null
     });
     const response = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
       method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify(finalPatch)
