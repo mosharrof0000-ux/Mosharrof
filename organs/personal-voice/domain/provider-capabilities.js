@@ -9,7 +9,7 @@ const PROVIDER_CONTROLS = Object.freeze({
 });
 
 export function getProviderControlCapabilities(providerId) {
-  return normalizeProviderCapabilities({ providerId, controls: PROVIDER_CONTROLS[String(providerId || "").toLowerCase()] || {} });
+  return normalizeProviderCapabilities({ providerId, supportsVoiceCloning: String(providerId || "").toLowerCase() === "indicf5", controls: PROVIDER_CONTROLS[String(providerId || "").toLowerCase()] || {} });
 }
 
 export function normalizeProviderCapabilities(input = {}) {
