@@ -1,4 +1,5 @@
 import { createIndicF5Request, synthesizeWithIndicF5 } from "../providers/indicf5.js";
+import { clearPreviousSample, removeProfileSamples } from "./sample-cleanup.js";
 import {
   MAX_SAMPLE_BYTES, MAX_TEXT_CHARS, MAX_REFERENCE_TEXT_CHARS, AUDIO_TYPES, PROFILE_FIELDS, UUID,
   json, supabaseFetch, asProfile, encryptionKey, encryptSample, decryptSample, readJson,
@@ -16,6 +17,7 @@ export async function profilesRoute(request, env, auth, url) {
     ]);
     if (!profilesResponse.ok || !preferenceResponse.ok) throw new Error("profile_list_failed");
     const profiles = await readJson(profilesResponse);
+    await Promise.all((profiles || []).map(profile => clearPreviousSample(env, token, user.id, profile)));
     const preferences = await readJson(preferenceResponse);
     return json({ profiles: (profiles || []).map(asProfile), default_profile_id: preferences?.[0]?.default_profile_id || null });
   }
@@ -102,6 +104,7 @@ export async function profilesRoute(request, env, auth, url) {
   if (action === "sample" && request.method === "POST") {
     if (!encryptionKey(env)) return json({ error: "voice_encryption_not_configured" }, 503);
     if (!profile.consent_voice_use || !profile.consent_sample_storage) return json({ error: "voice_and_storage_consent_required" }, 403);
+    if (profile.previous_sample_object_key && !(await clearPreviousSample(env, token, user.id, profile))) return json({ error: "previous_sample_cleanup_pending" }, 409);
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > MAX_SAMPLE_BYTES + 1024 * 1024) return json({ error: "audio_must_be_under_5_mib" }, 413);
     const form = await request.formData().catch(() => null);
@@ -123,7 +126,7 @@ export async function profilesRoute(request, env, auth, url) {
       method: "PATCH",
       headers: { prefer: "return=representation" },
       body: JSON.stringify({
-        sample_object_key: objectKey, sample_mime_type: String(file.type).toLowerCase(),
+        sample_object_key: objectKey, previous_sample_object_key: profile.sample_object_key || null, sample_mime_type: String(file.type).toLowerCase(),
         sample_bytes: raw.byteLength, reference_text: referenceText, status: "active"
       })
     });
@@ -132,10 +135,7 @@ export async function profilesRoute(request, env, auth, url) {
       return json({ error: "voice_profile_sample_link_failed" }, 502);
     }
     const rows = await readJson(update);
-    if (profile.sample_object_key) {
-      try { await removeStoredSample(env, token, profile.sample_object_key); }
-      catch { return json({ profile: asProfile(rows?.[0]), old_sample_cleanup_pending: true }, 202); }
-    }
+    if (profile.sample_object_key && !(await clearPreviousSample(env, token, user.id, { id: profileId, previous_sample_object_key: profile.sample_object_key }))) return json({ profile: asProfile(rows?.[0]), old_sample_cleanup_pending: true }, 202);
     return json({ profile: asProfile(rows?.[0]) });
   }
 
@@ -195,10 +195,7 @@ export async function profilesRoute(request, env, auth, url) {
     });
     if (!revoke.ok) return json({ error: "voice_profile_revoke_failed" }, 502);
 
-    if (!sampleStorage && sampleKey) {
-      try { await removeStoredSample(env, token, sampleKey); }
-      catch { return json({ error: "sample_deletion_pending_profile_revoked" }, 502); }
-    }
+    if (!sampleStorage && (sampleKey || profile.previous_sample_object_key) && !(await removeProfileSamples(env, token, profile))) return json({ error: "sample_deletion_pending_profile_revoked" }, 502);
 
     const finalPatch = {
       name, consent_voice_use: voiceUse, consent_sample_storage: sampleStorage,
@@ -206,7 +203,7 @@ export async function profilesRoute(request, env, auth, url) {
       status: voiceUse && sampleStorage && sampleKey ? "active" : "revoked"
     };
     if (!sampleStorage) Object.assign(finalPatch, {
-      sample_object_key: null, sample_mime_type: null, sample_bytes: null, reference_text: null
+      sample_object_key: null, previous_sample_object_key: null, sample_mime_type: null, sample_bytes: null, reference_text: null
     });
     const response = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
       method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify(finalPatch)
@@ -228,10 +225,7 @@ export async function profilesRoute(request, env, auth, url) {
       body: JSON.stringify({ status: "revoked", consent_voice_use: false, consent_sample_storage: false })
     });
     if (!revoke.ok) return json({ error: "voice_profile_revoke_failed" }, 502);
-    if (profile.sample_object_key) {
-      try { await removeStoredSample(env, token, profile.sample_object_key); }
-      catch { return json({ error: "sample_deletion_pending_profile_revoked" }, 502); }
-    }
+    if (!(await removeProfileSamples(env, token, profile))) return json({ error: "sample_deletion_pending_profile_revoked" }, 502);
     await supabaseFetch(env, token, "rest/v1/personal_voice_preferences?owner_id=eq." + user.id + "&default_profile_id=eq." + profileId, {
       method: "PATCH", headers: { prefer: "return=minimal" }, body: JSON.stringify({ default_profile_id: null })
     });
