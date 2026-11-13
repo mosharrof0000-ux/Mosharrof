@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { TTS_ENDPOINT, PERSONAL_VOICE_ENDPOINT, createReadAloudController } from "../components/read-aloud.js";
-import { cacheDefaultVoiceProfileId } from "../components/personal-voice-menu-api.js";
+import { resetDefaultVoiceProfileIdCache } from "../components/personal-voice-menu-api.js";
 
 test("personal voice failures fall back to the existing Gemini TTS route", async () => {
   const calls = [];
@@ -63,7 +63,7 @@ test("ordinary one-tap Read Aloud uses the saved default personal voice", async 
     atobImpl: (value) => Buffer.from(value, "base64").toString("binary")
   });
   try {
-    cacheDefaultVoiceProfileId(null);
+    resetDefaultVoiceProfileIdCache();
     const button = { disabled: false, dataset: {} };
     const blob = await controller.speak("আমার সংরক্ষিত কণ্ঠ পরীক্ষা", button);
     assert.equal(blob.size, 3);
