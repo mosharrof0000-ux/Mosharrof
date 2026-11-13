@@ -114,9 +114,10 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         profilesBox.append(row, controls);
       }
     } catch (error) {
-      setStatus(statusText(error) + " · Owner Login প্রয়োজন");
+      setStatus(statusText(error));
       addButton.disabled = true;
       profilesBox.replaceChildren();
+      if (error?.message !== "owner_login_required") return;
       const loginBox = element(documentRef, "div", undefined, "pv-login");
       const email = element(documentRef, "input"); email.type = "email"; email.autocomplete = "username"; email.placeholder = "Owner email"; email.className = "pv-input";
       const password = element(documentRef, "input"); password.type = "password"; password.autocomplete = "current-password"; password.placeholder = "Password"; password.className = "pv-input";
