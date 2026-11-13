@@ -1,6 +1,6 @@
 # Mosharrof Personal Voice API (prototype)
 
-**Experimental and not connected to the live app.** This is a separate Python inference service. It does not replace Gemini TTS, persist user profiles, or collect microphone audio.
+**Experimental private inference service.** The MOSHARROF Worker has a gated route that can call this service after server secrets, Supabase migration, model review and private deployment are configured. It does not replace Gemini TTS, persist user profiles, or collect microphone audio.
 
 ## Model and limitations
 
@@ -15,6 +15,7 @@
 - `PERSONAL_VOICE_API_TOKEN`: strong random bearer token; required for synthesis.
 - `HF_TOKEN`: Hugging Face token after the operator has accepted model access conditions.
 - `INDICF5_MODEL_REVISION`: exact, reviewed Hugging Face model commit SHA. It is deliberately required; do not set it to `main`.
+- `PERSONAL_VOICE_MODEL_REVIEWED=true`: explicit operator approval after reviewing the pinned model code and access/license terms. Without this flag, `/health` reports `configured=false` and the app keeps enrollment disabled.
 - Optional limits: `MAX_REFERENCE_AUDIO_BYTES` (default 5 MiB), `MAX_REFERENCE_AUDIO_SECONDS` (default 20), `MAX_SYNTHESIS_TEXT_CHARS` (default 800), `MAX_REFERENCE_TEXT_CHARS` (default 500).
 
 Never place secrets in Git, browser JavaScript, logs, screenshots, or chat. Keep the service private and only expose it through an authenticated server-to-server connection.
@@ -50,11 +51,11 @@ curl -X POST http://127.0.0.1:7860/synthesize \
   --output preview.wav
 ```
 
-## Not implemented yet
+## Production activation gates
 
-- Authenticated Mosharrof user identity and multi-tenant profile storage.
-- Consent/settings UI, reference enrollment, profile versioning and deletion.
-- Candidate-sample review workflow and optional profile improvement.
-- Worker integration, feature flag, quotas/rate limits per user, and production observability.
+- The Worker route, owner authentication, encrypted owner-scoped Storage flow, profile lifecycle, quota, and Gemini fallback are implemented in the repository.
+- The Supabase migration and private Worker secret values are source/configuration only until applied to the target project.
+- The service must be privately deployed, the pinned code and model terms reviewed, and `PERSONAL_VOICE_MODEL_REVIEWED=true` set only after that review.
+- Run Bengali similarity, latency, concurrency, and Android-device tests before activation. No user sample should be uploaded until the app's authenticated readiness check passes.
 
-These must be added and tested before any public activation. Ordinary transcription recordings must never be reused for cloning without separate, explicit opt-in and a review flow.
+Ordinary transcription recordings must never be reused for cloning without separate, explicit opt-in and a review flow.
