@@ -1,5 +1,12 @@
 import { apiRequest, cacheDefaultVoiceProfileId, element, signIn, statusText } from "./personal-voice-menu-api.js";
 
+export async function testPersonalVoiceProfile({ controller, button, profile } = {}) {
+  if (!controller || typeof controller.speak !== "function" || !button || !profile?.id || profile.status !== "active") {
+    throw new Error("active_personal_voice_profile_required");
+  }
+  return controller.speak("আসসালামু আলাইকুম। এটি আপনার ব্যক্তিগত কণ্ঠের পরীক্ষা।", button, { profileId: profile.id });
+}
+
 export function isVoiceEnrollmentValid({ name, transcript, file, voiceConsent, storageConsent } = {}) {
   return !!String(name || "").trim() && !!String(transcript || "").trim() && !!file && file.size > 0 && file.size <= 5 * 1024 * 1024 &&
     voiceConsent === true && storageConsent === true;
@@ -79,7 +86,10 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         });
         row.append(info, choose);
         const controls = element(documentRef, "div", undefined, "pv-profile-row");
-        if (profile.status === "active") controls.appendChild(action("নমুনা বদল", async () => {
+        if (profile.status === "active") controls.append(action("কণ্ঠ পরীক্ষা", async () => {
+          await testPersonalVoiceProfile({ controller, button, profile });
+          setStatus(profile.name + " কণ্ঠের পরীক্ষা সম্পন্ন");
+        }), action("নমুনা বদল", async () => {
           profileControls.replaceChildren();
           const transcript = element(documentRef, "textarea"); transcript.rows = 2; transcript.maxLength = 500; transcript.placeholder = "নতুন নমুনার হুবহু ট্রান্সক্রিপ্ট"; transcript.className = "pv-input";
           const file = element(documentRef, "input"); file.type = "file"; file.accept = "audio/wav,audio/flac,audio/ogg"; file.className = "pv-input";
