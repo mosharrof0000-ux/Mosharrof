@@ -178,6 +178,7 @@ export function createReadAloudController(options = {}) {
         if (!response.ok || !data.audio_data) throw new Error(data.reason || data.error || "tts_generation_failed");
       }
       const blob = decodeAudioBlob(data.audio_data, data.mime_type || "audio/mpeg", { BlobCtor, atobImpl });
+      if (button?.dataset) button.dataset.audioProvider = String(data.provider || provider);
       activeButton = button || null;
       if (button) {
         button.disabled = false;
