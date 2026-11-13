@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { handlePersonalVoiceAuth } from "./personal-voice-auth.js";
+import { handlePersonalVoiceAuth } from "../organs/personal-voice/worker/auth.js";
 
 test("owner login forwards credentials only to configured Supabase Auth", async () => {
   const originalFetch = globalThis.fetch;
