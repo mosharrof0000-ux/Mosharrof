@@ -136,9 +136,9 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
       profilesBox.replaceChildren();
       if (error?.message !== "owner_login_required") return;
       const loginBox = element(documentRef, "div", undefined, "pv-login");
-      const email = element(documentRef, "input"); email.type = "email"; email.autocomplete = "username"; email.placeholder = "Owner email"; email.className = "pv-input";
-      const password = element(documentRef, "input"); password.type = "password"; password.autocomplete = "current-password"; password.placeholder = "Password"; password.className = "pv-input";
-      loginBox.append(email, password, action("Owner Login", async () => {
+      const email = element(documentRef, "input"); email.type = "email"; email.autocomplete = "username"; email.placeholder = "ইমেইল"; email.className = "pv-input";
+      const password = element(documentRef, "input"); password.type = "password"; password.autocomplete = "current-password"; password.placeholder = "পাসওয়ার্ড"; password.className = "pv-input";
+      loginBox.append(email, password, action("লগইন", async () => {
         await signIn(email.value, password.value);
         await loadProfiles();
       }, "pv-primary"));
