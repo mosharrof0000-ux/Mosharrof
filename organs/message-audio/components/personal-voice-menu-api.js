@@ -85,6 +85,10 @@ export function cacheDefaultVoiceProfileId(profileId) {
   defaultProfileIdPromise = Promise.resolve(profileId || null);
 }
 
+export function resetDefaultVoiceProfileIdCache() {
+  defaultProfileIdPromise = null;
+}
+
 export function statusText(error) {
   const value = String(error?.message || error);
   const messages = {
