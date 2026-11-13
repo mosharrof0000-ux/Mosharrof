@@ -1,6 +1,6 @@
 import { apiRequest, element, signIn, statusText } from "./personal-voice-menu-api.js";
 
-export function mountPersonalVoiceProfiles({ documentRef, panel, button, action, setStatus, refreshProviderControls }) {
+export function mountPersonalVoiceProfiles({ documentRef, panel, button, controller, action, setStatus, refreshProviderControls }) {
   const profilesBox = element(documentRef, "div", undefined, "pv-profiles");
   const profileControls = element(documentRef, "div", undefined, "pv-controls");
   let enrollmentReady = false;
