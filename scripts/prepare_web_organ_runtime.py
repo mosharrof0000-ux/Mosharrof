@@ -11,11 +11,12 @@ from scripts.manual_provider_runtime_patch import apply_manual_provider_patches 
 
 
 def copy_organ_components(source_folder: Path, destination_folder: Path) -> None:
-    """Copy an organ's private component modules beside its browser entrypoint."""
-    source = source_folder / "components"
-    if source.is_dir():
-        destination = destination_folder / "components"
-        shutil.copytree(source, destination, dirs_exist_ok=True)
+    """Copy browser-safe organ modules beside its browser entrypoint."""
+    for folder_name in ("components", "domain", "providers"):
+        source = source_folder / folder_name
+        if source.is_dir():
+            destination = destination_folder / folder_name
+            shutil.copytree(source, destination, dirs_exist_ok=True)
 
 
 def main() -> int:
