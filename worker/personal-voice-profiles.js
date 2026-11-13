@@ -189,7 +189,7 @@ export async function profilesRoute(request, env, auth, url) {
     const revoke = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
       method: "PATCH", headers: { prefer: "return=minimal" },
       body: JSON.stringify({
-        name, consent_voice_use: voiceUse, consent_model_training: training,
+        name, consent_voice_use: voiceUse, consent_sample_storage: sampleStorage, consent_model_training: training,
         status: (!voiceUse || !sampleStorage) ? "revoked" : (sampleKey ? "active" : "draft")
       })
     });
