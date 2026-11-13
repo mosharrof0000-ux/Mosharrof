@@ -54,6 +54,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     }
     try { provider.value = storage?.getItem(PROVIDER_KEY) || "auto"; } catch {}
     provider.addEventListener("change", () => {
+      button.dataset.voiceProvider = provider.value;
       try { storage?.setItem(PROVIDER_KEY, provider.value); } catch {}
       refreshProviderControls().catch(() => {});
     });
@@ -80,7 +81,10 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
       voice.appendChild(option);
     }
     try { voice.value = storage?.getItem(VOICE_KEY) || "bn-BD-PradeepNeural"; } catch {}
-    voice.addEventListener("change", () => { try { storage?.setItem(VOICE_KEY, voice.value); } catch {} });
+    voice.addEventListener("change", () => {
+      button.dataset.voiceId = voice.value;
+      try { storage?.setItem(VOICE_KEY, voice.value); } catch {}
+    });
     voiceLabel.appendChild(voice);
     panel.appendChild(voiceLabel);
 
