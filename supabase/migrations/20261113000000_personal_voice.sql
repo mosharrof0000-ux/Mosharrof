@@ -25,7 +25,7 @@ create table if not exists public.personal_voice_profiles (
   previous_sample_object_key text,
   sample_mime_type text,
   sample_bytes bigint check (sample_bytes is null or sample_bytes between 1 and 5242880),
-  reference_text_ciphertext text check (reference_text_ciphertext is null or char_length(reference_text_ciphertext) <= 2048),
+  reference_text_ciphertext text check (reference_text_ciphertext is null or char_length(reference_text_ciphertext) <= 4096),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (sample_object_key is null or consent_sample_storage or status = 'revoked'),
