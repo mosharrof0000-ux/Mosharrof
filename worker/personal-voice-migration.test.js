@@ -28,3 +28,9 @@ test("model training consent defaults off and is independent from voice use", ()
   assert.match(sql, /consent_voice_use boolean not null default false/i);
   assert.match(sql, /consent_sample_storage boolean not null default false/i);
 });
+
+test("default profile references cannot cross owner boundaries", () => {
+  assert.match(sql, /personal_voice_preferences_default_profile_owner_fk/);
+  assert.match(sql, /foreign key \(owner_id, default_profile_id\)[\s\S]*?references public\.personal_voice_profiles\(owner_id, id\)/i);
+  assert.match(sql, /sample_object_key like owner_id::text \|\| '\/%'/i);
+});
