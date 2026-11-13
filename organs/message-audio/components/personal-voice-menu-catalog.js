@@ -45,6 +45,7 @@ export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provi
           const bytes = new Uint8Array(binary.length);
           for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
           const audio = element(documentRef, "audio"); audio.controls = true; audio.src = URL.createObjectURL(new Blob([bytes], { type: audioData.mime_type || "audio/mpeg" }));
+          objectUrls.add(audio.src);
           controls.appendChild(audio);
         }));
         row.appendChild(controls);
@@ -83,5 +84,5 @@ export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provi
   catalogLanguage.addEventListener("change", searchCatalog);
   catalogStyle.addEventListener("change", searchCatalog);
   catalogSearch.addEventListener("keydown", event => { if (event.key === "Enter") searchCatalog(); });
-  return { searchCatalog, loadSavedVoices };
+  return { searchCatalog, loadSavedVoices, dispose() { for (const url of objectUrls) URL.revokeObjectURL(url); objectUrls.clear(); } };
 }
