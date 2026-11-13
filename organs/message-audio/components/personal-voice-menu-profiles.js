@@ -92,7 +92,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         const controls = element(documentRef, "div", undefined, "pv-profile-row");
         if (profile.status === "active") controls.append(action("কণ্ঠ পরীক্ষা", async () => {
           await testPersonalVoiceProfile({ controller, button, profile });
-          setStatus(button.dataset.audioProvider === "personal-voice"
+          setStatus(["personal-voice", "indicf5"].includes(button.dataset.audioProvider)
             ? profile.name + " ব্যক্তিগত কণ্ঠে পরীক্ষা সম্পন্ন"
             : "ব্যক্তিগত কণ্ঠ পাওয়া যায়নি; Gemini/সাধারণ TTS fallback দিয়ে পরীক্ষা হয়েছে");
         }), action("নমুনা বদল", async () => {
