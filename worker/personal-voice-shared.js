@@ -115,8 +115,13 @@ export async function decryptSample(packed, env) {
   const bytes = encryptionKey(env);
   if (!bytes || packed.byteLength < 29) throw new Error("voice_sample_unavailable");
   const data = new Uint8Array(packed);
+  if (data[0] !== 1) throw new Error("voice_sample_version_unsupported");
   const key = await crypto.subtle.importKey("raw", bytes, "AES-GCM", false, ["decrypt"]);
-  return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: data.slice(0, 12) }, key, data.slice(12)));
+  try {
+    return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: data.slice(1, 13) }, key, data.slice(13)));
+  } catch {
+    throw new Error("voice_sample_authentication_failed");
+  }
 }
 
 export async function readJson(response) {
