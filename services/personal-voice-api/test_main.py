@@ -22,6 +22,7 @@ def test_health_does_not_expose_secrets_or_audio():
 
 def test_synthesis_requires_auth_before_model_load(monkeypatch):
     monkeypatch.setattr(main, "API_TOKEN", "test-secret")
+    monkeypatch.setattr(main, "MODEL_REVIEWED", True)
     monkeypatch.setattr(main, "_model", None)
 
     audio_buffer = io.BytesIO()
@@ -41,6 +42,7 @@ def test_unconfigured_service_does_not_load_model(monkeypatch):
     monkeypatch.setattr(main, "API_TOKEN", "")
     monkeypatch.setattr(main, "MODEL_REVISION", "")
     monkeypatch.setattr(main, "HF_TOKEN", "")
+    monkeypatch.setattr(main, "MODEL_REVIEWED", False)
     monkeypatch.setattr(main, "_model", None)
 
     response = client.get("/health")
