@@ -7,9 +7,10 @@ import { catalogRoute } from "./catalog.js";
 import { handlePersonalVoiceAuth } from "./auth.js";
 import { getPersonalVoiceReadiness } from "./readiness.js";
 
-export async function handlePersonalVoiceRequest(request, env = {}) {
+export async function handlePersonalVoiceRequest(request, env = {}, originAllowed = null) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/personal-voice/")) return null;
+  if (typeof originAllowed === "function" && !originAllowed(request.headers.get("Origin") || "")) return json({ error: "origin_not_allowed" }, 403);
   if (request.method === "OPTIONS") return new Response(null, { status: 204 });
   if (url.pathname === "/personal-voice/auth/login" || url.pathname === "/personal-voice/auth/refresh") {
     return handlePersonalVoiceAuth(request, env);
