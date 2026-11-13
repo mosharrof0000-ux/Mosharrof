@@ -1,9 +1,8 @@
 import { PACE_KEY, PROVIDER_KEY, VOICE_KEY, element, statusText } from "./personal-voice-menu-api.js";
 import { mountPersonalVoiceProfiles } from "./personal-voice-menu-profiles.js";
 import { mountVoiceCatalog } from "./personal-voice-menu-catalog.js";
-import { getProviderControlCapabilities } from "../../personal-voice/index.js";
 
-export function createPersonalVoiceMenu({ button, message, controller, documentRef = globalThis.document, storage = globalThis.localStorage } = {}) {
+export function createPersonalVoiceMenu({ button, message, controller, documentRef = globalThis.document, storage = globalThis.localStorage, getProviderControlCapabilities = async () => ({ controls: {} }) } = {}) {
   if (!button || !documentRef || !controller) return () => {};
   let panel = null;
   let holdTimer = null;
@@ -53,7 +52,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     try { provider.value = storage?.getItem(PROVIDER_KEY) || "auto"; } catch {}
     provider.addEventListener("change", () => {
       try { storage?.setItem(PROVIDER_KEY, provider.value); } catch {}
-      refreshProviderControls();
+      refreshProviderControls().catch(() => {});
     });
     providerLabel.appendChild(provider);
     panel.appendChild(providerLabel);
@@ -82,14 +81,17 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     voiceLabel.appendChild(voice);
     panel.appendChild(voiceLabel);
 
-    function refreshProviderControls() {
+    async function refreshProviderControls() {
       const personalSelected = button.dataset.voiceProfileDisabled !== "true" && (!!button.dataset.voiceProfileId || button.dataset.voiceProfileDefaultActive === "true");
       provider.disabled = personalSelected;
-      const supported = !personalSelected && getProviderControlCapabilities(provider.value).controls.speed;
-      speedLabel.hidden = !supported;
-      voiceLabel.hidden = !!button.dataset.voiceProfileId;
+      let capabilities = { controls: {} };
+      if (!personalSelected) {
+        try { capabilities = await getProviderControlCapabilities(provider.value); } catch {}
+      }
+      speedLabel.hidden = !(capabilities?.controls?.speed === true);
+      voiceLabel.hidden = personalSelected;
     }
-    refreshProviderControls();
+    await refreshProviderControls();
 
     status = element(documentRef, "p", "প্রোফাইল লোড হচ্ছে…", "pv-status");
     panel.appendChild(status);
