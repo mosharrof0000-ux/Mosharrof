@@ -108,3 +108,16 @@ def test_synthesis_rejects_unsupported_audio_type_before_model_load(monkeypatch)
     )
     assert response.status_code == 415
     assert main._model is None
+
+
+def test_ready_requires_worker_bearer_and_confirms_model_loaded(monkeypatch):
+    monkeypatch.setattr(main, "API_TOKEN", "test-secret")
+    monkeypatch.setattr(main, "MODEL_REVIEWED", True)
+    monkeypatch.setattr(main, "_model", object())
+    monkeypatch.setattr(main, "_get_model", lambda: main._model)
+    denied = client.get("/ready")
+    assert denied.status_code == 401
+    response = client.get("/ready", headers={"Authorization": "Bearer test-secret"})
+    assert response.status_code == 200
+    assert response.json()["ready"] is True
+    assert response.json()["model_loaded"] is True
