@@ -1,9 +1,10 @@
-import { apiRequest, element, signIn, statusText } from "./personal-voice-menu-api.js";
+import { apiRequest, cacheDefaultVoiceProfileId, element, signIn, statusText } from "./personal-voice-menu-api.js";
 
 export function mountPersonalVoiceProfiles({ documentRef, panel, button, controller, action, setStatus, refreshProviderControls }) {
   const profilesBox = element(documentRef, "div", undefined, "pv-profiles");
   const profileControls = element(documentRef, "div", undefined, "pv-controls");
   let enrollmentReady = false;
+  let defaultProfileId = null;
   panel.append(element(documentRef, "div", "ব্যক্তিগত কণ্ঠ", "pv-section-title"), profilesBox, profileControls);
 
   const addButton = action("＋ নিজের কণ্ঠ যোগ করুন", async () => {
@@ -64,6 +65,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         info.appendChild(element(documentRef, "small", profile.status === "active" ? "ব্যবহারযোগ্য" : "নিষ্ক্রিয়"));
         const choose = action(button.dataset.voiceProfileId === profile.id ? "নির্বাচিত" : "এই বার্তার জন্য", () => {
           button.dataset.voiceProfileId = profile.id;
+          delete button.dataset.voiceProfileDisabled;
           refreshProviderControls();
           setStatus(profile.name + " এই বার্তার কণ্ঠ হিসেবে নির্বাচিত");
         });
@@ -88,6 +90,8 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         }));
         controls.append(action("ডিফল্ট করুন", async () => {
           await apiRequest("/preferences/default", { method: "PUT", body: JSON.stringify({ profile_id: profile.id }) });
+          defaultProfileId = profile.id;
+          cacheDefaultVoiceProfileId(profile.id);
           setStatus("ডিফল্ট কণ্ঠ সংরক্ষণ করা হয়েছে");
         }), action("নাম বদল", async () => {
           const next = globalThis.prompt?.("নতুন কণ্ঠের নাম", profile.name);
@@ -99,6 +103,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
           if (!globalThis.confirm?.("এই কণ্ঠের ব্যবহার বন্ধ করবেন?")) return;
           await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "PATCH", body: JSON.stringify({ consent: { voice_use: false } }) });
           if (button.dataset.voiceProfileId === profile.id) delete button.dataset.voiceProfileId;
+          if (defaultProfileId === profile.id) { defaultProfileId = null; cacheDefaultVoiceProfileId(null); }
           await loadProfiles();
         }), action("নমুনা ও সংরক্ষণ মুছুন", async () => {
           if (!globalThis.confirm?.("সংরক্ষিত নমুনা স্থায়ীভাবে মুছবেন?")) return;
