@@ -23,7 +23,7 @@ app = FastAPI(title="Mosharrof Personal Voice API", version="0.1.0-prototype")
 
 MODEL_ID = os.getenv("INDICF5_MODEL_ID", "ai4bharat/IndicF5")
 MODEL_REVISION = os.getenv("INDICF5_MODEL_REVISION", "").strip()
-API_TOKEN = os.getenv("PERSONAL_VOICE_API_TOKEN", "")
+API_TOKEN = os.getenv("PERSONAL_VOICE_API_TOKEN", "").strip()
 HF_TOKEN = os.getenv("HF_TOKEN", "")
 MODEL_REVIEWED = os.getenv("PERSONAL_VOICE_MODEL_REVIEWED", "").strip().lower() == "true"
 MAX_AUDIO_BYTES = int(os.getenv("MAX_REFERENCE_AUDIO_BYTES", str(5 * 1024 * 1024)))
@@ -37,11 +37,11 @@ _model_lock = threading.Lock()
 
 def _is_configured() -> bool:
     # Requiring an explicit revision prevents silently following a moving model branch.
-    return bool(API_TOKEN and MODEL_REVISION and HF_TOKEN and MODEL_REVIEWED)
+    return bool(len(API_TOKEN) >= 32 and MODEL_REVISION and HF_TOKEN and MODEL_REVIEWED)
 
 
 def _authorize(authorization: str | None) -> None:
-    if not API_TOKEN:
+    if len(API_TOKEN) < 32:
         raise HTTPException(status_code=503, detail="Personal voice service is not configured")
     expected = f"Bearer {API_TOKEN}"
     if not authorization or not hmac.compare_digest(authorization, expected):
