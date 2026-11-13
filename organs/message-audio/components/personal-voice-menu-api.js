@@ -3,6 +3,7 @@ export const PROVIDER_KEY = "mosharrof_tts_provider_v1";
 export const VOICE_KEY = "mosharrof_tts_voice_v1";
 export const PACE_KEY = "mosharrof_tts_pace_v1";
 const AUTH_STORAGE_KEY = "mosharrof_personal_voice_auth_v1";
+let defaultProfileIdPromise = null;
 
 export function element(documentRef, tag, text, className) {
   const node = documentRef.createElement(tag);
@@ -71,6 +72,19 @@ export async function apiRequest(path, options = {}) {
   return data;
 }
 
+export async function getDefaultVoiceProfileId() {
+  if (!defaultProfileIdPromise) {
+    defaultProfileIdPromise = apiRequest("/profiles")
+      .then(data => data.default_profile_id || null)
+      .catch(() => null);
+  }
+  return defaultProfileIdPromise;
+}
+
+export function cacheDefaultVoiceProfileId(profileId) {
+  defaultProfileIdPromise = Promise.resolve(profileId || null);
+}
+
 export function statusText(error) {
   const value = String(error?.message || error);
   const messages = {
@@ -97,4 +111,5 @@ export async function signIn(email, password) {
   if (!response.ok || !data.access_token) throw new Error(data.error || "owner_login_invalid");
   const saved = { ...data, expires_at: Math.floor(Date.now() / 1000) + Number(data.expires_in || 3600) };
   globalThis.localStorage?.setItem(AUTH_STORAGE_KEY, JSON.stringify(saved));
+  defaultProfileIdPromise = null;
 }
