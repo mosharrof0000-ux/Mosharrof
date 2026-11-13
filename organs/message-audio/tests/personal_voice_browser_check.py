@@ -15,4 +15,4 @@ def check_personal_voice_menu(page, read_button) -> None:
     add_button = voice_menu.locator("button").filter(has_text="＋ নিজের কণ্ঠ যোগ করুন")
     assert add_button.is_disabled(), "sample enrollment must wait for secure backend readiness"
     voice_menu.get_by_role("button", name="বন্ধ").click()
-    assert page.locator(".personal-voice-menu").count() == 0
+    voice_menu.wait_for(state="detached", timeout=5000)
