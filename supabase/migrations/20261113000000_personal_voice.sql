@@ -22,6 +22,7 @@ create table if not exists public.personal_voice_profiles (
   consent_sample_storage boolean not null default false,
   consent_model_training boolean not null default false,
   sample_object_key text,
+  previous_sample_object_key text,
   sample_mime_type text,
   sample_bytes bigint check (sample_bytes is null or sample_bytes between 1 and 5242880),
   reference_text text check (reference_text is null or char_length(reference_text) <= 500),
@@ -29,6 +30,8 @@ create table if not exists public.personal_voice_profiles (
   updated_at timestamptz not null default now(),
   check (sample_object_key is null or consent_sample_storage or status = 'revoked'),
   check (sample_object_key is null or sample_object_key like owner_id::text || '/%'),
+  check (previous_sample_object_key is null or previous_sample_object_key like owner_id::text || '/%'),
+  check (previous_sample_object_key is null or consent_sample_storage or status = 'revoked'),
   check (status <> 'active' or sample_object_key is not null),
   unique (owner_id, id)
 );
