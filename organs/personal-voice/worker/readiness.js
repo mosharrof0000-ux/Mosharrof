@@ -20,7 +20,7 @@ export async function getPersonalVoiceReadiness(env, auth) {
   try {
     const endpoint = new URL(String(env.PERSONAL_VOICE_API_URL || ""));
     const apiToken = String(env.PERSONAL_VOICE_API_TOKEN || "").trim();
-    if (endpoint.protocol === "https:" && !endpoint.username && !endpoint.password && apiToken.length >= 32) {
+    if (endpoint.protocol === "https:" && !endpoint.username && !endpoint.password && !endpoint.search && !endpoint.hash && apiToken.length >= 32) {
       const response = await fetch(new URL("/ready", endpoint), {
         headers: { authorization: "Bearer " + apiToken },
         signal: AbortSignal.timeout(120000), cache: "no-store"
