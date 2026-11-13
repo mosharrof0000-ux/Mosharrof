@@ -72,7 +72,7 @@ test("ordinary one-tap Read Aloud uses the saved default personal voice", async 
     assert.equal(button.dataset.audioProvider, "personal-voice");
     controller.stop();
   } finally {
-    cacheDefaultVoiceProfileId(null);
+    resetDefaultVoiceProfileIdCache();
     globalThis.localStorage = previousStorage;
   }
 });
