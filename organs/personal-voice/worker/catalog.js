@@ -18,6 +18,11 @@ export async function catalogRoute(request, env, auth, url) {
   const response = await supabaseFetch(env, auth.token, "rest/v1/personal_voice_catalog?" + query);
   if (!response.ok) return json({ error: "voice_catalog_unavailable" }, 502);
   const rows = await readJson(response);
-  return json({ voices: (rows || []).map(row => ({ ...row, available: providerAvailability(env, row.provider_id) && row.license_status === "verified" && row.consent_status === "documented" })) });
+  return json({ voices: (rows || []).map(row => {
+    const provider_available = providerAvailability(env, row.provider_id);
+    const license_verified = row.license_status === "verified";
+    const consent_documented = row.consent_status === "documented";
+    return { ...row, provider_available, license_verified, consent_documented, available: provider_available && license_verified && consent_documented };
+  }) });
 }
 
