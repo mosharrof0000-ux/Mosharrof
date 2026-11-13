@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { decryptSample, encryptSample } from "./personal-voice-shared.js";
+import { decryptSample, encryptSample } from "../organs/personal-voice/worker/shared.js";
 
 const env = { PERSONAL_VOICE_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64") };
 
