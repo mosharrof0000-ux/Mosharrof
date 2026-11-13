@@ -71,7 +71,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         const info = element(documentRef, "div");
         info.append(element(documentRef, "strong", profile.name + " · " + profile.serial));
         info.appendChild(element(documentRef, "small", profile.status === "active" ? "ব্যবহারযোগ্য" : "নিষ্ক্রিয়"));
-        const choose = action(button.dataset.voiceProfileId === profile.id ? "নির্বাচিত" : "এই বার্তার জন্য", () => {
+        const choose = action(button.dataset.voiceProfileId === profile.id ? "নির্বাচিত" : "এই বার্তার জন্য", async () => {
           button.dataset.voiceProfileId = profile.id;
           delete button.dataset.voiceProfileDisabled;
           await refreshProviderControls();
