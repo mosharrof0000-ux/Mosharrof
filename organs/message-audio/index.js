@@ -10,6 +10,9 @@ export function installMessageAudioActions(options = {}) {
   const Observer = options.MutationObserverCtor || globalThis.MutationObserver;
   const runtime = options.runtime || null;
   const controller = options.controller || createReadAloudController(options.audioOptions || {});
+  const providerCapabilities = options.getProviderControlCapabilities || (runtime && typeof runtime.invoke === "function"
+    ? (providerId) => runtime.invoke("personal-voice", "getProviderControlCapabilities", providerId)
+    : async () => ({ controls: {} }));
   if (!documentRef || typeof Observer !== "function") return () => {};
   const root = documentRef.body || documentRef.documentElement;
   if (!root) return () => {};
@@ -51,7 +54,7 @@ export function installMessageAudioActions(options = {}) {
       }
     });
     group.appendChild(button);
-    createPersonalVoiceMenu({ button, message: extractMessageText(message), controller, documentRef });
+    createPersonalVoiceMenu({ button, message: extractMessageText(message), controller, documentRef, getProviderControlCapabilities: providerCapabilities });
   }
 
   function scan(node) {
