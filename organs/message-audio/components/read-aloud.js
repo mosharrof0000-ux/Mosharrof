@@ -130,7 +130,9 @@ export function createReadAloudController(options = {}) {
       if (button.dataset) button.dataset.audioState = "loading";
     }
 
-    const provider = preference(storage, "mosharrof_tts_provider_v1", PROVIDERS, "auto");
+    const provider = PROVIDERS.has(button?.dataset?.voiceProvider)
+      ? button.dataset.voiceProvider
+      : preference(storage, "mosharrof_tts_provider_v1", PROVIDERS, "auto");
     const selectedProfileId = String(speakOptions.profileId || (button?.dataset?.voiceProfileDisabled === "true" ? "" : button?.dataset?.voiceProfileId || await getDefaultVoiceProfileId(fetchImpl, options.authTokenProvider)) || "");
     if (provider === "browser" && !selectedProfileId) {
       if (startBrowserSpeech(text, button)) return null;
@@ -140,7 +142,9 @@ export function createReadAloudController(options = {}) {
 
     try {
       if (typeof fetchImpl !== "function") throw new Error("tts_fetch_unavailable");
-      const voice = preference(storage, "mosharrof_tts_voice_v1", VOICES, "bn-BD-PradeepNeural");
+      const voice = VOICES.has(button?.dataset?.voiceId)
+        ? button.dataset.voiceId
+        : preference(storage, "mosharrof_tts_voice_v1", VOICES, "bn-BD-PradeepNeural");
       const savedPace = Number(storage?.getItem?.(PACE_KEY) || 1);
       const pace = Number.isFinite(savedPace) ? Math.min(1.25, Math.max(0.75, savedPace)) : 1;
       const profileId = selectedProfileId;
