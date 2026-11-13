@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { handlePersonalVoiceRequest, PERSONAL_VOICE_LIMITS } from "../organs/personal-voice/worker/index.js";
+import { handlePersonalVoiceRequest, PERSONAL_VOICE_LIMITS } from "../organs/personal-voice/worker-entry.js";
 
 test("personal voice health reports readiness flags without exposing secrets", async () => {
   const response = await handlePersonalVoiceRequest(
