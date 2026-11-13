@@ -186,20 +186,20 @@ as $function$
 declare allowed boolean;
 begin
   if auth.uid() is null then return false; end if;
-  insert into public.personal_voice_synthesis_usage as usage
+  insert into public.personal_voice_synthesis_usage as existing_usage
     (owner_id, window_started_at, request_count)
   values (auth.uid(), now(), 1)
   on conflict (owner_id) do update set
     window_started_at = case
-      when usage.window_started_at <= now() - interval '1 minute' then now()
-      else usage.window_started_at
+      when existing_usage.window_started_at <= now() - interval '1 minute' then now()
+      else existing_usage.window_started_at
     end,
     request_count = case
-      when usage.window_started_at <= now() - interval '1 minute' then 1
-      else usage.request_count + 1
+      when existing_usage.window_started_at <= now() - interval '1 minute' then 1
+      else existing_usage.request_count + 1
     end
-  where usage.window_started_at <= now() - interval '1 minute'
-     or usage.request_count < 10
+  where existing_usage.window_started_at <= now() - interval '1 minute'
+     or existing_usage.request_count < 10
   returning true into allowed;
   return coalesce(allowed, false);
 end;
