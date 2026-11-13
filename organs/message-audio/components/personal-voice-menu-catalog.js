@@ -9,6 +9,7 @@ export function catalogVoiceUsable(voice) {
 }
 
 export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provider, voice, button, storage, refreshProviderControls }) {
+  const objectUrls = new Set();
   panel.appendChild(element(documentRef, "div", "ভয়েস ক্যাটালগ", "pv-section-title"));
   const catalogSearch = element(documentRef, "input");
   catalogSearch.type = "search"; catalogSearch.placeholder = "নাম দিয়ে খুঁজুন"; catalogSearch.className = "pv-input";
