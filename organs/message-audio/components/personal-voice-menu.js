@@ -10,10 +10,11 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
   let catalogManager = null;
 
   function close() {
-    if (catalogManager) catalogManager.dispose();
-    catalogManager = null;
-    if (panel) panel.remove();
+    const activePanel = panel;
     panel = null;
+    try { catalogManager?.dispose(); } catch {}
+    catalogManager = null;
+    activePanel?.remove();
   }
 
   function setStatus(text) {
