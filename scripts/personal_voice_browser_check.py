@@ -1,6 +1,8 @@
 """Browser checks for the personal voice controls embedded in Read Aloud."""
 
 def check_personal_voice_menu(page, read_button) -> None:
+    health = page.evaluate("window.MosharrofEntitySystem.organRuntime.health('personal-voice')")
+    assert health["status"] == "ready", f"personal-voice Organ is not ready: {health}"
     read_button.dispatch_event("contextmenu")
     voice_menu = page.locator(".personal-voice-menu")
     voice_menu.wait_for(state="visible", timeout=10000)
