@@ -2,7 +2,7 @@ export const MAX_SAMPLE_BYTES = 5 * 1024 * 1024;
 export const MAX_TEXT_CHARS = 800;
 export const MAX_REFERENCE_TEXT_CHARS = 500;
 export const AUDIO_TYPES = new Set(["audio/wav", "audio/x-wav", "audio/wave", "audio/vnd.wave", "audio/flac", "audio/ogg"]);
-export const PROFILE_FIELDS = "id,owner_id,voice_serial,name,language,provider_id,status,consent_voice_use,consent_sample_storage,consent_model_training,sample_object_key,sample_mime_type,sample_bytes,reference_text,created_at,updated_at";
+export const PROFILE_FIELDS = "id,owner_id,voice_serial,name,language,provider_id,status,consent_voice_use,consent_sample_storage,consent_model_training,sample_object_key,previous_sample_object_key,sample_mime_type,sample_bytes,reference_text,created_at,updated_at";
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function json(data, status = 200) {
