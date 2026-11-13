@@ -50,6 +50,8 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/personal-voice/")) {
+      const origin = request.headers.get("Origin") || "";
+      if (!isAllowedOrigin(origin)) return withVideoCors(jsonError("origin_not_allowed", 403), request);
       const response = await handlePersonalVoiceRequest(request, env);
       return withVideoCors(response || jsonError("personal_voice_route_not_found", 404), request);
     }
