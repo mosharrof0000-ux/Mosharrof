@@ -94,7 +94,7 @@ export function resetDefaultVoiceProfileIdCache() {
 export function statusText(error) {
   const value = String(error?.message || error);
   const messages = {
-    owner_login_required: "Owner Login সেশন পাওয়া যায়নি",
+    owner_login_required: "লগইন সেশন পাওয়া যায়নি",
     registered_owner_authentication_required: "এই অ্যাকাউন্ট Owner Registry-তে অনুমোদিত নয়",
     personal_voice_request_failed: "ভয়েস সার্ভার এখন প্রস্তুত নয়",
     personal_voice_inference_not_configured: "ক্লোন কণ্ঠের মডেল সার্ভার এখনো সংযুক্ত হয়নি",
