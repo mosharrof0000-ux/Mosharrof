@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { apiRequest, cacheDefaultVoiceProfileId, element, getDefaultVoiceProfileId, statusText } from "../components/personal-voice-menu-api.js";
+import { apiRequest, cacheDefaultVoiceProfileId, element, getDefaultVoiceProfileId, resetDefaultVoiceProfileIdCache, statusText } from "../components/personal-voice-menu-api.js";
 
 test("Read Aloud menu creates safe text-only UI elements", () => {
   const documentRef = { createElement(tag) { return { tag, textContent: "", className: "" }; } };
@@ -61,7 +61,7 @@ test("default profile lookup uses the injected fetcher and is cached", async () 
     return new Response(JSON.stringify({ profiles: [], default_profile_id: "profile-from-server" }), { status: 200 });
   };
   try {
-    cacheDefaultVoiceProfileId(null);
+    resetDefaultVoiceProfileIdCache();
     assert.equal(await getDefaultVoiceProfileId(fetcher, async () => "owner-token"), "profile-from-server");
     assert.equal(await getDefaultVoiceProfileId(fetcher, async () => "owner-token"), "profile-from-server");
     assert.equal(calls.length, 1);
