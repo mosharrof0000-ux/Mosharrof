@@ -25,6 +25,7 @@ MODEL_ID = os.getenv("INDICF5_MODEL_ID", "ai4bharat/IndicF5")
 MODEL_REVISION = os.getenv("INDICF5_MODEL_REVISION", "").strip()
 API_TOKEN = os.getenv("PERSONAL_VOICE_API_TOKEN", "")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
+MODEL_REVIEWED = os.getenv("PERSONAL_VOICE_MODEL_REVIEWED", "").strip().lower() == "true"
 MAX_AUDIO_BYTES = int(os.getenv("MAX_REFERENCE_AUDIO_BYTES", str(5 * 1024 * 1024)))
 MAX_AUDIO_SECONDS = int(os.getenv("MAX_REFERENCE_AUDIO_SECONDS", "20"))
 MAX_TEXT_CHARS = int(os.getenv("MAX_SYNTHESIS_TEXT_CHARS", "800"))
@@ -36,7 +37,7 @@ _model_lock = threading.Lock()
 
 def _is_configured() -> bool:
     # Requiring an explicit revision prevents silently following a moving model branch.
-    return bool(API_TOKEN and MODEL_REVISION and HF_TOKEN)
+    return bool(API_TOKEN and MODEL_REVISION and HF_TOKEN and MODEL_REVIEWED)
 
 
 def _authorize(authorization: str | None) -> None:
@@ -87,6 +88,7 @@ def health() -> dict[str, Any]:
         "mode": "prototype",
         "configured": _is_configured(),
         "model_loaded": _model is not None,
+        "model_reviewed": MODEL_REVIEWED,
         "audio_persistence": False,
     }
 
