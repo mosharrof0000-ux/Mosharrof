@@ -122,6 +122,7 @@ export function createReadAloudController(options = {}) {
     stop();
     const text = normalizeSpeechText(value);
     if (!text) throw new Error("empty_message");
+    if (button?.dataset) delete button.dataset.audioProvider;
     if (button) {
       button.disabled = true;
       setButtonContent(button, "speak", "প্রস্তুত হচ্ছে…");
