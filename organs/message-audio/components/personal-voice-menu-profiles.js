@@ -1,5 +1,10 @@
 import { apiRequest, cacheDefaultVoiceProfileId, element, signIn, statusText } from "./personal-voice-menu-api.js";
 
+export function isVoiceEnrollmentValid({ name, transcript, file, voiceConsent, storageConsent } = {}) {
+  return !!String(name || "").trim() && !!String(transcript || "").trim() && !!file && file.size > 0 &&
+    voiceConsent === true && storageConsent === true;
+}
+
 export function mountPersonalVoiceProfiles({ documentRef, panel, button, controller, action, setStatus, refreshProviderControls }) {
   const profilesBox = element(documentRef, "div", undefined, "pv-profiles");
   const profileControls = element(documentRef, "div", undefined, "pv-controls");
@@ -23,7 +28,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
     trainingConsent.append(trainingCheck, element(documentRef, "span", "ভবিষ্যৎ মডেল উন্নয়নে আলাদা সম্মতি (ঐচ্ছিক)"));
     profileControls.append(name, transcript, file, voiceConsent, storageConsent, trainingConsent);
     profileControls.appendChild(action("প্রোফাইল তৈরি ও নমুনা সংরক্ষণ", async () => {
-      if (!voiceCheck.checked || !storageCheck.checked || !file.files?.[0] || !transcript.value.trim() || !name.value.trim()) {
+      if (!isVoiceEnrollmentValid({ name: name.value, transcript: transcript.value, file: file.files?.[0], voiceConsent: voiceCheck.checked, storageConsent: storageCheck.checked })) {
         throw new Error("নাম, অডিও, হুবহু ট্রান্সক্রিপ্ট এবং দুইটি বাধ্যতামূলক সম্মতি দিন");
       }
       const created = await apiRequest("/profiles", {
