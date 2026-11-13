@@ -66,6 +66,7 @@ export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provi
           if (saved.voice?.provider_id) provider.value = saved.voice.provider_id;
           if (saved.voice?.provider_voice_id) voice.value = saved.voice.provider_voice_id;
           delete button.dataset.voiceProfileId;
+          button.dataset.voiceProfileDisabled = "true";
           refreshProviderControls();
           try { storage?.setItem("mosharrof_tts_provider_v1", provider.value); storage?.setItem("mosharrof_tts_voice_v1", voice.value); } catch {}
           setStatus(saved.serial + " ভয়েস এই বার্তার জন্য নির্বাচিত");
