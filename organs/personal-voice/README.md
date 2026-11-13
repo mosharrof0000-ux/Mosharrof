@@ -51,6 +51,7 @@ The current project and service have not been activated or deployed by this PR. 
 - Revoking voice-use consent disables the profile. Revoking sample-storage consent deletes the stored sample.
 - Catalog entries currently have `license_status=unknown` and `consent_status=required`; they are not represented as licensed celebrity/real-person clones. Only provider voices already present in the existing TTS implementation are seeded.
 - IndicF5 is reference-audio synthesis, not a promise of exact voice identity or fine-tuned model weights. No Quran recitation or tajwid capability is claimed.
+- The upstream IndicF5 model card declares MIT and lists Bengali support, but an open upstream issue asks for clarification about the original F5-TTS pretrained weights, IndicVoices-R dataset rights, and a missing repository LICENSE file. Keep `PERSONAL_VOICE_MODEL_REVIEWED=false` until those questions and the exact pinned code/model revision are independently cleared; do not treat the model-card label alone as a complete commercial clearance.
 
 ## Still required for production completion
 
