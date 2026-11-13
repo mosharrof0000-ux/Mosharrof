@@ -139,10 +139,10 @@ grant insert (owner_id, catalog_voice_id, nickname) on public.personal_voice_sav
 insert into public.personal_voice_catalog
 (id,display_name,language,style,provider_id,provider_voice_id,license_status,consent_status,enabled)
 values
-('edge-bn-pradeep','Pradeep Neural · বাংলা পুরুষ','bn-BD','standard','edge','bn-BD-PradeepNeural','unknown','required',true),
-('edge-bn-nabanita','Nabanita Neural · বাংলা নারী','bn-BD','standard','edge','bn-BD-NabanitaNeural','unknown','required',true),
-('azure-bn-pradeep','Pradeep Neural · বাংলা পুরুষ','bn-BD','standard','azure','bn-BD-PradeepNeural','unknown','required',true),
-('azure-bn-nabanita','Nabanita Neural · বাংলা নারী','bn-BD','standard','azure','bn-BD-NabanitaNeural','unknown','required',true)
+('edge-bn-pradeep','Pradeep Neural · বাংলা পুরুষ','bn-BD','male','edge','bn-BD-PradeepNeural','unknown','required',true),
+('edge-bn-nabanita','Nabanita Neural · বাংলা নারী','bn-BD','female','edge','bn-BD-NabanitaNeural','unknown','required',true),
+('azure-bn-pradeep','Pradeep Neural · বাংলা পুরুষ','bn-BD','male','azure','bn-BD-PradeepNeural','unknown','required',true),
+('azure-bn-nabanita','Nabanita Neural · বাংলা নারী','bn-BD','female','azure','bn-BD-NabanitaNeural','unknown','required',true)
 on conflict (id) do update set display_name=excluded.display_name, provider_id=excluded.provider_id,
   provider_voice_id=excluded.provider_voice_id, license_status=excluded.license_status,
   consent_status=excluded.consent_status, enabled=excluded.enabled;
