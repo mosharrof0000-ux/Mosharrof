@@ -8,8 +8,11 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
   let panel = null;
   let holdTimer = null;
   let status = null;
+  let catalogManager = null;
 
   function close() {
+    if (catalogManager) catalogManager.dispose();
+    catalogManager = null;
     if (panel) panel.remove();
     panel = null;
   }
@@ -80,7 +83,9 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     panel.appendChild(voiceLabel);
 
     function refreshProviderControls() {
-      const supported = !button.dataset.voiceProfileId && getProviderControlCapabilities(provider.value).controls.speed;
+      const personalSelected = !!button.dataset.voiceProfileId;
+      provider.disabled = personalSelected;
+      const supported = !personalSelected && getProviderControlCapabilities(provider.value).controls.speed;
       speedLabel.hidden = !supported;
       voiceLabel.hidden = !!button.dataset.voiceProfileId;
     }
@@ -91,7 +96,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     const profileManager = mountPersonalVoiceProfiles({
       documentRef, panel, button, controller, action, setStatus, refreshProviderControls
     });
-    const catalogManager = mountVoiceCatalog({
+    catalogManager = mountVoiceCatalog({
       documentRef, panel, action, setStatus, provider, voice, button, storage, refreshProviderControls
     });
 
