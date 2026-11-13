@@ -8,7 +8,7 @@ test("replaced sample cleanup deletes the old object and clears its database poi
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, options) => {
-    calls.push({ url: String(url), method: options.method });
+    calls.push({ url: String(url), method: options.method, body: options.body ? JSON.parse(options.body) : null });
     return new Response(null, { status: options.method === "DELETE" ? 200 : 204 });
   };
   try {
@@ -19,7 +19,7 @@ test("replaced sample cleanup deletes the old object and clears its database poi
     assert.equal(calls.length, 2);
     assert.equal(calls[0].method, "DELETE");
     assert.equal(calls[1].method, "PATCH");
-    assert.match(calls[1].url, /previous_sample_object_key/);
+    assert.equal(calls[1].body.previous_sample_object_key, null);
   } finally {
     globalThis.fetch = originalFetch;
   }
