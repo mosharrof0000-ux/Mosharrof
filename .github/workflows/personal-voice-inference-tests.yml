@@ -1,0 +1,26 @@
+name: Personal Voice Inference API Tests
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "services/personal-voice-api/**"
+      - ".github/workflows/personal-voice-inference-tests.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "services/personal-voice-api/**"
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install isolated inference API test dependencies
+        run: python -m pip install -r services/personal-voice-api/requirements-test.txt
+      - name: Run isolated inference API tests
+        working-directory: services/personal-voice-api
+        run: python -m pytest -q
