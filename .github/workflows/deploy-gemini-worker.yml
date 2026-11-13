@@ -108,6 +108,10 @@ jobs:
 
       - name: Validate Worker JavaScript syntax
         run: node --check worker/screenshot-analysis.js
+      - name: Validate Worker composition and Personal Voice entrypoints
+        run: |
+          node --input-type=module --check < core/video-cutting/worker-entry.js
+          node --input-type=module --check < organs/personal-voice/worker-entry.js
       - name: Validate video Worker JavaScript syntax
         run: node --input-type=module --check < core/video-generation/worker.js
 
