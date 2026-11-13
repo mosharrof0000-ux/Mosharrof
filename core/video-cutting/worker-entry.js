@@ -1,5 +1,6 @@
 import chatWorker from "../../worker/screenshot-analysis.js";
 import { handleVideoCuttingProxy } from "./worker-proxy.js";
+import { handlePersonalVoiceRequest } from "../../organs/personal-voice/worker-entry.js";
 
 const TRUSTED_APP_ORIGINS = new Set([
   "https://mosharrof0000-ux.github.io",
@@ -48,6 +49,10 @@ function jsonError(message, status) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/personal-voice/")) {
+      const response = await handlePersonalVoiceRequest(request, env, isAllowedOrigin);
+      return withVideoCors(response || jsonError("personal_voice_route_not_found", 404), request);
+    }
     if (!url.pathname.startsWith("/video-cut/")) {
       return chatWorker.fetch(request, env, ctx);
     }

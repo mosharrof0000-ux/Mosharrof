@@ -1,0 +1,27 @@
+name: Personal Voice JavaScript Tests
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "organs/message-audio/**"
+      - "organs/personal-voice/**"
+      - "worker/personal-voice*.js"
+      - ".github/workflows/personal-voice-js-tests.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "organs/message-audio/**"
+      - "organs/personal-voice/**"
+      - "worker/personal-voice*.js"
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run Read Aloud and personal voice tests
+        run: node --experimental-default-type=module --test organs/message-audio/tests/*.test.js organs/personal-voice/tests/*.test.js worker/personal-voice*.test.js

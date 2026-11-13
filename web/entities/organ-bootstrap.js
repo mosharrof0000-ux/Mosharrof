@@ -45,10 +45,14 @@ async function startOrganRuntime() {
   for (const organ of uiOrgans) {
     const scoped = runtime.forOrgan(organ.organId);
     organ.initialize(scoped);
-    scoped.register({
+    const handlers = {
       getHealth: () => organ.getHealth(scoped),
       reportIssue: (payload = {}) => organ.reportIssue(scoped, payload.summary ?? "issue reported by authorized caller")
-    });
+    };
+    for (const api of registry.get(organ.organId).public_api) {
+      if (!handlers[api] && typeof organ[api] === "function") handlers[api] = (...args) => organ[api](...args);
+    }
+    scoped.register(handlers);
   }
   document.querySelectorAll("[data-ui-entity]").forEach((element) => {
     const id = element.dataset.uiEntity;

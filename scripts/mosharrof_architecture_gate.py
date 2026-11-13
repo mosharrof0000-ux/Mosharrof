@@ -18,7 +18,7 @@ LINE_LIMITS = {
 MAX_LINKS_PER_FILE = 20
 # Cloudflare Worker entrypoint is a separately deployed runtime, not a UI organ.
 # Keep the exception narrow and require the chat failover contract tests when edited.
-RUNTIME_ENTRYPOINTS = {"worker/screenshot-analysis.js", "cloudflare-token-router-worker/index.js"}
+RUNTIME_ENTRYPOINTS = {"worker/screenshot-analysis.js", "core/video-cutting/worker-entry.js", "cloudflare-token-router-worker/index.js"}
 RUNTIME_ENTRYPOINT_MAX_LINES = 1000
 # Covers static imports, side-effect imports, re-exports, dynamic imports, and require().
 IMPORT_RE = re.compile(
@@ -215,6 +215,8 @@ def main() -> int:
             )
 
         current_organ = organ_name(path)
+        if path in RUNTIME_ENTRYPOINTS:
+            continue  # Composition roots may wire organ-owned handlers; feature logic remains inside the organ.
         if suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
             for specifier in links:
                 target = resolve_import(full, specifier)

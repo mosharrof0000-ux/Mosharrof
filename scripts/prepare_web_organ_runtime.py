@@ -11,11 +11,12 @@ from scripts.manual_provider_runtime_patch import apply_manual_provider_patches 
 
 
 def copy_organ_components(source_folder: Path, destination_folder: Path) -> None:
-    """Copy an organ's private component modules beside its browser entrypoint."""
-    source = source_folder / "components"
-    if source.is_dir():
-        destination = destination_folder / "components"
-        shutil.copytree(source, destination, dirs_exist_ok=True)
+    """Copy browser-safe organ modules beside its browser entrypoint."""
+    for folder_name in ("components", "domain", "providers"):
+        source = source_folder / folder_name
+        if source.is_dir():
+            destination = destination_folder / folder_name
+            shutil.copytree(source, destination, dirs_exist_ok=True)
 
 
 def main() -> int:
@@ -168,7 +169,7 @@ def main() -> int:
         ui_ids.append(organ_id)
     required = [ROOT / p for p in (
         "web/runtime/core/organ-registry/index.js", "web/runtime/core/link-manager/index.js",
-        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js", "web/core/design-intelligence.js", "web/design-intelligence.css", "web/core/new-chat-floating/index.js", "web/core/new-chat-floating/style.css", "web/core/new-chat-floating/compact.css", "web/core/new-chat-floating/theme.css", "web/core/new-chat-floating/theme.js")]
+        "web/runtime/core/organ-runtime/index.js", "web/runtime/core/organ-runtime/persistent-memory.js", "web/runtime/core/organ-runtime/scoped-api.js", "web/organs/chat/index.js", "web/organs/notes/index.js", "web/organs/personal-voice/domain/provider-capabilities.js", "web/organs/personal-voice/providers/indicf5.js", "web/device-control.js", "web/video-generation-ui.js", "web/core/personal-memory-engine.js", "web/core/personal-memory-bridge.js", "web/runtime/core/personal-memory-engine.js", "web/runtime/core/personal-memory-bridge.js", "web/core/design-intelligence.js", "web/design-intelligence.css", "web/core/new-chat-floating/index.js", "web/core/new-chat-floating/style.css", "web/core/new-chat-floating/compact.css", "web/core/new-chat-floating/theme.css", "web/core/new-chat-floating/theme.js")]
     if not all(p.is_file() for p in required):
         raise SystemExit("ORGAN ASSET PREP: required browser files are missing")
     print(f"ORGAN ASSET PREP: PASS — {len(ui_ids)} UI organs prepared")

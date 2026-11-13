@@ -1,5 +1,6 @@
 import { createReadAloudController, extractMessageText } from "./components/read-aloud.js";
 import { createAudioDownloadButton } from "./components/audio-download.js";
+import { createPersonalVoiceMenu } from "./components/personal-voice-menu.js";
 
 export const organId = "message-audio";
 let disposeCurrent = null;
@@ -9,6 +10,9 @@ export function installMessageAudioActions(options = {}) {
   const Observer = options.MutationObserverCtor || globalThis.MutationObserver;
   const runtime = options.runtime || null;
   const controller = options.controller || createReadAloudController(options.audioOptions || {});
+  const providerCapabilities = options.getProviderControlCapabilities || (runtime && typeof runtime.invoke === "function"
+    ? (providerId) => runtime.invoke("personal-voice", "getProviderControlCapabilities", providerId)
+    : async () => ({ controls: {} }));
   if (!documentRef || typeof Observer !== "function") return () => {};
   const root = documentRef.body || documentRef.documentElement;
   if (!root) return () => {};
@@ -27,6 +31,7 @@ export function installMessageAudioActions(options = {}) {
     button.dataset.messageAudioRead = "true";
     button.addEventListener("click", async (event) => {
       if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+      if (button.dataset.menuOpened === "true") return;
       if (button.dataset.busy === "true") return;
       button.dataset.busy = "true";
       try {
@@ -49,6 +54,7 @@ export function installMessageAudioActions(options = {}) {
       }
     });
     group.appendChild(button);
+    createPersonalVoiceMenu({ button, message: extractMessageText(message), controller, documentRef, getProviderControlCapabilities: providerCapabilities });
   }
 
   function scan(node) {

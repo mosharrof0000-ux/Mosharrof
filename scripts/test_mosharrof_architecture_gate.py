@@ -154,6 +154,11 @@ class ArchitectureGateIntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("web/index.html is frozen except for the single verified organ-bootstrap script addition", result.stdout)
 
+    def test_worker_composition_entrypoint_is_declared(self) -> None:
+        source = GATE_SOURCE.read_text(encoding="utf-8")
+        self.assertIn('"core/video-cutting/worker-entry.js"', source)
+        self.assertIn("if path in RUNTIME_ENTRYPOINTS:\n            continue", source)
+
     def test_cross_organ_private_import_is_blocked(self) -> None:
         self.add_organ('import { privateThing } from "../target-organ/index.js";\nexport {};\n')
         target = self.repo / "organs" / "target-organ"

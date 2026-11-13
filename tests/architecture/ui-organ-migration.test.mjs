@@ -21,24 +21,25 @@ import * as VoiceOrgan from "../../organs/voice/index.js";
 import * as StorageOrgan from "../../organs/storage/index.js";
 import * as ToolFactoryOrgan from "../../organs/tool-factory/index.js";
 import * as QuranResearchOrgan from "../../organs/quran-research/index.js";
+import * as MessageAudioOrgan from "../../organs/message-audio/index.js";
+import * as PersonalVoiceOrgan from "../../organs/personal-voice/index.js";
 
-const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan, CoreOrgan, SidebarOrgan, VoiceOrgan, StorageOrgan, ToolFactoryOrgan, QuranResearchOrgan];
+const uiOrgans = [HomeOrgan, ChatOrgan, HistoryOrgan, LibraryOrgan, ProjectOrgan, NotesOrgan, SettingsOrgan, QuranOrgan, ResearchOrgan, AiOrgan, BranchOrgan, CoreOrgan, SidebarOrgan, VoiceOrgan, StorageOrgan, ToolFactoryOrgan, QuranResearchOrgan, MessageAudioOrgan, PersonalVoiceOrgan];
 test("each UI entity has a distinct manifest and runtime namespace", async () => {
   const artifact = JSON.parse(await readFile(new URL("../../web/runtime/organs.registry.json", import.meta.url), "utf8"));
   const registry = createOrganRegistry(artifact.organs);
   const runtime = createOrganRuntime({ registry, linkManager: createLinkManager(registry) });
-  assert.equal(uiOrgans.length, 17);
+  assert.equal(uiOrgans.length, 19);
   assert.equal(new Set(uiOrgans.map((organ) => organ.organId)).size, uiOrgans.length);
   for (const organ of uiOrgans) {
     const manifest = registry.get(organ.organId);
     assert.ok(manifest, "missing manifest for " + organ.organId);
-    assert.deepEqual([...manifest.public_api].sort(), ["getHealth", "reportIssue"]);
+    assert.deepEqual([...manifest.public_api].sort(), Object.keys(organ).filter(key => typeof organ[key] === "function" && ["getHealth", "reportIssue", "getProviderControlCapabilities", "getIndicF5Capabilities"].includes(key)).sort());
     const scoped = runtime.forOrgan(organ.organId);
     organ.initialize(scoped);
-    scoped.register({
-      getHealth: () => organ.getHealth(scoped),
-      reportIssue: (payload = {}) => organ.reportIssue(scoped, payload.summary ?? "test issue")
-    });
+    const handlers = { getHealth: () => organ.getHealth(scoped), reportIssue: (payload = {}) => organ.reportIssue(scoped, payload.summary ?? "test issue") };
+    for (const api of manifest.public_api) if (!handlers[api] && typeof organ[api] === "function") handlers[api] = (...args) => organ[api](...args);
+    scoped.register(handlers);
     assert.equal(scoped.health().status, "ready");
   }
 });

@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "organs/message-audio/tests"))
 from playwright.sync_api import sync_playwright
+from personal_voice_browser_check import check_personal_voice_menu
 
 PAGE_URL = os.environ["PAGE_URL"]
 TTS_URL = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts"
@@ -84,6 +87,7 @@ def main() -> int:
         audio_bytes = Path(download.path()).read_bytes()
         assert audio_bytes.startswith(b"ID3"), "MP3 Title metadata is missing"
         assert "MOSHARROF".encode("utf-8") in audio_bytes, "MP3 Artist metadata is missing"
+        check_personal_voice_menu(page, read_button)
         print("MESSAGE AUDIO BROWSER CHECK: PASS — sent-message Read Aloud and MP3 download controls work")
         context.close()
         browser.close()

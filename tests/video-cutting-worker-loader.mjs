@@ -13,6 +13,10 @@ export async function loadVideoCuttingWorker() {
       'import chatWorker from "../../worker/screenshot-analysis.js";',
       'const chatWorker = { async fetch() { return new Response("delegated", { status: 200 }); } };'
     )
+    .replace(
+      'import { handlePersonalVoiceRequest } from "../../organs/personal-voice/worker-entry.js";',
+      'async function handlePersonalVoiceRequest() { return null; }'
+    )
     .replace('import { handleVideoCuttingProxy } from "./worker-proxy.js";', inlineProxy);
   return (await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"))).default;
 }
