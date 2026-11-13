@@ -16,7 +16,7 @@ export async function handlePersonalVoiceRequest(request, env = {}, originAllowe
     return handlePersonalVoiceAuth(request, env);
   }
   if (request.method === "GET" && url.pathname === "/personal-voice/health") {
-    const inference = (() => { try { const value = new URL(String(env.PERSONAL_VOICE_API_URL || "")); return value.protocol === "https:" && !!env.PERSONAL_VOICE_API_TOKEN; } catch { return false; } })();
+    const inference = (() => { try { const value = new URL(String(env.PERSONAL_VOICE_API_URL || "")); return value.protocol === "https:" && String(env.PERSONAL_VOICE_API_TOKEN || "").trim().length >= 32; } catch { return false; } })();
     return json({
       ok: true,
       enabled: !!baseUrl(env) && !!publishableKey(env) && !!encryptionKey(env) && inference,
