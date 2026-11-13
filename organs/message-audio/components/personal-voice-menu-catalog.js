@@ -13,11 +13,11 @@ export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provi
   const catalogSearch = element(documentRef, "input");
   catalogSearch.type = "search"; catalogSearch.placeholder = "নাম দিয়ে খুঁজুন"; catalogSearch.className = "pv-input";
   const catalogLanguage = element(documentRef, "select", undefined, "pv-select");
-  for (const [value, label] of [["", "সব ভাষা"], ["bn-BD", "বাংলা"]]) {
+  for (const [value, label] of [["", "সব ভাষা"], ["bn-BD", "বাংলা"], ["en-US", "ইংরেজি"], ["hi-IN", "হিন্দি"], ["ar-SA", "আরবি"], ["ur-PK", "উর্দু"]]) {
     const option = element(documentRef, "option", label); option.value = value; catalogLanguage.appendChild(option);
   }
   const catalogStyle = element(documentRef, "select", undefined, "pv-select");
-  for (const [value, label] of [["", "সব স্টাইল"], ["standard", "স্ট্যান্ডার্ড"]]) {
+  for (const [value, label] of [["", "সব ধরন"], ["male", "পুরুষ"], ["female", "নারী"], ["deep", "গভীর"], ["sweet", "মিষ্টি"], ["storyteller", "গল্পকথক"], ["international", "আন্তর্জাতিক"]]) {
     const option = element(documentRef, "option", label); option.value = value; catalogStyle.appendChild(option);
   }
   panel.append(catalogSearch, catalogLanguage, catalogStyle);
