@@ -164,7 +164,6 @@ export function createReadAloudController(options = {}) {
           data = await response.json().catch(() => ({}));
           if (!response.ok || !data.audio_data) throw new Error(data.error || "personal_voice_failed");
         } catch {
-          // A personal voice failure must preserve the established Gemini voice as fallback.
           response = await fetchImpl(TTS_ENDPOINT, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
