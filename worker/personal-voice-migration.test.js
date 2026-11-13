@@ -40,3 +40,9 @@ test("replacement samples retain a retryable owner-scoped previous object pointe
   assert.match(sql, /previous_sample_object_key is null or previous_sample_object_key like owner_id::text/);
   assert.match(sql, /previous_sample_object_key is null or consent_sample_storage or status = 'revoked'/);
 });
+
+test("reference transcripts are stored only as bounded ciphertext", () => {
+  assert.match(sql, /reference_text_ciphertext text/);
+  assert.match(sql, /char_length\(reference_text_ciphertext\) <= 2048/);
+  assert.doesNotMatch(sql, /reference_text text check/);
+});
