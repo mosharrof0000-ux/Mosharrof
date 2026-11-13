@@ -5,6 +5,7 @@
 ## Model and limitations
 
 - Candidate: [AI4Bharat/IndicF5](https://huggingface.co/ai4bharat/IndicF5), which lists Bengali support and reference-audio synthesis.
+- The upstream model card declares the MIT license and Bengali support; AI4Bharat's maintainer also confirms commercial use in its [license discussion](https://huggingface.co/ai4bharat/IndicF5/discussions/34). The exact pinned code and model revision still require review before setting the production review flag.
 - Upstream code is pinned in `requirements.txt`; the model weights require a Hugging Face account and acceptance of the model's current access conditions.
 - Before deployment, review the pinned upstream code and all model/dependency terms. The model loader uses `trust_remote_code=True` because the upstream model uses custom code. Do not run an unreviewed revision.
 - A reference sample is used for each request; this prototype does not fine-tune model weights and cannot promise an exact voice match.
