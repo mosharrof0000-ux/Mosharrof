@@ -31,7 +31,7 @@ function storedSession() {
   return null;
 }
 
-export async function getAccessToken() {
+export async function getAccessToken(fetcher = globalThis.fetch) {
   try {
     const auth = globalThis.MOSHARROF_AUTH || globalThis.mosharrofAuth;
     if (auth && typeof auth.getAccessToken === "function") {
@@ -46,7 +46,7 @@ export async function getAccessToken() {
     const expiry = Number(session.expires_at || 0);
     if (session.access_token && (!expiry || expiry > Math.floor(Date.now() / 1000) + 30)) return session.access_token;
     if (!session.refresh_token) return null;
-    const response = await fetch(API + "/auth/refresh", {
+    const response = await fetcher(API + "/auth/refresh", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token: session.refresh_token }),
@@ -60,21 +60,21 @@ export async function getAccessToken() {
   } catch { return null; }
 }
 
-export async function apiRequest(path, options = {}) {
-  const token = await getAccessToken();
+export async function apiRequest(path, options = {}, fetcher = globalThis.fetch) {
+  const token = await getAccessToken(fetcher);
   if (!token) throw new Error("owner_login_required");
   const headers = new Headers(options.headers || {});
   headers.set("Authorization", "Bearer " + token);
   if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
-  const response = await fetch(API + path, { ...options, headers, cache: "no-store" });
+  const response = await fetcher(API + path, { ...options, headers, cache: "no-store" });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "personal_voice_request_failed");
   return data;
 }
 
-export async function getDefaultVoiceProfileId() {
+export async function getDefaultVoiceProfileId(fetcher = globalThis.fetch) {
   if (!defaultProfileIdPromise) {
-    defaultProfileIdPromise = apiRequest("/profiles")
+    defaultProfileIdPromise = apiRequest("/profiles", {}, fetcher)
       .then(data => data.default_profile_id || null)
       .catch(() => null);
   }
