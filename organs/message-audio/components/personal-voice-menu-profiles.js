@@ -46,10 +46,10 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
     profileControls.appendChild(action("বাতিল", () => profileControls.replaceChildren()));
   }, "pv-primary");
   panel.appendChild(addButton);
-  panel.appendChild(action("এই বার্তার ব্যক্তিগত কণ্ঠ সরান", () => {
+  panel.appendChild(action("এই বার্তার ব্যক্তিগত কণ্ঠ সরান", async () => {
     delete button.dataset.voiceProfileId;
     button.dataset.voiceProfileDisabled = "true";
-    refreshProviderControls();
+    await refreshProviderControls();
     setStatus("এই বার্তায় সাধারণ TTS ভয়েস ব্যবহার হবে");
   }));
 
