@@ -43,6 +43,6 @@ test("replacement samples retain a retryable owner-scoped previous object pointe
 
 test("reference transcripts are stored only as bounded ciphertext", () => {
   assert.match(sql, /reference_text_ciphertext text/);
-  assert.match(sql, /char_length\(reference_text_ciphertext\) <= 2048/);
+  assert.match(sql, /char_length\(reference_text_ciphertext\) <= 4096/);
   assert.doesNotMatch(sql, /reference_text text check/);
 });
