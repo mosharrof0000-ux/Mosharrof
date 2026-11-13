@@ -43,6 +43,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
   panel.appendChild(addButton);
   panel.appendChild(action("এই বার্তার ব্যক্তিগত কণ্ঠ সরান", () => {
     delete button.dataset.voiceProfileId;
+    button.dataset.voiceProfileDisabled = "true";
     refreshProviderControls();
     setStatus("এই বার্তায় সাধারণ TTS ভয়েস ব্যবহার হবে");
   }));
@@ -116,7 +117,8 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         }), action("মুছুন", async () => {
           if (!globalThis.confirm?.("এই কণ্ঠ ও নমুনা মুছে ফেলবেন?")) return;
           await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "DELETE" });
-          if (button.dataset.voiceProfileId === profile.id) delete button.dataset.voiceProfileId;
+          if (button.dataset.voiceProfileId === profile.id) { delete button.dataset.voiceProfileId; button.dataset.voiceProfileDisabled = "true"; }
+          if (defaultProfileId === profile.id) { defaultProfileId = null; cacheDefaultVoiceProfileId(null); }
           await loadProfiles();
         }));
         profilesBox.append(row, controls);
