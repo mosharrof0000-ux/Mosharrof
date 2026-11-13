@@ -58,7 +58,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
       const data = await apiRequest("/profiles");
       defaultProfileId = data.default_profile_id || null;
       cacheDefaultVoiceProfileId(defaultProfileId);
-      if (!button.dataset.voiceProfileId && defaultProfileId && button.dataset.voiceProfileDisabled !== "true") button.dataset.voiceProfileId = defaultProfileId;
+      button.dataset.voiceProfileDefaultActive = defaultProfileId ? "true" : "false";
       refreshProviderControls();
       setStatus(data.profiles?.length ? "সংরক্ষিত কণ্ঠ নির্বাচন করুন" : enrollmentReady ? "এখনো কোনো ব্যক্তিগত কণ্ঠ নেই" : "কণ্ঠ নিবন্ধন বন্ধ: নিরাপদ সার্ভার প্রস্তুত নয়");
       for (const profile of data.profiles || []) {
@@ -95,6 +95,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
           await apiRequest("/preferences/default", { method: "PUT", body: JSON.stringify({ profile_id: profile.id }) });
           defaultProfileId = profile.id;
           cacheDefaultVoiceProfileId(profile.id);
+          button.dataset.voiceProfileDefaultActive = "true";
           setStatus("ডিফল্ট কণ্ঠ সংরক্ষণ করা হয়েছে");
         }), action("নাম বদল", async () => {
           const next = globalThis.prompt?.("নতুন কণ্ঠের নাম", profile.name);
@@ -106,7 +107,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
           if (!globalThis.confirm?.("এই কণ্ঠের ব্যবহার বন্ধ করবেন?")) return;
           await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "PATCH", body: JSON.stringify({ consent: { voice_use: false } }) });
           if (button.dataset.voiceProfileId === profile.id) { delete button.dataset.voiceProfileId; button.dataset.voiceProfileDisabled = "true"; }
-          if (defaultProfileId === profile.id) { defaultProfileId = null; cacheDefaultVoiceProfileId(null); }
+          if (defaultProfileId === profile.id) { defaultProfileId = null; cacheDefaultVoiceProfileId(null); button.dataset.voiceProfileDefaultActive = "false"; }
           await loadProfiles();
         }), action("নমুনা ও সংরক্ষণ মুছুন", async () => {
           if (!globalThis.confirm?.("সংরক্ষিত নমুনা স্থায়ীভাবে মুছবেন?")) return;
