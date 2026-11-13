@@ -9,4 +9,5 @@ test("voice enrollment requires name, transcript, audio and both mandatory conse
   assert.equal(isVoiceEnrollmentValid({ name: "আমার কণ্ঠ", transcript: "নমুনা বাক্য", file, voiceConsent: true, storageConsent: false }), false);
   assert.equal(isVoiceEnrollmentValid({ name: "আমার কণ্ঠ", transcript: "", file, voiceConsent: true, storageConsent: true }), false);
   assert.equal(isVoiceEnrollmentValid({ name: "আমার কণ্ঠ", transcript: "নমুনা বাক্য", file: { size: 0 }, voiceConsent: true, storageConsent: true }), false);
+  assert.equal(isVoiceEnrollmentValid({ name: "আমার কণ্ঠ", transcript: "নমুনা বাক্য", file: { size: 5 * 1024 * 1024 + 1 }, voiceConsent: true, storageConsent: true }), false);
 });
