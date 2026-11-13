@@ -215,6 +215,8 @@ def main() -> int:
             )
 
         current_organ = organ_name(path)
+        if path in RUNTIME_ENTRYPOINTS:
+            continue  # Composition roots may wire organ-owned handlers; feature logic remains inside the organ.
         if suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"}:
             for specifier in links:
                 target = resolve_import(full, specifier)
