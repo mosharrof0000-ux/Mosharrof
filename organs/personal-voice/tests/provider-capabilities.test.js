@@ -40,3 +40,8 @@ test("only real provider controls are exposed", () => {
     speed: false, pitch: false, emotion: false, intensity: false, pause: false, emphasis: false
   });
 });
+
+test("only IndicF5 advertises reference voice cloning capability", () => {
+  assert.equal(getProviderControlCapabilities("indicf5").supportsVoiceCloning, true);
+  assert.equal(getProviderControlCapabilities("gemini").supportsVoiceCloning, false);
+});
