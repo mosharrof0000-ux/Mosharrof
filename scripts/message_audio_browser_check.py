@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+from personal_voice_browser_check import check_personal_voice_menu
 
 PAGE_URL = os.environ["PAGE_URL"]
 TTS_URL = "https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts"
@@ -43,8 +44,6 @@ def main() -> int:
         )
         health = page.evaluate("window.MosharrofEntitySystem.organRuntime.health('message-audio')")
         assert health["status"] == "ready", f"message-audio Organ is not ready: {health}"
-        voice_health = page.evaluate("window.MosharrofEntitySystem.organRuntime.health('personal-voice')")
-        assert voice_health["status"] == "ready", f"personal-voice Organ is not ready: {voice_health}"
 
         page.evaluate("""() => {
           const container = document.querySelector("#messages");
@@ -86,23 +85,8 @@ def main() -> int:
         audio_bytes = Path(download.path()).read_bytes()
         assert audio_bytes.startswith(b"ID3"), "MP3 Title metadata is missing"
         assert "MOSHARROF".encode("utf-8") in audio_bytes, "MP3 Artist metadata is missing"
-
-        # The personal voice manager must remain inside the existing Read Aloud action menu.
-        read_button.dispatch_event("contextmenu")
-        voice_menu = page.locator(".personal-voice-menu")
-        voice_menu.wait_for(state="visible", timeout=10000)
-        assert voice_menu.get_attribute("aria-label") == "পড়ে শোনানোর সেটিংস"
-        page.get_by_role("button", name="Owner Login").wait_for(state="visible", timeout=10000)
-        page.get_by_placeholder("Owner email").wait_for(state="visible", timeout=10000)
-        page.get_by_placeholder("Password").wait_for(state="visible", timeout=10000)
-        page.get_by_placeholder("নাম দিয়ে খুঁজুন").wait_for(state="visible", timeout=10000)
-        assert page.locator("[data-message-audio-read]").count() == 1, "a separate personal voice button was added"
-        assert voice_menu.locator("button").filter(has_text="＋ নিজের কণ্ঠ যোগ করুন").is_disabled(), (
-            "sample enrollment must stay disabled until secure backend readiness passes"
-        )
-        voice_menu.get_by_role("button", name="বন্ধ").click()
-        assert page.locator(".personal-voice-menu").count() == 0
-        print("MESSAGE AUDIO BROWSER CHECK: PASS — Read Aloud, MP3 metadata, and in-menu personal voice setup work")
+        check_personal_voice_menu(page, read_button)
+        print("MESSAGE AUDIO BROWSER CHECK: PASS — sent-message Read Aloud and MP3 download controls work")
         context.close()
         browser.close()
     return 0
