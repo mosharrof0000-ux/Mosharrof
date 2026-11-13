@@ -60,8 +60,8 @@ export async function getAccessToken(fetcher = globalThis.fetch) {
   } catch { return null; }
 }
 
-export async function apiRequest(path, options = {}, fetcher = globalThis.fetch) {
-  const token = await getAccessToken(fetcher);
+export async function apiRequest(path, options = {}, fetcher = globalThis.fetch, tokenProvider = null) {
+  const token = typeof tokenProvider === "function" ? await tokenProvider() : await getAccessToken(fetcher);
   if (!token) throw new Error("owner_login_required");
   const headers = new Headers(options.headers || {});
   headers.set("Authorization", "Bearer " + token);
@@ -72,9 +72,9 @@ export async function apiRequest(path, options = {}, fetcher = globalThis.fetch)
   return data;
 }
 
-export async function getDefaultVoiceProfileId(fetcher = globalThis.fetch) {
+export async function getDefaultVoiceProfileId(fetcher = globalThis.fetch, tokenProvider = null) {
   if (!defaultProfileIdPromise) {
-    defaultProfileIdPromise = apiRequest("/profiles", {}, fetcher)
+    defaultProfileIdPromise = apiRequest("/profiles", {}, fetcher, tokenProvider)
       .then(data => data.default_profile_id || null)
       .catch(() => null);
   }
