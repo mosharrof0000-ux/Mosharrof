@@ -9,7 +9,10 @@ export async function catalogRoute(request, env, auth, url) {
   const q = String(url.searchParams.get("q") || "").trim().slice(0, 80);
   const language = String(url.searchParams.get("language") || "").trim().slice(0, 16);
   const style = String(url.searchParams.get("style") || "").trim().slice(0, 32);
-  if (q) query.set("or", "(display_name.ilike.*" + q.replace(/[(),]/g, "") + "*,provider_voice_id.ilike.*" + q.replace(/[(),]/g, "") + "*)");
+  const safeQuery = q.replace(/[^\\p{L}\\p{N}\\s_-]/gu, "").trim();
+  if (language && !/^[A-Za-z0-9_-]{2,16}$/.test(language)) return json({ error: "invalid_language_filter" }, 400);
+  if (style && !/^[A-Za-z0-9_-]{1,32}$/.test(style)) return json({ error: "invalid_style_filter" }, 400);
+  if (safeQuery) query.set("or", "(display_name.ilike.*" + safeQuery + "*,provider_voice_id.ilike.*" + safeQuery + "*)");
   if (language) query.set("language", "eq." + language);
   if (style) query.set("style", "eq." + style);
   const response = await supabaseFetch(env, auth.token, "rest/v1/personal_voice_catalog?" + query);
