@@ -66,7 +66,7 @@ test("default profile lookup uses the injected fetcher and is cached", async () 
     assert.equal(await getDefaultVoiceProfileId(fetcher, async () => "owner-token"), "profile-from-server");
     assert.equal(calls.length, 1);
   } finally {
-    cacheDefaultVoiceProfileId(null);
+    resetDefaultVoiceProfileIdCache();
     globalThis.localStorage = previousStorage;
   }
 });
