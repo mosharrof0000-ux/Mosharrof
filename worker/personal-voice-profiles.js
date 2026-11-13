@@ -225,7 +225,7 @@ export async function profilesRoute(request, env, auth, url) {
     // Revoke first; if storage deletion fails, the still-present revoked row allows a safe retry.
     const revoke = await supabaseFetch(env, token, "rest/v1/personal_voice_profiles?id=eq." + profileId + "&owner_id=eq." + user.id, {
       method: "PATCH", headers: { prefer: "return=minimal" },
-      body: JSON.stringify({ status: "revoked", consent_voice_use: false })
+      body: JSON.stringify({ status: "revoked", consent_voice_use: false, consent_sample_storage: false })
     });
     if (!revoke.ok) return json({ error: "voice_profile_revoke_failed" }, 502);
     if (profile.sample_object_key) {
