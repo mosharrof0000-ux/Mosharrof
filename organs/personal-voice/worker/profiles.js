@@ -54,7 +54,10 @@ export async function profilesRoute(request, env, auth, url) {
     const rows = await readJson(response);
     return json({ voices: (rows || []).map(row => ({
       id: row.id, serial: "VOICE-" + String(row.voice_serial).padStart(3, "0"),
-      nickname: row.nickname, catalog_voice_id: row.catalog_voice_id, voice: { ...row.personal_voice_catalog, available: row.personal_voice_catalog?.enabled === true && providerAvailability(env, row.personal_voice_catalog?.provider_id) && row.personal_voice_catalog?.license_status === "verified" && row.personal_voice_catalog?.consent_status === "documented" }
+      nickname: row.nickname, catalog_voice_id: row.catalog_voice_id, voice: { ...row.personal_voice_catalog, provider_available: providerAvailability(env, row.personal_voice_catalog?.provider_id),
+        license_verified: row.personal_voice_catalog?.license_status === "verified",
+        consent_documented: row.personal_voice_catalog?.consent_status === "documented",
+        available: row.personal_voice_catalog?.enabled === true && providerAvailability(env, row.personal_voice_catalog?.provider_id) && row.personal_voice_catalog?.license_status === "verified" && row.personal_voice_catalog?.consent_status === "documented" }
     })) });
   }
 
