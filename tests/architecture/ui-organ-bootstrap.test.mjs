@@ -13,7 +13,7 @@ test("the current shell loads the organ runtime through its existing script", as
     'core: "core"', 'chat: "chat"', 'sidebar: "sidebar"', 'voice: "voice"',
     'storage: "storage"', 'tool_factory: "tool-factory"', 'quran_research: "quran-research"'
   ]) assert.ok(bootstrap.includes(mapping), "missing visible UI organ mapping: " + mapping);
-  for (const id of ["core", "sidebar", "voice", "storage", "tool-factory", "quran-research"]) {
+  for (const id of ["core", "sidebar", "voice", "storage", "tool-factory", "quran-research", "message-audio", "personal-voice"]) {
     assert.ok(modules.includes('../organs/' + id + '/index.js'), "missing UI organ import: " + id);
   }
 });
