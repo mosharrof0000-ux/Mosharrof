@@ -34,3 +34,9 @@ test("default profile references cannot cross owner boundaries", () => {
   assert.match(sql, /foreign key \(owner_id, default_profile_id\)[\s\S]*?references public\.personal_voice_profiles\(owner_id, id\)/i);
   assert.match(sql, /sample_object_key like owner_id::text \|\| '\/%'/i);
 });
+
+test("replacement samples retain a retryable owner-scoped previous object pointer", () => {
+  assert.match(sql, /previous_sample_object_key text/);
+  assert.match(sql, /previous_sample_object_key is null or previous_sample_object_key like owner_id::text/);
+  assert.match(sql, /previous_sample_object_key is null or consent_sample_storage or status = 'revoked'/);
+});
