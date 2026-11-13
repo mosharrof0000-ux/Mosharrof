@@ -83,7 +83,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     panel.appendChild(voiceLabel);
 
     function refreshProviderControls() {
-      const personalSelected = !!button.dataset.voiceProfileId;
+      const personalSelected = button.dataset.voiceProfileDisabled !== "true" && (!!button.dataset.voiceProfileId || button.dataset.voiceProfileDefaultActive === "true");
       provider.disabled = personalSelected;
       const supported = !personalSelected && getProviderControlCapabilities(provider.value).controls.speed;
       speedLabel.hidden = !supported;
