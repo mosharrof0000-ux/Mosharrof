@@ -1,5 +1,6 @@
 import { createIndicF5Request, synthesizeWithIndicF5 } from "../providers/indicf5.js";
 import { clearPreviousSample, removeProfileSamples } from "./sample-cleanup.js";
+import { getPersonalVoiceReadiness } from "./readiness.js";
 import {
   MAX_SAMPLE_BYTES, MAX_TEXT_CHARS, MAX_REFERENCE_TEXT_CHARS, AUDIO_TYPES, PROFILE_FIELDS, UUID,
   json, supabaseFetch, asProfile, encryptionKey, encryptSample, decryptSample, encryptText, decryptText, readJson,
@@ -9,6 +10,13 @@ import {
 export async function profilesRoute(request, env, auth, url) {
   const { user, token } = auth;
   const path = url.pathname;
+  async function enrollmentReady() {
+    try {
+      const response = await getPersonalVoiceReadiness(env, auth);
+      const state = await response.json();
+      return state.ready === true;
+    } catch { return false; }
+  }
   if (request.method === "GET" && path === "/personal-voice/profiles") {
     const query = new URLSearchParams({ select: PROFILE_FIELDS, owner_id: "eq." + user.id, order: "voice_serial.asc" });
     const [profilesResponse, preferenceResponse] = await Promise.all([
@@ -23,6 +31,7 @@ export async function profilesRoute(request, env, auth, url) {
   }
 
   if (request.method === "POST" && path === "/personal-voice/profiles") {
+    if (!(await enrollmentReady())) return json({ error: "personal_voice_enrollment_not_ready" }, 503);
     const length = Number(request.headers.get("content-length") || 0);
     if (length > 8192) return json({ error: "request_too_large" }, 413);
     const body = await request.json().catch(() => null);
@@ -105,6 +114,7 @@ export async function profilesRoute(request, env, auth, url) {
   if (!profile) return json({ error: "voice_profile_not_found" }, 404);
 
   if (action === "sample" && request.method === "POST") {
+    if (!(await enrollmentReady())) return json({ error: "personal_voice_enrollment_not_ready" }, 503);
     if (!encryptionKey(env)) return json({ error: "voice_encryption_not_configured" }, 503);
     if (!profile.consent_voice_use || !profile.consent_sample_storage) return json({ error: "voice_and_storage_consent_required" }, 403);
     if (profile.previous_sample_object_key && !(await clearPreviousSample(env, token, user.id, profile))) return json({ error: "previous_sample_cleanup_pending" }, 409);
