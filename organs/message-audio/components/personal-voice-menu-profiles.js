@@ -64,7 +64,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
       defaultProfileId = data.default_profile_id || null;
       cacheDefaultVoiceProfileId(defaultProfileId);
       button.dataset.voiceProfileDefaultActive = defaultProfileId ? "true" : "false";
-      refreshProviderControls();
+      await refreshProviderControls();
       setStatus(data.profiles?.length ? "সংরক্ষিত কণ্ঠ নির্বাচন করুন" : enrollmentReady ? "এখনো কোনো ব্যক্তিগত কণ্ঠ নেই" : "কণ্ঠ নিবন্ধন বন্ধ: নিরাপদ সার্ভার প্রস্তুত নয়");
       for (const profile of data.profiles || []) {
         const row = element(documentRef, "div", undefined, "pv-profile-row");
@@ -74,7 +74,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         const choose = action(button.dataset.voiceProfileId === profile.id ? "নির্বাচিত" : "এই বার্তার জন্য", () => {
           button.dataset.voiceProfileId = profile.id;
           delete button.dataset.voiceProfileDisabled;
-          refreshProviderControls();
+          await refreshProviderControls();
           setStatus(profile.name + " এই বার্তার কণ্ঠ হিসেবে নির্বাচিত");
         });
         row.append(info, choose);
