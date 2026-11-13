@@ -43,6 +43,8 @@ def main() -> int:
         )
         health = page.evaluate("window.MosharrofEntitySystem.organRuntime.health('message-audio')")
         assert health["status"] == "ready", f"message-audio Organ is not ready: {health}"
+        voice_health = page.evaluate("window.MosharrofEntitySystem.organRuntime.health('personal-voice')")
+        assert voice_health["status"] == "ready", f"personal-voice Organ is not ready: {voice_health}"
 
         page.evaluate("""() => {
           const container = document.querySelector("#messages");
