@@ -61,7 +61,8 @@ export async function getAccessToken(fetcher = globalThis.fetch) {
 }
 
 export async function apiRequest(path, options = {}, fetcher = globalThis.fetch, tokenProvider = null) {
-  const token = typeof tokenProvider === "function" ? await tokenProvider() : await getAccessToken(fetcher);
+  let token = typeof tokenProvider === "function" ? await tokenProvider() : null;
+  if (!token) token = await getAccessToken(fetcher);
   if (!token) throw new Error("owner_login_required");
   const headers = new Headers(options.headers || {});
   headers.set("Authorization", "Bearer " + token);
