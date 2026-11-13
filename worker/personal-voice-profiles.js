@@ -2,7 +2,7 @@ import { createIndicF5Request, synthesizeWithIndicF5 } from "../organs/personal-
 import {
   MAX_SAMPLE_BYTES, MAX_TEXT_CHARS, MAX_REFERENCE_TEXT_CHARS, AUDIO_TYPES, PROFILE_FIELDS, UUID,
   json, supabaseFetch, asProfile, encryptionKey, encryptSample, decryptSample, readJson,
-  getProfile, removeStoredSample
+  getProfile, removeStoredSample, providerAvailability
 } from "./personal-voice-shared.js";
 
 export async function profilesRoute(request, env, auth, url) {
