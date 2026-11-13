@@ -31,7 +31,7 @@ export function installMessageAudioActions(options = {}) {
     button.dataset.messageAudioRead = "true";
     button.addEventListener("click", async (event) => {
       if (event && typeof event.stopPropagation === "function") event.stopPropagation();
-      if (button.dataset.menuOpened === "true") { delete button.dataset.menuOpened; return; }
+      if (button.dataset.menuOpened === "true") return;
       if (button.dataset.busy === "true") return;
       button.dataset.busy = "true";
       try {
