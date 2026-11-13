@@ -45,3 +45,28 @@ test("API requests attach the owner JWT and disable caching", async () => {
     globalThis.fetch = previousFetch;
   }
 });
+
+test("default profile lookup uses the injected fetcher and is cached", async () => {
+  const previousStorage = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem(key) {
+      if (key === "mosharrof_personal_voice_auth_v1") return JSON.stringify({ access_token: "owner-session-token-1234567890", expires_at: Math.floor(Date.now() / 1000) + 3600 });
+      return null;
+    },
+    setItem() {}
+  };
+  const calls = [];
+  const fetcher = async (url, options) => {
+    calls.push({ url: String(url), options });
+    return new Response(JSON.stringify({ profiles: [], default_profile_id: "profile-from-server" }), { status: 200 });
+  };
+  try {
+    cacheDefaultVoiceProfileId(null);
+    assert.equal(await getDefaultVoiceProfileId(fetcher), "profile-from-server");
+    assert.equal(await getDefaultVoiceProfileId(fetcher), "profile-from-server");
+    assert.equal(calls.length, 1);
+  } finally {
+    cacheDefaultVoiceProfileId(null);
+    globalThis.localStorage = previousStorage;
+  }
+});
