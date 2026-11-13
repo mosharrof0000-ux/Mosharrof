@@ -130,7 +130,7 @@ export function createReadAloudController(options = {}) {
     }
 
     const provider = preference(storage, "mosharrof_tts_provider_v1", PROVIDERS, "auto");
-    const selectedProfileId = String(speakOptions.profileId || (button?.dataset?.voiceProfileDisabled === "true" ? "" : button?.dataset?.voiceProfileId || await getDefaultVoiceProfileId(fetchImpl)) || "");
+    const selectedProfileId = String(speakOptions.profileId || (button?.dataset?.voiceProfileDisabled === "true" ? "" : button?.dataset?.voiceProfileId || await getDefaultVoiceProfileId(fetchImpl, options.authTokenProvider)) || "");
     if (provider === "browser" && !selectedProfileId) {
       if (startBrowserSpeech(text, button)) return null;
       resetButton(button);
