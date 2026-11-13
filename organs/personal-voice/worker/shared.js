@@ -2,7 +2,7 @@ export const MAX_SAMPLE_BYTES = 5 * 1024 * 1024;
 export const MAX_TEXT_CHARS = 800;
 export const MAX_REFERENCE_TEXT_CHARS = 500;
 export const AUDIO_TYPES = new Set(["audio/wav", "audio/x-wav", "audio/wave", "audio/vnd.wave", "audio/flac", "audio/ogg"]);
-export const PROFILE_FIELDS = "id,owner_id,voice_serial,name,language,provider_id,status,consent_voice_use,consent_sample_storage,consent_model_training,sample_object_key,previous_sample_object_key,sample_mime_type,sample_bytes,reference_text,created_at,updated_at";
+export const PROFILE_FIELDS = "id,owner_id,voice_serial,name,language,provider_id,status,consent_voice_use,consent_sample_storage,consent_model_training,sample_object_key,previous_sample_object_key,sample_mime_type,sample_bytes,reference_text_ciphertext,created_at,updated_at";
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function json(data, status = 200) {
@@ -122,6 +122,21 @@ export async function decryptSample(packed, env) {
   } catch {
     throw new Error("voice_sample_authentication_failed");
   }
+}
+
+export async function encryptText(value, env) {
+  const encrypted = await encryptSample(new TextEncoder().encode(String(value || "")), env);
+  let binary = "";
+  for (let offset = 0; offset < encrypted.length; offset += 0x8000) binary += String.fromCharCode(...encrypted.subarray(offset, offset + 0x8000));
+  return "enc:v1:" + btoa(binary);
+}
+
+export async function decryptText(value, env) {
+  const encoded = String(value || "");
+  if (!encoded.startsWith("enc:v1:")) throw new Error("voice_reference_text_unavailable");
+  const binary = atob(encoded.slice(7));
+  const packed = Uint8Array.from(binary, character => character.charCodeAt(0));
+  return new TextDecoder().decode(await decryptSample(packed, env));
 }
 
 export async function readJson(response) {
