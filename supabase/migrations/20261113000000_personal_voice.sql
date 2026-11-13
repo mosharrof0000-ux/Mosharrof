@@ -32,7 +32,8 @@ create table if not exists public.personal_voice_profiles (
   check (sample_object_key is null or sample_object_key like owner_id::text || '/%'),
   check (previous_sample_object_key is null or previous_sample_object_key like owner_id::text || '/%'),
   check (previous_sample_object_key is null or consent_sample_storage or status = 'revoked'),
-  check (status <> 'active' or sample_object_key is not null),
+  check (status <> 'active' or (sample_object_key is not null and consent_voice_use and consent_sample_storage)),
+  check (sample_object_key is not null or (reference_text_ciphertext is null and sample_mime_type is null and sample_bytes is null)),
   unique (owner_id, id)
 );
 drop trigger if exists personal_voice_assign_serial on public.personal_voice_profiles;
