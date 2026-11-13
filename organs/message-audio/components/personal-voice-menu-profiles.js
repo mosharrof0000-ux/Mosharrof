@@ -55,6 +55,8 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
   panel.appendChild(addButton);
   panel.appendChild(action("এই বার্তার ব্যক্তিগত কণ্ঠ সরান", async () => {
     delete button.dataset.voiceProfileId;
+    delete button.dataset.voiceProvider;
+    delete button.dataset.voiceId;
     button.dataset.voiceProfileDisabled = "true";
     await refreshProviderControls();
     setStatus("এই বার্তায় সাধারণ TTS ভয়েস ব্যবহার হবে");
@@ -80,6 +82,8 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         info.appendChild(element(documentRef, "small", profile.status === "active" ? "ব্যবহারযোগ্য" : "নিষ্ক্রিয়"));
         const choose = action(button.dataset.voiceProfileId === profile.id ? "নির্বাচিত" : "এই বার্তার জন্য", async () => {
           button.dataset.voiceProfileId = profile.id;
+          delete button.dataset.voiceProvider;
+          delete button.dataset.voiceId;
           delete button.dataset.voiceProfileDisabled;
           await refreshProviderControls();
           setStatus(profile.name + " এই বার্তার কণ্ঠ হিসেবে নির্বাচিত");
@@ -124,19 +128,19 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
         }), action("ব্যবহারের সম্মতি প্রত্যাহার", async () => {
           if (!globalThis.confirm?.("এই কণ্ঠের ব্যবহার বন্ধ করবেন?")) return;
           await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "PATCH", body: JSON.stringify({ consent: { voice_use: false } }) });
-          if (button.dataset.voiceProfileId === profile.id) { delete button.dataset.voiceProfileId; button.dataset.voiceProfileDisabled = "true"; }
+          if (button.dataset.voiceProfileId === profile.id) { delete button.dataset.voiceProfileId; delete button.dataset.voiceProvider; delete button.dataset.voiceId; button.dataset.voiceProfileDisabled = "true"; }
           if (defaultProfileId === profile.id) { defaultProfileId = null; cacheDefaultVoiceProfileId(null); button.dataset.voiceProfileDefaultActive = "false"; }
           await loadProfiles();
         }), action("নমুনা ও সংরক্ষণ মুছুন", async () => {
           if (!globalThis.confirm?.("সংরক্ষিত নমুনা স্থায়ীভাবে মুছবেন?")) return;
           await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "PATCH", body: JSON.stringify({ consent: { sample_storage: false } }) });
-          if (button.dataset.voiceProfileId === profile.id) { delete button.dataset.voiceProfileId; button.dataset.voiceProfileDisabled = "true"; }
+          if (button.dataset.voiceProfileId === profile.id) { delete button.dataset.voiceProfileId; delete button.dataset.voiceProvider; delete button.dataset.voiceId; button.dataset.voiceProfileDisabled = "true"; }
           if (defaultProfileId === profile.id) { defaultProfileId = null; cacheDefaultVoiceProfileId(null); }
           await loadProfiles();
         }), action("মুছুন", async () => {
           if (!globalThis.confirm?.("এই কণ্ঠ ও নমুনা মুছে ফেলবেন?")) return;
           await apiRequest("/profiles/" + encodeURIComponent(profile.id), { method: "DELETE" });
-          if (button.dataset.voiceProfileId === profile.id) { delete button.dataset.voiceProfileId; button.dataset.voiceProfileDisabled = "true"; }
+          if (button.dataset.voiceProfileId === profile.id) { delete button.dataset.voiceProfileId; delete button.dataset.voiceProvider; delete button.dataset.voiceId; button.dataset.voiceProfileDisabled = "true"; }
           if (defaultProfileId === profile.id) { defaultProfileId = null; cacheDefaultVoiceProfileId(null); }
           await loadProfiles();
         }));
