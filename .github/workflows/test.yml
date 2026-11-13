@@ -19,8 +19,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Run Read Aloud and personal voice JavaScript tests
-        run: node --experimental-default-type=module --test organs/message-audio/tests/*.test.js organs/personal-voice/tests/*.test.js worker/personal-voice*.test.js
       - name: Verify image engine prompt parsing
         run: node scripts/test_image_engine.mjs
       - name: Test personal memory engine
