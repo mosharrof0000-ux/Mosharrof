@@ -15,6 +15,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
     try { catalogManager?.dispose(); } catch {}
     catalogManager = null;
     activePanel?.remove();
+    if (button?.dataset) button.dataset.menuOpened = "false";
   }
 
   function setStatus(text) {
@@ -35,6 +36,7 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
 
   async function open() {
     close();
+    if (button?.dataset) button.dataset.menuOpened = "true";
     panel = element(documentRef, "section", undefined, "personal-voice-menu");
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-label", "পড়ে শোনানোর সেটিংস");
@@ -122,9 +124,11 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
   }
 
   function onPointerDown() {
+    if (panel) return;
+    onPointerUp();
     holdTimer = setTimeout(() => {
-      button.dataset.menuOpened = "true";
-      open().catch(() => {});
+      holdTimer = null;
+      if (!panel) open().catch(() => {});
     }, 650);
   }
   function onPointerUp() {
@@ -133,8 +137,8 @@ export function createPersonalVoiceMenu({ button, message, controller, documentR
   }
   function onContextMenu(event) {
     event.preventDefault();
-    button.dataset.menuOpened = "true";
-    open().catch(() => {});
+    onPointerUp();
+    if (!panel) open().catch(() => {});
   }
   button.addEventListener("pointerdown", onPointerDown);
   button.addEventListener("pointerup", onPointerUp);
