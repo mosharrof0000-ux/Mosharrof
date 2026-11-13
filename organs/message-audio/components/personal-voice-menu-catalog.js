@@ -59,15 +59,18 @@ export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provi
       const result = await apiRequest("/catalog/saved");
       for (const saved of result.voices || []) {
         const row = element(documentRef, "div", undefined, "pv-catalog-row");
-        row.append(element(documentRef, "strong", saved.voice?.display_name || saved.catalog_voice_id), element(documentRef, "small", saved.serial));
-        row.appendChild(action("এই বার্তায় ব্যবহার", () => {
+        row.append(element(documentRef, "strong", saved.voice?.display_name || saved.catalog_voice_id), element(documentRef, "small", saved.serial + " · " + (saved.voice?.available ? "ব্যবহারের অনুমতি যাচাইকৃত" : "লাইসেন্স/অনুমতি বা সার্ভার যাচাই বাকি")));
+        const useSaved = action("এই বার্তায় ব্যবহার", () => {
+          if (!saved.voice?.available) throw new Error("এই ক্যাটালগ ভয়েসের লাইসেন্স, সম্মতি ও সার্ভার যাচাই সম্পূর্ণ নয়");
           if (saved.voice?.provider_id) provider.value = saved.voice.provider_id;
           if (saved.voice?.provider_voice_id) voice.value = saved.voice.provider_voice_id;
           delete button.dataset.voiceProfileId;
           refreshProviderControls();
           try { storage?.setItem("mosharrof_tts_provider_v1", provider.value); storage?.setItem("mosharrof_tts_voice_v1", voice.value); } catch {}
           setStatus(saved.serial + " ভয়েস এই বার্তার জন্য নির্বাচিত");
-        }));
+        });
+        useSaved.disabled = !saved.voice?.available;
+        row.appendChild(useSaved);
         row.appendChild(action("তালিকা থেকে সরান", async () => {
           await apiRequest("/catalog/saved/" + encodeURIComponent(saved.id), { method: "DELETE" });
           await loadSavedVoices();
