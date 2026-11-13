@@ -83,7 +83,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
           profileControls.replaceChildren();
           const transcript = element(documentRef, "textarea"); transcript.rows = 2; transcript.maxLength = 500; transcript.placeholder = "নতুন নমুনার হুবহু ট্রান্সক্রিপ্ট"; transcript.className = "pv-input";
           const file = element(documentRef, "input"); file.type = "file"; file.accept = "audio/wav,audio/flac,audio/ogg"; file.className = "pv-input";
-          profileControls.append(transcript, file, element(documentRef, "small", "WAV / FLAC / OGG · সর্বোচ্চ ৫ MB · অডিও ২০ সেকেন্ডের মধ্যে", "pv-muted"));
+          profileControls.append(transcript, file, element(documentRef, "small", "WAV / FLAC / OGG · সর্বোচ্চ ৫ MB · অডিও ২০ সেকেন্ডের মধ্যে। এটি নমুনা-নির্দেশিত TTS; হুবহু কণ্ঠের নিশ্চয়তা নয়।", "pv-muted"));
           profileControls.appendChild(action("নতুন নমুনা সংরক্ষণ", async () => {
             if (!file.files?.[0] || !transcript.value.trim()) throw new Error("অডিও ও হুবহু ট্রান্সক্রিপ্ট দিন");
             const form = new FormData();
