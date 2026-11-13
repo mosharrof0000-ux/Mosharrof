@@ -43,7 +43,7 @@ create table if not exists public.personal_voice_preferences (
   updated_at timestamptz not null default now()
 );
 
-do $
+do $owner_pref$
 begin
   if not exists (
     select 1 from pg_constraint
@@ -57,7 +57,7 @@ begin
       on delete cascade;
   end if;
 end;
-$;
+$owner_pref$;
 
 create table if not exists public.personal_voice_catalog (
   id text primary key,
