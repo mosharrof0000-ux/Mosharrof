@@ -1,8 +1,10 @@
 import io
 
-import numpy as np
-import soundfile as sf
-from fastapi.testclient import TestClient
+import pytest
+
+np = pytest.importorskip("numpy")
+sf = pytest.importorskip("soundfile")
+TestClient = pytest.importorskip("fastapi.testclient").TestClient
 
 import main
 
