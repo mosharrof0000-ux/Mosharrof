@@ -83,3 +83,33 @@ test("registered owner can read only the RLS-scoped profile API", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("profile creation is rejected server-side until database, storage, encryption and inference are ready", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    calls.push(target);
+    if (target.endsWith("/auth/v1/user")) return new Response(JSON.stringify({ id: "123e4567-e89b-42d3-a456-426614174000" }), { status: 200 });
+    if (target.endsWith("/rest/v1/rpc/asm_is_registered_owner")) return new Response("true", { status: 200 });
+    if (target.includes("rest/v1/personal_voice_profiles?select=id&limit=0")) return new Response("{}", { status: 404 });
+    if (target.includes("storage/v1/object/list/personal-voice-samples")) return new Response("[]", { status: 404 });
+    throw new Error("unexpected_request:" + target);
+  };
+  try {
+    const response = await handlePersonalVoiceRequest(
+      new Request("https://worker.example/personal-voice/profiles", {
+        method: "POST",
+        headers: { Authorization: "Bearer 12345678901234567890123456789012", "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "আমার কণ্ঠ", language: "bn-BD", consent: { voice_use: true, sample_storage: true } })
+      }),
+      { SUPABASE_URL: "https://project.supabase.co", SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test" }
+    );
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).error, "personal_voice_enrollment_not_ready");
+    assert.equal(calls.some(url => url.includes("rest/v1/personal_voice_profiles?") && !url.includes("select=id&limit=0")), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
