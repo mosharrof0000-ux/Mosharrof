@@ -23,7 +23,7 @@ def test_health_does_not_expose_secrets_or_audio():
 
 
 def test_synthesis_requires_auth_before_model_load(monkeypatch):
-    monkeypatch.setattr(main, "API_TOKEN", "test-secret")
+    monkeypatch.setattr(main, "API_TOKEN", "test-personal-voice-api-token-123456")
     monkeypatch.setattr(main, "MODEL_REVIEWED", True)
     monkeypatch.setattr(main, "_model", None)
 
@@ -54,12 +54,12 @@ def test_unconfigured_service_does_not_load_model(monkeypatch):
 
 
 def test_oversized_reference_audio_is_rejected_before_model_load(monkeypatch):
-    monkeypatch.setattr(main, "API_TOKEN", "test-secret")
+    monkeypatch.setattr(main, "API_TOKEN", "test-personal-voice-api-token-123456")
     monkeypatch.setattr(main, "MAX_AUDIO_BYTES", 32)
     monkeypatch.setattr(main, "_model", None)
     response = client.post(
         "/synthesize",
-        headers={"Authorization": "Bearer test-secret"},
+        headers={"Authorization": "Bearer test-personal-voice-api-token-123456"},
         data={"text": "বাংলা", "reference_text": "এটি নমুনা"},
         files={"reference_audio": ("sample.wav", b"x" * 33, "audio/wav")},
     )
@@ -70,7 +70,7 @@ def test_oversized_reference_audio_is_rejected_before_model_load(monkeypatch):
 def test_synthesis_uses_and_removes_temporary_reference_audio(monkeypatch):
     from pathlib import Path
 
-    monkeypatch.setattr(main, "API_TOKEN", "test-secret")
+    monkeypatch.setattr(main, "API_TOKEN", "test-personal-voice-api-token-123456")
     monkeypatch.setattr(main, "_model", None)
     paths = []
 
@@ -86,7 +86,7 @@ def test_synthesis_uses_and_removes_temporary_reference_audio(monkeypatch):
     sf.write(audio_buffer, np.zeros(8000, dtype=np.float32), 8000, format="WAV")
     response = client.post(
         "/synthesize",
-        headers={"Authorization": "Bearer test-secret"},
+        headers={"Authorization": "Bearer test-personal-voice-api-token-123456"},
         data={"text": "বাংলা কণ্ঠ পরীক্ষা", "reference_text": "এটি আমার নমুনা"},
         files={"reference_audio": ("sample.wav", audio_buffer.getvalue(), "audio/wav")},
     )
@@ -98,11 +98,11 @@ def test_synthesis_uses_and_removes_temporary_reference_audio(monkeypatch):
 
 
 def test_synthesis_rejects_unsupported_audio_type_before_model_load(monkeypatch):
-    monkeypatch.setattr(main, "API_TOKEN", "test-secret")
+    monkeypatch.setattr(main, "API_TOKEN", "test-personal-voice-api-token-123456")
     monkeypatch.setattr(main, "_model", None)
     response = client.post(
         "/synthesize",
-        headers={"Authorization": "Bearer test-secret"},
+        headers={"Authorization": "Bearer test-personal-voice-api-token-123456"},
         data={"text": "বাংলা", "reference_text": "এটি নমুনা"},
         files={"reference_audio": ("sample.mp3", b"fake", "audio/mpeg")},
     )
@@ -111,13 +111,25 @@ def test_synthesis_rejects_unsupported_audio_type_before_model_load(monkeypatch)
 
 
 def test_ready_requires_worker_bearer_and_confirms_model_loaded(monkeypatch):
-    monkeypatch.setattr(main, "API_TOKEN", "test-secret")
+    monkeypatch.setattr(main, "API_TOKEN", "test-personal-voice-api-token-123456")
     monkeypatch.setattr(main, "MODEL_REVIEWED", True)
     monkeypatch.setattr(main, "_model", object())
     monkeypatch.setattr(main, "_get_model", lambda: main._model)
     denied = client.get("/ready")
     assert denied.status_code == 401
-    response = client.get("/ready", headers={"Authorization": "Bearer test-secret"})
+    response = client.get("/ready", headers={"Authorization": "Bearer test-personal-voice-api-token-123456"})
     assert response.status_code == 200
     assert response.json()["ready"] is True
     assert response.json()["model_loaded"] is True
+
+
+def test_short_server_token_keeps_inference_service_unconfigured(monkeypatch):
+    monkeypatch.setattr(main, "API_TOKEN", "too-short")
+    monkeypatch.setattr(main, "MODEL_REVISION", "a" * 40)
+    monkeypatch.setattr(main, "HF_TOKEN", "hf-test-token")
+    monkeypatch.setattr(main, "MODEL_REVIEWED", True)
+    monkeypatch.setattr(main, "_model", None)
+    response = client.get("/ready", headers={"Authorization": "Bearer too-short"})
+    assert response.status_code == 503
+    assert main._is_configured() is False
+    assert main._model is None
