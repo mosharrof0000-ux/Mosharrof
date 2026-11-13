@@ -201,7 +201,7 @@ export async function profilesRoute(request, env, auth, url) {
     const finalPatch = {
       name, consent_voice_use: voiceUse, consent_sample_storage: sampleStorage,
       consent_model_training: training,
-      status: voiceUse && sampleStorage && sampleKey ? "active" : "revoked"
+      status: !voiceUse || !sampleStorage ? "revoked" : (sampleKey ? "active" : "draft")
     };
     if (!sampleStorage) Object.assign(finalPatch, {
       sample_object_key: null, previous_sample_object_key: null, sample_mime_type: null, sample_bytes: null, reference_text_ciphertext: null
