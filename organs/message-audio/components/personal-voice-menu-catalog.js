@@ -1,5 +1,13 @@
 import { apiRequest, element, statusText } from "./personal-voice-menu-api.js";
 
+export function buildCatalogQuery({ query = "", language = "", style = "" } = {}) {
+  return new URLSearchParams({ q: String(query).trim(), language: String(language), style: String(style) });
+}
+
+export function catalogVoiceUsable(voice) {
+  return voice?.available === true;
+}
+
 export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provider, voice, button, storage, refreshProviderControls }) {
   panel.appendChild(element(documentRef, "div", "ভয়েস ক্যাটালগ", "pv-section-title"));
   const catalogSearch = element(documentRef, "input");
@@ -21,7 +29,7 @@ export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provi
   async function searchCatalog() {
     catalogResults.replaceChildren();
     try {
-      const params = new URLSearchParams({ q: catalogSearch.value.trim(), language: catalogLanguage.value, style: catalogStyle.value });
+      const params = buildCatalogQuery({ query: catalogSearch.value, language: catalogLanguage.value, style: catalogStyle.value });
       const result = await apiRequest("/catalog?" + params.toString());
       if (!result.voices?.length) catalogResults.appendChild(element(documentRef, "p", "এই অনুসন্ধানে কোনো ভয়েস পাওয়া যায়নি।", "pv-muted"));
       for (const voiceItem of result.voices || []) {
@@ -34,7 +42,7 @@ export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provi
           await loadSavedVoices();
         }));
         controls.appendChild(action("প্রিভিউ", async () => {
-          if (!voiceItem.available) throw new Error("এই ভয়েস সার্ভার এখন অনুপলব্ধ");
+          if (!catalogVoiceUsable(voiceItem)) throw new Error("এই ভয়েস সার্ভার বা লাইসেন্স অনুমতি যাচাইকৃত নয়");
           const response = await fetch("https://mosharrof-screenshot-analysis.mosharrof0000.workers.dev/tts", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: "আসসালামু আলাইকুম। এটি কণ্ঠের নমুনা পরীক্ষা।", language_code: voiceItem.language, provider: voiceItem.provider_id, voice: voiceItem.provider_voice_id })
@@ -71,7 +79,7 @@ export function mountVoiceCatalog({ documentRef, panel, action, setStatus, provi
           try { storage?.setItem("mosharrof_tts_provider_v1", provider.value); storage?.setItem("mosharrof_tts_voice_v1", voice.value); } catch {}
           setStatus(saved.serial + " ভয়েস এই বার্তার জন্য নির্বাচিত");
         });
-        useSaved.disabled = !saved.voice?.available;
+        useSaved.disabled = !catalogVoiceUsable(saved.voice);
         row.appendChild(useSaved);
         row.appendChild(action("তালিকা থেকে সরান", async () => {
           await apiRequest("/catalog/saved/" + encodeURIComponent(saved.id), { method: "DELETE" });
