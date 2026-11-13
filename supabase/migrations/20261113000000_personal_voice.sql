@@ -28,6 +28,7 @@ create table if not exists public.personal_voice_profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (sample_object_key is null or consent_sample_storage),
+  check (sample_object_key is null or sample_object_key like owner_id::text || '/%'),
   check (status <> 'active' or sample_object_key is not null),
   unique (owner_id, id)
 );
@@ -41,6 +42,22 @@ create table if not exists public.personal_voice_preferences (
   default_profile_id uuid,
   updated_at timestamptz not null default now()
 );
+
+do $
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'personal_voice_preferences_default_profile_owner_fk'
+      and conrelid = 'public.personal_voice_preferences'::regclass
+  ) then
+    alter table public.personal_voice_preferences
+      add constraint personal_voice_preferences_default_profile_owner_fk
+      foreign key (owner_id, default_profile_id)
+      references public.personal_voice_profiles(owner_id, id)
+      on delete cascade;
+  end if;
+end;
+$;
 
 create table if not exists public.personal_voice_catalog (
   id text primary key,
