@@ -46,3 +46,8 @@ test("reference transcripts are stored only as bounded ciphertext", () => {
   assert.match(sql, /char_length\(reference_text_ciphertext\) <= 4096/);
   assert.doesNotMatch(sql, /reference_text text check/);
 });
+
+test("active profiles require voice-use and sample-storage consent", () => {
+  assert.match(sql, /status <> 'active' or \(sample_object_key is not null and consent_voice_use and consent_sample_storage\)/i);
+  assert.match(sql, /sample_object_key is not null or \(reference_text_ciphertext is null and sample_mime_type is null and sample_bytes is null\)/i);
+});
