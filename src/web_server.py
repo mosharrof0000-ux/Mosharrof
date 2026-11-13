@@ -217,11 +217,14 @@ def process_thought():
     data = request.get_json() or {}
     user_thought = data.get('thought', '')
     
+    intent_res = brain.process_intent(user_thought)
+    clarity_pct = f"{int(intent_res.get('intent_clarity', 1.0) * 100)}%"
     response_text = f"আপনার ভাবনার প্রতিটি সূক্ষ্ম কোণ আমি ১০০% অনুধাবন করেছি। '{user_thought}' - এর পেছনের সত্য ও যুক্তির প্রকাশ প্রস্তুত।"
     
     return jsonify({
         "status": "SUCCESS",
-        "intent_clarity": "100%",
+        "intent_clarity": clarity_pct,
+        "intent": intent_res.get("intent", "GENERAL"),
         "response": response_text
     })
 
