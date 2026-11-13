@@ -130,7 +130,7 @@ export function createReadAloudController(options = {}) {
     }
 
     const provider = preference(storage, "mosharrof_tts_provider_v1", PROVIDERS, "auto");
-    const selectedProfileId = String(speakOptions.profileId || (button?.dataset?.voiceProfileDisabled === "true" ? "" : button?.dataset?.voiceProfileId || await getDefaultVoiceProfileId()) || "");
+    const selectedProfileId = String(speakOptions.profileId || (button?.dataset?.voiceProfileDisabled === "true" ? "" : button?.dataset?.voiceProfileId || await getDefaultVoiceProfileId(fetchImpl)) || "");
     if (provider === "browser" && !selectedProfileId) {
       if (startBrowserSpeech(text, button)) return null;
       resetButton(button);
@@ -149,7 +149,7 @@ export function createReadAloudController(options = {}) {
         try {
           let token = null;
           if (typeof options.authTokenProvider === "function") token = await options.authTokenProvider();
-          if (!token) token = await getAccessToken();
+          if (!token) token = await getAccessToken(fetchImpl);
           if (!token) throw new Error("owner_login_required");
           response = await fetchImpl(PERSONAL_VOICE_ENDPOINT + "/profiles/" + encodeURIComponent(profileId) + "/synthesize", {
             method: "POST",
