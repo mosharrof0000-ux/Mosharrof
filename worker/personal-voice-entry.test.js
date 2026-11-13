@@ -23,3 +23,12 @@ test("Cloudflare Worker entrypoint protects personal voice profile routes", asyn
   assert.equal(response.headers.get("access-control-allow-origin"), origin);
   assert.equal((await response.json()).error, "registered_owner_authentication_required");
 });
+
+test("Cloudflare Worker rejects untrusted origins before personal voice requests", async () => {
+  const response = await worker.fetch(
+    new Request("https://worker.example/personal-voice/health", { headers: { Origin: "https://attacker.example" } }),
+    {}
+  );
+  assert.equal(response.status, 403);
+  assert.equal((await response.json()).error, "origin_not_allowed");
+});
