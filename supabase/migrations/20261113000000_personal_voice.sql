@@ -27,7 +27,7 @@ create table if not exists public.personal_voice_profiles (
   reference_text text check (reference_text is null or char_length(reference_text) <= 500),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  check (sample_object_key is null or consent_sample_storage),
+  check (sample_object_key is null or consent_sample_storage or status = 'revoked'),
   check (sample_object_key is null or sample_object_key like owner_id::text || '/%'),
   check (status <> 'active' or sample_object_key is not null),
   unique (owner_id, id)
