@@ -6,6 +6,10 @@ on:
     branches: [main]
     paths:
       - "worker/**"
+      - "core/video-cutting/worker-entry.js"
+      - "organs/personal-voice/worker/**"
+      - "organs/personal-voice/worker-entry.js"
+      - "organs/personal-voice/providers/**"
       - ".github/workflows/deploy-gemini-worker.yml"
       - "core/video-generation/**"
       - "core/video-generation-ui.js"
