@@ -98,6 +98,7 @@ export function statusText(error) {
     registered_owner_authentication_required: "এই অ্যাকাউন্ট Owner Registry-তে অনুমোদিত নয়",
     personal_voice_request_failed: "ভয়েস সার্ভার এখন প্রস্তুত নয়",
     personal_voice_inference_not_configured: "ক্লোন কণ্ঠের মডেল সার্ভার এখনো সংযুক্ত হয়নি",
+    personal_voice_enrollment_not_ready: "নিরাপদ ডেটাবেস, স্টোরেজ, এনক্রিপশন ও মডেল প্রস্তুত না হওয়া পর্যন্ত কণ্ঠ নিবন্ধন বন্ধ",
     email_not_confirmed: "ইমেইল যাচাই সম্পন্ন হয়নি",
     owner_login_invalid: "ইমেইল বা পাসওয়ার্ড সঠিক নয়",
     owner_login_unavailable: "Owner Login সার্ভার অনুপলব্ধ",
