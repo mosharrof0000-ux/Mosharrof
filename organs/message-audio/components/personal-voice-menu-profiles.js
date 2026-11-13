@@ -101,6 +101,7 @@ export function mountPersonalVoiceProfiles({ documentRef, panel, button, control
           defaultProfileId = profile.id;
           cacheDefaultVoiceProfileId(profile.id);
           button.dataset.voiceProfileDefaultActive = "true";
+          await refreshProviderControls();
           setStatus("ডিফল্ট কণ্ঠ সংরক্ষণ করা হয়েছে");
         }), action("নাম বদল", async () => {
           const next = globalThis.prompt?.("নতুন কণ্ঠের নাম", profile.name);
