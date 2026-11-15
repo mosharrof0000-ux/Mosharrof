@@ -43,4 +43,5 @@ def test_machine_readable_contract_is_consistent():
 def test_legacy_web_server_escapes_dynamic_ai_output():
     legacy = (ROOT / "src" / "web_server.py").read_text(encoding="utf-8")
     assert "aiNode.innerHTML" not in legacy
+    assert "userNode.innerHTML" not in legacy
     assert "document.createTextNode(' ' + String(data.response || ''))" in legacy
