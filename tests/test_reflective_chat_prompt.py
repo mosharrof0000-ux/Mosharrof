@@ -12,3 +12,13 @@ def test_live_chat_providers_use_reflective_pre_and_post_response_contract():
     assert "Before sending" in prompt
     assert "tentative hypotheses" in prompt
     assert "Do not reveal private chain-of-thought" in prompt
+
+
+def test_chatbot_explains_video_cutting_capabilities_truthfully():
+    prompt = Path("core/reflective-chat-prompt.js").read_text(encoding="utf-8")
+    assert "MOSHARROF VIDEO-CUTTING CAPABILITY CONTRACT" in prompt
+    assert "MP4, MOV, WebM, and MKV" in prompt
+    assert "39 MiB" in prompt
+    assert "disabled by default" in prompt
+    assert "never claim the service is live" in prompt
+    assert "only a text model" in prompt
