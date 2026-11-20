@@ -44,3 +44,9 @@ def test_legacy_web_server_escapes_dynamic_ai_output():
     legacy = (ROOT / "src" / "web_server.py").read_text(encoding="utf-8")
     assert "aiNode.innerHTML" not in legacy
     assert "document.createTextNode(' ' + String(data.response || ''))" in legacy
+
+
+def test_older_webview_array_at_polyfill_is_present():
+    sidebar = (ROOT / "web" / "sidebar-recovery.js").read_text(encoding="utf-8")
+    assert "Array.prototype.at" in sidebar
+    assert "String.prototype.at" in sidebar
