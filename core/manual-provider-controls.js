@@ -4,15 +4,10 @@ var manualCss=document.createElement("style");manualCss.setAttribute("data-organ
 var sendButton=document.querySelector("#sendBtn");
 var CHAT_KEY="mosharrof_chat_route_v1",STT_KEY="mosharrof_stt_model_v1";
 var chatChoices=[
-{value:"auto",label:"স্বয়ংক্রিয় · সব সংযোগ পরীক্ষা",tone:"green"},
-{value:"gemini|gemini-3.8-flash",label:"Gemini · 3.8 Flash",tone:"blue"},
-{value:"gemini|gemini-3.7-flash",label:"Gemini · 3.7 Flash",tone:"blue"},
+{value:"auto",label:"স্বয়ংক্রিয় · সচল সংযোগে ফেইলওভার",tone:"green"},
 {value:"gemini|gemini-3.6-flash",label:"Gemini · 3.6 Flash",tone:"blue"},
-{value:"gemini|gemini-3.5-flash",label:"Gemini · 3.5 Flash",tone:"blue"},
 {value:"cloudflare-workers-ai|@cf/zai-org/glm-4.7-flash",label:"Cloudflare · GLM 4.7 Flash",tone:"yellow"},
-{value:"cloudflare-workers-ai|@cf/meta/llama-3.3-70b-instruct-fp8-fast",label:"Cloudflare · Llama 3.3 70B",tone:"yellow"},
-{value:"groq|llama-3.1-8b-instant",label:"Groq · Llama 3.1 8B",tone:"blue"},
-{value:"openrouter|meta-llama/llama-3.3-70b-instruct:free",label:"OpenRouter · Llama 3.3 Free",tone:"blue"}];
+{value:"cloudflare-workers-ai|@cf/meta/llama-3.3-70b-instruct-fp8-fast",label:"Cloudflare · Llama 3.3 70B",tone:"yellow"}];
 var ttsChoices=[
 {value:"auto",label:"স্বয়ংক্রিয় · ফ্রি-ফার্স্ট",tone:"green"},
 {value:"edge",label:"Edge-TTS · বাংলা কণ্ঠ",tone:"blue"},
