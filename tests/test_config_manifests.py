@@ -38,3 +38,12 @@ def test_entity_and_capability_registries_structure():
     cap_data = json.loads(cap_reg_path.read_text(encoding="utf-8"))
     assert cap_data["defaults"]["permanent_delete_block"] is True
     assert "categories" in cap_data
+
+
+def test_entity_registry_integrity():
+    entity_reg_path = CONFIG_DIR / "entity_registry.json"
+    entity_data = json.loads(entity_reg_path.read_text(encoding="utf-8"))
+    for entity in entity_data["entities"]:
+        assert "id" in entity
+        assert "brain" in entity
+        assert "scope" in entity
