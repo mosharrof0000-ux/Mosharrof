@@ -1,0 +1,110 @@
+name: MOSHARROF Parallel APK Failure Triage
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_run:
+    workflows: ["MOSHARROF Android APK WebView Real Chat QA"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: apk-failure-triage-${{ github.event.workflow_run.id || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout proposed triage code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile triage script
+        run: python3 -m py_compile scripts/android/parallel_failure_triage.py
+      - name: Exercise every diagnostic lane without claiming a fix
+        run: |
+          mkdir -p /tmp/triage-test
+          : > /tmp/triage-test/empty.log
+          for lane in artifact emulator cdp composer backend evidence; do
+            python3 scripts/android/parallel_failure_triage.py \
+              --lane "$lane" \
+              --log /tmp/triage-test/empty.log \
+              --output /tmp/triage-test/out \
+              --source-root .
+            test -s "/tmp/triage-test/out/$lane.json"
+            test -s "/tmp/triage-test/out/$lane.md"
+          done
+
+  triage:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure'
+    name: "Triage / ${{ matrix.lane }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        lane: [artifact, emulator, cdp, composer, backend, evidence]
+    steps:
+      - name: Checkout triage code from default branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch exact failed source revision separately
+        env:
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "$SOURCE_SHA"
+          git worktree add --detach /tmp/mosharrof-failed-source "$SOURCE_SHA"
+      - name: Fetch failed run log and available evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set +e
+          mkdir -p artifacts/triage
+          gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --log > artifacts/failure.log 2> artifacts/triage/log-fetch-errors.txt
+          echo "log_fetch_exit=$?" > artifacts/triage/collection.txt
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --dir artifacts/triage/source-artifacts >> artifacts/triage/collection.txt 2>&1
+          echo "artifact_download_exit=$?" >> artifacts/triage/collection.txt
+          printf '%s\n' "$RUN_URL" > artifacts/triage/triggering-run-url.txt
+          test -f artifacts/failure.log || : > artifacts/failure.log
+          exit 0
+      - name: Run independent diagnostic lane
+        env:
+          LANE: ${{ matrix.lane }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          python3 scripts/android/parallel_failure_triage.py \
+            --lane "$LANE" \
+            --log artifacts/failure.log \
+            --output artifacts/triage \
+            --run-id "$RUN_ID" \
+            --run-url "$RUN_URL" \
+            --source-root /tmp/mosharrof-failed-source
+      - name: Upload lane report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mosharrof-apk-triage-${{ matrix.lane }}-${{ github.event.workflow_run.id }}
+          path: artifacts/triage/
+          if-no-files-found: warn
+          retention-days: 30
