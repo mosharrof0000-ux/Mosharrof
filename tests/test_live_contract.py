@@ -44,3 +44,11 @@ def test_legacy_web_server_escapes_dynamic_ai_output():
     legacy = (ROOT / "src" / "web_server.py").read_text(encoding="utf-8")
     assert "aiNode.innerHTML" not in legacy
     assert "document.createTextNode(' ' + String(data.response || ''))" in legacy
+
+
+def test_web_app_js_dom_null_guards():
+    app_js = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
+    assert "if (!toastEl) return;" in app_js
+    assert "if (!inputEl) return;" in app_js
+    assert "sendBtn?.addEventListener" in app_js
+    assert "leftBtn?.addEventListener" in app_js
