@@ -47,3 +47,31 @@ def test_entity_registry_integrity():
         assert "id" in entity
         assert "brain" in entity
         assert "scope" in entity
+
+
+def test_autonomous_policy_safety_invariants():
+    auto_policy_path = CONFIG_DIR / "autonomous_policy.json"
+    assert auto_policy_path.is_file(), "autonomous_policy.json must exist"
+    data = json.loads(auto_policy_path.read_text(encoding="utf-8"))
+    permanent = data["permanent"]
+    assert permanent["delete_allowed"] is False
+    assert permanent["destructive_operations_allowed"] is False
+    assert permanent["direct_main_write_allowed"] is False
+    assert permanent["force_push_allowed"] is False
+    assert set(data["autonomous"]["allowed_paths"]) == {
+        "web/", "src/", "backend/", "tests/", "config/", "docs/"
+    }
+
+
+def test_permission_profiles_deny_destructive_operations():
+    profiles_path = CONFIG_DIR / "permission_profiles.json"
+    assert profiles_path.is_file(), "permission_profiles.json must exist"
+    data = json.loads(profiles_path.read_text(encoding="utf-8"))
+    for name, profile in data["profiles"].items():
+        denied = set(profile.get("deny", []))
+        assert "delete" in denied, f"Profile {name} must deny delete"
+        assert "destructive" in denied, f"Profile {name} must deny destructive"
+
+
+def test_global_policy_safety_rules():
+    policy_path = CONFIG_DIR / "policy.json"
