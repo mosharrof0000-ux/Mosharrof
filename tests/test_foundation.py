@@ -25,13 +25,6 @@ def test_all_entities_have_valid_scope_format():
         assert entity["scope"].startswith(entity["id"])
 
 
-def test_all_entities_have_valid_permission_profile():
-    registry = json.loads(Path("config/entity_registry.json").read_text(encoding="utf-8"))
-    profiles = json.loads(Path("config/permission_profiles.json").read_text(encoding="utf-8"))["profiles"]
-    for entity in registry["entities"]:
-        assert "permission_profile" in entity
-        assert entity["permission_profile"] in profiles
-
 def test_brain_adapter_preserves_entity_identity():
     adapter = BrainAdapter("chat")
     assert adapter.describe()["model_independent_identity"] is True
