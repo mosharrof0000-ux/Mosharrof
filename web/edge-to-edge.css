@@ -112,12 +112,33 @@ body{
 }
 
 .chat-mode .messages{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:16px !important;
+  width:100% !important;
   min-height:100% !important;
   padding:
     calc(86px + var(--mos-safe-top))
     max(14px,var(--mos-safe-left))
     calc(180px + var(--mos-safe-bottom))
     max(14px,var(--mos-safe-right)) !important;
+}
+
+.chat-mode .message{
+  display:flex !important;
+  flex-direction:column !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  word-break:break-word !important;
+  overflow-wrap:break-word !important;
+}
+
+.chat-mode .message .label{
+  display:block !important;
+  font-size:0.8rem !important;
+  margin-bottom:4px !important;
+  opacity:0.75 !important;
 }
 
 .chat-mode .composer{
