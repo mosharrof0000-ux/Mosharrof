@@ -75,3 +75,11 @@ def test_permission_profiles_deny_destructive_operations():
 
 def test_global_policy_safety_rules():
     policy_path = CONFIG_DIR / "policy.json"
+    assert policy_path.is_file(), "policy.json must exist"
+    data = json.loads(policy_path.read_text(encoding="utf-8"))
+    gp = data["global_policy"]
+    assert gp["delete_allowed"] is False
+    assert gp["destructive_operations_allowed"] is False
+    assert gp["scope_escape_allowed"] is False
+    assert gp["automatic_activation_without_tests"] is False
+    assert data["temporary_permissions"]["delete_exception"] is False
