@@ -83,3 +83,12 @@ def test_global_policy_safety_rules():
     assert gp["scope_escape_allowed"] is False
     assert gp["automatic_activation_without_tests"] is False
     assert data["temporary_permissions"]["delete_exception"] is False
+
+
+def test_component_consciousness_invariants():
+    comp_path = CONFIG_DIR / "component_consciousness.json"
+    assert comp_path.is_file(), "component_consciousness.json must exist"
+    data = json.loads(comp_path.read_text(encoding="utf-8"))
+    rules = data["rules"]
+    assert rules["never_delete"] is True
+    assert rules["never_modify_main_directly"] is True
