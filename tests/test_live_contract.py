@@ -44,3 +44,11 @@ def test_legacy_web_server_escapes_dynamic_ai_output():
     legacy = (ROOT / "src" / "web_server.py").read_text(encoding="utf-8")
     assert "aiNode.innerHTML" not in legacy
     assert "document.createTextNode(' ' + String(data.response || ''))" in legacy
+
+
+def test_android_webview_message_layout_css():
+    css = (ROOT / "web" / "styles.css").read_text(encoding="utf-8")
+    assert ".messages{" in css
+    assert ".message{" in css
+    assert "min-width:0" in css
+    assert "word-break:break-word" in css or "overflow-wrap:anywhere" in css
